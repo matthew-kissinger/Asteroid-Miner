@@ -1,8 +1,16 @@
 // gameOverScreen.js - Handles the game over UI
 
+import { getAbsolutePath } from '../../utils/pathUtils.js';
+
 export class GameOverScreen {
     constructor() {
+        this.isVisible = false;
         this.setupGameOverScreen();
+    }
+    
+    // Helper method to handle paths for GitHub Pages and local development
+    getPath(relativePath) {
+        return getAbsolutePath(relativePath);
     }
     
     setupGameOverScreen() {
@@ -122,7 +130,7 @@ export class GameOverScreen {
             console.log("GameOverScreen: Attempting simple audio playback");
             
             // Create a direct audio element without attaching to DOM
-            const explosionSound = new Audio('sounds/game/explosion.wav');
+            const explosionSound = new Audio(this.getPath('sounds/game/explosion.wav'));
             explosionSound.volume = 0.8;
             
             // Play with a slight delay to avoid conflict with other sounds

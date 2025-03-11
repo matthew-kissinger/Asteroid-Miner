@@ -1,10 +1,17 @@
 // audio.js - Handles game audio, both music and sound effects
 
+import { getAbsolutePath } from '../utils/pathUtils.js';
+
 export class AudioManager {
     constructor() {
-        this.sounds = {}; // Store all loaded sounds
+        this.audioContext = null;
+        this.sounds = {};
+        this.backgroundMusic = [];
+        this.currentMusicIndex = 0;
+        this.currentMusic = null;
+        this.isMuted = false;
+        this.thrustSound = null;
         this.music = []; // Store all background music tracks
-        this.muted = false;
         this.musicVolume = 0.21; // Reduced by 30% from 0.3
         this.sfxVolume = 0.5; // Default sound effects volume
         
@@ -100,14 +107,14 @@ export class AudioManager {
     // Check if the required sound directories exist and notify user if they don't
     async checkSoundDirectories() {
         // Only check for soundtrack directory since we're generating other sounds
-        const soundsDirExists = await this.checkFileExists('sounds');
+        const soundsDirExists = await this.checkFileExists(this.getPath('sounds'));
         if (!soundsDirExists.exists) {
             this.showDirectoryMissingNotification('sounds');
             return false;
         }
         
         // Check for soundtrack directory
-        const soundtrackDirExists = await this.checkFileExists('sounds/soundtrack');
+        const soundtrackDirExists = await this.checkFileExists(this.getPath('sounds/soundtrack'));
         if (!soundtrackDirExists.exists) {
             this.showDirectoryMissingNotification('sounds/soundtrack');
         }
@@ -210,13 +217,13 @@ export class AudioManager {
             
             // Directly use the exact soundtrack files from the user's folder
             const soundtrackFiles = [
-                'sounds/soundtrack/The Sound of Lightyears.wav',
-                'sounds/soundtrack/Aurora Drifts.wav',
-                'sounds/soundtrack/Tidal Lock.wav',
-                'sounds/soundtrack/Solar Drift.wav',
-                'sounds/soundtrack/Orbital Resonance.wav',
-                'sounds/soundtrack/Starlight Trails.wav',
-                'sounds/soundtrack/Orbit Bloom.wav'
+                this.getPath('sounds/soundtrack/The Sound of Lightyears.wav'),
+                this.getPath('sounds/soundtrack/Aurora Drifts.wav'),
+                this.getPath('sounds/soundtrack/Tidal Lock.wav'),
+                this.getPath('sounds/soundtrack/Solar Drift.wav'),
+                this.getPath('sounds/soundtrack/Orbital Resonance.wav'),
+                this.getPath('sounds/soundtrack/Starlight Trails.wav'),
+                this.getPath('sounds/soundtrack/Orbit Bloom.wav')
             ];
             
             console.log(`Loading ${soundtrackFiles.length} soundtrack files...`);
@@ -246,6 +253,11 @@ export class AudioManager {
         } catch (err) {
             return { path, exists: false };
         }
+    }
+    
+    // Helper method to handle paths correctly for both local and GitHub Pages deployment
+    getPath(relativePath) {
+        return getAbsolutePath(relativePath);
     }
     
     // Fisher-Yates shuffle algorithm for arrays

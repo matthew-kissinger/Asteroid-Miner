@@ -1,9 +1,10 @@
 // starMap.js - Handles the star map UI for interstellar travel
 
 export class StarMap {
-    constructor(starSystemGenerator, dockingSystem) {
+    constructor(starSystemGenerator, dockingSystem, mothershipInterface) {
         this.starSystemGenerator = starSystemGenerator;
         this.dockingSystem = dockingSystem;
+        this.mothershipInterface = mothershipInterface;
         this.isVisible = false;
         this.selectedSystem = null;
         this.isTraveling = false;
@@ -542,6 +543,11 @@ export class StarMap {
         if (starMap) {
             starMap.style.display = 'none';
             this.isVisible = false;
+            
+            // Show the mothership UI when returning from star map
+            if (this.mothershipInterface) {
+                this.mothershipInterface.showMothershipUI();
+            }
         }
     }
     

@@ -26,8 +26,8 @@ export class UI {
         this.gameOverScreen = new GameOverScreen();
         this.controlsMenu = new ControlsMenu();
         
-        // Initialize star map (requires environment and docking system)
-        this.starMap = new StarMap(this.environment.starSystemGenerator, null);
+        // Initialize star map (requires environment, docking system, and mothership interface)
+        this.starMap = new StarMap(this.environment.starSystemGenerator, null, this.mothershipInterface);
         
         // Initialize Blackjack game (will be fully initialized after audio is set)
         this.blackjackGame = null;
