@@ -5,20 +5,20 @@ const textureLoader = new THREE.TextureLoader();
 
 // Load all planet textures
 const planetTextures = {
-    mercury: textureLoader.load('/assets/2k_mercury.jpg'),
+    mercury: textureLoader.load('./assets/2k_mercury.jpg'),
     venus: {
-        surface: textureLoader.load('/assets/2k_venus_surface.jpg'),
-        atmosphere: textureLoader.load('/assets/2k_venus_atmosphere.jpg')
+        surface: textureLoader.load('./assets/2k_venus_surface.jpg'),
+        atmosphere: textureLoader.load('./assets/2k_venus_atmosphere.jpg')
     },
-    earth: textureLoader.load('/assets/2k_earth_daymap.jpg'),
-    mars: textureLoader.load('/assets/2k_mars.jpg'),
-    jupiter: textureLoader.load('/assets/2k_jupiter.jpg'),
+    earth: textureLoader.load('./assets/2k_earth_daymap.jpg'),
+    mars: textureLoader.load('./assets/2k_mars.jpg'),
+    jupiter: textureLoader.load('./assets/2k_jupiter.jpg'),
     saturn: {
-        surface: textureLoader.load('/assets/2k_saturn.jpg'),
-        rings: textureLoader.load('/assets/2k_saturn_ring_alpha.png')
+        surface: textureLoader.load('./assets/2k_saturn.jpg'),
+        rings: textureLoader.load('./assets/2k_saturn_ring_alpha.png')
     },
-    uranus: textureLoader.load('/assets/2k_uranus.jpg'),
-    neptune: textureLoader.load('/assets/2k_neptune.jpg')
+    uranus: textureLoader.load('./assets/2k_uranus.jpg'),
+    neptune: textureLoader.load('./assets/2k_neptune.jpg')
 };
 
 export class Planets {

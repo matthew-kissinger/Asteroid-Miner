@@ -10,7 +10,7 @@ export class Skybox {
         this.textureLoader = new THREE.TextureLoader();
         
         // Load the Milky Way texture
-        this.milkyWayTexture = this.textureLoader.load('/assets/2k_stars_milky_way.jpg');
+        this.milkyWayTexture = this.textureLoader.load('./assets/2k_stars_milky_way.jpg');
         this.milkyWayTexture.encoding = THREE.sRGBEncoding;
         
         // Store initial parameters for the Solar System
