@@ -1,0 +1,1089 @@
+/**
+ * Combat module - Handles all combat-related functionality
+ * 
+ * This module manages particle cannon firing, projectile creation, and combat logic.
+ * 
+ * IMPORTANT: As of the latest update, this module directly handles all enemy destruction
+ * when projectiles are fired. The collision detection and enemy destruction functionality
+ * previously handled by CollisionSystem and ParticleCannonSystem has been moved here for
+ * reliability, as there were issues with the event-based approach.
+ */
+
+import { World } from '../core/world.js';
+import { CombatSystem } from '../systems/combat/combatSystem.js';
+import { EnemySystem } from '../systems/combat/enemySystem.js';
+import { RenderSystem } from '../systems/rendering/renderSystem.js';
+import { CollisionSystem } from '../systems/physics/collisionSystem.js'; // Import CollisionSystem
+import { VisualEffectsSystem } from '../systems/rendering/visualEffectsSystem.js'; // Import VisualEffectsSystem
+import { TrailSystem } from '../systems/rendering/trailSystem.js';
+
+export class Combat {
+    constructor(scene, spaceship) {
+        console.log("Initializing combat systems...");
+        
+        this.scene = scene;
+        this.spaceship = spaceship;
+        
+        // Projectile properties
+        this.projectiles = [];
+        this.projectileSpeed = 4000;     // Increased speed (compromise between 1000 and 8000)
+        this.projectileLifespan = 2500; // milliseconds - increased lifetime
+        
+        // Weapon properties
+        this.isFiring = false;
+        this.fireRate = 3; // shots per second (compromise between 2 and 5)
+        this.lastShotTime = 0;
+        this.cooldown = 1000 / this.fireRate; // milliseconds between shots
+        
+        // Combat properties
+        this.projectileDamage = 20; // Standard damage per projectile hit
+        
+        // Initialize ECS world for advanced combat systems
+        // This needs to be initialized asynchronously, but constructors can't be async
+        // So we'll just kick off the initialization and let it complete in the background
+        this.initializeECSWorld();
+        
+        console.log("Combat systems initialized");
+    }
+    
+    /**
+     * Initialize the ECS world asynchronously
+     * This is called from the constructor and runs in the background
+     */
+    async initializeECSWorld() {
+        try {
+            await this.setupECSWorld();
+            console.log("ECS world initialization complete");
+        } catch (error) {
+            console.error("Error initializing ECS world:", error);
+        }
+    }
+    
+    /**
+     * Set up the ECS world and register combat systems
+     */
+    async setupECSWorld() {
+        // Create a new ECS world - use window.mainMessageBus if available for unified messaging
+        this.world = new World(window.mainMessageBus);
+        console.log("Combat: Created world with messageBus: ", 
+                    this.world.messageBus === window.mainMessageBus ? "Using shared messageBus" : "Created new messageBus");
+        
+        // Store scene reference in world for systems that need it
+        this.world.scene = this.scene;
+        
+        // Log scene reference for debugging
+        console.log(`Set scene reference in ECS world for enemy rendering:`, 
+                   this.scene ? "Scene available" : "No scene available");
+        
+        // Register combat systems
+        console.log("Registering combat systems with ECS world...");
+        
+        // Register the combat system
+        this.combatSystem = new CombatSystem(this.world);
+        this.world.registerSystem(this.combatSystem);
+        
+        // Register the enemy system
+        this.enemySystem = new EnemySystem(this.world);
+        this.world.registerSystem(this.enemySystem);
+        
+        // Register the trail system for visual effects
+        this.trailSystem = new TrailSystem(this.world);
+        this.world.registerSystem(this.trailSystem);
+        
+        // Add trail system to window.game for global access if game object exists
+        if (window.game) {
+            window.game.trailSystem = this.trailSystem;
+            console.log("Registered trail system with window.game for global access");
+        }
+        
+        // Register the render system - this is critical for making meshes visible
+        // Use the scene's camera reference if available
+        const camera = this.scene.camera;
+        
+        if (!camera) {
+            console.error("No camera found on scene, enemies may not be visible");
+        }
+        
+        // Log camera reference for debugging
+        console.log(`Camera reference for RenderSystem: ${camera ? "Available" : "Missing"}`);
+        
+        // Note: We're only passing the scene and camera, not the renderer
+        // This avoids the issues with trying to call render() from the RenderSystem
+        this.renderSystem = new RenderSystem(this.world, this.scene, camera);
+        this.world.registerSystem(this.renderSystem);
+        
+        // CRITICAL FIX: Register the CollisionSystem - this was missing!
+        console.log("Registering CollisionSystem with the world...");
+        this.collisionSystem = new CollisionSystem(this.world);
+        this.world.registerSystem(this.collisionSystem);
+        console.log("CollisionSystem registered and active!");
+        
+        // Register the new VisualEffectsSystem
+        console.log("Registering VisualEffectsSystem with the world...");
+        this.visualEffectsSystem = new VisualEffectsSystem(this.world);
+        this.world.registerSystem(this.visualEffectsSystem);
+        console.log("VisualEffectsSystem registered and active!");
+        
+        // Set reference to this world in the scene for cross-component access
+        if (this.scene) {
+            this.scene.ecsWorld = this.world;
+            console.log("Set ECS world reference in scene for cross-system access");
+        }
+        
+        // Initialize the world
+        this.world.initialize();
+        
+        // Create player reference entity so enemies can target it
+        await this.createPlayerReferenceEntity();
+        
+        console.log("ECS combat systems registered and initialized");
+    }
+    
+    /**
+     * Create a player reference entity in the ECS world
+     * This allows enemies and other systems to interact with the player
+     */
+    async createPlayerReferenceEntity() {
+        if (!this.world || !this.spaceship) return;
+        
+        try {
+            // Create player entity
+            const playerEntity = this.world.createEntity('player');
+            playerEntity.addTag('player');
+            
+            // Import needed components
+            const { TransformComponent } = await import('../components/transform.js');
+            const { HealthComponent } = await import('../components/combat/healthComponent.js');
+            
+            // Add transform component linked to spaceship position
+            const transform = new TransformComponent(this.spaceship.mesh.position.clone());
+            playerEntity.addComponent(transform);
+            
+            // Add health component
+            const health = new HealthComponent(100, 50); // 100 health, 50 shield
+            playerEntity.addComponent(health);
+            
+            // Store reference to player entity
+            this.playerEntity = playerEntity;
+            
+            // Connect spaceship to entity destruction events if available
+            if (this.spaceship && typeof this.spaceship.subscribeToDestructionEvents === 'function') {
+                this.spaceship.subscribeToDestructionEvents(this.world.messageBus);
+            }
+            
+            console.log("Created player reference entity in ECS world with ID:", playerEntity.id);
+        } catch (error) {
+            console.error("Error creating player reference entity:", error);
+        }
+    }
+    
+    /**
+     * Update all projectiles and handle firing logic
+     * @param {number} deltaTime Time since last update in seconds
+     */
+    update(deltaTime) {
+        // Skip if disabled
+        if (!this.scene || !this.spaceship) return;
+        
+        // Update the player reference entity position
+        this.updatePlayerReference();
+        
+        // Update the spaceship health from ECS
+        this.updateSpaceshipHealth();
+        
+        // Update all active projectiles
+        this.updateProjectiles(deltaTime);
+        
+        // Handle firing weapons
+        if (this.isFiring && !this.spaceship.isDocked) {
+            this.fireParticleCannon();
+        }
+        
+        // Update the ECS world with the current delta time
+        if (this.world) {
+            this.world.update(deltaTime);
+        }
+    }
+    
+    /**
+     * Update the player reference entity with the current spaceship position
+     */
+    updatePlayerReference() {
+        // Skip if missing references
+        if (!this.world || !this.spaceship || !this.playerEntity) return;
+        
+        // Get the player entity
+        const playerEntity = this.world.getEntity(this.playerEntity.id);
+        
+        // If entity was somehow lost, recreate it
+        if (!playerEntity) {
+            console.warn("Player entity lost, recreating...");
+            this.createPlayerReferenceEntity();
+            return;
+        }
+        
+        // Update transform component with current spaceship position
+        const transform = playerEntity.getComponent('TransformComponent');
+        if (transform && this.spaceship.mesh) {
+            // Update position
+            transform.position.copy(this.spaceship.mesh.position);
+            
+            // Update rotation
+            transform.rotation.copy(this.spaceship.mesh.rotation);
+            transform.quaternion.copy(this.spaceship.mesh.quaternion);
+        }
+        
+        // Update health component, BUT BE CAREFUL not to overwrite damage
+        const health = playerEntity.getComponent('HealthComponent');
+        if (health) {
+            // IMPORTANT: Don't blindly overwrite health values from spaceship
+            
+            // Only update health if the spaceship hull has changed and is LOWER than the current
+            // health component value - this means damage was applied directly to the spaceship
+            if (this.spaceship.hull < health.health) {
+                // Spaceship lost health, update the health component
+                health.health = this.spaceship.hull;
+                console.log(`Updating health component from spaceship hull value: ${health.health}`);
+            }
+            
+            // Only update shield if the spaceship shield has changed and is LOWER than the current
+            // shield component value - this means damage was applied directly to the spaceship
+            if (this.spaceship.shield < health.shield) {
+                // Spaceship lost shield, update the health component
+                health.shield = this.spaceship.shield;
+                console.log(`Updating health component from spaceship shield value: ${health.shield}`);
+            }
+            
+            // These should always be in sync
+            health.maxHealth = this.spaceship.maxHull;
+            health.maxShield = this.spaceship.maxShield;
+        }
+    }
+    
+    /**
+     * Sync the spaceship hull/shield with the player entity's HealthComponent
+     */
+    updateSpaceshipHealth() {
+        if (!this.playerEntity || !this.spaceship) return;
+        
+        // Get health component
+        const health = this.playerEntity.getComponent('HealthComponent');
+        if (health) {
+            // IMPORTANT: Only update spaceship health if the health component shows MORE damage
+            // (less health) than the spaceship currently has - this means damage was applied to the component
+            if (health.health < this.spaceship.hull) {
+                console.log(`Damage detected in health component: ${health.health} (was ${this.spaceship.hull})`);
+                this.spaceship.hull = health.health;
+            }
+            
+            // Similarly for shield
+            if (health.shield < this.spaceship.shield) {
+                console.log(`Shield damage detected in health component: ${health.shield} (was ${this.spaceship.shield})`);
+                this.spaceship.shield = health.shield;
+            }
+            
+            // Check if health indicates the ship is destroyed
+            if (health.isDestroyed && !this.spaceship.isDestroyed) {
+                console.log("Health component indicates player is destroyed - updating spaceship state");
+                this.spaceship.isDestroyed = true;
+                
+                // Call handle destruction for visual effects
+                if (typeof this.spaceship.handleDestruction === 'function') {
+                    this.spaceship.handleDestruction();
+                }
+            }
+            
+            // Check for low health and update spaceship directly
+            if (health.health <= 0 && !this.spaceship.isDestroyed) {
+                console.log("Player health is zero - marking spaceship as destroyed");
+                this.spaceship.isDestroyed = true;
+                
+                // Call handle destruction for visual effects
+                if (typeof this.spaceship.handleDestruction === 'function') {
+                    this.spaceship.handleDestruction();
+                }
+                
+                // Force game over with a "pwned by space alien" message
+                if (window.game) {
+                    console.log("FORCING GAME OVER FROM COMBAT MODULE!");
+                    window.game.gameOver("You were pwned by a space alien!");
+                }
+            }
+        }
+    }
+    
+    /**
+     * Update all projectile positions
+     * @param {number} deltaTime Time since last update in seconds
+     */
+    updateProjectiles(deltaTime) {
+        // Update existing projectiles
+        for (let i = this.projectiles.length - 1; i >= 0; i--) {
+            const projectile = this.projectiles[i];
+            
+            // Move projectile forward along its direction
+            projectile.position.add(projectile.velocity.clone().multiplyScalar(deltaTime));
+            
+            // Update associated entity in ECS world
+            if (projectile.userData && projectile.userData.entityId && this.world) {
+                const entity = this.world.getEntity(projectile.userData.entityId);
+                if (entity) {
+                    // If entity has custom update method, call it
+                    if (typeof entity.update === 'function') {
+                        entity.update(deltaTime);
+                    }
+                    
+                    // Otherwise manually update transform to match projectile
+                    else {
+                        const transform = entity.getComponent('TransformComponent');
+                        if (transform) {
+                            transform.position.copy(projectile.position);
+                            transform.needsUpdate = true;
+                        }
+                        
+                        const rigidbody = entity.getComponent('RigidbodyComponent');
+                        if (rigidbody) {
+                            rigidbody.velocity.copy(projectile.velocity);
+                        }
+                    }
+                }
+            }
+            
+            // Check if projectile has expired
+            if (performance.now() - projectile.creationTime > this.projectileLifespan) {
+                // Proper cleanup for our new trail system
+                if (projectile.userData.trail) {
+                    // Remove all trail particles to prevent memory leaks
+                    if (projectile.userData.trailParticles) {
+                        for (const particle of projectile.userData.trailParticles) {
+                            if (particle.material) {
+                                particle.material.dispose();
+                            }
+                            if (particle.geometry) {
+                                particle.geometry.dispose();
+                            }
+                            projectile.userData.trail.remove(particle);
+                        }
+                    }
+                    projectile.remove(projectile.userData.trail);
+                }
+                
+                // Dispose of projectile resources
+                if (projectile.material) {
+                    projectile.material.dispose();
+                }
+                if (projectile.geometry) {
+                    projectile.geometry.dispose();
+                }
+                
+                // Clean up glow effect if it exists
+                if (projectile.children.length > 0) {
+                    for (const child of projectile.children) {
+                        if (child.material) {
+                            child.material.dispose();
+                        }
+                        if (child.geometry) {
+                            child.geometry.dispose();
+                        }
+                        projectile.remove(child);
+                    }
+                }
+                
+                // Remove associated entity from ECS world
+                if (projectile.userData && projectile.userData.entityId && this.world) {
+                    try {
+                        this.world.destroyEntity(projectile.userData.entityId);
+                        console.log(`Removed expired projectile entity ${projectile.userData.entityId}`);
+                    } catch (error) {
+                        console.error("Error removing projectile entity:", error);
+                    }
+                }
+                
+                // Remove from scene and list
+                this.scene.remove(projectile);
+                this.projectiles.splice(i, 1);
+            }
+        }
+    }
+    
+    /**
+     * Set firing state for the particle cannon
+     * @param {boolean} isFiring Whether the cannon should be firing
+     */
+    setFiring(isFiring) {
+        this.isFiring = isFiring;
+        console.log(`Particle cannon firing state changed: ${isFiring}`);
+    }
+    
+    /**
+     * Fire the particle cannon, creating two projectiles
+     */
+    fireParticleCannon() {
+        if (!this.spaceship || !this.spaceship.mesh) return false;
+        
+        // Check cooldown - prevent firing too rapidly
+        const currentTime = performance.now();
+        if (currentTime - this.lastShotTime < this.cooldown) {
+            // Still in cooldown period
+            return false;
+        }
+        
+        console.log("*** COMBAT MODULE: Firing particle cannon ***");
+        
+        // Update last shot time for cooldown tracking
+        this.lastShotTime = currentTime;
+        
+        // Get ship transform data
+        const shipPosition = this.spaceship.mesh.position.clone();
+        
+        // IMPROVED AIMING: Use raycasting from camera through crosshair
+        // Create a ray from the camera through the center of the screen (crosshair)
+        const camera = this.scene.camera;
+        if (!camera) {
+            console.error("Camera not available for aiming");
+            return false;
+        }
+        
+        // Create a raycaster from camera center (crosshair position)
+        const raycaster = new THREE.Raycaster();
+        // Vector representing center of the screen (crosshair)
+        const screenCenter = new THREE.Vector2(0, 0);
+        
+        // Set the raycaster from camera through crosshair
+        raycaster.setFromCamera(screenCenter, camera);
+        
+        // Get the ray direction in world space
+        const direction = raycaster.ray.direction.clone().normalize();
+        
+        // Log the new direction approach
+        console.log(`Projectile direction (using camera ray): ${direction.x.toFixed(2)}, ${direction.y.toFixed(2)}, ${direction.z.toFixed(2)}`);
+        
+        // Calculate right vector for offset
+        const right = new THREE.Vector3().crossVectors(direction, new THREE.Vector3(0, 1, 0)).normalize();
+        
+        // Position offsets for dual projectiles
+        const leftOffset = new THREE.Vector3().copy(right).multiplyScalar(-1.5);
+        const rightOffset = new THREE.Vector3().copy(right).multiplyScalar(1.5);
+        
+        // Add slight forward offset so projectiles spawn in front of ship
+        const forwardOffset = new THREE.Vector3().copy(direction).multiplyScalar(7);
+        
+        // Create left projectile
+        const leftPosition = new THREE.Vector3().copy(shipPosition)
+            .add(leftOffset)
+            .add(forwardOffset);
+        const leftProjectile = this.createProjectile(leftPosition, direction);
+        
+        // Create right projectile
+        const rightPosition = new THREE.Vector3().copy(shipPosition)
+            .add(rightOffset)
+            .add(forwardOffset);
+        const rightProjectile = this.createProjectile(rightPosition, direction);
+        
+        // Play projectile sound
+        if (window.game && window.game.audio) {
+            console.log("Playing ASMR projectile sound for particle cannon");
+            window.game.audio.playSound('projectile');
+        }
+        
+        // DIRECT ENEMY CHECK - Find any enemies in the scene and check for direct hits
+        console.log("DIRECT ENEMY CHECK: Searching for enemies to destroy");
+        if (this.world && this.world.entityManager) {
+            let enemies = [];
+            
+            // Try to get enemies from tag map
+            try {
+                if (this.world.entityManager.entitiesByTag && this.world.entityManager.entitiesByTag.get('enemy')) {
+                    enemies = this.world.entityManager.entitiesByTag.get('enemy');
+                    console.log(`Found ${enemies.length} enemies via tag map`);
+                } else {
+                    // Fallback to checking all entities
+                    console.log("No enemy tag map, checking all entities");
+                    const allEntities = Array.from(this.world.entityManager.entities.values());
+                    for (const entity of allEntities) {
+                        if (entity.hasTag && entity.hasTag('enemy')) {
+                            enemies.push(entity);
+                        } else if (entity.hasComponent && entity.hasComponent('EnemyAIComponent')) {
+                            enemies.push(entity);
+                        }
+                    }
+                    console.log(`Found ${enemies.length} enemies by checking all entities`);
+                }
+            } catch (error) {
+                console.error("Error finding enemies:", error);
+            }
+            
+            // Check for collision with each enemy - using raycasting for better precision
+            for (const enemy of enemies) {
+                if (!enemy) continue;
+                
+                try {
+                    // Get enemy position
+                    let enemyPosition = null;
+                    const enemyTransform = enemy.getComponent('TransformComponent');
+                    if (enemyTransform) {
+                        enemyPosition = enemyTransform.position;
+                    } else {
+                        console.log("Enemy missing transform component");
+                        continue;
+                    }
+                    
+                    // Get enemy collision radius
+                    let enemyRadius = 20; // Default radius
+                    const enemyRigidbody = enemy.getComponent('RigidbodyComponent');
+                    if (enemyRigidbody && enemyRigidbody.collisionRadius) {
+                        enemyRadius = enemyRigidbody.collisionRadius;
+                    }
+                    
+                    // Calculate distance from ship to enemy
+                    const distanceToEnemy = shipPosition.distanceTo(enemyPosition);
+                    console.log(`Enemy ${enemy.id} at distance: ${distanceToEnemy.toFixed(0)}`);
+                    
+                    // IMPROVED HIT DETECTION: Check if ray intersects enemy sphere
+                    // Calculate distance from ray to enemy center
+                    const rayToEnemyDistance = raycaster.ray.distanceToPoint(enemyPosition);
+                    
+                    // If distance is less than enemy radius, we have a hit
+                    if (rayToEnemyDistance < enemyRadius) {
+                        console.log(`*** RAY HIT on enemy ${enemy.id}! Ray distance: ${rayToEnemyDistance.toFixed(2)}, Enemy radius: ${enemyRadius.toFixed(2)} ***`);
+                        
+                        // Force destroy enemy via all possible methods
+                        // Method 1: Apply damage via health component
+                        const health = enemy.getComponent('HealthComponent');
+                        if (health) {
+                            console.log("Applying damage to enemy");
+                            // Use the standardized projectile damage value
+                            const damageResult = health.applyDamage(this.projectileDamage, 'particle', this.playerEntity);
+                            
+                            // Check if the damage was enough to destroy the enemy
+                            if (health.health <= 0) {
+                                console.log("Enemy health depleted, destroying entity");
+                                health.isDestroyed = true;
+                                
+                                // Create explosion effect for destroyed enemy
+                                const enemyTransform = enemy.getComponent('TransformComponent');
+                                if (enemyTransform) {
+                                    this.createExplosionEffect(enemyTransform.position.clone());
+                                    
+                                    // Play explosion sound if available
+                                    if (window.game && window.game.audio) {
+                                        window.game.audio.playSound('explosion');
+                                    }
+                                }
+                                
+                                // Method 2: Direct entity destruction only if health is depleted
+                                try {
+                                    this.world.destroyEntity(enemy.id);
+                                    console.log("Enemy destroyed via world.destroyEntity");
+                                } catch (e) {
+                                    console.error("Failed to destroy enemy:", e);
+                                }
+                            } else {
+                                console.log(`Enemy hit but survived with ${health.health}/${health.maxHealth} health remaining`);
+                                // Non-lethal hit - no visual effect
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error checking enemy collision:", error);
+                }
+            }
+        } else {
+            console.log("No world or entityManager available for enemy check");
+        }
+        
+        // Return true to indicate successful firing
+        return true;
+    }
+    
+    /**
+     * Create an explosion effect at the given position
+     * @param {THREE.Vector3} position Position for the explosion
+     * @param {number} duration Duration of the explosion in milliseconds
+     * @param {boolean} isVisible Whether the explosion should be visible
+     */
+    createExplosionEffect(position, duration = 1000, isVisible = true) {
+        try {
+            // Create particle geometry for explosion
+            const particleCount = 200;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            
+            // Randomize particle positions in a sphere
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                positions[i3] = (Math.random() - 0.5) * 100;
+                positions[i3 + 1] = (Math.random() - 0.5) * 100;
+                positions[i3 + 2] = (Math.random() - 0.5) * 100;
+            }
+            
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            // Create bright material with additive blending for glow effect
+            const material = new THREE.PointsMaterial({
+                color: 0xff9900,
+                size: 10,
+                transparent: true,
+                opacity: 1,
+                blending: THREE.AdditiveBlending
+            });
+            
+            // Create particle system
+            const explosion = new THREE.Points(geometry, material);
+            explosion.position.copy(position);
+            this.scene.add(explosion);
+            
+            console.log("Created explosion effect at:", position.x.toFixed(0), position.y.toFixed(0), position.z.toFixed(0));
+            
+            // Automatically remove after animation
+            const startTime = Date.now();
+            
+            // Animation function
+            const animateExplosion = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / duration;
+                
+                if (elapsed < duration) {
+                    // Calculate animation progress (0-1)
+                    const progress = elapsed / duration;
+                    
+                    // Expand particles outward
+                    for (let i = 0; i < particleCount; i++) {
+                        const i3 = i * 3;
+                        const x = positions[i3] * (1 + progress * 5);
+                        const y = positions[i3 + 1] * (1 + progress * 5);
+                        const z = positions[i3 + 2] * (1 + progress * 5);
+                        
+                        explosion.geometry.attributes.position.array[i3] = x;
+                        explosion.geometry.attributes.position.array[i3 + 1] = y;
+                        explosion.geometry.attributes.position.array[i3 + 2] = z;
+                    }
+                    
+                    explosion.geometry.attributes.position.needsUpdate = true;
+                    
+                    // Fade out
+                    material.opacity = 1 - progress;
+                    
+                    // Continue animation
+                    requestAnimationFrame(animateExplosion);
+                } else {
+                    // Remove from scene when done
+                    this.scene.remove(explosion);
+                    console.log("Explosion animation complete");
+                }
+            };
+            
+            // Start animation
+            animateExplosion();
+            
+            // Play explosion sound
+            if (window.game && window.game.audio) {
+                window.game.audio.playSound('explosion');
+            }
+        } catch (error) {
+            console.error("Error creating explosion effect:", error);
+        }
+    }
+    
+    /**
+     * Create a single projectile
+     * @param {THREE.Vector3} position Spawn position
+     * @param {THREE.Vector3} direction Direction vector
+     */
+    createProjectile(position, direction) {
+        // Create projectile geometry and material with improved visuals
+        const geometry = new THREE.SphereGeometry(0.6, 12, 12); // Better quality sphere
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 5,
+            metalness: 0.7,
+            roughness: 0.3
+        });
+        
+        // Add glow effect
+        const glowGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.4,
+            blending: THREE.AdditiveBlending
+        });
+        const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+        
+        // Create mesh
+        const projectile = new THREE.Mesh(geometry, material);
+        projectile.position.copy(position);
+        projectile.add(glowMesh); // Add glow as child
+        
+        // Set velocity based on direction and speed
+        projectile.velocity = direction.clone().multiplyScalar(this.projectileSpeed);
+        
+        // Mark projectile as player's to prevent self-damage
+        projectile.userData.isPlayerProjectile = true;
+        projectile.userData.sourceId = 'player';
+        projectile.userData.damage = this.projectileDamage;
+        
+        // Add a dynamic trail
+        this.addProjectileTrail(projectile, direction);
+        
+        // Add to scene
+        this.scene.add(projectile);
+        
+        // Store creation time for lifespan tracking
+        projectile.creationTime = performance.now();
+        
+        // Add to projectiles array
+        this.projectiles.push(projectile);
+        
+        // IMPORTANT: Register the projectile in the ECS world
+        // This is critical for collision detection
+        if (this.world) {
+            try {
+                // Create projectile entity
+                const projectileEntity = this.world.createEntity('projectile_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
+                
+                // Add tags for identification
+                projectileEntity.addTag('projectile');
+                projectileEntity.addTag('playerProjectile');
+                projectileEntity.addTag('particleProjectile');
+                
+                // Store damage information
+                projectileEntity.userData = { 
+                    mesh: projectile,
+                    damage: this.projectileDamage,
+                    source: 'player',
+                    attackType: 'particle'
+                };
+                
+                // Link mesh to entity for reference
+                projectile.userData.entityId = projectileEntity.id;
+                
+                // Add required components directly with proper imports
+                try {
+                    // First option: Use component registry
+                    if (this.world.componentRegistry) {
+                        const TransformComponent = this.world.componentRegistry.getComponentClass('TransformComponent');
+                        const RigidbodyComponent = this.world.componentRegistry.getComponentClass('RigidbodyComponent');
+                        
+                        // Add transform component
+                        if (TransformComponent) {
+                            const transform = new TransformComponent(position.clone());
+                            transform.needsUpdate = true;
+                            projectileEntity.addComponent(transform);
+                            console.log(`Added TransformComponent to projectile ${projectileEntity.id}`);
+                        } else {
+                            console.error("TransformComponent class not available in registry");
+                        }
+                        
+                        // Add rigidbody component
+                        if (RigidbodyComponent) {
+                            const rigidbody = new RigidbodyComponent(1); // 1 = mass
+                            rigidbody.velocity = direction.clone().multiplyScalar(this.projectileSpeed);
+                            rigidbody.collisionRadius = 5; // Increased collision radius
+                            rigidbody.useGravity = false;
+                            rigidbody.drag = 0;
+                            projectileEntity.addComponent(rigidbody);
+                            console.log(`Added RigidbodyComponent to projectile ${projectileEntity.id}`);
+                        } else {
+                            console.error("RigidbodyComponent class not available in registry");
+                        }
+                    } 
+                    // Second option: Direct dynamic imports
+                    else {
+                        console.log("Attempting direct component imports for projectile");
+                        
+                        // Dynamic imports as fallback
+                        Promise.all([
+                            import('../components/transform.js'),
+                            import('../components/physics/rigidbody.js')
+                        ]).then(([transformModule, rigidbodyModule]) => {
+                            // Add transform
+                            const transform = new transformModule.TransformComponent(position.clone());
+                            transform.needsUpdate = true;
+                            projectileEntity.addComponent(transform);
+                            
+                            // Add rigidbody
+                            const rigidbody = new rigidbodyModule.RigidbodyComponent(1);
+                            rigidbody.velocity = direction.clone().multiplyScalar(this.projectileSpeed);
+                            rigidbody.collisionRadius = 5;
+                            rigidbody.useGravity = false;
+                            rigidbody.drag = 0;
+                            projectileEntity.addComponent(rigidbody);
+                            
+                            console.log(`Added components to projectile ${projectileEntity.id} via dynamic imports`);
+                        }).catch(error => {
+                            console.error("Failed to import component modules:", error);
+                        });
+                    }
+                    
+                    // Verify components were added
+                    setTimeout(() => {
+                        const hasTransform = projectileEntity.hasComponent('TransformComponent');
+                        const hasRigidbody = projectileEntity.hasComponent('RigidbodyComponent');
+                        console.log(`Projectile component verification: Transform=${hasTransform}, Rigidbody=${hasRigidbody}`);
+                    }, 50);
+                    
+                } catch (componentError) {
+                    console.error("Error adding components to projectile:", componentError);
+                }
+                
+                // Custom update function for this entity to sync with mesh
+                projectileEntity.update = (deltaTime) => {
+                    // Update transform to match mesh position
+                    const transform = projectileEntity.getComponent('TransformComponent');
+                    if (transform && projectile) {
+                        transform.position.copy(projectile.position);
+                        transform.needsUpdate = true;
+                    }
+                    
+                    // Update rigidbody to match mesh velocity
+                    const rigidbody = projectileEntity.getComponent('RigidbodyComponent');
+                    if (rigidbody && projectile && projectile.velocity) {
+                        rigidbody.velocity.copy(projectile.velocity);
+                    }
+                };
+                
+                console.log(`Created projectile entity ${projectileEntity.id} with proper components`);
+                
+                // Signal projectile creation to combat system
+                this.world.messageBus.publish('combat.projectileCreated', {
+                    projectile: projectileEntity,
+                    position: position.clone(),
+                    direction: direction.clone(),
+                    speed: this.projectileSpeed
+                });
+                
+            } catch (error) {
+                console.error("Error creating projectile entity:", error);
+            }
+        }
+        
+        return projectile;
+    }
+    
+    /**
+     * Enable or disable all combat systems
+     * @param {boolean} enabled Whether combat systems should be enabled
+     */
+    setEnabled(enabled) {
+        // If disabling, clear all projectiles
+        if (!enabled) {
+            this.clearAllProjectiles();
+            
+            // Disable ECS systems
+            if (this.world) {
+                if (this.enemySystem) {
+                    this.enemySystem.enabled = false;
+                }
+                if (this.combatSystem) {
+                    this.combatSystem.enabled = false;
+                }
+            }
+        } else {
+            // Enable ECS systems
+            if (this.world) {
+                if (this.enemySystem) {
+                    this.enemySystem.enabled = true;
+                }
+                if (this.combatSystem) {
+                    this.combatSystem.enabled = true;
+                }
+            }
+        }
+        
+        console.log(`Combat systems ${enabled ? 'enabled' : 'disabled'}`);
+    }
+    
+    /**
+     * Add a dynamic particle trail to a projectile
+     * @param {THREE.Mesh} projectile The projectile mesh
+     * @param {THREE.Vector3} direction Direction of travel
+     */
+    addProjectileTrail(projectile, direction) {
+        // Create a more dynamic and visually appealing trail
+        
+        // Create trail points
+        const numPoints = 20; // Number of particles in the trail
+        const trailLength = 6.0; // Total length of the trail
+        
+        // Create trail container
+        const trailContainer = new THREE.Object3D();
+        projectile.add(trailContainer);
+        
+        // Create individual trail particles
+        const trailParticles = [];
+        
+        for (let i = 0; i < numPoints; i++) {
+            // Calculate size and position
+            const ratio = i / numPoints;
+            const size = 0.5 * (1 - ratio); // Smaller as we get further from projectile
+            
+            // Create particle geometry
+            const particleGeometry = new THREE.SphereGeometry(size, 8, 8);
+            
+            // Create particle material with glow
+            const particleMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.9 * (1 - ratio), // More transparent further from projectile
+                blending: THREE.AdditiveBlending
+            });
+            
+            // Create particle mesh
+            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+            
+            // Position particle along trail
+            const offset = direction.clone().multiplyScalar(-ratio * trailLength);
+            particle.position.copy(offset);
+            
+            // Store initial values for animation
+            particle.userData.initialOffset = offset.clone();
+            particle.userData.initialSize = size;
+            particle.userData.initialOpacity = particleMaterial.opacity;
+            
+            // Add to trail
+            trailContainer.add(particle);
+            trailParticles.push(particle);
+        }
+        
+        // Store trail reference
+        projectile.userData.trail = trailContainer;
+        projectile.userData.trailParticles = trailParticles;
+        
+        // Set up animation for trail particles
+        const animateTrail = () => {
+            if (!projectile.parent) return; // Stop if projectile is removed
+            
+            // Update each particle
+            for (let i = 0; i < trailParticles.length; i++) {
+                const particle = trailParticles[i];
+                const ratio = i / numPoints;
+                
+                // Create wake effect by slightly moving particles
+                const time = performance.now() * 0.001;
+                const wakeFactor = Math.sin(time * 10 + i) * 0.03;
+                
+                // Calculate perpendicular vectors for movement
+                const perpVector = new THREE.Vector3(-direction.z, 0, direction.x).normalize();
+                perpVector.multiplyScalar(wakeFactor);
+                
+                // Set position with wake effect
+                particle.position.copy(particle.userData.initialOffset).add(perpVector);
+                
+                // Pulse opacity for energy effect
+                const opacityPulse = 0.2 * Math.sin(time * 5 + i * 0.5) + 0.8;
+                particle.material.opacity = particle.userData.initialOpacity * opacityPulse;
+            }
+            
+            // Continue animation
+            requestAnimationFrame(animateTrail);
+        };
+        
+        // Start trail animation
+        animateTrail();
+    }
+    
+    /**
+     * Clear all active projectiles
+     */
+    clearAllProjectiles() {
+        for (const projectile of this.projectiles) {
+            // Clean up all resources for each projectile
+            if (projectile.userData.trail) {
+                // Remove all trail particles
+                if (projectile.userData.trailParticles) {
+                    for (const particle of projectile.userData.trailParticles) {
+                        if (particle.material) {
+                            particle.material.dispose();
+                        }
+                        if (particle.geometry) {
+                            particle.geometry.dispose();
+                        }
+                        projectile.userData.trail.remove(particle);
+                    }
+                }
+                projectile.remove(projectile.userData.trail);
+            }
+            
+            // Dispose of projectile resources
+            if (projectile.material) {
+                projectile.material.dispose();
+            }
+            if (projectile.geometry) {
+                projectile.geometry.dispose();
+            }
+            
+            // Clean up any child objects (like glow effect)
+            if (projectile.children.length > 0) {
+                for (const child of projectile.children) {
+                    if (child.material) {
+                        child.material.dispose();
+                    }
+                    if (child.geometry) {
+                        child.geometry.dispose();
+                    }
+                    projectile.remove(child);
+                }
+            }
+            
+            this.scene.remove(projectile);
+        }
+        this.projectiles = [];
+    }
+    
+    // New method to visualize projectile trajectory
+    createAimingTracer(startPosition, direction, distance = 3000) {
+        // Create a line geometry for the tracer
+        const lineGeometry = new THREE.BufferGeometry();
+        const endPosition = startPosition.clone().add(direction.clone().multiplyScalar(distance));
+        
+        // Create points array to define the line
+        const points = [
+            startPosition.x, startPosition.y, startPosition.z,
+            endPosition.x, endPosition.y, endPosition.z
+        ];
+        
+        // Set the line vertices
+        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+        
+        // Create a bright, pulsing material for the tracer
+        const tracerMaterial = new THREE.LineBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+        
+        // Create the line
+        const tracerLine = new THREE.Line(lineGeometry, tracerMaterial);
+        
+        // Add tracer to scene
+        this.scene.add(tracerLine);
+        
+        // Animate tracer fade-out
+        let opacity = 0.6;
+        const fadeSpeed = 1.5; // Faster fade-out
+        
+        const animateTracer = () => {
+            opacity -= fadeSpeed * 0.016; // Assume 60fps
+            
+            if (opacity <= 0) {
+                // Remove tracer when fully faded
+                this.scene.remove(tracerLine);
+                return;
+            }
+            
+            // Update opacity
+            tracerMaterial.opacity = opacity;
+            
+            // Continue animation
+            requestAnimationFrame(animateTracer);
+        };
+        
+        // Start animation
+        animateTracer();
+        
+        return tracerLine;
+    }
+}

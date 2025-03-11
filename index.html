@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Asteroid Miner</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* UI Styles */
+        .ui-item {
+            margin-bottom: 8px;
+        }
+        
+        .ui-label {
+            display: inline-block;
+            width: 120px;
+            color: #30cfd0;
+        }
+        
+        .ui-value {
+            color: #fff;
+            font-weight: bold;
+        }
+        
+        .help-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #30cfd0;
+            text-align: center;
+        }
+        
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .key {
+            background-color: rgba(48, 207, 208, 0.2);
+            border: 1px solid #30cfd0;
+            border-radius: 4px;
+            padding: 0 5px;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+        
+        .loading-element {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* Star background for initial loading */
+        .star-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #101020 0%, #000000 70%);
+            z-index: -1;
+        }
+        
+        /* Credits */
+        .credits {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 12px;
+            text-align: right;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Star background for loading screen -->
+    <div class="star-bg" id="star-bg"></div>
+    
+    <!-- Three.js will create its own canvas -->
+    
+    <!-- Credits -->
+    <div class="credits">
+        Solar System Asteroid Miner v1.0<br>
+        Built with Three.js
+    </div>
+    
+    <!-- Load Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Three.js Shaders (must load before post-processing) -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/FXAAShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/FilmShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/ColorCorrectionShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/VignetteShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    
+    <!-- Three.js Post-Processing -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    
+    <!-- Load Tone.js for ASMR sound effects -->
+    <script src="https://unpkg.com/tone"></script>
+    
+    <!-- Load the game -->
+    <script type="module" src="js/main.js?cache=202407011"></script>
+    
+    <script>
+        // Generate stars for the loading background
+        document.addEventListener('DOMContentLoaded', function() {
+            const starBg = document.getElementById('star-bg');
+            
+            // Create 100 stars
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.style.position = 'absolute';
+                star.style.width = `${Math.random() * 2 + 1}px`;
+                star.style.height = star.style.width;
+                star.style.backgroundColor = 'white';
+                star.style.borderRadius = '50%';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.opacity = Math.random() * 0.7 + 0.3;
+                star.classList.add('loading-element');
+                
+                // Randomize the animation delay
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                
+                starBg.appendChild(star);
+            }
+            
+            console.log("Stars generated for loading screen");
+        });
+    </script>
+</body>
+</html>
