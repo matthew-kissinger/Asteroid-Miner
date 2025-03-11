@@ -8,23 +8,25 @@
  * @returns {string} - The absolute path adjusted for the current environment
  */
 export function getAbsolutePath(relativePath) {
-    // Handle both local and GitHub Pages environments
-    if (window.location.hostname.includes('github.io') || window.location.hostname.includes('github.com')) {
-        // For GitHub Pages deployments
-        const pathParts = window.location.pathname.split('/');
-        const repoName = pathParts.length > 1 ? pathParts[1] : ''; // e.g., 'Asteroid-Miner'
+    // Log for debugging
+    console.log(`Original path: ${relativePath}`);
+    
+    // For GitHub Pages or any hosted environment
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // Get the base path from the current URL
+        const basePath = window.location.pathname.split('/').slice(0, -1).join('/');
         
-        if (repoName) {
-            // Handle both cases where path may or may not start with a slash
-            const cleanRelativePath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
-            
-            // Check if path already includes repo name
-            if (!cleanRelativePath.startsWith(`/${repoName}/`) && !cleanRelativePath.startsWith(`/${repoName}`)) {
-                return `/${repoName}${cleanRelativePath}`;
-            }
-        }
+        // Remove leading slash from relative path if it exists
+        const cleanPath = relativePath.startsWith('/') ? relativePath.substring(1) : relativePath;
+        
+        // Construct the full path
+        const fullPath = `${basePath}/${cleanPath}`;
+        
+        console.log(`Adjusted path for hosted environment: ${fullPath}`);
+        return fullPath;
     }
     
-    // For local development or if already in correct format
+    // For local development
+    console.log(`Using original path for local environment: ${relativePath}`);
     return relativePath;
 } 

@@ -109,16 +109,18 @@ export class AudioManager {
         // Only check for soundtrack directory since we're generating other sounds
         const soundsDirExists = await this.checkFileExists(this.getPath('sounds'));
         if (!soundsDirExists.exists) {
-            this.showDirectoryMissingNotification('sounds');
-            return false;
+            console.warn("Sounds directory not found, but will attempt to load files directly anyway.");
+            // Removed notification call since sound is working fine
         }
         
         // Check for soundtrack directory
         const soundtrackDirExists = await this.checkFileExists(this.getPath('sounds/soundtrack'));
         if (!soundtrackDirExists.exists) {
-            this.showDirectoryMissingNotification('sounds/soundtrack');
+            console.warn("Soundtrack directory not found, but will attempt to load files directly anyway.");
+            // Removed notification call since sound is working fine
         }
         
+        // Always return true to continue loading process
         return true;
     }
     
@@ -132,23 +134,26 @@ export class AudioManager {
         notification.style.top = '20px';
         notification.style.left = '50%';
         notification.style.transform = 'translateX(-50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
         notification.style.color = '#ff4400';
-        notification.style.padding = '15px 20px';
+        notification.style.padding = '10px 15px';
         notification.style.borderRadius = '5px';
-        notification.style.fontFamily = 'Courier New, monospace';
-        notification.style.fontSize = '14px';
         notification.style.zIndex = '9999';
+        notification.style.fontSize = '14px';
         notification.style.maxWidth = '80%';
         notification.style.textAlign = 'center';
         
+        // Add message
         notification.innerHTML = `
-            <div style="margin-bottom: 10px; font-weight: bold;">Sound Directory Missing</div>
-            <div>Create the <span style="color: #30cfd0;">${directory}</span> directory and add .wav files for sounds.</div>
-            <div style="margin-top: 10px; font-size: 12px; color: #aaa;">Game will continue with synthesized sounds.</div>
+            <div style="margin-bottom: 5px;">
+                <strong>Note:</strong> ${directory} directory not found.
+            </div>
+            <div style="font-size: 12px; color: #aaa;">
+                Game will continue with limited audio. This is normal when running on GitHub Pages.
+            </div>
         `;
         
-        // Add a close button
+        // Add close button
         const closeButton = document.createElement('div');
         closeButton.style.position = 'absolute';
         closeButton.style.top = '5px';
@@ -162,18 +167,18 @@ export class AudioManager {
         // Add to document
         document.body.appendChild(notification);
         
-        // Auto-remove after 10 seconds
+        // Auto-remove after 5 seconds
         setTimeout(() => {
             if (document.body.contains(notification)) {
                 notification.style.opacity = '0';
-                notification.style.transition = 'opacity 1s ease';
+                notification.style.transition = 'opacity 0.5s ease';
                 setTimeout(() => {
                     if (document.body.contains(notification)) {
                         notification.remove();
                     }
-                }, 1000);
+                }, 500);
             }
-        }, 10000);
+        }, 5000);
     }
     
     // Set up a listener to detect the first user interaction
@@ -244,13 +249,22 @@ export class AudioManager {
     
     // Helper method to check if a file exists
     async checkFileExists(path) {
+        console.log(`Checking if file/directory exists: ${path}`);
         try {
-            const response = await fetch(path, { method: 'HEAD' });
+            // Try to fetch the resource
+            const response = await fetch(path, { 
+                method: 'HEAD',
+                cache: 'no-cache' // Avoid caching issues
+            });
+            
+            console.log(`Fetch response for ${path}: status=${response.status}, ok=${response.ok}`);
+            
             return { 
                 path, 
                 exists: response.ok 
             };
         } catch (err) {
+            console.error(`Error checking if file exists (${path}):`, err);
             return { path, exists: false };
         }
     }
@@ -287,9 +301,26 @@ export class AudioManager {
         
         console.log(`Randomized playlist order:`, shuffledFiles.map(file => file.split('/').pop()));
         
+        // Check if any files exist before trying to load them
+        let anyFilesExist = false;
+        for (const file of shuffledFiles) {
+            const fileExists = await this.checkFileExists(file);
+            if (fileExists.exists) {
+                anyFilesExist = true;
+                break;
+            }
+        }
+        
+        if (!anyFilesExist) {
+            console.warn("None of the music files could be found. Using fallback audio.");
+            this.createDummySounds();
+            return;
+        }
+        
         // Load each music track in the randomized order
         for (const file of shuffledFiles) {
             try {
+                console.log(`Attempting to load audio file: ${file}`);
                 const audio = new Audio(file);
                 audio.loop = false; // We'll handle looping manually for playlist functionality
                 audio.volume = this.musicVolume;
@@ -300,6 +331,11 @@ export class AudioManager {
                 // Add error handler
                 audio.addEventListener('error', (e) => {
                     console.error(`Error loading music file ${file}:`, e);
+                });
+                
+                // Add a load event to confirm successful loading
+                audio.addEventListener('canplaythrough', () => {
+                    console.log(`Successfully loaded music file: ${file}`);
                 });
                 
                 this.music.push(audio);
