@@ -1,0 +1,308 @@
+/**
+ * mobile.css - Mobile-specific styles for the game
+ * Applied when the game is loaded on a mobile device
+ */
+
+/* Basic mobile adjustments */
+@media (max-width: 768px) {
+    /* Improve touch targets */
+    button, 
+    select, 
+    input[type="button"], 
+    input[type="submit"] {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px;
+        font-size: 16px;
+    }
+    
+    /* Hide desktop HUD elements */
+    #hud-container {
+        display: none !important;
+    }
+    
+    /* Ensure text readability */
+    body {
+        font-size: 16px;
+    }
+    
+    /* Adjust control instructions for mobile */
+    #pointer-lock-instructions {
+        display: none !important;
+    }
+}
+
+/* Responsive Mothership Terminal */
+@media (max-width: 768px) {
+    /* Main mothership UI container */
+    #mothership-ui {
+        width: 90% !important;
+        max-width: 90vw !important;
+        max-height: 80vh !important;
+        padding: 15px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important; /* Enable smooth scrolling on iOS */
+        touch-action: pan-y !important; /* Enable vertical touch scrolling */
+        overscroll-behavior: contain !important; /* Prevent overscroll effects */
+    }
+    
+    /* Convert horizontal layout to vertical for small screens */
+    #mothership-ui > div {
+        flex-direction: column !important;
+    }
+    
+    /* Remove border-right from resources section when stacked vertically */
+    #mothership-ui > div > div:first-child {
+        border-right: none !important;
+        border-bottom: 1px solid #33aaff !important;
+        padding-bottom: 15px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Ensure buttons are tappable */
+    #mothership-ui button {
+        margin-bottom: 12px !important;
+        padding: 12px !important;
+    }
+    
+    /* Add more space between elements for easier touch interactions */
+    #mothership-ui h3 {
+        margin-top: 20px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Improve mothership content scrolling */
+    #mothership-content {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 20px !important;
+    }
+    
+    /* Adjust upgrade section for vertical layout */
+    #upgrades-container {
+        flex-direction: column !important;
+        padding: 10px !important;
+    }
+    
+    /* Make upgrade columns stack properly */
+    #upgrades-container > div {
+        width: 100% !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Adjust star map button */
+    #show-star-map, #show-blackjack {
+        margin-top: 10px !important;
+        margin-bottom: 10px !important;
+        width: 100% !important;
+    }
+    
+    /* Make sure scrollable areas have enough contrast for the scrollbar */
+    div[style*="overflow-y: auto"] {
+        background-color: rgba(6, 22, 31, 0.95) !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Ensure the tabs UI is mobile-friendly */
+    .tab {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+    
+    .tab button {
+        flex: 1 0 auto !important;
+        font-size: 14px !important;
+    }
+    
+    /* Additional padding to prevent content from being hidden behind fixed elements */
+    .tabcontent {
+        padding-bottom: 20px !important;
+    }
+    
+    /* Styling for scrollbars in mothership panels */
+    #mothership-ui::-webkit-scrollbar {
+        width: 8px !important;
+    }
+    
+    #mothership-ui::-webkit-scrollbar-track {
+        background-color: rgba(0, 0, 0, 0.3) !important;
+        border-radius: 8px !important;
+    }
+    
+    #mothership-ui::-webkit-scrollbar-thumb {
+        background-color: rgba(51, 153, 255, 0.5) !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Allow content within the UI to be selectable for copy/paste */
+    #mothership-ui div, #mothership-ui span {
+        user-select: text !important;
+        -webkit-user-select: text !important;
+    }
+}
+
+/* Star Map Adjustments */
+@media (max-width: 768px) {
+    #star-map-container {
+        width: 90% !important;
+        max-width: 90vw !important;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    #star-map-controls {
+        flex-direction: column !important;
+    }
+    
+    #star-map-controls button {
+        margin: 5px 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Add spacing for scrolling content */
+    #star-map-details {
+        padding-bottom: 20px !important;
+    }
+}
+
+/* Blackjack Game UI Adjustments */
+@media (max-width: 768px) {
+    #blackjack-container {
+        width: 90% !important;
+        max-width: 90vw !important;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    #blackjack-controls {
+        flex-direction: column !important;
+    }
+    
+    #blackjack-controls button {
+        margin: 5px 0 !important;
+        width: 100% !important;
+    }
+    
+    .card {
+        width: 60px !important;
+        height: 90px !important;
+    }
+}
+
+/* Settings UI Adjustments */
+@media (max-width: 768px) {
+    #settings-container {
+        width: 90% !important;
+        max-width: 90vw !important;
+        max-height: 80vh !important;
+        padding: 15px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .settings-section {
+        padding: 10px !important;
+    }
+    
+    .settings-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    .settings-row label {
+        margin-bottom: 5px !important;
+    }
+    
+    .settings-row input[type="range"] {
+        width: 100% !important;
+    }
+}
+
+/* Game Over Screen Adjustments */
+@media (max-width: 768px) {
+    #game-over-container {
+        width: 90% !important;
+        max-width: 90vw !important;
+        padding: 15px !important;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    #game-over-container h2 {
+        font-size: 24px !important;
+    }
+    
+    #game-over-resources {
+        flex-direction: column !important;
+    }
+    
+    #game-over-resources > div {
+        width: 100% !important;
+        margin-bottom: 15px !important;
+    }
+}
+
+/* Mining Display Adjustments */
+@media (max-width: 768px) {
+    #mining-display {
+        top: auto !important;
+        bottom: 200px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 80% !important;
+    }
+}
+
+/* Mobile Touch UI Specific Styles */
+.mobile-action-button {
+    background-color: rgba(10, 20, 30, 0.7);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(120, 220, 232, 0.5);
+    user-select: none;
+    touch-action: manipulation;
+}
+
+.mobile-action-button:active {
+    transform: scale(0.95);
+    opacity: 0.9;
+}
+
+#leftJoystickZone, #rightJoystickZone {
+    background-color: rgba(10, 20, 30, 0.3);
+    border-radius: 50%;
+    border: 1px dashed rgba(120, 220, 232, 0.3);
+}
+
+/* General mobile scrolling improvements */
+@media (max-width: 768px) {
+    /* Add extra padding to the bottom of all scrollable elements to ensure content isn't hidden behind controls */
+    [style*="overflow-y: auto"], [style*="overflow: auto"], 
+    #mothership-ui, #star-map-container, #blackjack-container, 
+    #settings-container, #game-over-container, .tabcontent {
+        padding-bottom: 150px !important; /* Extra padding to account for touch controls */
+    }
+    
+    /* Ensure scrollbars are visible and styled consistently */
+    ::-webkit-scrollbar {
+        width: 8px !important;
+        height: 8px !important;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background-color: rgba(0, 0, 0, 0.3) !important;
+        border-radius: 8px !important;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background-color: rgba(51, 153, 255, 0.5) !important;
+        border-radius: 8px !important;
+    }
+} 

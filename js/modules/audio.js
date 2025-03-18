@@ -1,4 +1,4 @@
-// audio.js - Handles game audio, both music and sound effects
+// audio.js - Handles game audio, both music and sound effects with improved resource management
 
 import { getAbsolutePath } from '../utils/pathUtils.js';
 
@@ -15,6 +15,9 @@ export class AudioManager {
         this.musicVolume = 0.21; // Reduced by 30% from 0.3
         this.sfxVolume = 0.5; // Default sound effects volume
         
+        // Store active audio nodes
+        this.activeNodes = new Set();
+        
         // Store active audio contexts
         this.activeSounds = {
             laser: null,
@@ -25,13 +28,50 @@ export class AudioManager {
         // Track if the user has interacted with the page (for autoplay policies)
         this.userHasInteracted = false;
         
-        console.log("Initializing audio manager...");
+        console.log("Initializing audio manager with improved resource management...");
         
         // Initialize Tone.js (now loaded from CDN in index.html)
         this.initializeTone();
         
         // Listen for user interaction to enable audio
         this.setupUserInteractionListener();
+        
+        // Set up garbage collection interval
+        this.setupGarbageCollection();
+    }
+    
+    // Set up regular garbage collection for unused audio nodes
+    setupGarbageCollection() {
+        // Clean up inactive nodes every 30 seconds
+        this.gcInterval = setInterval(() => this.cleanupInactiveNodes(), 30000);
+        console.log("Audio garbage collection scheduled");
+    }
+    
+    // Clean up inactive audio nodes to prevent memory leaks
+    cleanupInactiveNodes() {
+        let count = 0;
+        this.activeNodes.forEach(node => {
+            // If a node is inactive (e.g., a one-shot sound that's finished playing)
+            if (node._inactive || (node.disposed === true)) {
+                if (typeof node.dispose === 'function') {
+                    node.dispose();
+                    count++;
+                }
+                this.activeNodes.delete(node);
+            }
+        });
+        
+        if (count > 0) {
+            console.log(`Audio manager: cleaned up ${count} inactive audio nodes`);
+        }
+    }
+    
+    // Track an audio node for garbage collection
+    trackNode(node) {
+        if (node) {
+            this.activeNodes.add(node);
+        }
+        return node;
     }
     
     // Initialize Tone.js effects chain
@@ -45,24 +85,24 @@ export class AudioManager {
             console.log("Initializing Tone.js...");
             
             // Create master effects for ASMR-like quality
-            this.masterReverb = new Tone.Reverb({
+            this.masterReverb = this.trackNode(new Tone.Reverb({
                 decay: 1.5,
                 wet: 0.2
-            }).toDestination();
+            }).toDestination());
             
-            this.masterCompressor = new Tone.Compressor({
+            this.masterCompressor = this.trackNode(new Tone.Compressor({
                 threshold: -24,
                 ratio: 4,
                 attack: 0.005,
                 release: 0.1
-            }).connect(this.masterReverb);
+            }).connect(this.masterReverb));
             
             // Create ASMR EQ profile
-            this.masterEQ = new Tone.EQ3({
+            this.masterEQ = this.trackNode(new Tone.EQ3({
                 low: 2,
                 mid: 0,
                 high: 3
-            }).connect(this.masterCompressor);
+            }).connect(this.masterCompressor));
             
             // Connect to destination
             Tone.Destination.volume.value = -6; // Lower overall volume
@@ -973,44 +1013,67 @@ export class AudioManager {
         return this.muted;
     }
     
-    // Clean up audio resources
+    /**
+     * Clean up all audio resources
+     */
     cleanup() {
-        // Stop all sounds
-        for (const [name, sound] of Object.entries(this.sounds)) {
-            if (sound.type === "synth") {
+        console.log("Cleaning up audio resources...");
+        
+        // Stop all currently playing sounds
+        for (const key in this.activeSounds) {
+            if (this.activeSounds[key]) {
                 try {
-                    sound.stop();
-                } catch (err) {
-                    console.warn(`Error stopping synth ${name}:`, err);
+                    this.stopSound(key);
+                } catch (e) {
+                    console.warn(`Error stopping sound ${key}:`, e);
                 }
-            } else if (sound instanceof Audio) {
-                sound.pause();
-                sound.src = '';
             }
         }
         
-        // Stop all music
-        for (const track of this.music) {
-            track.pause();
-            track.src = '';
-        }
-        
-        // Clean up Tone.js if it exists
-        if (typeof Tone !== 'undefined') {
-            Tone.Transport.stop();
-            Tone.Transport.cancel();
-            
+        // Stop and clean up background music
+        if (this.currentMusic) {
             try {
-                if (this.masterReverb) this.masterReverb.dispose();
-                if (this.masterCompressor) this.masterCompressor.dispose();
-                if (this.masterEQ) this.masterEQ.dispose();
-            } catch (err) {
-                console.warn("Error disposing Tone.js components:", err);
+                this.currentMusic.stop();
+                this.currentMusic.dispose();
+                this.currentMusic = null;
+            } catch (e) {
+                console.warn("Error stopping background music:", e);
             }
         }
         
+        // Dispose of all tracked nodes
+        this.activeNodes.forEach(node => {
+            try {
+                if (typeof node.dispose === 'function') {
+                    node.dispose();
+                }
+            } catch (e) {
+                console.warn("Error disposing audio node:", e);
+            }
+        });
+        this.activeNodes.clear();
+        
+        // Clean up effect chain
+        if (this.masterReverb && typeof this.masterReverb.dispose === 'function') {
+            this.masterReverb.dispose();
+        }
+        
+        if (this.masterCompressor && typeof this.masterCompressor.dispose === 'function') {
+            this.masterCompressor.dispose();
+        }
+        
+        if (this.masterEQ && typeof this.masterEQ.dispose === 'function') {
+            this.masterEQ.dispose();
+        }
+        
+        // Clear all sound references
         this.sounds = {};
-        this.music = [];
-        this.activeSounds = {};
+        
+        // Clear the GC interval
+        if (this.gcInterval) {
+            clearInterval(this.gcInterval);
+        }
+        
+        console.log("Audio resources cleaned up");
     }
 } 

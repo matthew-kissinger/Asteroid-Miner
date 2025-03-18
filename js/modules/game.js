@@ -6,7 +6,7 @@ import { Environment } from './environment.js';
 import { Controls } from './controls.js';
 import { UI } from './ui.js';
 import { CombatManager } from './combat/combatManager.js';
-import { WeaponSystem } from './combat/weaponSystem.js';
+import { Combat } from './combat.js';
 import { AudioManager } from './audio.js';
 import { MessageBus } from '../core/messageBus.js';
 export class Game {
@@ -43,14 +43,14 @@ export class Game {
             this.ui = new UI(this.spaceship, this.environment);
             // Initialize combat systems
             console.log("Initializing combat systems...");
-            // Create weapon system for player's ship
-            this.weaponSystem = new WeaponSystem(this.scene, this.spaceship);
+            // Create combat system for player's ship
+            this.combat = new Combat(this.scene, this.spaceship);
             // Create combat manager for handling enemy ships
             this.combatManager = new CombatManager(this.scene, this.spaceship, this.environment);
             // Initialize controls last, as it depends on other components
             this.controls = new Controls(this.spaceship, this.physics, this.environment, this.ui);
-            // Add weapon system to controls
-            this.controls.weaponSystem = this.weaponSystem;
+            // Add combat system reference to controls (instead of weaponSystem)
+            this.controls.weaponSystem = this.combat;
             // Share controls reference with UI for bidirectional communication
             this.ui.setControls(this.controls);
             // Initial camera positioning
@@ -59,6 +59,7 @@ export class Game {
             this.isGameOver = false;
             this.lastUpdateTime = performance.now();
             this.frameCount = 0;
+            this.currentFPS = 0;
             // Combat stats
             this.enemiesDestroyed = 0;
             this.damageDealt = 0;
@@ -151,26 +152,26 @@ export class Game {
                 console.log(`Audio ${isMuted ? 'muted' : 'unmuted'}`);
             }
         });
-        // Add weapon firing to mouse inputs - Changed to RIGHT mouse button
-        document.addEventListener('mousedown', (e) => {
-            if (e.button === 2 && this.controls.inputHandler && this.controls.inputHandler.isLocked()) {
-                // Handle weapon firing with right button
-                if (!this.spaceship.isDocked && this.weaponSystem) {
-                    // Start firing weapons
-                    this.weaponSystem.isWeaponActive = true;
-                    // Play laser sound for weapons too, since they're also energy weapons
-                    if (this.audio) {
-                        this.audio.playSound('laser');
-                    }
+        // Add right-click firing
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            
+            // Only fire if not docked
+            if (!this.spaceship.isDocked && this.combat) {
+                // Start firing
+                this.combat.setFiring(true); // Use combat instead of weaponSystem
+                
+                // Play laser sound
+                if (this.audio) {
+                    this.audio.playSound('laser');
                 }
             }
-            // Note: Left button (button 0) is already handled by controls for mining
         });
         document.addEventListener('mouseup', (e) => {
             if (e.button === 2) {
-                if (this.weaponSystem) {
+                if (this.combat) {
                     // Stop firing weapons
-                    this.weaponSystem.isWeaponActive = false;
+                    this.combat.setFiring(false); // Use combat instead of weaponSystem
                     // Stop laser sound
                     if (this.audio) {
                         this.audio.stopSound('laser');
@@ -185,8 +186,8 @@ export class Game {
         // Add weapon mode switching (F key)
         document.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 'f' && !this.spaceship.isDocked) {
-                if (this.weaponSystem) {
-                    const newMode = this.weaponSystem.cycleWeaponMode();
+                if (this.combat && this.combat.cycleWeaponMode) {
+                    const newMode = this.combat.cycleWeaponMode();
                     // Display weapon switch notification in UI
                     if (this.ui && this.ui.showNotification) {
                         this.ui.showNotification(`Weapon Mode: ${newMode}`, 2000);
@@ -203,6 +204,20 @@ export class Game {
         if (this.spaceship.update) {
             this.spaceship.update(deltaTime);
         }
+        
+        // Update coordinates in HUD after physics update
+        if (this.ui && this.ui.updateCoordinates && this.spaceship && this.spaceship.mesh) {
+            const position = this.spaceship.mesh.position;
+            this.ui.updateCoordinates(position.x, position.y, position.z);
+        }
+        
+        // Calculate and update FPS
+        this.currentFPS = 1 / deltaTime;
+        // Only update FPS display every 10 frames to reduce DOM operations
+        if (this.frameCount % 10 === 0 && this.ui && this.ui.updateFPS) {
+            this.ui.updateFPS(this.currentFPS);
+        }
+        
         // Update controls
         if (this.controls.update) {
             this.controls.update();
@@ -212,23 +227,23 @@ export class Game {
             this.environment.update();
         }
         // Update weapon system
-        if (this.weaponSystem) {
+        if (this.combat) {
             // Update weapon systems
-            this.weaponSystem.update(deltaTime);
+            this.combat.update(deltaTime);
             // Handle continuous firing if weapon is active
-            if (this.weaponSystem.isWeaponActive && !this.spaceship.isDocked) {
+            if (this.combat.isFiring && !this.spaceship.isDocked) {
                 // Fire weapon (sound is handled directly in the particle cannon firing method)
-                this.weaponSystem.fireWeapon();
+                this.combat.fireParticleCannon();
             }
         }
         // Update combat manager
         if (this.combatManager) {
             this.combatManager.update(deltaTime);
             // Check for player projectile hits on enemies
-            if (this.weaponSystem) {
+            if (this.combat) {
                 for (const enemy of this.combatManager.enemies) {
                     if (!enemy.isDestroyed) {
-                        const didHit = this.weaponSystem.checkHit(enemy);
+                        const didHit = this.combat.checkHit && this.combat.checkHit(enemy);
                         // Track stats and play hit sound
                         if (didHit) {
                             this.damageDealt += 1;
@@ -241,16 +256,18 @@ export class Game {
                 }
                 // Explicitly reset any projectiles getting too close to player to prevent self-damage
                 const minSafeDistance = 30; // Safe distance from player to prevent self-hits
-                for (let i = this.weaponSystem.projectiles.length - 1; i >= 0; i--) {
-                    const projectile = this.weaponSystem.projectiles[i];
-                    if (projectile.mesh.position.distanceTo(this.spaceship.mesh.position) < minSafeDistance) {
-                        console.log("Removing projectile too close to player");
-                        // Clean up projectile
-                        if (projectile.mesh.userData.trail && projectile.mesh.userData.trail.mesh) {
-                            this.scene.remove(projectile.mesh.userData.trail.mesh);
+                if (this.combat.projectiles) {
+                    for (let i = this.combat.projectiles.length - 1; i >= 0; i--) {
+                        const projectile = this.combat.projectiles[i];
+                        if (projectile.mesh && projectile.mesh.position.distanceTo(this.spaceship.mesh.position) < minSafeDistance) {
+                            console.log("Removing projectile too close to player");
+                            // Clean up projectile
+                            if (projectile.mesh.userData.trail && projectile.mesh.userData.trail.mesh) {
+                                this.scene.remove(projectile.mesh.userData.trail.mesh);
+                            }
+                            this.scene.remove(projectile.mesh);
+                            this.combat.projectiles.splice(i, 1);
                         }
-                        this.scene.remove(projectile.mesh);
-                        this.weaponSystem.projectiles.splice(i, 1);
                     }
                 }
             }

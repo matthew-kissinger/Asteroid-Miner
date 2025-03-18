@@ -1,285 +1,367 @@
 # Solar System Asteroid Miner
 
-A 3D space simulation game where players navigate the solar system, mine asteroids, and engage in combat.
+A browser-based 3D space mining simulation game built with JavaScript and Three.js.
 
 ## Overview
 
-Solar System Asteroid Miner is a browser-based 3D space simulation built with Three.js. Players control a spaceship to explore the solar system, mine resources from asteroids, and engage in combat with enemy ships.
+Solar System Asteroid Miner is a resource extraction and trading game set in space. Players control a mining ship, harvest resources from asteroids, and return to the mothership to sell resources and upgrade their vessel. The game features multiple star systems to explore, each with unique characteristics and resource distributions.
 
 ## Features
 
-- Realistic 3D solar system environment with planets
-  - Procedurally generated star systems
-  - Detailed planet models with textures and atmospheres
-  - Dynamic asteroid belts with minable resources
-  - Realistic space lighting and effects
-  - Mothership docking system
+- **3D Space Environment**: Navigate a procedurally generated universe with multiple star systems, each containing planets, asteroid fields, and a unique visual style.
+- **Mining Mechanics**: Extract valuable resources from asteroids using mining lasers with resource-specific extraction rates and visual feedback.
+- **Resource Management**: Manage cargo space, fuel consumption, and ship integrity.
+- **Trading System**: Sell mined resources at the mothership for credits.
+- **Ship Upgrades**: Enhance your ship's capabilities:
+  - Mining laser efficiency
+  - Cargo capacity
+  - Engine power
+  - Shield strength
+  - Hull durability
+  - Scanner range
+- **Combat System**: Defend yourself against hostile entities with different weapon modes and combat mechanics.
+- **Star System Travel**: Explore different star systems, each with unique resource distributions and visual appearance.
+- **Environmental Hazards**: Navigate through radiation zones, dense asteroid clusters, and solar hazards.
+- **Mini-games**: Play blackjack at the mothership to potentially earn extra credits.
+- **Visual Effects**: Enjoy particle-based explosions, damage flashes, engine trails, and mining beam effects.
 
-- Spaceship flight controls with physics-based movement
-  - 6 degrees of freedom movement
-  - Realistic inertial physics
-  - Thruster-based propulsion with particle effects
-  - Boost capability for rapid travel
+### Universe Exploration
 
-- Mining system for extracting resources from asteroids
-  - Mining laser for resource extraction
-  - Three resource types: iron, gold, platinum
-  - Cargo management system
-  - Resource trading at the mothership
+- **Diverse Star Systems**: Travel between star systems with different star types (O, B, A, F, G, K, M) affecting resource availability
+- **Visually Unique Environments**: Each star system features distinct coloration, nebula density, and visual appearance
+- **Dynamic Skybox**: Immersive starfield with system-specific star density and Milky Way visibility
+- **Realistic Star Types**: Stars range from hot blue giants to cool red dwarfs, each with realistic surface details and corona effects
+- **Spectacular Transitions**: Warp between systems with a stunning particle tunnel effect and smooth visual transition
+- **Procedural Planets**: Discover unique planets with realistic textures, atmospheres, and ring systems
+- **Central Mothership**: Dock at the detailed mothership to trade resources, upgrade your ship, and play mini-games
+- **Resource Distribution**: Different star types have varying concentrations of resources - some rich in iron, others in precious metals
 
-- Combat system with weapons and shields
-  - Particle cannon weapon system with visual beam effects
-  - Projectile-based combat with collision detection
-  - Shield management system with damage absorption
-  - Configurable damage resistance system
-  - Enemy AI with kamikaze attack patterns
-  - Visual combat effects including explosions and impact flashes
-  - Combat statistics tracking (damage dealt/received)
+### Mining Environment
 
-- Advanced ASMR-like audio system with programmatic sound synthesis
-  - Powered by Tone.js for real-time sound generation
-  - Deep, oscillating hum for thrusters that intensifies with thrust level
-  - Distinct pew-pew sound effects for projectiles with satisfying frequency sweeps
-  - Comical explosion sounds with multi-layered synthesis
-  - Satisfying UI interaction sounds with tactile feedback
-  - Progressive audio feedback as actions intensify
-  - Custom audio processing with reverb, EQ, and compression for ASMR quality
-  - Ambient space soundtrack with multiple tracks
-  - Spatial audio positioning for immersion
-  - Dynamic volume control and mute functionality
-  - Browser autoplay policy handling with user interaction detection
+- **Asteroid Belt Exploration**: Navigate dense asteroid fields with realistic orbital motion and distribution
+- **Resource Visualization**: Identify resource types by asteroid coloration and emissive properties
+- **System-Specific Mining**: Resource distribution varies by system - some rich in common minerals, others with abundant rare metals
+- **Dynamic Asteroid Density**: System-specific asteroid field density affects navigation difficulty and mining opportunities
+- **Asteroid Deformation**: Realistically deformed asteroid shapes with various sizes and compositions
+- **Visual Resource Depletion**: Watch asteroids visually transform as resources are extracted
 
-- Entity Component System (ECS) architecture
-  - Modular, extensible codebase
-  - Component-based entity design
-  - System-driven gameplay logic
-  - Message-based communication
+### Advanced Targeting & Extraction
 
-- Post-processing visual effects for enhanced graphics
-  - Bloom effect for glowing elements
-  - Film grain for visual style
-  - FXAA anti-aliasing
-  - Vignette effect
+- **Smart Targeting System**: Lock onto nearby asteroids with an upgradeable scanner
+- **Visual Target Reticle**: Dynamic targeting indicator shows selected asteroid with range information
+- **Target Cycling**: Easily cycle through detected asteroids to find your preferred resource type
+- **Resource Identification**: Visual and HUD indicators show asteroid resource type before mining
+- **Adaptive Mining Laser**: Mining beam appearance changes based on resource type and mining efficiency
+- **Resource-Based Mining Speed**: Different resources require different extraction times - platinum takes longer than iron
+- **Efficiency Upgrades**: Improve mining speed with mothership upgrades for faster resource collection
+- **Visual Extraction Feedback**: Mining particles and laser effects show active resource extraction
+- **Mining Progress Indicator**: Clear UI showing extraction progress for current asteroid
+- **Bonus Resource Chance**: Higher mining efficiency increases chances of bonus resource yield
 
-- Advanced holographic UI
-  - Dynamic heads-up display (HUD)
-  - Ship status monitoring
-  - Resource tracking
-  - Location tracking
-  - Targeting system
+### Mothership Interaction
 
-- Mothership Interface
-  - Ship upgrades and customization
-  - Resource trading system
-  - Repair and refueling
-  - Star map for navigation
-  - Mini-games (Blackjack)
+- **Proximity Docking**: Approach the mothership and press a key to dock when in range
+- **Trading Interface**: Sell different resources at varying market rates
+- **Upgrade Shop**: Purchase ship improvements with credits earned from resource sales
+- **Ship Refueling**: Replenish fuel supply for continued exploration
+- **Hull and Shield Repair**: Repair damage sustained during your mining operations
+- **Credit Economy**: Balance upgrade purchases with your earned credits
+- **Persistent Upgrades**: All ship improvements are permanently applied
+- **Upgrade Progression**: Each upgrade increases ship capabilities while also increasing future upgrade costs
+- **Visual Upgrade Feedback**: See the effects of your upgrades directly impact gameplay
 
-## Installation
+## User Interface Features
 
-The game must be served from a web server due to browser security restrictions with ES modules and Web Audio API. You cannot simply open the HTML file directly.
+### Immersive HUD System
+- Sci-fi themed heads-up display with animated startup sequence
+- Real-time flight data including speed, coordinates, and thruster status
+- Dynamic shield and hull integrity monitors with visual damage indicators
+- Resource tracking with capacity management display
+- Stylized holographic design with scanline effects and corner decorations
 
-### Option 1: Using Python's built-in HTTP server
+### Resource Mining Interface
+- Target asteroid information with resource composition details
+- Visual mining progress feedback
+- Cargo capacity monitoring with color-coded capacity warnings
+- Automated target tracking with distance calculations
 
-```bash
-# Clone the repository
-git clone [repository-url]
+### Mothership Docking Station
+- Comprehensive trading interface for selling mined resources
+- Ship maintenance with fuel replenishment and repair options
+- Progressive upgrade system for ship capabilities:
+  - Enhanced fuel capacity for longer expeditions
+  - Improved engine performance for faster travel
+  - Advanced mining lasers for efficient resource extraction
+  - Reinforced hull for damage resistance
+  - Extended scanner range for detecting distant objects
+- Progress tracking for each upgrade path with visual indicators
 
-# Navigate to the project directory
-cd solar-system-asteroid-miner
+### Galactic Navigation
+- Interactive star map with visual representation of the galaxy
+- Detailed system information with resource distribution analysis
+- Travel capabilities with fuel consumption calculations
+- Connected star systems with navigation paths
+- Visual highlighting of current and selected systems
 
-# If you have Python 3 installed
-python -m http.server 8000
+### Targeting System
+- Lock-on targeting display for asteroids and enemies
+- Distance tracking with real-time updates
+- Resource type identification for informed mining decisions
+- Target cycling for efficient resource selection
 
+### In-Game Entertainment
+- Stellar Blackjack mini-game for resource gambling
+- Resource wagering system with risk/reward dynamics
+- Dealer AI with authentic game mechanics
+- Visually engaging card interface
 
-# Open in browser
-# Visit http://localhost:8000 in your web browser
-```
+### Combat Interface
+- Weapon status displays with ammunition tracking
+- Enemy targeting with health and shield indicators
+- Combat statistics with hit counts and damage metrics
+- Special weapon availability and cooldown timers
+- Notification system for combat events
 
-### Option 2: Using Node.js and http-server
+### Game Controls Reference
+- Accessible controls menu with key mapping display
+- Visual key indicators for easy reference
+- Comprehensive listing of all gameplay actions
 
-```bash
-# Install http-server globally if you haven't already
-npm install -g http-server
+## Technical Details
 
-# Navigate to the project directory
-cd solar-system-asteroid-miner
+### Architecture
 
-# Start the server
-http-server -p 8000
+Built using an enhanced Entity Component System (ECS) architecture with an event-driven message bus system:
 
-# Open in browser
-# Visit http://localhost:8000 in your web browser
-```
+- **Entities**: Game objects like ships, asteroids, projectiles
+- **Components**: Data containers for entity properties:
+  - `TransformComponent`: Position, rotation, and scale in 3D space
+  - `RigidbodyComponent`: Physics properties for momentum and collisions
+  - `HealthComponent`: Health and shield management with damage system
+  - `MeshComponent`: Visual representation with Three.js meshes
+  - `TrailComponent`: Visual trails for movement effects
+  - `MineableComponent`: Resource properties for asteroids
+  - `EnemyAIComponent`: Behavior patterns for hostile entities
+  - `MiningLaserComponent`: Resource extraction tool with visual effects
+  - `CargoComponent`: Resource storage with capacity management
+  - `ThrusterComponent`: Ship propulsion with particle effects
+- **Systems**: Logic that processes entities with specific components:
+  - Optimized physics system with batch processing
+  - Instanced rendering system for performance
+  - Combat system for projectiles and damage
+  - Mining system for resource extraction
+  - AI system for enemy behavior
+  - Trail system for visual effects
+- **Message Bus**: Event-driven communication system allowing components to interact without direct references
+- **Performance Optimizations**:
+  - Entity pooling system that recycles game objects to reduce garbage collection
+  - Spatial partitioning grid for efficient collision detection
+  - Customized update cycles with priority-based execution
+  - Optimized movement system with batch processing
+  - Enhanced entity cache for faster lookups
+  - System update prioritization for critical operations
 
-## Usage
+### Memory Management
 
-### Controls
+Advanced memory management techniques to reduce garbage collection pauses:
 
-- **W/A/S/D**: Thrust forward/left/backward/right
-- **Q/E**: Thrust up/down
+- **Vector Pool**: Reusable THREE.Vector3 objects to avoid frequent allocations
+- **Object Pooling**: Pre-allocated object pools for commonly created entities:
+  - Hit effects
+  - Projectiles
+  - Particle effects
+  - UI elements
+- **Typed Array Pools**: Reusable typed arrays for geometry operations:
+  - Float32Array for vertex data
+  - Uint32Array for indices
+  - Uint16Array for compact indices
+  - Uint8Array for attribute data
+- **Memory Statistics**: Real-time tracking of pool usage and memory allocations
+- **Lifecycle Management**: Proper disposal of Three.js resources to prevent memory leaks
+- **Reference Cleanup**: Automatic clearing of object references when returned to pools
+
+### Rendering System
+
+Enhanced rendering with modern post-processing effects:
+
+- **Camera effects including screen shake and damage flashes**
+- **Third-person camera with smooth target following**
+- **Thruster trail effects that respond to ship movement**
+- **Particle-based explosion effects with realistic physics**
+- **Screen-space visual feedback for player damage**
+- **Performance optimization with off-screen object culling**
+- **Motion trails for fast-moving objects and projectiles**
+- **Advanced Post-Processing Pipeline**:
+  - UnrealBloomPass for glowing effects on energy sources
+  - FXAA for edge smoothing without performance impact
+  - Color correction for visual mood enhancement
+  - Film grain effect for cinematic appearance
+  - Vignette effect for visual focus and atmosphere
+- **HDR Rendering**: ACES Filmic tone mapping for realistic lighting
+- **Optimized Resource Management**:
+  - Proper disposal of Three.js objects
+  - Material sharing between similar objects
+  - Instanced mesh rendering for asteroid fields
+  - Dynamic LOD (Level of Detail) system for distant objects
+- **Visual Effects System**:
+  - Dedicated system for managing explosion and impact effects
+  - Time-based particle animation with automatic cleanup
+  - GPU-accelerated particle systems
+  - Object-pooled visual effects
+- **Adaptive Quality Settings**:
+  - Automatic adjustment of post-processing based on performance
+  - Fallback rendering path when shaders aren't available
+  - Debug-mode visualization of render statistics
+
+### Technologies
+
+- **Three.js**: 3D rendering with advanced post-processing effects
+- **JavaScript Modules**: Modular code organization
+- **Custom Physics**: Zero-gravity Newtonian physics system with realistic collisions
+- **Event System**: Message bus for decoupled communication
+- **Audio System**: Dynamic sound effects and music system with spatial audio
+
+## Getting Started
+
+1. Clone the repository
+2. Open `index.html` in a modern browser
+3. Use WASD to move, mouse to look around, left mouse button to mine, and right mouse button to fire weapons
+
+## Controls
+
+- **WASD**: Forward, left, backward, right movement
 - **Mouse**: Look around
-- **Space**: Fire weapons
-- **Left Click**: Activate mining laser
-- **Shift**: Boost
+- **Left Mouse Button**: Activate mining laser
+- **Right Mouse Button**: Fire weapons
+- **Shift**: Boost (increased speed, higher fuel consumption)
+- **Space**: Dock with mothership (when in range)
+- **F**: Cycle weapon modes
 - **M**: Toggle audio mute
-- **ESC**: Exit pointer lock/open menu
-- **Q** (near mothership): Dock with mothership
+- **ESC**: Exit pointer lock / Pause game
 
-### Gameplay
+## Game Loop
 
-1. The game starts with your ship docked at the mothership
-2. Navigate through the solar system using the controls
-3. Locate asteroids to mine for resources
-   - Asteroids contain different resources (iron, gold, platinum)
-   - Each resource has different values and mining difficulty
-4. Defend yourself against enemy ships
-   - Enemies have different behaviors and difficulty levels
-   - Use shields and weapons to survive combat
-5. Combat mechanics:
-   - Shield absorbs damage first before health is affected
-   - Shields and hull do not regenerate automatically
-   - Different enemy types have varying attack patterns and health
-   - Visual and audio feedback indicates hits and damage
-   - Destroyed enemies trigger explosion effects
-6. Return to the mothership to:
-   - Trade resources for credits
-   - Upgrade your ship systems
-   - Repair/refill shields
-   - Repair hull damage
-   - Refuel
-   - Access the star map for navigation
-   - Play mini-games like Blackjack
+1. Mine resources from asteroids
+2. Manage cargo space and fuel
+3. Return to mothership to sell resources
+4. Upgrade your ship with credits earned
+5. Travel to different star systems to find rarer, more valuable resources
+6. Defend against increasingly challenging threats
 
-### Game Systems
+## Implementation Details
 
-- **Resource Management**: Mine resources, manage cargo capacity, trade for credits
-- **Ship Upgrades**: Improve thrusters, weapons, shields, and cargo capacity
-- **Navigation**: Travel between planets and asteroid fields
-- **Combat**: 
-  - Engage in battles with enemy ships using particle cannon weapon (Space key)
-  - Manage shield energy that absorbs damage before health
-  - Shields and hull must be repaired/refilled at the mothership
-  - Enemy ships use kamikaze attacks, ramming into your ship for damage
-  - Visual effects show projectiles, impacts, and explosions
-  - Audio cues reinforce combat actions and hits
-- **Audio System**: 
-  - Programmatically generated ASMR-like sounds using Tone.js
-  - Dynamic sound effects that respond to gameplay actions
-  - Thruster sounds that change pitch and intensity based on thrust direction and boost
-  - Unique projectile sounds when firing the particle cannon
-  - Combat sounds for weapon impacts and explosions
-  - UI interaction sounds in various game interfaces
-  - Background music system with randomized track playback
-  - Global audio controls with mute toggle (M key)
+### Mining System
+- Automated asteroid targeting for efficient resource collection
+- Visual laser beams dynamically connecting ship to mining target
+- Progress indicators for resource extraction rate
+- Resource-specific mining speeds based on laser upgrades
+- Proximity-based mining operations with range limitations
+- Depletion mechanics with asteroid destruction effects
+- Cargo capacity monitoring with automatic mining interruption
 
-- **Enemy System**:
-  - Pirate faction scouts with kamikaze attack pattern
-  - Enemy ships spawn around player at regular intervals
-  - Maximum of 5 concurrent enemies to balance difficulty
-  - Enemies freeze when docked at mothership for safe zones
-  - Enemies track directly toward player position
-  - Red enemy ships are visible from a distance for easy identification
-  - Collision with enemies causes damage and triggers explosions
-  - Enemies track player using sight/detection within 2000-2500 unit range
-  - Destroy enemies before they reach collision distance of 75 units
+### Input System
+- Intuitive controls with customizable key mappings
+- Mouse-look camera with pointer-lock for immersive gameplay
+- First-person style ship rotation and movement
+- Automatic targeting for mining and combat actions
+- Continuous thrust input for smooth flight control
+- Immersive camera shake effects during collisions and damage
+- UI interaction through contextual controls
 
-## Development
+### Rendering System
+- Camera effects including screen shake and damage flashes
+- Third-person camera with smooth target following
+- Thruster trail effects that respond to ship movement
+- Particle-based explosion effects with realistic physics
+- Screen-space visual feedback for player damage
+- Performance optimization with off-screen object culling
+- Motion trails for fast-moving objects and projectiles
+- **Advanced Post-Processing Pipeline**:
+  - UnrealBloomPass for glowing effects on energy sources
+  - FXAA for edge smoothing without performance impact
+  - Color correction for visual mood enhancement
+  - Film grain effect for cinematic appearance
+  - Vignette effect for visual focus and atmosphere
+- **HDR Rendering**: ACES Filmic tone mapping for realistic lighting
+- **Optimized Resource Management**:
+  - Proper disposal of Three.js objects
+  - Material sharing between similar objects
+  - Instanced mesh rendering for asteroid fields
+  - Dynamic LOD (Level of Detail) system for distant objects
+- **Visual Effects System**:
+  - Dedicated system for managing explosion and impact effects
+  - Time-based particle animation with automatic cleanup
+  - GPU-accelerated particle systems
+  - Object-pooled visual effects
+- **Adaptive Quality Settings**:
+  - Automatic adjustment of post-processing based on performance
+  - Fallback rendering path when shaders aren't available
+  - Debug-mode visualization of render statistics
 
-### Debug Mode
+### Physics System
+- Custom zero-gravity physics implementation with friction for control
+- Spatial partitioning collision detection for optimal performance
+- Cell-based entity tracking with optimized lookups
+- Impulse-based collision resolution with mass considerations
+- Hull resistance system with survival chance based on impact type
+- Visual effects for collisions and damage
+- Quaternion-based rotation integration for stable movement
 
-Set `DEBUG_MODE = true` in main.js for verbose console logging.
+### Combat System
+- Weapon system with different firing modes
+- Projectile management with trails and lighting effects
+- Enemy AI with different behavior patterns
+- Health and shield system with regeneration
+- Hit visualization effects with color-coded feedback
+- Enemy pooling system for performance optimization
+- Self-healing spawn system with dynamic spawn point generation
+- Spectral drones with unique visual effects and movement patterns
 
-### Code Structure
+### Star System Generator
+- Procedurally generated star systems with unique characteristics
+- System-specific visual styles and resource distributions
+- Transition effects when traveling between systems
 
-- `js/core/`: Core ECS architecture components
-  - `entity.js`: Base entity class
-  - `component.js`: Base component class
-  - `system.js`: Base system class
-  - `entityManager.js`: Manages entity lifecycle
-  - `systemManager.js`: Manages system execution
-  - `world.js`: Top-level container for game world
-  - `messageBus.js`: Pub/sub system for communication
+### Memory Management System
+- **Vector Pooling**: Recycling of vector objects for position, direction, and force calculations
+- **Object Pooling System**: Framework for creating and managing object pools:
+  - Pre-allocation of commonly used objects during initialization
+  - Automatic object recycling with reset and clear methods
+  - Pool size management to prevent memory bloat
+  - Type-specific factory functions for object creation
+- **Particle Effect Management**: Optimized particle systems using pooled geometry and materials
+- **Projectile Recycling**: Efficient projectile management without constant allocation/deallocation
+- **Mesh Instancing**: Using THREE.InstancedMesh for rendering many similar objects
+- **Typed Array Management**: Pooled typed arrays for geometry operations
+- **Garbage Collection Reduction**: Strategies to minimize GC pauses:
+  - Reusing objects instead of creating new ones
+  - Pre-binding methods to avoid closure creation
+  - Pooled variables for hot path calculations
+  - Optimized deltaTime calculation without object creation
+- **Performance Monitoring**: Debug tools to track memory usage and object allocation
 
-- `js/components/`: Game component definitions
-  - `transform.js`: Position, rotation, scale
-  - `combat/`: Weapons, shields, health components
-    - `healthComponent.js`: Health and shield management with regeneration
-    - `enemyAI.js`: Enemy behavior control and attack patterns
-  - `mining/`: Resource extraction components
-    - `mineable.js`: Makes entities minable for resources
-  - `physics/`: Movement and collision components
-    - `rigidbody.js`: Physics properties for entities
-  - `rendering/`: Visual representation components
-    - `mesh.js`: 3D model management
-  - `spaceship/`: Ship-specific components
-    - `thruster.js`: Ship propulsion system
-    - `cargo.js`: Resource storage and management
-    - `miningLaser.js`: Resource extraction tool
+### Message Bus Architecture
+- Decoupled communication between game components
+- Event-driven design for better code organization
+- Enhanced error handling and recovery mechanisms
 
-- `js/systems/`: Game system implementations
-  - `combat/`: Combat logic
-    - `combatSystem.js`: Projectile tracking, collision detection, and damage
-    - `enemySystem.js`: Enemy spawning, AI control, and lifecycle management
-  - `input/`: Input processing
-  - `mining/`: Mining mechanics
-    - `miningSystem.js`: Resource extraction logic
-  - `physics/`: Physics calculations
-    - `collisionSystem.js`: Collision detection and response
-    - `movementSystem.js`: Entity movement
-  - `rendering/`: Rendering logic
+### Optimized ECS Architecture
+- **Component-First Design**: Optimized data structures for component storage and access
+- **Batch Processing**: Systems process entities in groups for improved performance
+- **Priority Execution**: Systems execute in priority order to ensure critical systems run first
+- **Entity Caching**: Smart caching of entity references to reduce lookups
+- **System Querying**: Efficient entity querying based on component requirements
+- **Event Integration**: Full integration with the message bus for component-level events
+- **Dynamic System Registration**: Systems can be added or removed at runtime
+- **Component Lifecycle Hooks**: Components have attached/detached lifecycle events
+- **World Management**: Centralized world manager controls all system updates
+- **Debug Mode**: Special debug mode provides real-time statistics on entity and system performance
 
-- `js/modules/`: High-level game modules
-  - `renderer.js`: Three.js rendering pipeline
-  - `physics.js`: Physics simulation
-  - `spaceship.js`: Player ship implementation
-  - `environment.js`: Solar system and space environment
-  - `controls.js`: Input handling
-  - `ui.js`: User interface
-  - `audio.js`: Sound system with Tone.js integration for ASMR-like sound synthesis
-  - `combat.js`: Weapons systems, projectile management, and combat effects
-  - `environment/`: Space environment components
-    - `planets.js`: Planet generation and management
-    - `asteroidBelt.js`: Asteroid field creation
-    - `sun.js`: Star rendering and effects
-    - `skybox.js`: Space background
-    - `mothership.js`: Player's home base
-  - `ui/`: User interface components
-    - `hud.js`: Heads-up display
-    - `mothershipInterface.js`: Upgrade and trading UI
-    - `combatDisplay.js`: Combat information display
-    - `starMap.js`: Navigation interface
-    - `miningDisplay.js`: Mining status display
-    - `blackjackGame.js`: Mini-game implementation
-    - `gameOverScreen.js`: End game UI
-    - `controlsMenu.js`: Controls information
-    - `targetingSystem.js`: Target acquisition UI
+## License
 
-- `js/entities/`: Entity definitions
-  - `spaceship.js`: Player ship entity definition
+See the LICENSE file for details.
 
-- `assets/`: Game assets
-  - Planet textures (2k resolution)
-  - Stars background
-  - Ships and models
+## Credits
 
-- `sounds/`: Audio files
-  - `soundtrack/`: Background music tracks (WAV files)
-    - Multiple ambient space tracks for background music
-  - Note: Game sound effects (thrust, laser, explosion, etc.) are generated programmatically using Tone.js
-
-## Technical Requirements
-
-- Modern web browser with WebGL support
-- Recommended: Dedicated graphics card for optimal performance
-- Keyboard and mouse
-- Audio output device (for full experience)
-- Web Audio API support (for sound synthesis)
-
-## External Libraries
-
-- [Three.js](https://threejs.org/) - 3D rendering engine
-- [Tone.js](https://tonejs.github.io/) - Sound synthesis and audio processing
-- Planet textures from [Solar System Scope](https://www.solarsystemscope.com/)
-- AI
+Developed as a learning project for Three.js and ECS architecture.
 

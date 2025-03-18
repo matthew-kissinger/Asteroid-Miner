@@ -54,6 +54,15 @@ export class System {
     }
     
     /**
+     * Initialize the system
+     * Called once when the system is first registered
+     */
+    initialize() {
+        // Base implementation does nothing
+        // Override in derived systems for initialization logic
+    }
+    
+    /**
      * Enable this system
      */
     enable() {

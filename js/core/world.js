@@ -121,4 +121,13 @@ export class World {
     getEntity(id) {
         return this.entityManager.getEntity(id);
     }
+    
+    /**
+     * Get a system by type
+     * @param {Function} systemType The system class type
+     * @returns {System|undefined} The system instance or undefined if not found
+     */
+    getSystem(systemType) {
+        return this.systemManager.getSystem(systemType);
+    }
 }

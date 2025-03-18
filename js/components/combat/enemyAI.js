@@ -43,78 +43,118 @@ export class EnemyAIComponent extends Component {
      * @param {number} deltaTime Time since last update in seconds
      */
     update(deltaTime) {
-        // SAFETY: Check if entity exists
-        if (!this.entity) {
-            console.warn("EnemyAI: No entity reference, skipping update");
-            return;
+        if (!this.entity || !this.entity.world) return;
+        
+        // Track how long this enemy has been alive
+        this.timeAlive += deltaTime;
+        
+        // ===== ENHANCED PLAYER DETECTION =====
+        let player = null;
+        
+        // METHOD 1: Check direct reference in world
+        try {
+            if (this.entity.world.playerEntity) {
+                player = this.entity.world.playerEntity;
+                //console.log("Found player via direct world.playerEntity reference");
+            }
+        } catch (error) {}
+        
+        // METHOD 2: Try global window reference
+        if (!player && window.game && window.game.combat && window.game.combat.playerEntity) {
+            player = window.game.combat.playerEntity;
+            //console.log("Found player via window.game.combat.playerEntity");
         }
         
-        // SAFETY: Check if world exists
-        if (!this.entity.world) {
-            console.warn(`EnemyAI: Entity ${this.entity.id} has no world reference, skipping update`);
+        // METHOD 3: Use getEntitiesByTag
+        if (!player) {
+            try {
+                const playerEntities = this.entity.world.getEntitiesByTag('player');
+                if (playerEntities && playerEntities.length > 0) {
+                    player = playerEntities[0];
+                    //console.log("Found player via world.getEntitiesByTag");
+                }
+            } catch (error) {}
+        }
+        
+        // METHOD 4: Check entitiesByTag map
+        if (!player && this.entity.world.entityManager && this.entity.world.entityManager.entitiesByTag) {
+            try {
+                const playerEntities = this.entity.world.entityManager.entitiesByTag.get('player');
+                if (playerEntities && (playerEntities.size > 0 || playerEntities.length > 0)) {
+                    player = Array.from(playerEntities)[0];
+                    //console.log("Found player via entityManager.entitiesByTag map");
+                }
+            } catch (error) {}
+        }
+        
+        // METHOD 5: Bruteforce search all entities
+        if (!player && this.entity.world.entityManager && this.entity.world.entityManager.entities) {
+            try {
+                const allEntities = Array.from(this.entity.world.entityManager.entities.values());
+                for (const entity of allEntities) {
+                    if ((entity.hasTag && entity.hasTag('player')) || 
+                        entity.name === 'player' || 
+                        (entity.id && entity.id.includes('player'))) {
+                        player = entity;
+                        //console.log("Found player via brute force entity search");
+                        break;
+                    }
+                }
+            } catch (error) {}
+        }
+        
+        // METHOD 6: Check for spaceship in scene
+        if (!player && window.game && window.game.spaceship && window.game.spaceship.mesh) {
+            // Create a temporary entity if needed
+            console.log("No player entity found, but found spaceship - will use position directly");
+            
+            // Use the spaceship as the target without an actual entity
+            // We'll create a minimal object with the necessary properties
+            player = {
+                getComponent: (type) => {
+                    if (type === 'TransformComponent') {
+                        return {
+                            position: window.game.spaceship.mesh.position,
+                            rotation: window.game.spaceship.mesh.rotation,
+                            quaternion: window.game.spaceship.mesh.quaternion
+                        };
+                    }
+                    return null;
+                }
+            };
+        }
+        
+        // If still no player, we can't proceed
+        if (!player) {
+            // Only show error message occasionally to avoid console spam
+            if (Math.random() < 0.01) { // Show error roughly once per 100 frames
+                console.error("No player entity found by any method! Enemy cannot move.");
+            }
             return;
         }
         
         // Get required components
         const transform = this.entity.getComponent('TransformComponent');
         if (!transform) {
-            console.warn(`EnemyAI: Entity ${this.entity.id} has no transform component, skipping update`);
             return;
         }
         
         // Get health component to check status
         const health = this.entity.getComponent('HealthComponent');
         if (health && health.isDestroyed) {
-            console.log(`EnemyAI: Entity ${this.entity.id} is already destroyed, skipping update`);
-            return;
-        }
-        
-        // Increment time alive for movement calculations
-        this.timeAlive += deltaTime;
-        
-        // Find player entity
-        let player = null;
-        let playerTransform = null;
-        
-        // SAFETY: Check if entity manager exists
-        if (!this.entity.world.entityManager) {
-            console.warn(`EnemyAI: Entity ${this.entity.id} - world has no entityManager, skipping update`);
-            return;
-        }
-        
-        if (this.entity.world.entityManager && this.entity.world.entityManager.entitiesByTag) {
-            // Try direct tag map access first
-            const playerEntities = this.entity.world.entityManager.entitiesByTag.get('player');
-            if (playerEntities && playerEntities.length > 0) {
-                player = playerEntities[0];
-                console.log("Found player via direct tag map access");
-            }
-        }
-        
-        // If that fails, try brute force search
-        if (!player) {
-            // Fallback: Check ALL entities for player tag
-            const allEntities = Array.from(this.entity.world.entityManager.entities.values());
-            for (const entity of allEntities) {
-                if (entity.hasTag('player')) {
-                    player = entity;
-                    console.log("Found player via brute force entity search");
-                    break;
-                }
-            }
-        }
-        
-        // If still no player, we can't proceed
-        if (!player) {
-            console.error("No player entity found by any method!");
             return;
         }
         
         // Get player transform
-        playerTransform = player.getComponent('TransformComponent');
+        let playerTransform = player.getComponent ? player.getComponent('TransformComponent') : null;
         if (!playerTransform) {
-            console.error("Player found but missing transform component!");
-            return;
+            // If using spaceship directly, playerTransform is already correctly set up
+            if (player.position) {
+                playerTransform = player;
+            } else {
+                console.warn("Player found but missing transform component!");
+                return;
+            }
         }
         
         // Log that we found the player (only once)

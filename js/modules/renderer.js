@@ -24,6 +24,9 @@ export class Renderer {
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.0;
         
+        // Setup for instanced meshes
+        this.instancedMeshes = new Map();
+        
         this.setupRenderer();
         this.setupPostProcessing();
         this.setupLighting();
@@ -205,6 +208,9 @@ export class Renderer {
         if (this.filmPass && this.filmPass.uniforms && this.filmPass.uniforms.time) {
             this.filmPass.uniforms.time.value += deltaTime;
         }
+        
+        // Update instanced meshes
+        this.updateInstancedMeshes();
     }
     
     // Override the render method to use the composer if available, otherwise fallback to basic rendering
@@ -214,5 +220,170 @@ export class Renderer {
         } else {
             this.renderer.render(this.scene, this.camera);
         }
+    }
+    
+    /**
+     * Create an instanced mesh for efficient rendering of many similar objects
+     * @param {string} key Unique identifier for this instanced mesh type
+     * @param {THREE.BufferGeometry} geometry The geometry to instance
+     * @param {THREE.Material} material The material to use
+     * @param {number} maxCount Maximum number of instances
+     * @returns {THREE.InstancedMesh} The created instanced mesh
+     */
+    createInstancedMesh(key, geometry, material, maxCount) {
+        const instancedMesh = new THREE.InstancedMesh(geometry, material, maxCount);
+        instancedMesh.count = 0; // Start with 0 visible instances
+        instancedMesh.frustumCulled = true;
+        this.scene.add(instancedMesh);
+        
+        this.instancedMeshes.set(key, {
+            mesh: instancedMesh,
+            count: 0,
+            maxCount: maxCount,
+            dummy: new THREE.Object3D() // Reusable temporary Object3D for matrix calculations
+        });
+        
+        return instancedMesh;
+    }
+    
+    /**
+     * Add or update an instance in an instanced mesh
+     * @param {string} key The instanced mesh identifier
+     * @param {number} index Index of the instance to update (or next available)
+     * @param {THREE.Vector3} position Position of the instance
+     * @param {THREE.Quaternion} quaternion Rotation of the instance
+     * @param {THREE.Vector3} scale Scale of the instance
+     * @returns {number} The index of the instance
+     */
+    updateInstance(key, index, position, quaternion, scale) {
+        const instance = this.instancedMeshes.get(key);
+        if (!instance) return -1;
+        
+        // Determine index to use
+        const idx = (index !== undefined) ? index : instance.count;
+        
+        // If we're adding a new instance, increment the count
+        if (idx >= instance.count) {
+            if (idx >= instance.maxCount) return -1; // Can't exceed max count
+            instance.count = idx + 1;
+            instance.mesh.count = instance.count;
+        }
+        
+        // Update the matrix for this instance
+        instance.dummy.position.copy(position);
+        instance.dummy.quaternion.copy(quaternion);
+        instance.dummy.scale.copy(scale);
+        instance.dummy.updateMatrix();
+        
+        instance.mesh.setMatrixAt(idx, instance.dummy.matrix);
+        instance.mesh.instanceMatrix.needsUpdate = true;
+        
+        return idx;
+    }
+    
+    /**
+     * Remove an instance from an instanced mesh
+     * @param {string} key The instanced mesh identifier
+     * @param {number} index Index of the instance to remove
+     */
+    removeInstance(key, index) {
+        const instance = this.instancedMeshes.get(key);
+        if (!instance || index >= instance.count) return;
+        
+        // Move the last instance to this slot if it's not the last one
+        if (index < instance.count - 1) {
+            // Get the matrix of the last instance
+            const matrix = new THREE.Matrix4();
+            instance.mesh.getMatrixAt(instance.count - 1, matrix);
+            
+            // Set it at the removed index
+            instance.mesh.setMatrixAt(index, matrix);
+        }
+        
+        // Decrease count
+        instance.count--;
+        instance.mesh.count = instance.count;
+        instance.mesh.instanceMatrix.needsUpdate = true;
+    }
+    
+    /**
+     * Update all instanced meshes
+     */
+    updateInstancedMeshes() {
+        this.instancedMeshes.forEach(instance => {
+            if (instance.mesh.instanceMatrix.needsUpdate) {
+                instance.mesh.instanceMatrix.needsUpdate = false;
+            }
+        });
+    }
+    
+    /**
+     * Properly dispose of Three.js resources to prevent memory leaks
+     */
+    dispose() {
+        console.log("Disposing renderer resources...");
+        
+        // Remove event listener
+        window.removeEventListener('resize', this.handleResize);
+        
+        // Dispose of post-processing
+        if (this.composer) {
+            this.composer.passes.forEach(pass => {
+                if (pass.dispose) pass.dispose();
+                if (pass.material) {
+                    pass.material.dispose();
+                }
+            });
+        }
+        
+        // Dispose of instanced meshes
+        this.instancedMeshes.forEach(instance => {
+            if (instance.mesh) {
+                if (instance.mesh.geometry) instance.mesh.geometry.dispose();
+                if (instance.mesh.material) {
+                    if (Array.isArray(instance.mesh.material)) {
+                        instance.mesh.material.forEach(material => material.dispose());
+                    } else {
+                        instance.mesh.material.dispose();
+                    }
+                }
+                this.scene.remove(instance.mesh);
+            }
+        });
+        
+        // Dispose of scene objects
+        this.scene.traverse(object => {
+            if (object.geometry) object.geometry.dispose();
+            
+            if (object.material) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(material => this.disposeMaterial(material));
+                } else {
+                    this.disposeMaterial(object.material);
+                }
+            }
+        });
+        
+        // Dispose of renderer
+        this.renderer.dispose();
+        
+        console.log("Renderer resources disposed");
+    }
+    
+    /**
+     * Helper method to dispose of materials and their textures
+     * @param {THREE.Material} material The material to dispose
+     */
+    disposeMaterial(material) {
+        // Dispose textures
+        for (const propertyName in material) {
+            const property = material[propertyName];
+            if (property && property.isTexture) {
+                property.dispose();
+            }
+        }
+        
+        // Dispose the material itself
+        material.dispose();
     }
 }

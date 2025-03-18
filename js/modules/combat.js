@@ -19,20 +19,24 @@ import { TrailSystem } from '../systems/rendering/trailSystem.js';
 
 export class Combat {
     constructor(scene, spaceship) {
-        console.log("Initializing combat systems...");
-        
+        console.log("Initializing combat system");
         this.scene = scene;
         this.spaceship = spaceship;
-        
-        // Projectile properties
         this.projectiles = [];
-        this.projectileSpeed = 4000;     // Increased speed (compromise between 1000 and 8000)
-        this.projectileLifespan = 2500; // milliseconds - increased lifetime
+        this.projectileLifetime = 2000; // milliseconds
+        
+        // Tuned these parameters for better gameplay
+        this.fireRate = 3; // shots per second
+        this.projectileSpeed = 2000; // Base speed units per frame (will be normalized)
+        
+        // Track the last time we fired for rate limiting
+        this.lastFireTime = 0;
+        
+        // Reference size for spread calculation
+        this.aimingSpread = 0.05;
         
         // Weapon properties
         this.isFiring = false;
-        this.fireRate = 3; // shots per second (compromise between 2 and 5)
-        this.lastShotTime = 0;
         this.cooldown = 1000 / this.fireRate; // milliseconds between shots
         
         // Combat properties
@@ -52,10 +56,28 @@ export class Combat {
      */
     async initializeECSWorld() {
         try {
+            console.log("[COMBAT] Starting ECS world initialization...");
+            
+            // Create a new World instance immediately to allow references
+            this.world = new World(window.mainMessageBus);
+            console.log("[COMBAT] Created world with messageBus: ", 
+                        this.world.messageBus === window.mainMessageBus ? "Using shared messageBus" : "Created new messageBus");
+            
+            // Make world globally available immediately
+            if (window.game) {
+                window.game.ecsWorld = this.world;
+                console.log("[COMBAT] Made ECS world globally available via window.game.ecsWorld");
+            }
+            
+            // Create player entity immediately - don't wait for full setup
+            await this.createPlayerReferenceEntity();
+            
+            // Continue with full world setup
             await this.setupECSWorld();
-            console.log("ECS world initialization complete");
+            
+            console.log("[COMBAT] ECS world initialization complete");
         } catch (error) {
-            console.error("Error initializing ECS world:", error);
+            console.error("[COMBAT] Error initializing ECS world:", error);
         }
     }
     
@@ -63,80 +85,99 @@ export class Combat {
      * Set up the ECS world and register combat systems
      */
     async setupECSWorld() {
-        // Create a new ECS world - use window.mainMessageBus if available for unified messaging
-        this.world = new World(window.mainMessageBus);
-        console.log("Combat: Created world with messageBus: ", 
-                    this.world.messageBus === window.mainMessageBus ? "Using shared messageBus" : "Created new messageBus");
+        // Skip if world was already set up
+        if (this.worldInitialized) {
+            console.log("[COMBAT] World already initialized, skipping setup");
+            return;
+        }
         
         // Store scene reference in world for systems that need it
         this.world.scene = this.scene;
         
         // Log scene reference for debugging
-        console.log(`Set scene reference in ECS world for enemy rendering:`, 
+        console.log(`[COMBAT] Set scene reference in ECS world for enemy rendering:`, 
                    this.scene ? "Scene available" : "No scene available");
         
         // Register combat systems
-        console.log("Registering combat systems with ECS world...");
+        console.log("[COMBAT] Registering combat systems with ECS world...");
         
-        // Register the combat system
-        this.combatSystem = new CombatSystem(this.world);
-        this.world.registerSystem(this.combatSystem);
-        
-        // Register the enemy system
-        this.enemySystem = new EnemySystem(this.world);
-        this.world.registerSystem(this.enemySystem);
-        
-        // Register the trail system for visual effects
-        this.trailSystem = new TrailSystem(this.world);
-        this.world.registerSystem(this.trailSystem);
-        
-        // Add trail system to window.game for global access if game object exists
-        if (window.game) {
-            window.game.trailSystem = this.trailSystem;
-            console.log("Registered trail system with window.game for global access");
+        try {
+            // Register the combat system
+            this.combatSystem = new CombatSystem(this.world);
+            this.world.registerSystem(this.combatSystem);
+            
+            // Register the enemy system
+            this.enemySystem = new EnemySystem(this.world);
+            this.world.registerSystem(this.enemySystem);
+            
+            // Register the trail system for visual effects
+            this.trailSystem = new TrailSystem(this.world);
+            this.world.registerSystem(this.trailSystem);
+            
+            // Add trail system to window.game for global access if game object exists
+            if (window.game) {
+                window.game.trailSystem = this.trailSystem;
+                console.log("[COMBAT] Registered trail system with window.game for global access");
+            }
+            
+            // Register the render system - this is critical for making meshes visible
+            // Use the scene's camera reference if available
+            const camera = this.scene.camera;
+            
+            if (!camera) {
+                console.error("[COMBAT] No camera found on scene, enemies may not be visible");
+            }
+            
+            // Log camera reference for debugging
+            console.log(`[COMBAT] Camera reference for RenderSystem: ${camera ? "Available" : "Missing"}`);
+            
+            // Note: We're only passing the scene and camera, not the renderer
+            // This avoids the issues with trying to call render() from the RenderSystem
+            this.renderSystem = new RenderSystem(this.world, this.scene, camera);
+            this.world.registerSystem(this.renderSystem);
+            
+            // Register the CollisionSystem
+            console.log("[COMBAT] Registering CollisionSystem with the world...");
+            this.collisionSystem = new CollisionSystem(this.world);
+            this.world.registerSystem(this.collisionSystem);
+            console.log("[COMBAT] CollisionSystem registered");
+            
+            // Register the VisualEffectsSystem
+            console.log("[COMBAT] Registering VisualEffectsSystem with the world...");
+            this.visualEffectsSystem = new VisualEffectsSystem(this.world);
+            this.world.registerSystem(this.visualEffectsSystem);
+            console.log("[COMBAT] VisualEffectsSystem registered");
+            
+            // Set reference to this world in the scene for cross-component access
+            if (this.scene) {
+                this.scene.ecsWorld = this.world;
+                console.log("[COMBAT] Set ECS world reference in scene for cross-system access");
+            }
+            
+            // Initialize the world
+            try {
+                console.log("[COMBAT] Calling world.initialize()...");
+                this.world.initialize();
+                console.log("[COMBAT] World initialization completed successfully");
+            } catch (error) {
+                console.error("[COMBAT] Error during world.initialize():", error);
+                console.error("[COMBAT] Stack trace:", error.stack);
+                
+                // Continue execution - don't let this error stop us
+                console.log("[COMBAT] Continuing despite initialization error");
+            }
+            
+            // Create player reference entity again to ensure it exists
+            await this.createPlayerReferenceEntity();
+            
+            // Mark world as initialized
+            this.worldInitialized = true;
+            
+            console.log("[COMBAT] ECS combat systems registered and initialization process completed");
+        } catch (error) {
+            console.error("[COMBAT] Error during world setup:", error);
+            console.error("[COMBAT] Stack trace:", error.stack);
         }
-        
-        // Register the render system - this is critical for making meshes visible
-        // Use the scene's camera reference if available
-        const camera = this.scene.camera;
-        
-        if (!camera) {
-            console.error("No camera found on scene, enemies may not be visible");
-        }
-        
-        // Log camera reference for debugging
-        console.log(`Camera reference for RenderSystem: ${camera ? "Available" : "Missing"}`);
-        
-        // Note: We're only passing the scene and camera, not the renderer
-        // This avoids the issues with trying to call render() from the RenderSystem
-        this.renderSystem = new RenderSystem(this.world, this.scene, camera);
-        this.world.registerSystem(this.renderSystem);
-        
-        // CRITICAL FIX: Register the CollisionSystem - this was missing!
-        console.log("Registering CollisionSystem with the world...");
-        this.collisionSystem = new CollisionSystem(this.world);
-        this.world.registerSystem(this.collisionSystem);
-        console.log("CollisionSystem registered and active!");
-        
-        // Register the new VisualEffectsSystem
-        console.log("Registering VisualEffectsSystem with the world...");
-        this.visualEffectsSystem = new VisualEffectsSystem(this.world);
-        this.world.registerSystem(this.visualEffectsSystem);
-        console.log("VisualEffectsSystem registered and active!");
-        
-        // Set reference to this world in the scene for cross-component access
-        if (this.scene) {
-            this.scene.ecsWorld = this.world;
-            console.log("Set ECS world reference in scene for cross-system access");
-        }
-        
-        // Initialize the world
-        this.world.initialize();
-        
-        // Create player reference entity so enemies can target it
-        await this.createPlayerReferenceEntity();
-        
-        console.log("ECS combat systems registered and initialized");
     }
     
     /**
@@ -144,36 +185,146 @@ export class Combat {
      * This allows enemies and other systems to interact with the player
      */
     async createPlayerReferenceEntity() {
-        if (!this.world || !this.spaceship) return;
+        if (!this.world) {
+            console.error("[COMBAT] Cannot create player entity - world not available");
+            return null;
+        }
+        
+        if (!this.spaceship) {
+            console.error("[COMBAT] Cannot create player entity - spaceship not available");
+            return null;
+        }
         
         try {
-            // Create player entity
-            const playerEntity = this.world.createEntity('player');
+            console.log("[COMBAT] Creating player reference entity...");
+            
+            // If player entity already exists, check if it's valid
+            if (this.playerEntity) {
+                const existingEntity = this.world.getEntity(this.playerEntity.id);
+                if (existingEntity) {
+                    console.log(`[COMBAT] Player entity already exists with ID: ${this.playerEntity.id}`);
+                    
+                    // Make sure it has the player tag (re-add if missing)
+                    if (!existingEntity.hasTag('player')) {
+                        console.log("[COMBAT] Re-adding 'player' tag to existing entity");
+                        existingEntity.addTag('player');
+                    }
+                    
+                    // Update its position
+                    const transform = existingEntity.getComponent('TransformComponent');
+                    if (transform && this.spaceship.mesh) {
+                        transform.position.copy(this.spaceship.mesh.position);
+                        transform.rotation.copy(this.spaceship.mesh.rotation);
+                        transform.quaternion.copy(this.spaceship.mesh.quaternion);
+                        if (typeof transform.setUpdated === 'function') {
+                            transform.setUpdated();
+                        }
+                    }
+                    
+                    // Make it globally accessible
+                    if (window.game) {
+                        window.game.combat = window.game.combat || {};
+                        window.game.combat.playerEntity = existingEntity;
+                    }
+                    
+                    return existingEntity;
+                } else {
+                    console.log("[COMBAT] Previous player entity no longer exists, creating new one");
+                }
+            }
+            
+            // Create player entity with a clear unique name
+            const playerEntity = this.world.createEntity('player_' + Date.now());
+            
+            // Add player tag and log it
             playerEntity.addTag('player');
+            console.log(`[COMBAT] Added 'player' tag to entity ${playerEntity.id}`);
             
             // Import needed components
-            const { TransformComponent } = await import('../components/transform.js');
-            const { HealthComponent } = await import('../components/combat/healthComponent.js');
+            let TransformComponent, HealthComponent;
+            
+            try {
+                const transformModule = await import('../components/transform.js');
+                TransformComponent = transformModule.TransformComponent;
+                console.log("[COMBAT] Successfully imported TransformComponent");
+            } catch (error) {
+                console.error("[COMBAT] Failed to import TransformComponent:", error);
+                // Create a minimal fallback if import fails
+                TransformComponent = class FallbackTransform extends Component {
+                    constructor(position) { 
+                        super();
+                        this.position = position || new THREE.Vector3();
+                        this.rotation = new THREE.Euler();
+                        this.quaternion = new THREE.Quaternion();
+                    }
+                };
+            }
+            
+            try {
+                const healthModule = await import('../components/combat/healthComponent.js');
+                HealthComponent = healthModule.HealthComponent;
+                console.log("[COMBAT] Successfully imported HealthComponent");
+            } catch (error) {
+                console.error("[COMBAT] Failed to import HealthComponent:", error);
+                // Create a minimal fallback if import fails
+                HealthComponent = class FallbackHealth extends Component {
+                    constructor(health, shield) {
+                        super();
+                        this.health = health || 100;
+                        this.shield = shield || 50;
+                        this.maxHealth = health || 100;
+                        this.maxShield = shield || 50;
+                    }
+                };
+            }
             
             // Add transform component linked to spaceship position
-            const transform = new TransformComponent(this.spaceship.mesh.position.clone());
-            playerEntity.addComponent(transform);
+            try {
+                const position = this.spaceship.mesh ? this.spaceship.mesh.position.clone() : new THREE.Vector3();
+                const transform = new TransformComponent(position);
+                playerEntity.addComponent(transform);
+                console.log(`[COMBAT] Added TransformComponent to player entity with position: ${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}`);
+            } catch (error) {
+                console.error("[COMBAT] Error adding TransformComponent to player entity:", error);
+            }
             
             // Add health component
-            const health = new HealthComponent(100, 50); // 100 health, 50 shield
-            playerEntity.addComponent(health);
+            try {
+                const health = new HealthComponent(100, 50); // 100 health, 50 shield
+                playerEntity.addComponent(health);
+                console.log("[COMBAT] Added HealthComponent to player entity");
+            } catch (error) {
+                console.error("[COMBAT] Error adding HealthComponent to player entity:", error);
+            }
             
             // Store reference to player entity
             this.playerEntity = playerEntity;
             
-            // Connect spaceship to entity destruction events if available
-            if (this.spaceship && typeof this.spaceship.subscribeToDestructionEvents === 'function') {
-                this.spaceship.subscribeToDestructionEvents(this.world.messageBus);
+            // Make the player entity globally accessible for emergency access
+            if (window.game) {
+                window.game.combat = window.game.combat || {};
+                window.game.combat.playerEntity = playerEntity;
+                console.log("[COMBAT] Made player entity globally accessible via window.game.combat.playerEntity");
             }
             
-            console.log("Created player reference entity in ECS world with ID:", playerEntity.id);
+            // Add direct player entity reference to the world
+            this.world.playerEntity = playerEntity;
+            console.log("[COMBAT] Made player entity available directly via world.playerEntity");
+            
+            // Explicitly publish an event for player entity creation
+            if (this.world && this.world.messageBus) {
+                this.world.messageBus.publish('player.created', { entity: playerEntity });
+                console.log("[COMBAT] Published player.created event");
+            }
+            
+            console.log("[COMBAT] Successfully created player reference entity with ID:", playerEntity.id);
+            
+            // Return the entity for chaining
+            return playerEntity;
         } catch (error) {
-            console.error("Error creating player reference entity:", error);
+            console.error("[COMBAT] Error creating player reference entity:", error);
+            console.error("[COMBAT] Stack trace:", error.stack);
+            return null;
         }
     }
     
@@ -210,7 +361,15 @@ export class Combat {
      */
     updatePlayerReference() {
         // Skip if missing references
-        if (!this.world || !this.spaceship || !this.playerEntity) return;
+        if (!this.world || !this.spaceship || !this.playerEntity) {
+            // If we don't have a player entity, try to create one now if world is ready
+            if (this.world && this.spaceship && !this.playerEntity) {
+                console.log("No player entity found, creating one...");
+                this.createPlayerReferenceEntity();
+                return;
+            }
+            return;
+        }
         
         // Get the player entity
         const playerEntity = this.world.getEntity(this.playerEntity.id);
@@ -231,32 +390,25 @@ export class Combat {
             // Update rotation
             transform.rotation.copy(this.spaceship.mesh.rotation);
             transform.quaternion.copy(this.spaceship.mesh.quaternion);
+            
+            // Mark transform as updated to trigger any listening systems
+            if (typeof transform.setUpdated === 'function') {
+                transform.setUpdated();
+            }
         }
         
-        // Update health component, BUT BE CAREFUL not to overwrite damage
+        // Update health component if spaceship has relevant health info
         const health = playerEntity.getComponent('HealthComponent');
-        if (health) {
-            // IMPORTANT: Don't blindly overwrite health values from spaceship
-            
-            // Only update health if the spaceship hull has changed and is LOWER than the current
-            // health component value - this means damage was applied directly to the spaceship
-            if (this.spaceship.hull < health.health) {
-                // Spaceship lost health, update the health component
-                health.health = this.spaceship.hull;
-                console.log(`Updating health component from spaceship hull value: ${health.health}`);
+        if (health && this.spaceship.health !== undefined) {
+            // Only update health if it would be higher - don't override damage
+            if (this.spaceship.health > health.health) {
+                health.health = this.spaceship.health;
             }
             
-            // Only update shield if the spaceship shield has changed and is LOWER than the current
-            // shield component value - this means damage was applied directly to the spaceship
-            if (this.spaceship.shield < health.shield) {
-                // Spaceship lost shield, update the health component
+            // Only update shield if it would be higher - don't override damage
+            if (this.spaceship.shield !== undefined && this.spaceship.shield > health.shield) {
                 health.shield = this.spaceship.shield;
-                console.log(`Updating health component from spaceship shield value: ${health.shield}`);
             }
-            
-            // These should always be in sync
-            health.maxHealth = this.spaceship.maxHull;
-            health.maxShield = this.spaceship.maxShield;
         }
     }
     
@@ -317,11 +469,16 @@ export class Combat {
      * @param {number} deltaTime Time since last update in seconds
      */
     updateProjectiles(deltaTime) {
+        // Normalize deltaTime to 60 FPS for frame rate independence
+        const normalizedDeltaTime = deltaTime * 60;
+        
         // Update existing projectiles
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             const projectile = this.projectiles[i];
             
-            // Move projectile forward along its direction
+            // Move projectile forward along its direction using normalized delta time
+            // For projectiles, we need to scale by deltaTime alone, not normalized,
+            // because the projectile speed is already calibrated for the base frame rate
             projectile.position.add(projectile.velocity.clone().multiplyScalar(deltaTime));
             
             // Update associated entity in ECS world
@@ -350,7 +507,7 @@ export class Combat {
             }
             
             // Check if projectile has expired
-            if (performance.now() - projectile.creationTime > this.projectileLifespan) {
+            if (performance.now() - projectile.creationTime > this.projectileLifetime) {
                 // Proper cleanup for our new trail system
                 if (projectile.userData.trail) {
                     // Remove all trail particles to prevent memory leaks
@@ -423,7 +580,7 @@ export class Combat {
         
         // Check cooldown - prevent firing too rapidly
         const currentTime = performance.now();
-        if (currentTime - this.lastShotTime < this.cooldown) {
+        if (currentTime - this.lastFireTime < this.cooldown) {
             // Still in cooldown period
             return false;
         }
@@ -431,7 +588,7 @@ export class Combat {
         console.log("*** COMBAT MODULE: Firing particle cannon ***");
         
         // Update last shot time for cooldown tracking
-        this.lastShotTime = currentTime;
+        this.lastFireTime = currentTime;
         
         // Get ship transform data
         const shipPosition = this.spaceship.mesh.position.clone();

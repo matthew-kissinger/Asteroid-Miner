@@ -139,6 +139,30 @@ export class Entity {
     }
     
     /**
+     * Clear all tags from this entity
+     * @returns {Entity} This entity for chaining
+     */
+    clearTags() {
+        // Make a copy of the tags to iterate over
+        const allTags = [...this.tags];
+        
+        // Remove each tag properly
+        for (const tag of allTags) {
+            this.removeTag(tag);
+        }
+        
+        // Reset cached tag checks
+        this._isEnemy = undefined;
+        this._isPlayer = undefined;
+        this._isProjectile = undefined;
+        
+        // Clear the local Set
+        this.tags.clear();
+        
+        return this;
+    }
+    
+    /**
      * Check if this entity has the specified tag
      * @param {string} tag The tag to check for
      * @returns {boolean} True if the entity has the tag

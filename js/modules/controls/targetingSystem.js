@@ -171,11 +171,95 @@ export class TargetingSystem {
     }
     
     getCurrentTarget() {
-        return this.targetAsteroid;
+        try {
+            console.log("TargetingSystem: getCurrentTarget called");
+            
+            // Check if we have a valid target
+            if (!this.targetAsteroid) {
+                console.log("TargetingSystem: No current target");
+                return null;
+            }
+            
+            // Validate the target is still valid
+            if (!this.targetAsteroid.mesh || !this.targetAsteroid.mesh.position) {
+                console.error("TargetingSystem: Current target is invalid, clearing target");
+                this.targetAsteroid = null;
+                return null;
+            }
+            
+            console.log("TargetingSystem: Returning current target:", this.targetAsteroid);
+            return this.targetAsteroid;
+        } catch (error) {
+            console.error("TargetingSystem: Error in getCurrentTarget:", error);
+            return null;
+        }
     }
     
     isLockOnEnabled() {
-        return this.lockOnEnabled;
+        return this.lockOnEnabled === true;
+    }
+    
+    findNearestTarget() {
+        try {
+            console.log("TargetingSystem: findNearestTarget called");
+            
+            if (!this.spaceship || !this.spaceship.mesh || !this.spaceship.mesh.position) {
+                console.error("TargetingSystem: Cannot find nearest target - spaceship missing or invalid");
+                return null;
+            }
+            
+            // Get all asteroids
+            let asteroids = [];
+            
+            // Try to get asteroids from the game environment
+            const game = window.gameInstance || window.game;
+            if (game && game.environment && Array.isArray(game.environment.asteroids)) {
+                console.log(`TargetingSystem: Found ${game.environment.asteroids.length} asteroids in environment`);
+                asteroids = game.environment.asteroids;
+            } else {
+                console.error("TargetingSystem: Could not access asteroids from game environment");
+                return null;
+            }
+            
+            if (asteroids.length === 0) {
+                console.log("TargetingSystem: No asteroids found in environment");
+                return null;
+            }
+            
+            // Find the closest asteroid with proper validation
+            let closestAsteroid = null;
+            let closestDistance = Infinity;
+            
+            for (const asteroid of asteroids) {
+                // Validate asteroid has required properties
+                if (!asteroid || !asteroid.mesh || !asteroid.mesh.position) {
+                    console.log("TargetingSystem: Skipping invalid asteroid", asteroid);
+                    continue;
+                }
+                
+                const distance = this.spaceship.mesh.position.distanceTo(asteroid.mesh.position);
+                
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestAsteroid = asteroid;
+                }
+            }
+            
+            if (closestAsteroid) {
+                console.log("TargetingSystem: Found nearest target:", closestAsteroid);
+                
+                // Select this target
+                this.setTarget(closestAsteroid);
+                
+                return closestAsteroid;
+            } else {
+                console.log("TargetingSystem: No valid asteroid found after checking all asteroids");
+                return null;
+            }
+        } catch (error) {
+            console.error("TargetingSystem: Error in findNearestTarget:", error);
+            return null;
+        }
     }
     
     update() {
@@ -222,6 +306,75 @@ export class TargetingSystem {
         // Rescan for asteroids periodically in lock-on mode
         if (this.lockOnEnabled && Date.now() % 50 === 0) {
             this.scanForAsteroids();
+        }
+    }
+    
+    setTarget(target) {
+        try {
+            console.log("TargetingSystem: setTarget called", target);
+            
+            // Validate the target
+            if (!target) {
+                console.error("TargetingSystem: Cannot set null target");
+                return;
+            }
+            
+            if (!target.mesh || !target.mesh.position) {
+                console.error("TargetingSystem: Target is missing mesh or position properties", target);
+                return;
+            }
+            
+            // Set the target
+            this.targetAsteroid = target;
+            
+            // Update UI elements
+            if (this.targetDisplay) {
+                this.targetDisplay.style.display = 'block';
+            }
+            
+            if (this.targetInfoElement) {
+                // Format target info
+                const distance = this.calculateDistanceToTarget();
+                let resourceType = target.resourceType || 'Unknown';
+                
+                // Capitalize first letter
+                resourceType = resourceType.charAt(0).toUpperCase() + resourceType.slice(1);
+                
+                // Update target info text
+                this.targetInfoElement.textContent = `${resourceType} Asteroid - ${distance.toFixed(0)}m`;
+                this.targetInfoElement.style.color = '#30cfd0';
+                this.targetInfoElement.style.display = 'block';
+            }
+            
+            console.log("TargetingSystem: Target successfully set", this.targetAsteroid);
+            
+            // Enable lock-on
+            this.lockOnEnabled = true;
+            
+            return true;
+        } catch (error) {
+            console.error("TargetingSystem: Error in setTarget:", error);
+            return false;
+        }
+    }
+    
+    calculateDistanceToTarget() {
+        try {
+            if (!this.targetAsteroid || !this.targetAsteroid.mesh || !this.targetAsteroid.mesh.position) {
+                console.error("TargetingSystem: Cannot calculate distance - invalid target asteroid");
+                return Infinity;
+            }
+            
+            if (!this.spaceship || !this.spaceship.mesh || !this.spaceship.mesh.position) {
+                console.error("TargetingSystem: Cannot calculate distance - invalid spaceship");
+                return Infinity;
+            }
+            
+            const distance = this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position);
+            return distance;
+        } catch (error) {
+            console.error("TargetingSystem: Error calculating distance to target:", error);
+            return Infinity;
         }
     }
 } 

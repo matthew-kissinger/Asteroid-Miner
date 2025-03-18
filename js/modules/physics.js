@@ -45,6 +45,10 @@ export class Physics {
         // Check if ship is docked - skip physics if docked
         if (this.spaceship.isDocked) return;
         
+        // Use a normalized deltaTime to standardize physics at 60 FPS feel
+        // This is the key to frame rate independence
+        this.normalizedDeltaTime = deltaTime * 60; 
+        
         // Check if we have fuel
         const hasFuel = this.spaceship.consumeFuel();
         
@@ -207,6 +211,9 @@ export class Physics {
             if (isThrusting) {
                 // Apply thrust in world space (only if actively thrusting)
                 thrustVector.applyQuaternion(this.spaceship.mesh.quaternion);
+                
+                // Apply thrust scaled by normalized delta time
+                thrustVector.multiplyScalar(this.normalizedDeltaTime);
                 this.spaceship.velocity.add(thrustVector);
                 
                 // Get the current max velocity from the spaceship
@@ -222,7 +229,7 @@ export class Physics {
         // Add a small amount of "space friction" to make controls more manageable
         // This isn't realistic physics but makes the game more enjoyable to play
         if (!isThrusting && this.spaceship.velocity.length() > 0) {
-            const friction = Physics.FRICTION;
+            const friction = Physics.FRICTION * this.normalizedDeltaTime;
             if (this.spaceship.velocity.length() > friction) {
                 this.spaceship.velocity.multiplyScalar(1 - friction);
             } else {
@@ -232,7 +239,9 @@ export class Physics {
         
         // CRITICAL: Always update position based on current velocity (Newton's first law)
         // Objects in motion stay in motion unless acted upon by a force
-        this.spaceship.mesh.position.add(this.spaceship.velocity);
+        // Scale position update by normalized delta time
+        const positionDelta = this.spaceship.velocity.clone().multiplyScalar(this.normalizedDeltaTime);
+        this.spaceship.mesh.position.add(positionDelta);
         
         // Apply rotation based on rotationState
         this.updateShipRotation();
@@ -271,8 +280,9 @@ export class Physics {
         const euler = new THREE.Euler(this.rotationState.y, this.rotationState.x, 0, 'YXZ');
         const targetQuaternion = new THREE.Quaternion().setFromEuler(euler);
         
-        // Apply the rotation to the spaceship - with light smoothing
-        this.spaceship.mesh.quaternion.slerp(targetQuaternion, Physics.ROTATION_SPEED);
+        // Smoothly interpolate current rotation to target rotation
+        // Use rotation speed scaled by normalized delta time
+        this.spaceship.mesh.quaternion.slerp(targetQuaternion, Physics.ROTATION_SPEED * this.normalizedDeltaTime);
     }
     
     updateCamera() {

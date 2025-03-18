@@ -11,9 +11,9 @@ export class MiningSystem {
         
         // Mining speeds based on resource types (lower = slower mining)
         this.miningSpeedByType = {
-            iron: 0.003,     // Base mining speed
-            gold: 0.0006,    // 5x slower than iron
-            platinum: 0.0002  // 15x slower than iron
+            iron: 0.006,     // Base mining speed
+            gold: 0.0012,    // 5x slower than iron
+            platinum: 0.0004  // 15x slower than iron
         };
         this.miningSpeed = 0.03; // Default speed, will be set based on asteroid type
         this.miningDistance = 600; // Maximum mining distance
@@ -79,103 +79,180 @@ export class MiningSystem {
     }
     
     startMining() {
-        // Don't allow mining if no asteroid is targeted
-        if (!this.targetAsteroid) {
-            return;
-        }
-        
-        // Check if asteroid is in mining range
-        const distance = this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position);
-        if (distance > this.miningDistance) {
-            // Show a message that target is out of range
-            const targetInfo = document.getElementById('target-info');
-            if (targetInfo) {
-                targetInfo.textContent = 'TARGET OUT OF RANGE';
-                targetInfo.style.color = '#ff4400';
-                targetInfo.style.display = 'block';
-                
-                // Hide after 2 seconds
-                setTimeout(() => {
-                    targetInfo.style.display = 'none';
-                }, 2000);
-            }
-            return;
-        }
-        
-        // Set mining state to active
-        this.isMining = true;
-        this.miningProgress = 0;
-        
-        // Show mining laser beam
-        const laserBeam = document.getElementById('laser-beam');
-        if (laserBeam) {
-            laserBeam.style.display = 'block';
+        try {
+            console.log("MiningSystem: startMining called");
             
-            // Adjust laser color based on resource type and mining level
-            if (this.targetAsteroid.resourceType) {
-                const resourceType = this.targetAsteroid.resourceType.toLowerCase();
-                let laserColor = '#ff3030'; // Default red for iron
-                let glowColor = '#ff0000';
-                
-                if (resourceType === 'gold') {
-                    laserColor = '#ffcc00'; // Gold color
-                    glowColor = '#ffaa00';
-                } else if (resourceType === 'platinum') {
-                    laserColor = '#66ffff'; // Cyan color for platinum
-                    glowColor = '#00ffff';
+            // Don't allow mining if no asteroid is targeted
+            if (!this.targetAsteroid) {
+                console.error("MiningSystem: Cannot start mining - no target asteroid set");
+                return;
+            }
+
+            // Validate asteroid has required properties
+            if (!this.targetAsteroid.mesh || !this.targetAsteroid.mesh.position) {
+                console.error("MiningSystem: Target asteroid is missing mesh or position", this.targetAsteroid);
+                return;
+            }
+
+            // Validate spaceship has required properties
+            if (!this.spaceship || !this.spaceship.mesh || !this.spaceship.mesh.position) {
+                console.error("MiningSystem: Spaceship is missing mesh or position");
+                return;
+            }
+            
+            // Check if asteroid is in mining range
+            const distance = this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position);
+            console.log(`MiningSystem: Distance to asteroid: ${distance}, max range: ${this.miningDistance}`);
+            
+            if (distance > this.miningDistance) {
+                // Show a message that target is out of range
+                const targetInfo = document.getElementById('target-info');
+                if (targetInfo) {
+                    targetInfo.textContent = 'TARGET OUT OF RANGE';
+                    targetInfo.style.color = '#ff4400';
+                    targetInfo.style.display = 'block';
+                    
+                    // Hide after 2 seconds
+                    setTimeout(() => {
+                        targetInfo.style.display = 'none';
+                    }, 2000);
                 }
+                console.log("MiningSystem: Target out of range");
+                return;
+            }
+            
+            // Set mining state to active
+            this.isMining = true;
+            this.miningProgress = 0;
+            console.log("MiningSystem: Mining state activated");
+            
+            // Get or create laser beam element
+            let laserBeam = document.getElementById('laser-beam');
+            
+            // If laser beam element doesn't exist, create it
+            if (!laserBeam) {
+                console.log("MiningSystem: Creating laser beam element");
+                laserBeam = document.createElement('div');
+                laserBeam.id = 'laser-beam';
+                laserBeam.style.position = 'absolute';
+                laserBeam.style.height = '2px';
+                laserBeam.style.backgroundColor = '#ff3030';
+                laserBeam.style.transformOrigin = '0 0';
+                laserBeam.style.zIndex = '100';
+                laserBeam.style.pointerEvents = 'none';
+                document.body.appendChild(laserBeam);
+            }
+            
+            // Show mining laser beam
+            if (laserBeam) {
+                laserBeam.style.display = 'block';
                 
-                // Adjust intensity based on mining efficiency - brighter for higher efficiency
-                const efficiency = this.getMiningEfficiency();
-                if (efficiency > 1.0) {
-                    // Make the laser more intense as mining level increases
-                    const laserIntensity = Math.min(1.0 + (efficiency - 1.0) * 0.5, 3.0);
-                    laserBeam.style.boxShadow = `0 0 ${10 * laserIntensity}px ${glowColor}, 0 0 ${20 * laserIntensity}px ${glowColor}`;
+                // Adjust laser color based on resource type and mining level
+                if (this.targetAsteroid.resourceType) {
+                    const resourceType = this.targetAsteroid.resourceType.toLowerCase();
+                    let laserColor = '#ff3030'; // Default red for iron
+                    let glowColor = '#ff0000';
+                    
+                    if (resourceType === 'gold') {
+                        laserColor = '#ffcc00'; // Gold color
+                        glowColor = '#ffaa00';
+                    } else if (resourceType === 'platinum') {
+                        laserColor = '#66ffff'; // Cyan color for platinum
+                        glowColor = '#00ffff';
+                    }
+                    
+                    // Adjust intensity based on mining efficiency - brighter for higher efficiency
+                    const efficiency = this.getMiningEfficiency();
+                    if (efficiency > 1.0) {
+                        // Make the laser more intense as mining level increases
+                        const laserIntensity = Math.min(1.0 + (efficiency - 1.0) * 0.5, 3.0);
+                        laserBeam.style.boxShadow = `0 0 ${10 * laserIntensity}px ${glowColor}, 0 0 ${20 * laserIntensity}px ${glowColor}`;
+                    } else {
+                        laserBeam.style.boxShadow = `0 0 10px ${glowColor}, 0 0 20px ${glowColor}`;
+                    }
+                    
+                    laserBeam.style.backgroundColor = laserColor;
                 } else {
-                    laserBeam.style.boxShadow = `0 0 10px ${glowColor}, 0 0 20px ${glowColor}`;
+                    // Default red laser
+                    laserBeam.style.backgroundColor = '#ff3030'; 
+                    laserBeam.style.boxShadow = '0 0 10px #ff0000, 0 0 20px #ff0000';
                 }
-                
-                laserBeam.style.backgroundColor = laserColor;
-            } else {
-                // Default red laser
-                laserBeam.style.backgroundColor = '#ff3030'; 
-                laserBeam.style.boxShadow = '0 0 10px #ff0000, 0 0 20px #ff0000';
             }
-        }
-        
-        // Show mining particles
-        if (this.miningParticles) {
-            this.miningParticles.visible = true;
             
-            // Adjust particle color based on resource type
-            if (this.targetAsteroid.resourceType && this.miningParticles.material) {
-                const resourceType = this.targetAsteroid.resourceType.toLowerCase();
+            // Show mining particles
+            if (this.miningParticles) {
+                this.miningParticles.visible = true;
                 
-                if (resourceType === 'iron') {
-                    this.miningParticles.material.color.set(0xff5500); // Orange
-                } else if (resourceType === 'gold') {
-                    this.miningParticles.material.color.set(0xffcc00); // Yellow
-                } else if (resourceType === 'platinum') {
-                    this.miningParticles.material.color.set(0x66ffff); // Light blue
-                }
-                
-                // Adjust particle size based on mining efficiency
-                const efficiency = this.getMiningEfficiency();
-                if (efficiency > 1.0) {
-                    this.miningParticles.material.size = 1.5 * Math.sqrt(efficiency);
+                // Adjust particle color based on resource type
+                if (this.targetAsteroid.resourceType && this.miningParticles.material) {
+                    const resourceType = this.targetAsteroid.resourceType.toLowerCase();
+                    
+                    if (resourceType === 'iron') {
+                        this.miningParticles.material.color.set(0xff5500); // Orange
+                    } else if (resourceType === 'gold') {
+                        this.miningParticles.material.color.set(0xffcc00); // Yellow
+                    } else if (resourceType === 'platinum') {
+                        this.miningParticles.material.color.set(0x66ffff); // Light blue
+                    }
+                    
+                    // Adjust particle size based on mining efficiency
+                    const efficiency = this.getMiningEfficiency();
+                    if (efficiency > 1.0) {
+                        this.miningParticles.material.size = 1.5 * Math.sqrt(efficiency);
+                    }
                 }
             }
-        }
-        
-        // Activate the spaceship's laser emitter
-        this.spaceship.activateMiningLaser();
-        
-        // Update mining status display with timing info
-        this.updateMiningStatusWithTime();
-        
-        // Trigger laser sound
-        if (window.game && window.game.audio) {
-            window.game.audio.playSound('laser');
+            
+            // Create or update mining progress bar
+            let miningProgressContainer = document.getElementById('mining-progress-container');
+            if (!miningProgressContainer) {
+                console.log("MiningSystem: Creating mining progress container");
+                miningProgressContainer = document.createElement('div');
+                miningProgressContainer.id = 'mining-progress-container';
+                miningProgressContainer.style.position = 'absolute';
+                miningProgressContainer.style.bottom = '20px';
+                miningProgressContainer.style.left = '50%';
+                miningProgressContainer.style.transform = 'translateX(-50%)';
+                miningProgressContainer.style.width = '200px';
+                miningProgressContainer.style.height = '10px';
+                miningProgressContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                miningProgressContainer.style.border = '1px solid #30cfd0';
+                miningProgressContainer.style.zIndex = '1000';
+                document.body.appendChild(miningProgressContainer);
+                
+                const progressBar = document.createElement('div');
+                progressBar.id = 'mining-progress-bar';
+                progressBar.style.width = '0%';
+                progressBar.style.height = '100%';
+                progressBar.style.backgroundColor = '#30cfd0';
+                miningProgressContainer.appendChild(progressBar);
+            } else {
+                miningProgressContainer.style.display = 'block';
+                const progressBar = document.getElementById('mining-progress-bar');
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+            }
+            
+            // Activate the spaceship's laser emitter
+            if (this.spaceship && typeof this.spaceship.activateMiningLaser === 'function') {
+                this.spaceship.activateMiningLaser();
+            }
+            
+            // Update mining status display with timing info
+            this.updateMiningStatusWithTime();
+            
+            // Trigger laser sound
+            if (window.game && window.game.audio) {
+                window.game.audio.playSound('mining-laser');
+            } else if (window.game && window.game.audio) {
+                window.game.audio.playSound('laser');
+            }
+            
+            console.log("MiningSystem: Mining successfully started");
+        } catch (error) {
+            console.error("MiningSystem: Error in startMining:", error);
+            this.isMining = false;
         }
     }
     
@@ -213,6 +290,12 @@ export class MiningSystem {
         // Hide mining particles
         if (this.miningParticles) {
             this.miningParticles.visible = false;
+        }
+        
+        // Hide mining progress bar
+        const miningProgressContainer = document.getElementById('mining-progress-container');
+        if (miningProgressContainer) {
+            miningProgressContainer.style.display = 'none';
         }
         
         // Deactivate the spaceship's laser emitter
@@ -294,8 +377,9 @@ export class MiningSystem {
         const shipPosition = this.spaceship.mesh.position.clone();
         const asteroidPosition = this.targetAsteroid.mesh.position.clone();
         
-        // Add a small offset to the ship position to start from the mining laser tip
-        const shipOffset = new THREE.Vector3(0, 0, -3); // Adjust based on ship model
+        // Add a small offset to the ship position to start from the FRONT of the mining laser
+        // The ship's coordinate system has -Z as the forward direction, so use negative Z
+        const shipOffset = new THREE.Vector3(0, 0, -15); // Negative Z to go to the front of the ship
         shipOffset.applyQuaternion(this.spaceship.mesh.quaternion);
         shipPosition.add(shipOffset);
         

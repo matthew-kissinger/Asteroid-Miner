@@ -381,10 +381,20 @@ export class DockingSystem {
             if (this.ui && this.ui.mothershipInterface) {
                 this.ui.mothershipInterface.showDockingPrompt();
             }
+            // Also show the dock button in touch controls for mobile
+            if (this.ui && this.ui.controls && this.ui.controls.isMobile && 
+                this.ui.controls.touchControls) {
+                this.ui.controls.touchControls.showDockButton();
+            }
         } else {
             this.nearMothership = false;
             if (this.ui && this.ui.mothershipInterface) {
                 this.ui.mothershipInterface.hideDockingPrompt();
+            }
+            // Also hide the dock button in touch controls for mobile
+            if (this.ui && this.ui.controls && this.ui.controls.isMobile && 
+                this.ui.controls.touchControls) {
+                this.ui.controls.touchControls.hideDockButton();
             }
         }
     }

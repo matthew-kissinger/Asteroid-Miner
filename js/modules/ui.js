@@ -1,6 +1,7 @@
 // ui.js - Main UI class that integrates all UI components
 
 import { HUD } from './ui/hud.js';
+import { MobileHUD } from './ui/mobileHUD.js';
 import { MiningDisplay } from './ui/miningDisplay.js';
 import { TargetingSystem } from './ui/targetingSystem.js';
 import { MothershipInterface } from './ui/mothershipInterface.js';
@@ -8,6 +9,9 @@ import { GameOverScreen } from './ui/gameOverScreen.js';
 import { ControlsMenu } from './ui/controlsMenu.js';
 import { StarMap } from './ui/starMap.js';
 import { BlackjackGame } from './ui/blackjackGame.js';
+import { Settings } from './ui/settings.js';
+import { MemoryStats } from '../utils/memoryManager.js';
+import { MobileDetector } from '../utils/mobileDetector.js';
 
 export class UI {
     constructor(spaceship, environment) {
@@ -15,11 +19,22 @@ export class UI {
         this.environment = environment;
         this.controls = null; // Will be set via setControls
         this.audio = null; // Will be set via setAudio
+        this.isMobile = MobileDetector.isMobile();
         
-        console.log("Initializing UI components...");
+        console.log(`Initializing UI components for ${this.isMobile ? 'mobile' : 'desktop'} device...`);
+        
+        // Load mobile CSS if on mobile device
+        if (this.isMobile) {
+            this.loadMobileCSS();
+        }
         
         // Initialize UI components
-        this.hud = new HUD(spaceship);
+        if (this.isMobile) {
+            this.hud = new MobileHUD(spaceship);
+        } else {
+            this.hud = new HUD(spaceship);
+        }
+        
         this.miningDisplay = new MiningDisplay();
         this.targetingSystem = new TargetingSystem();
         this.mothershipInterface = new MothershipInterface();
@@ -32,10 +47,31 @@ export class UI {
         // Initialize Blackjack game (will be fully initialized after audio is set)
         this.blackjackGame = null;
         
+        // Initialize settings (requires game instance)
+        this.settings = null;
+        
         // Link starMap to mothershipInterface
         this.mothershipInterface.setStarMap(this.starMap);
         
+        // Initialize performance monitoring if in debug mode
+        if (window.DEBUG_MODE) {
+            this.initializePerformanceMonitor();
+        }
+        
         console.log("UI components initialized");
+    }
+    
+    loadMobileCSS() {
+        // Create link element for mobile CSS
+        const mobileCSS = document.createElement('link');
+        mobileCSS.rel = 'stylesheet';
+        mobileCSS.href = 'css/mobile.css';
+        mobileCSS.type = 'text/css';
+        
+        // Add to document head
+        document.head.appendChild(mobileCSS);
+        
+        console.log("Mobile CSS loaded");
     }
     
     setAudio(audio) {
@@ -67,6 +103,11 @@ export class UI {
             this.miningDisplay.setControls(this.controls);
         }
         
+        // Set controls in the mobile HUD if we're on mobile
+        if (this.isMobile && this.hud && this.hud.setControls) {
+            this.hud.setControls(this.controls);
+        }
+        
         // Update star map with docking system
         if (this.starMap && this.controls.dockingSystem) {
             this.starMap.dockingSystem = this.controls.dockingSystem;
@@ -74,6 +115,22 @@ export class UI {
         
         // Set up button handlers
         this.setupEventHandlers();
+    }
+    
+    // Initialize settings with the game instance
+    initializeSettings(game) {
+        if (!game) {
+            console.error("Cannot initialize settings without game instance");
+            return;
+        }
+        
+        // Create settings
+        this.settings = new Settings(game);
+        
+        // Link settings to mothershipInterface
+        this.mothershipInterface.setSettings(this.settings);
+        
+        console.log("Settings initialized with game instance");
     }
     
     setupEventHandlers() {
@@ -88,16 +145,33 @@ export class UI {
         if (this.controls && this.controls.setupMothershipUIControls) {
             this.controls.setupMothershipUIControls();
         }
+        
+        // Add resize handler to update mobile detection
+        window.addEventListener('resize', () => {
+            const wasMobile = this.isMobile;
+            this.isMobile = MobileDetector.isMobile();
+            
+            // If device type changed, reload the page to apply correct UI
+            if (wasMobile !== this.isMobile) {
+                console.log(`Device type changed from ${wasMobile ? 'mobile' : 'desktop'} to ${this.isMobile ? 'mobile' : 'desktop'}`);
+                location.reload();
+            }
+        });
     }
     
     update() {
-        // Update individual components
+        // Update appropriate HUD based on device type
         if (this.hud && this.hud.update) {
             this.hud.update();
         }
         
         if (this.miningDisplay && this.miningDisplay.update) {
             this.miningDisplay.update();
+        }
+        
+        // Update touch controls if on mobile
+        if (this.isMobile && this.controls && this.controls.touchControls) {
+            this.controls.touchControls.update();
         }
     }
     
@@ -111,6 +185,63 @@ export class UI {
         if (this.hud && this.hud.updateCoordinates) {
             this.hud.updateCoordinates(x, y, z);
         }
+    }
+    
+    updateFPS(fps, cap) {
+        if (this.hud && this.hud.updateFPS) {
+            // Pass both actual FPS and cap to HUD
+            this.hud.updateFPS(fps, cap);
+            
+            // Control visibility of FPS display based on settings
+            if (this.settings && this.settings.settings) {
+                const fpsDisplay = document.getElementById('fps-display');
+                if (fpsDisplay) {
+                    fpsDisplay.style.display = this.settings.settings.showFPS ? 'block' : 'none';
+                }
+            }
+        }
+    }
+    
+    /**
+     * Show a notification message to the user
+     * @param {string} message - The message to display
+     * @param {number} duration - Time in milliseconds to show the notification
+     */
+    showNotification(message, duration = 3000) {
+        const notificationsArea = document.getElementById('notifications-area');
+        if (!notificationsArea) return;
+        
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+        notification.style.backgroundColor = 'rgba(6, 22, 31, 0.7)';
+        notification.style.backdropFilter = 'blur(5px)';
+        notification.style.color = 'rgba(120, 220, 232, 0.9)';
+        notification.style.padding = '8px 15px';
+        notification.style.borderRadius = '5px';
+        notification.style.marginBottom = '10px';
+        notification.style.border = '1px solid rgba(120, 220, 232, 0.3)';
+        notification.style.boxShadow = '0 0 10px rgba(120, 220, 232, 0.2)';
+        notification.style.textAlign = 'center';
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.3s';
+        
+        notificationsArea.appendChild(notification);
+        
+        // Fade in
+        setTimeout(() => {
+            notification.style.opacity = '1';
+        }, 10);
+        
+        // Fade out and remove after duration
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, duration);
     }
     
     showGameOver(resources, message) {
@@ -188,6 +319,11 @@ export class UI {
         if (this.mothershipInterface && this.mothershipInterface.hideDockingPrompt) {
             this.mothershipInterface.hideDockingPrompt();
         }
+        
+        // Hide touch controls if on mobile
+        if (this.isMobile && this.controls && this.controls.touchControls) {
+            this.controls.touchControls.hide();
+        }
     }
     
     showUI() {
@@ -200,6 +336,66 @@ export class UI {
         
         if (this.miningDisplay && this.miningDisplay.show) {
             this.miningDisplay.show();
+        }
+        
+        // Show touch controls if on mobile
+        if (this.isMobile && this.controls && this.controls.touchControls) {
+            this.controls.touchControls.show();
+        }
+    }
+    
+    /**
+     * Initialize performance monitor for debugging
+     */
+    initializePerformanceMonitor() {
+        // Create container for performance stats
+        const statsContainer = document.createElement('div');
+        statsContainer.id = 'performance-stats';
+        statsContainer.style.position = 'fixed';
+        statsContainer.style.bottom = '10px';
+        statsContainer.style.right = '10px';
+        statsContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        statsContainer.style.color = '#0ff';
+        statsContainer.style.padding = '10px';
+        statsContainer.style.fontFamily = 'monospace';
+        statsContainer.style.fontSize = '12px';
+        statsContainer.style.borderRadius = '4px';
+        statsContainer.style.zIndex = '1000';
+        statsContainer.style.maxWidth = '300px';
+        statsContainer.style.maxHeight = '200px';
+        statsContainer.style.overflow = 'auto';
+        
+        // Memory stats container
+        const memoryStats = document.createElement('div');
+        memoryStats.id = 'memory-stats';
+        statsContainer.appendChild(memoryStats);
+        
+        // FPS counter
+        const fpsCounter = document.createElement('div');
+        fpsCounter.id = 'fps-counter';
+        statsContainer.appendChild(fpsCounter);
+        
+        // Add to DOM
+        document.body.appendChild(statsContainer);
+        
+        // Update stats every second
+        this.statsInterval = setInterval(() => {
+            // Update memory stats display
+            memoryStats.innerHTML = MemoryStats.getReport().replace(/\n/g, '<br>');
+            
+            // Display current FPS if available
+            if (window.game && window.game.currentFPS) {
+                fpsCounter.innerHTML = `FPS: ${Math.round(window.game.currentFPS)}`;
+            }
+        }, 1000);
+    }
+    
+    // Make sure to clean up stats interval when necessary
+    onDisabled() {
+        // Clear stats interval if it exists
+        if (this.statsInterval) {
+            clearInterval(this.statsInterval);
+            this.statsInterval = null;
         }
     }
 } 

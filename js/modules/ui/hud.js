@@ -476,6 +476,7 @@ export class HUD {
                 <span id="current-location" style="font-weight:600; letter-spacing:1px;">DEEP SPACE</span>
             </div>
             <div id="location-coordinates" style="margin-top:5px; font-size:12px; opacity:0.8;">X: 0 Y: 0 Z: 0</div>
+            <div id="fps-display" style="margin-top:5px; font-size:12px; opacity:0.8;">FPS: 0</div>
         `;
         
         // Add decorative corner effects
@@ -1079,6 +1080,29 @@ export class HUD {
         const coordsElement = document.getElementById('location-coordinates');
         if (coordsElement) {
             coordsElement.textContent = `X: ${Math.round(x)} Y: ${Math.round(y)} Z: ${Math.round(z)}`;
+        }
+    }
+    
+    updateFPS(fps, cap) {
+        const fpsElement = document.getElementById('fps-display');
+        if (fpsElement) {
+            if (cap) {
+                // Show actual FPS and the cap
+                fpsElement.textContent = `FPS: ${Math.round(fps)}/${cap}`;
+                
+                // Color code based on performance relative to cap
+                if (fps < cap * 0.9) {
+                    // Below 90% of target - indicate performance issues
+                    fpsElement.style.color = "rgba(255, 120, 120, 0.9)";
+                } else {
+                    // Normal performance - standard color
+                    fpsElement.style.color = "rgba(120, 220, 232, 0.8)";
+                }
+            } else {
+                // Just show FPS for uncapped mode
+                fpsElement.textContent = `FPS: ${Math.round(fps)}`;
+                fpsElement.style.color = "rgba(120, 220, 232, 0.8)";
+            }
         }
     }
     

@@ -4,6 +4,8 @@ import { InputHandler } from './controls/inputHandler.js';
 import { MiningSystem } from './controls/miningSystem.js';
 import { TargetingSystem } from './controls/targetingSystem.js';
 import { DockingSystem } from './controls/dockingSystem.js';
+import { TouchControls } from './controls/touchControls.js';
+import { MobileDetector } from '../utils/mobileDetector.js';
 
 export class Controls {
     constructor(spaceship, physics, environment, ui) {
@@ -13,12 +15,28 @@ export class Controls {
         this.physics = physics;
         this.environment = environment;
         this.ui = ui;
+        this.isMobile = MobileDetector.isMobile();
+        this._wasDocked = spaceship ? spaceship.isDocked : false;
+        this.weaponSystem = null; // Initialize weaponSystem reference
         
         // Set scene reference for components that need it
         this.scene = physics.scene;
         
         // Initialize controls components
-        this.inputHandler = new InputHandler(spaceship, physics);
+        if (!this.isMobile) {
+            console.log("Initializing keyboard/mouse controls");
+            this.inputHandler = new InputHandler(spaceship, physics);
+        } else {
+            console.log("Initializing touch controls for mobile");
+            this.touchControls = new TouchControls(spaceship, physics);
+            // Create a placeholder input handler with minimal functionality
+            // This prevents errors where other systems expect inputHandler to exist
+            this.inputHandler = {
+                isLocked: () => false,
+                exitPointerLock: () => {}
+            };
+        }
+        
         this.miningSystem = new MiningSystem(spaceship, this.scene);
         this.targetingSystem = new TargetingSystem(spaceship, this.scene, environment);
         
@@ -29,10 +47,15 @@ export class Controls {
         this.resources = this.miningSystem.resources;
         this.dockingSystem.setResources(this.resources);
         
+        // Pass control systems to touch controls if on mobile
+        if (this.isMobile && this.touchControls) {
+            this.touchControls.setControlSystems(this);
+        }
+        
         // Connect upgrade systems - share references for easier updates
         this.connectUpgradeEffects();
         
-        // Set up event handlers
+        // Set up event handlers - different for mobile vs desktop
         this.setupEventHandlers();
         
         console.log("Control systems initialized");
@@ -69,6 +92,12 @@ export class Controls {
     }
     
     setupEventHandlers() {
+        // Skip adding keyboard controls if on mobile
+        if (this.isMobile) {
+            console.log("Mobile device detected, touch handlers are set in TouchControls class");
+            return;
+        }
+        
         // Add T key for targeting system
         document.addEventListener('keydown', e => {
             switch (e.key.toLowerCase()) {
@@ -133,12 +162,33 @@ export class Controls {
     dockWithMothership() {
         if (this.dockingSystem) {
             this.dockingSystem.dockWithMothership();
+            
+            // Hide touch controls when docked
+            if (this.isMobile && this.touchControls) {
+                this.touchControls.hide();
+            }
         } else {
             console.error("Docking system not initialized");
         }
     }
     
     update() {
+        // Check if docking status changed
+        if (this.spaceship) {
+            const wasDocked = this._wasDocked;
+            const isDocked = this.spaceship.isDocked;
+            
+            // If docking status changed, update touch controls visibility
+            if (this.isMobile && this.touchControls && wasDocked !== isDocked) {
+                if (isDocked) {
+                    this.touchControls.hide();
+                } else {
+                    this.touchControls.show();
+                }
+                this._wasDocked = isDocked;
+            }
+        }
+        
         // Skip updates if docked
         if (this.spaceship && this.spaceship.isDocked) {
             // Only update the docking system when docked
@@ -166,6 +216,11 @@ export class Controls {
         
         if (this.dockingSystem) {
             this.dockingSystem.update();
+        }
+        
+        // Update touch controls if on mobile
+        if (this.isMobile && this.touchControls) {
+            this.touchControls.update();
         }
     }
     

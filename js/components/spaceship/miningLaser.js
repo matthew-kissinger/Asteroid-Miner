@@ -161,25 +161,64 @@ export class MiningLaserComponent extends Component {
      * @param {THREE.Vector3} targetPosition Target position (asteroid)
      */
     updateLaserBeam(sourcePosition, targetPosition) {
-        if (!this.laserBeam || !this.active) return;
+        // If the laser is not active or we're missing positions, don't show it
+        if (!this.active || !sourcePosition || !targetPosition) {
+            this.laserBeam.visible = false;
+            return;
+        }
         
-        // Calculate direction and distance
-        const direction = new THREE.Vector3().subVectors(targetPosition, sourcePosition);
+        // Create a clone of the source position to work with
+        const adjustedSource = sourcePosition.clone();
+        
+        // The ship's coordinate system has -Z as forward direction
+        // Add offset to position the laser at the front of the ship
+        if (this.entity) {
+            const frontOffset = new THREE.Vector3(0, 0, -5); // Negative Z is forward
+            
+            // If the entity has a transform component, use its rotation
+            const transform = this.entity.getComponent('TransformComponent');
+            if (transform) {
+                frontOffset.applyQuaternion(transform.getQuaternion());
+            }
+            
+            // Apply the offset to the source position
+            adjustedSource.add(frontOffset);
+        }
+        
+        // Calculate direction and length of the beam
+        const direction = new THREE.Vector3().subVectors(targetPosition, adjustedSource);
         const distance = direction.length();
         
-        // Scale laser beam to match distance
-        this.laserBeam.scale.z = distance;
-        
-        // Position laser beam
-        this.laserBeam.position.copy(sourcePosition);
-        
-        // Orient laser beam to point at target
+        // Set the laser beam position and scale
+        this.laserBeam.position.copy(adjustedSource);
         this.laserBeam.lookAt(targetPosition);
+        this.laserBeam.scale.set(1, 1, distance);
+        
+        // Show the beam
+        this.laserBeam.visible = true;
         
         // Position progress indicator at target
         if (this.progressIndicator) {
             this.progressIndicator.position.copy(targetPosition);
-            // Always face camera (will be handled in the update loop)
+            this.progressIndicator.visible = true;
+        }
+        
+        // Update the impact effect position
+        if (this.impactEffect) {
+            this.impactEffect.position.copy(targetPosition);
+            this.impactEffect.visible = true;
+        }
+        
+        // Ensure the beam material is updated correctly
+        if (this.laserBeam.material) {
+            // Animate laser intensity
+            const intensity = 0.8 + Math.sin(Date.now() * 0.01) * 0.2;
+            this.laserBeam.material.opacity = intensity;
+            
+            // Make the color pulse slightly
+            const hue = (Date.now() * 0.001) % 1;
+            const saturation = 0.5 + Math.sin(Date.now() * 0.002) * 0.2;
+            this.laserBeam.material.color.setHSL(hue, saturation, 0.5);
         }
     }
     

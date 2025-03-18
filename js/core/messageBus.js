@@ -11,6 +11,13 @@ export class MessageBus {
         this.queuedMessages = [];
         this.dispatching = false;
         
+        // High-frequency message types to minimize logging
+        this.highFrequencyTypes = new Set([
+            'transform.updated',
+            'physics.update',
+            'render.update'
+        ]);
+        
         // Store this instance in a global registry for emergency access
         if (!window.messageRegistry) {
             window.messageRegistry = new Set();
@@ -74,12 +81,38 @@ export class MessageBus {
     }
     
     /**
+     * Fast publish for high-frequency events with minimal overhead
+     * @param {string} messageType The message type to publish
+     * @param {Object} data Data to include with the message
+     */
+    fastPublish(messageType, data = {}) {
+        if (!this.listeners.has(messageType)) return;
+        
+        const listeners = this.listeners.get(messageType);
+        const messageObj = {
+            type: messageType,
+            data: data,
+            timestamp: Date.now()
+        };
+        
+        for (let i = 0; i < listeners.length; i++) {
+            const listener = listeners[i];
+            listener.callback.call(listener.context, messageObj);
+        }
+    }
+    
+    /**
      * Send a message immediately
      * @param {string} messageType The message type to publish
      * @param {Object} data Data to include with the message
      */
     publish(messageType, data = {}) {
-        // Debug logging for critical messages - add 'game.over' as high priority message
+        // Use fast path for high-frequency messages
+        if (this.highFrequencyTypes.has(messageType)) {
+            return this.fastPublish(messageType, data);
+        }
+        
+        // Debug logging for critical messages
         const criticalMessages = ['entity.created', 'entity.destroyed', 'component.added', 'component.removed', 'game.over'];
         if (criticalMessages.includes(messageType)) {
             console.log(`MessageBus: Publishing ${messageType}`, data);

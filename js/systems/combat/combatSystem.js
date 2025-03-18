@@ -8,6 +8,7 @@ import { System } from '../../core/system.js';
 import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { TransformComponent } from '../../components/transform.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
+import { FixedArray } from '../../utils/memoryManager.js';
 
 export class CombatSystem extends System {
     constructor(world) {
@@ -21,6 +22,15 @@ export class CombatSystem extends System {
         // Combat statistics
         this.damageDealt = 0;
         this.damageReceived = 0;
+        
+        // Pre-allocated arrays for entity filtering
+        this.cachedProjectiles = new FixedArray(100);
+        this.cachedEnemies = new FixedArray(50);
+        this.cachedPlayers = new FixedArray(5);
+        
+        // Reusable vectors for calculations
+        this.hitPosition = new THREE.Vector3();
+        this.effectPosition = new THREE.Vector3();
         
         // Setup event listeners
         this.setupEventListeners();
@@ -88,22 +98,39 @@ export class CombatSystem extends System {
         const projectiles = this.world.entityManager.getEntitiesByTag('projectile');
         const enemyProjectiles = this.world.entityManager.getEntitiesByTag('enemyProjectile');
         
-        // Combine both types of projectiles
-        const allProjectiles = [...projectiles, ...enemyProjectiles];
+        // Clear our cached arrays
+        this.cachedProjectiles.clear();
+        this.cachedEnemies.clear();
+        this.cachedPlayers.clear();
         
-        // Log number of projectiles if any are found
-        if (allProjectiles.length > 0) {
-            console.log(`CombatSystem: Checking ${allProjectiles.length} projectiles for collisions`);
+        // Filter entities only once and store in cached arrays
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+            if (entity.hasTag('enemy') || entity.hasComponent('EnemyAIComponent')) {
+                this.cachedEnemies.push(entity);
+            } else if (entity.hasTag('player')) {
+                this.cachedPlayers.push(entity);
+            }
         }
         
-        // Filter enemy entities for faster iteration
-        const enemies = entities.filter(entity => 
-            entity.hasTag('enemy') || entity.hasComponent('EnemyAIComponent'));
+        // Combine projectiles into our cached array
+        for (let i = 0; i < projectiles.length; i++) {
+            this.cachedProjectiles.push(projectiles[i]);
+        }
         
-        const players = entities.filter(entity => entity.hasTag('player'));
+        for (let i = 0; i < enemyProjectiles.length; i++) {
+            this.cachedProjectiles.push(enemyProjectiles[i]);
+        }
+        
+        // Log number of projectiles if any are found
+        if (this.cachedProjectiles.length > 0) {
+            console.log(`CombatSystem: Checking ${this.cachedProjectiles.length} projectiles for collisions`);
+        }
         
         // Check each projectile against potential targets
-        for (const projectile of allProjectiles) {
+        for (let i = 0; i < this.cachedProjectiles.length; i++) {
+            const projectile = this.cachedProjectiles.get(i);
+            
             try {
                 // Track this projectile if not already tracked
                 if (!this.projectiles.has(projectile.id)) {
@@ -122,17 +149,27 @@ export class CombatSystem extends System {
                 }
                 
                 // Determine if this is a player projectile or enemy projectile
-                const isPlayerProjectile = projectile.hasTag('projectile') || projectile.hasTag('playerProjectile');
-                const isEnemyProjectile = projectile.hasTag('enemyProjectile');
+                // Use direct flag checking for better performance if available
+                const isPlayerProjectile = projectile._isPlayerProjectile || 
+                                          projectile.hasTag('projectile') || 
+                                          projectile.hasTag('playerProjectile');
+                                          
+                const isEnemyProjectile = projectile._isEnemyProjectile || 
+                                         projectile.hasTag('enemyProjectile');
                 
                 // Skip projectile if it has no velocity (inactive)
                 if (projectileRigidbody.velocity.lengthSq() < 0.1) continue;
                 
-                // Check against appropriate targets based on projectile type
-                const targets = isPlayerProjectile ? enemies : (isEnemyProjectile ? players : entities);
+                // Use our cached arrays for better performance
+                const targets = isPlayerProjectile ? this.cachedEnemies : 
+                               (isEnemyProjectile ? this.cachedPlayers : entities);
                 
                 // Check for collisions with targets
-                for (const target of targets) {
+                let targetHit = false;
+                
+                for (let j = 0; j < targets.length; j++) {
+                    const target = targets.get ? targets.get(j) : targets[j];
+                    
                     // Skip if target is destroyed
                     if (target.destroyed) continue;
                     
@@ -150,18 +187,25 @@ export class CombatSystem extends System {
                         collisionRadius = targetRigidbody.collisionRadius;
                     }
                     
-                    // Calculate distance
-                    const distance = targetTransform.position.distanceTo(projectileTransform.position);
+                    // Calculate distance using squared distance for better performance
+                    const dx = targetTransform.position.x - projectileTransform.position.x;
+                    const dy = targetTransform.position.y - projectileTransform.position.y;
+                    const dz = targetTransform.position.z - projectileTransform.position.z;
+                    const distanceSquared = dx * dx + dy * dy + dz * dz;
+                    
+                    // Sum of collision radii
+                    const radiusSum = collisionRadius + projectileRigidbody.collisionRadius;
                     
                     // If distance is less than sum of collision radii, we have a hit
-                    if (distance < (collisionRadius + projectileRigidbody.collisionRadius)) {
-                        console.log(`Projectile hit! Distance: ${distance.toFixed(2)}`);
+                    if (distanceSquared < (radiusSum * radiusSum)) {
+                        console.log(`Projectile hit! Distance: ${Math.sqrt(distanceSquared).toFixed(2)}`);
                         this.handleProjectileCollision(projectile, target);
                         
                         // Destroy projectile after hit
                         try {
                             this.world.destroyEntity(projectile.id);
                             this.projectiles.delete(projectile.id);
+                            targetHit = true;
                         } catch (e) {
                             console.error("Failed to destroy projectile after hit:", e);
                         }
@@ -170,6 +214,10 @@ export class CombatSystem extends System {
                         break;
                     }
                 }
+                
+                // If we hit a target, skip to the next projectile
+                if (targetHit) continue;
+                
             } catch (error) {
                 console.error(`Error processing projectile ${projectile.id}:`, error);
             }
@@ -210,6 +258,14 @@ export class CombatSystem extends System {
                 this.damageDealt += damageResult.damageApplied;
             }
             
+            // Get position using our reusable vector
+            const projectileTransform = projectile.getComponent('TransformComponent');
+            if (projectileTransform) {
+                this.hitPosition.copy(projectileTransform.position);
+            } else {
+                this.hitPosition.set(0, 0, 0);
+            }
+            
             // Publish hit event
             this.world.messageBus.publish('combat.hit', {
                 projectile: projectile,
@@ -218,7 +274,7 @@ export class CombatSystem extends System {
                 shieldDamage: damageResult.shieldDamage,
                 healthDamage: damageResult.healthDamage,
                 destroyed: damageResult.destroyed,
-                position: projectile.getComponent('TransformComponent').position.clone()
+                position: this.hitPosition // Pass direct reference for better performance
             });
         }
     }
@@ -250,70 +306,93 @@ export class CombatSystem extends System {
             effectSize = 2;
         }
         
-        // Create hit effect entity
-        const hitEffect = this.world.createEntity('hit_effect');
+        // Use our cached effect position
+        this.effectPosition.copy(projectileTransform.position);
         
-        // Add transform at projectile's position
-        const effectTransform = new TransformComponent(projectileTransform.position.clone());
-        hitEffect.addComponent(effectTransform);
+        // Create hit effect
+        // Try to use an object from the pool if available
+        let hitEffect;
+        if (window.objectPool && window.objectPool.pools['hitEffect']) {
+            hitEffect = window.objectPool.get('hitEffect', effectColor, effectSize);
+        } else {
+            // Create new effect if no pool exists
+            hitEffect = this.createNewHitEffect(effectColor, effectSize);
+        }
         
-        // Create material with glow effect
-        const effectMaterial = new THREE.MeshBasicMaterial({
+        if (hitEffect && hitEffect.mesh) {
+            // Position the effect
+            hitEffect.mesh.position.copy(this.effectPosition);
+            
+            // Start the animation
+            this.animateHitEffect(hitEffect, hitEffect.mesh);
+        }
+    }
+    
+    // Helper method to create a new hit effect
+    createNewHitEffect(effectColor, effectSize) {
+        // Create geometry only once and reuse
+        if (!this.hitEffectGeometry) {
+            this.hitEffectGeometry = new THREE.SphereGeometry(1, 8, 8);
+        }
+        
+        // Create the hit effect mesh
+        const material = new THREE.MeshBasicMaterial({
             color: effectColor,
             transparent: true,
             opacity: 0.8
         });
         
-        // Create mesh with sphere geometry
-        const effectGeometry = new THREE.SphereGeometry(effectSize, 8, 8);
-        const effectMesh = new THREE.Mesh(effectGeometry, effectMaterial);
+        const mesh = new THREE.Mesh(this.hitEffectGeometry, material);
+        mesh.scale.set(effectSize, effectSize, effectSize);
         
-        // Add mesh to scene
-        this.world.scene.add(effectMesh);
+        // Add to scene
+        this.world.scene.add(mesh);
         
-        // Position at hit location
-        effectMesh.position.copy(projectileTransform.position);
-        
-        // Store mesh reference in entity
-        hitEffect.userData = { mesh: effectMesh };
-        
-        // Animate and remove after short duration
-        this.animateHitEffect(hitEffect, effectMesh);
+        return { mesh, material };
     }
     
     /**
-     * Animate a hit effect and then remove it
-     * @param {Entity} hitEffect Hit effect entity
-     * @param {THREE.Mesh} effectMesh Effect mesh
+     * Animate a hit effect
+     * @param {object} hitEffect The hit effect object
+     * @param {THREE.Mesh} effectMesh The effect mesh
      */
     animateHitEffect(hitEffect, effectMesh) {
-        // Expand and fade out
-        let scale = 1;
-        const expandSpeed = 3;
-        const fadeSpeed = 0.1;
+        let scale = 1.0;
+        let opacity = 0.8;
         
         const animate = () => {
-            // Stop if entity removed or fully faded
-            if (!this.world.getEntity(hitEffect.id) || effectMesh.material.opacity <= 0) {
-                // Remove mesh from scene
-                this.world.scene.remove(effectMesh);
+            // Increase scale
+            scale += 0.1;
+            opacity -= 0.05;
+            
+            // Update mesh
+            if (effectMesh && effectMesh.scale) {
+                effectMesh.scale.set(scale, scale, scale);
                 
-                // Remove entity if it still exists
-                if (this.world.getEntity(hitEffect.id)) {
-                    this.world.destroyEntity(hitEffect.id);
+                if (hitEffect.material) {
+                    hitEffect.material.opacity = opacity;
                 }
-                return;
+                
+                // Continue animation until opacity reaches 0
+                if (opacity > 0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    // Clean up effect when animation is done
+                    if (effectMesh.parent) {
+                        effectMesh.parent.remove(effectMesh);
+                    }
+                    
+                    // Return to pool if available
+                    if (window.objectPool && window.objectPool.pools['hitEffect']) {
+                        window.objectPool.release('hitEffect', hitEffect);
+                    } else {
+                        // Dispose of geometry and material if not using object pooling
+                        if (hitEffect.material) {
+                            hitEffect.material.dispose();
+                        }
+                    }
+                }
             }
-            
-            // Expand
-            scale += expandSpeed * 0.1;
-            effectMesh.scale.set(scale, scale, scale);
-            
-            // Fade
-            effectMesh.material.opacity -= fadeSpeed;
-            
-            // Continue animation
-            requestAnimationFrame(animate);
         };
         
         // Start animation
@@ -321,14 +400,13 @@ export class CombatSystem extends System {
     }
     
     /**
-     * Handle projectile created event
+     * Handle projectile creation event
      * @param {object} message Event message
      */
     handleProjectileCreated(message) {
-        // Track all created projectiles
-        const projectile = message.data.projectile;
-        if (projectile && !this.projectiles.has(projectile.id)) {
-            this.projectiles.add(projectile.id);
+        // Track the projectile if it has a valid entity
+        if (message.entity && message.entity.id) {
+            this.projectiles.add(message.entity.id);
         }
     }
     
@@ -337,13 +415,13 @@ export class CombatSystem extends System {
      * @param {object} message Event message
      */
     handleEntityDamaged(message) {
-        const { entity, amount, shieldDamage, healthDamage, source } = message.data;
-        
-        // Track damage statistics
-        if (entity && entity.hasTag('player')) {
-            this.damageReceived += amount;
-        } else if (source && source.hasTag('player')) {
-            this.damageDealt += amount;
+        // Update damage statistics
+        if (message.target) {
+            if (message.target.hasTag('player')) {
+                this.damageReceived += message.damage || 0;
+            } else if (message.target.hasTag('enemy')) {
+                this.damageDealt += message.damage || 0;
+            }
         }
     }
     
@@ -351,13 +429,10 @@ export class CombatSystem extends System {
      * Clean up when system is disabled
      */
     onDisabled() {
-        // Destroy all active projectiles
-        this.projectiles.forEach(projectileId => {
-            if (this.world.getEntity(projectileId)) {
-                this.world.destroyEntity(projectileId);
-            }
-        });
-        
-        this.projectiles.clear();
+        // Remove all event listeners
+        this.world.messageBus.unsubscribe('weapon.fired', this.handleProjectileCreated);
+        this.world.messageBus.unsubscribe('turret.fire', this.handleProjectileCreated);
+        this.world.messageBus.unsubscribe('missile.fired', this.handleProjectileCreated);
+        this.world.messageBus.unsubscribe('entity.damaged', this.handleEntityDamaged);
     }
 }

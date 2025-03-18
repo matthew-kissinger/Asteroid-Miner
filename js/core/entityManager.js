@@ -11,8 +11,14 @@ export class EntityManager {
     constructor(world) {
         this.world = world;
         this.entities = new Map();
+        // Use WeakMap for entity tracking to allow garbage collection
+        this.entitiesByComponent = new Map();
         this.entitiesByTag = new Map();
         this.lastEntityId = 0;
+        
+        // Entity recycle pool for faster instantiation
+        this.recycledEntities = [];
+        this.maxRecycledEntities = 100;
     }
     
     /**
@@ -21,11 +27,23 @@ export class EntityManager {
      * @returns {Entity} The created entity
      */
     createEntity(name = '') {
-        const id = this._generateEntityId();
-        const entity = new Entity(id, this.world);
+        // Try to reuse a recycled entity first
+        let entity;
+        
+        if (this.recycledEntities.length > 0) {
+            entity = this.recycledEntities.pop();
+            entity.components.clear();
+            entity.tags.clear();
+            entity._isEnemy = undefined;
+            entity._isPlayer = undefined;
+            entity._isProjectile = undefined;
+        } else {
+            const id = this._generateEntityId();
+            entity = new Entity(id, this.world);
+        }
         
         // Add to entities map first
-        this.entities.set(id.toString(), entity);
+        this.entities.set(entity.id.toString(), entity);
         
         // Add name as tag using the fixed addTag method which will register with entityManager
         if (name) {
@@ -73,6 +91,11 @@ export class EntityManager {
         
         // Remove from entities map
         this.entities.delete(id.toString());
+        
+        // Add to recycled entities pool if not full
+        if (this.recycledEntities.length < this.maxRecycledEntities) {
+            this.recycledEntities.push(entity);
+        }
     }
     
     /**

@@ -1,9 +1,13 @@
 // mothershipInterface.js - Handles the mothership docking and trading UI
 
+import { MobileDetector } from '../../utils/mobileDetector.js';
+
 export class MothershipInterface {
     constructor() {
         this.starMap = null;
         this.blackjackGame = null;
+        this.settings = null;
+        this.isMobile = MobileDetector.isMobile();
         this.setupMothershipUI();
     }
     
@@ -13,6 +17,18 @@ export class MothershipInterface {
     
     setBlackjackGame(blackjackGame) {
         this.blackjackGame = blackjackGame;
+    }
+    
+    setSettings(settings) {
+        this.settings = settings;
+        
+        // Pass the mothership interface reference to settings
+        if (this.settings) {
+            this.settings.setMothershipInterface(this);
+        }
+        
+        // Setup settings button handler now that we have settings
+        this.setupSettingsButton();
     }
     
     setupMothershipUI() {
@@ -34,7 +50,17 @@ export class MothershipInterface {
         dockingPrompt.style.textAlign = 'center';
         dockingPrompt.style.zIndex = '1000';
         dockingPrompt.style.display = 'none';
-        dockingPrompt.textContent = 'Press Q to dock with Mothership';
+        
+        // Update prompt text based on device - on mobile, we don't need this prompt
+        // since we have an actual interactive DOCK button
+        if (this.isMobile) {
+            // On mobile, we'll hide this text prompt completely since we have a dedicated dock button
+            dockingPrompt.style.display = 'none';
+            dockingPrompt.dataset.alwaysHide = 'true'; // Mark to keep it hidden
+        } else {
+            dockingPrompt.textContent = 'Press Q to dock with Mothership';
+        }
+        
         document.body.appendChild(dockingPrompt);
         
         // Create mothership interface (hidden by default)
@@ -57,18 +83,37 @@ export class MothershipInterface {
         mothershipUI.style.zIndex = '1000';
         mothershipUI.style.display = 'none';
         
+        // Add touch scrolling properties for mobile
+        if (this.isMobile) {
+            mothershipUI.style.webkitOverflowScrolling = 'touch';
+            mothershipUI.style.touchAction = 'pan-y';
+            mothershipUI.style.overscrollBehavior = 'contain';
+        }
+        
         mothershipUI.innerHTML = `
             <h2 style="text-align: center; color: #33aaff; margin-top: 0;">MOTHERSHIP TERMINAL</h2>
             <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
                 <div style="flex: 1; padding: 15px; border-right: 1px solid #33aaff;">
                     <h3 style="color: #33aaff;">RESOURCES</h3>
-                    <div id="mothership-resources">
-                        <div>Iron: <span id="ms-iron">0</span></div>
-                        <div>Gold: <span id="ms-gold">0</span></div>
-                        <div>Platinum: <span id="ms-platinum">0</span></div>
+                    <div id="mothership-resources" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <div class="resource-display" style="flex: 1; padding: 8px; background-color: rgba(15, 40, 55, 0.8); border: 1px solid #cc6633; border-radius: 5px; text-align: center; box-shadow: 0 0 10px rgba(204, 102, 51, 0.3);">
+                            <div style="font-weight: bold; font-size: 14px;">IRON</div>
+                            <div id="ms-iron" style="font-size: 18px; margin-top: 5px;">0</div>
+                            <div style="font-size: 10px; opacity: 0.7;">UNITS</div>
+                        </div>
+                        <div class="resource-display" style="flex: 1; padding: 8px; background-color: rgba(15, 40, 55, 0.8); border: 1px solid #ffcc33; border-radius: 5px; text-align: center; box-shadow: 0 0 10px rgba(255, 204, 51, 0.3);">
+                            <div style="font-weight: bold; font-size: 14px;">GOLD</div>
+                            <div id="ms-gold" style="font-size: 18px; margin-top: 5px;">0</div>
+                            <div style="font-size: 10px; opacity: 0.7;">UNITS</div>
+                        </div>
+                        <div class="resource-display" style="flex: 1; padding: 8px; background-color: rgba(15, 40, 55, 0.8); border: 1px solid #33ccff; border-radius: 5px; text-align: center; box-shadow: 0 0 10px rgba(51, 204, 255, 0.3);">
+                            <div style="font-weight: bold; font-size: 14px;">PLATINUM</div>
+                            <div id="ms-platinum" style="font-size: 18px; margin-top: 5px;">0</div>
+                            <div style="font-size: 10px; opacity: 0.7;">UNITS</div>
+                        </div>
                     </div>
                     <h3 style="color: #33aaff; margin-top: 20px;">CREDITS</h3>
-                    <div id="ms-credits">0 CR</div>
+                    <div id="ms-credits" style="font-size: 18px; font-weight: bold; color: #ffcc33; text-shadow: 0 0 5px rgba(255, 204, 51, 0.5);">0 CR</div>
                 </div>
                 <div style="flex: 1; padding: 15px;">
                     <h3 style="color: #33aaff;">FUEL</h3>
@@ -108,14 +153,17 @@ export class MothershipInterface {
             <div style="border-top: 1px solid #33aaff; padding-top: 20px; margin-bottom: 20px;">
                 <h3 style="color: #33aaff;">MARKET</h3>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                    <button id="sell-iron" class="sell-btn" style="flex: 1; margin-right: 5px; padding: 10px; background-color: #555; color: #fff; border: 1px solid #777; border-radius: 5px; cursor: pointer;">
-                        SELL IRON (10 CR each)
+                    <button id="sell-iron" class="sell-btn" style="flex: 1; margin-right: 5px; padding: 10px; background-color: rgba(15, 40, 55, 0.8); color: #fff; border: 1px solid #cc6633; border-radius: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(204, 102, 51, 0.3); transition: all 0.2s;">
+                        <div style="font-weight: bold;">SELL IRON</div>
+                        <div style="font-size: 12px; margin-top: 3px;">(10 CR each)</div>
                     </button>
-                    <button id="sell-gold" class="sell-btn" style="flex: 1; margin-right: 5px; padding: 10px; background-color: #555; color: #fff; border: 1px solid #777; border-radius: 5px; cursor: pointer;">
-                        SELL GOLD (50 CR each)
+                    <button id="sell-gold" class="sell-btn" style="flex: 1; margin-right: 5px; padding: 10px; background-color: rgba(15, 40, 55, 0.8); color: #fff; border: 1px solid #ffcc33; border-radius: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(255, 204, 51, 0.3); transition: all 0.2s;">
+                        <div style="font-weight: bold;">SELL GOLD</div>
+                        <div style="font-size: 12px; margin-top: 3px;">(50 CR each)</div>
                     </button>
-                    <button id="sell-platinum" class="sell-btn" style="flex: 1; padding: 10px; background-color: #555; color: #fff; border: 1px solid #777; border-radius: 5px; cursor: pointer;">
-                        SELL PLATINUM (200 CR each)
+                    <button id="sell-platinum" class="sell-btn" style="flex: 1; padding: 10px; background-color: rgba(15, 40, 55, 0.8); color: #fff; border: 1px solid #33ccff; border-radius: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(51, 204, 255, 0.3); transition: all 0.2s;">
+                        <div style="font-weight: bold;">SELL PLATINUM</div>
+                        <div style="font-size: 12px; margin-top: 3px;">(200 CR each)</div>
                     </button>
                 </div>
             </div>
@@ -132,6 +180,13 @@ export class MothershipInterface {
                     STELLAR BLACKJACK
                 </button>
                 <p style="font-size: 12px; color: #aaa; margin: 0;">Wager resources in this classic card game with a space twist</p>
+            </div>
+            <div style="border-top: 1px solid #33aaff; padding-top: 20px; margin-bottom: 20px;">
+                <h3 style="color: #33aaff;">SYSTEM</h3>
+                <button id="open-settings" style="width: 100%; padding: 15px; margin-bottom: 10px; background-color: #33aaff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px;">
+                    SETTINGS
+                </button>
+                <p style="font-size: 12px; color: #aaa; margin: 0;">Adjust graphics, performance, and audio settings</p>
             </div>
             <div style="border-top: 1px solid #33aaff; padding-top: 20px; margin-bottom: 20px;">
                 <h3 style="color: #33aaff;">UPGRADES</h3>
@@ -269,10 +324,26 @@ export class MothershipInterface {
         document.body.appendChild(mothershipUI);
     }
     
+    setupSettingsButton() {
+        if (!this.settings) return;
+        
+        const settingsButton = document.getElementById('open-settings');
+        if (settingsButton) {
+            settingsButton.addEventListener('click', () => {
+                console.log("Opening settings");
+                this.hideMothershipUI();
+                this.settings.show();
+            });
+        }
+    }
+    
     showDockingPrompt() {
         const dockingPrompt = document.getElementById('docking-prompt');
         if (dockingPrompt) {
-            dockingPrompt.style.display = 'block';
+            // Only show if not flagged to always hide (on mobile devices)
+            if (dockingPrompt.dataset.alwaysHide !== 'true') {
+                dockingPrompt.style.display = 'block';
+            }
         }
     }
     
@@ -284,9 +355,16 @@ export class MothershipInterface {
     }
     
     showMothershipUI() {
+        // Show the mothership UI
         const mothershipUI = document.getElementById('mothership-ui');
         if (mothershipUI) {
             mothershipUI.style.display = 'block';
+        }
+        
+        // Hide the docking prompt
+        const dockingPrompt = document.getElementById('docking-prompt');
+        if (dockingPrompt) {
+            dockingPrompt.style.display = 'none';
         }
         
         // Setup star map button handler
@@ -294,6 +372,27 @@ export class MothershipInterface {
         
         // Setup blackjack game button handler
         this.setupBlackjackButton();
+        
+        // Setup settings button handler
+        this.setupSettingsButton();
+        
+        // Set up touch events for mobile scrolling
+        if (this.isMobile) {
+            this.setupTouchEvents();
+        }
+        
+        // Sync resources with game if available (similar to BlackjackGame)
+        if (window.game && window.game.controls) {
+            // Get reference to spaceship and resources
+            const spaceship = window.game.spaceship;
+            const resources = window.game.controls.resources;
+            
+            // Update the mothership UI with current values
+            if (spaceship && resources) {
+                console.log("Syncing mothership UI with game resources:", resources);
+                this.updateMothershipUI(spaceship, resources);
+            }
+        }
     }
     
     setupStarMapButton() {
@@ -338,12 +437,12 @@ export class MothershipInterface {
     }
     
     updateMothershipUI(spaceship, resources) {
-        // Update resource display
+        // Update resource display with visual elements
         document.getElementById('ms-iron').textContent = resources.iron;
         document.getElementById('ms-gold').textContent = resources.gold;
         document.getElementById('ms-platinum').textContent = resources.platinum;
         
-        // Update credits
+        // Update credits with styling
         document.getElementById('ms-credits').textContent = `${spaceship.credits} CR`;
         
         // Update fuel gauge
@@ -441,16 +540,18 @@ export class MothershipInterface {
         document.getElementById('sell-gold').disabled = resources.gold === 0;
         document.getElementById('sell-platinum').disabled = resources.platinum === 0;
         
+        // Update sell button styles based on resource availability
+        this.updateSellButtonStatus('sell-iron', resources.iron, '#cc6633');
+        this.updateSellButtonStatus('sell-gold', resources.gold, '#ffcc33');
+        this.updateSellButtonStatus('sell-platinum', resources.platinum, '#33ccff');
+        
         // Update button styles based on disabled state
         document.querySelectorAll('.sell-btn').forEach(btn => {
             if (btn.disabled) {
-                btn.style.backgroundColor = '#333';
+                btn.style.backgroundColor = 'rgba(40, 40, 40, 0.8)';
                 btn.style.color = '#777';
                 btn.style.cursor = 'not-allowed';
-            } else {
-                btn.style.backgroundColor = '#555';
-                btn.style.color = '#fff';
-                btn.style.cursor = 'pointer';
+                btn.style.boxShadow = 'none';
             }
         });
     }
@@ -470,6 +571,69 @@ export class MothershipInterface {
             button.style.backgroundColor = activeColor;
             button.style.color = activeColor === '#ff9900' || activeColor === '#30cfd0' ? '#000' : '#fff';
             button.style.cursor = 'pointer';
+        }
+    }
+    
+    // Update sell button styles based on available resources
+    updateSellButtonStatus(buttonId, resourceAmount, borderColor) {
+        const button = document.getElementById(buttonId);
+        if (!button) return;
+        
+        if (resourceAmount === 0) {
+            button.disabled = true;
+            button.style.backgroundColor = 'rgba(40, 40, 40, 0.8)';
+            button.style.borderColor = '#555';
+            button.style.color = '#777';
+            button.style.boxShadow = 'none';
+            button.style.cursor = 'not-allowed';
+        } else {
+            button.disabled = false;
+            button.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
+            button.style.borderColor = borderColor;
+            button.style.color = '#fff';
+            button.style.boxShadow = `0 0 10px rgba(${parseInt(borderColor.slice(1, 3), 16)}, ${parseInt(borderColor.slice(3, 5), 16)}, ${parseInt(borderColor.slice(5, 7), 16)}, 0.3)`;
+            button.style.cursor = 'pointer';
+        }
+    }
+    
+    // Add a new method for setting up touch events
+    setupTouchEvents() {
+        if (!this.isMobile) return;
+        
+        const mothershipUI = document.getElementById('mothership-ui');
+        if (!mothershipUI) return;
+        
+        // Prevent default touchmove on body but allow scrolling within the mothership UI
+        mothershipUI.addEventListener('touchmove', (e) => {
+            // Allow the default scroll behavior within the mothership UI
+            e.stopPropagation();
+        }, { passive: true });
+        
+        // Fix for iOS scrolling issues
+        mothershipUI.addEventListener('touchstart', (e) => {
+            // If at the top of the content and trying to scroll down further, prevent pull-to-refresh
+            const scrollTop = mothershipUI.scrollTop;
+            const scrollHeight = mothershipUI.scrollHeight;
+            const clientHeight = mothershipUI.clientHeight;
+            
+            if ((scrollTop <= 0 && e.touches[0].screenY < e.touches[0].clientY) ||
+                (scrollTop + clientHeight >= scrollHeight && e.touches[0].screenY > e.touches[0].clientY)) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Handle tabbed content for better touch experience
+        const tabButtons = mothershipUI.querySelectorAll('.tablinks');
+        if (tabButtons.length > 0) {
+            tabButtons.forEach(button => {
+                button.addEventListener('touchend', (e) => {
+                    // Prevent rapid multiple touches
+                    e.preventDefault();
+                    
+                    // Simulate a click event
+                    button.click();
+                });
+            });
         }
     }
 }
