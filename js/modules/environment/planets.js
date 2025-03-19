@@ -21,6 +21,12 @@ const planetTextures = {
     neptune: textureLoader.load('./assets/2k_neptune.jpg')
 };
 
+// Load the custom procedural textures (p1-p22)
+const proceduralTextures = [];
+for (let i = 1; i <= 22; i++) {
+    proceduralTextures.push(textureLoader.load(`./assets/p${i}.jpeg`));
+}
+
 export class Planets {
     constructor(scene) {
         this.scene = scene;
@@ -273,8 +279,10 @@ export class Planets {
                     break;
                     
                 default:
+                    // Use random texture from procedural textures for procedurally generated planets
+                    const randomTexture = proceduralTextures[Math.floor(Math.random() * proceduralTextures.length)];
                     planetMaterial = new THREE.MeshPhongMaterial({
-                        color: planet.color,
+                        map: randomTexture,
                         shininess: 10,
                         flatShading: false
                     });

@@ -89,47 +89,13 @@ export class Skybox {
                 varying vec2 vUv;
                 varying vec3 vPosition;
                 
-                // Random and noise functions
-                float hash(vec2 p) {
-                    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
-                }
-                
-                float stars(vec2 p) {
-                    vec2 cell = floor(p);
-                    vec2 cellPos = fract(p);
-                    
-                    float brightness = 0.0;
-                    
-                    // Improved star distribution with smoother falloff
-                    float starValue = hash(cell);
-                    if (starValue > (1.0 - starDensity * 0.5)) {
-                        float size = (hash(cell + 1.23) * 0.6 + 0.2) * 0.015;  // Smaller, more natural star size
-                        
-                        // Smoother star falloff with gaussian-like distribution
-                        float dist = length(cellPos - vec2(0.5));
-                        brightness = 1.5 * exp(-dist * dist / (size * size));
-                        
-                        // Add subtle twinkle effect
-                        brightness *= 0.8 + 0.2 * sin(time * (hash(cell + 2.34) * 2.0));
-                    }
-                    
-                    return brightness;
-                }
-                
                 void main() {
                     // Sample the Milky Way texture with adjusted brightness
                     vec4 milkyWay = texture2D(milkyWayTexture, vUv);
                     milkyWay.rgb *= 1.5; // Slightly reduced Milky Way brightness
                     
-                    // Generate stars with improved distribution
-                    vec2 starPos = vPosition.xy * 50.0 + time * 0.05; // Reduced frequency and speed
-                    float starField = stars(starPos) * starDensity;
-                    
-                    // Add depth variation to stars
-                    starField *= (0.8 + 0.2 * hash(floor(starPos * 0.1)));
-                    
-                    // Combine Milky Way with procedural stars
-                    vec3 finalColor = milkyWay.rgb * nebulaDensity * 1.2 + vec3(starField);
+                    // Use only the Milky Way texture without procedural stars
+                    vec3 finalColor = milkyWay.rgb * nebulaDensity * 1.2;
                     
                     // Reduced ambient light
                     finalColor += vec3(0.05);
