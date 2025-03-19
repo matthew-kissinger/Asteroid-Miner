@@ -17,7 +17,7 @@ export class Sun {
         this.scene.add(this.sun);
         
         // Create the core sun sphere with increased size
-        const sunGeometry = new THREE.SphereGeometry(300, 64, 64);
+        const sunGeometry = new THREE.SphereGeometry(1200, 64, 64);
         
         // Use advanced shader material for the sun surface
         const sunMaterial = new THREE.ShaderMaterial({
@@ -120,7 +120,7 @@ export class Sun {
         this.sun.add(sunCoreMesh);
         
         // Add corona layer (volumetric glow effect)
-        const coronaGeometry = new THREE.SphereGeometry(600, 64, 64);
+        const coronaGeometry = new THREE.SphereGeometry(2400, 64, 64);
         const coronaMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
@@ -213,7 +213,7 @@ export class Sun {
         this.sun.add(coronaMesh);
         
         // Add outer corona for extended glow
-        const outerCoronaGeometry = new THREE.SphereGeometry(900, 32, 32);
+        const outerCoronaGeometry = new THREE.SphereGeometry(3600, 32, 32);
         const outerCoronaMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
@@ -359,7 +359,7 @@ export class Sun {
     }
     
     getRadius() {
-        return 900; // Return the radius of the sun's boundary (including corona)
+        return 3600; // Return the radius of the sun's boundary (including corona)
     }
     
     getPosition() {

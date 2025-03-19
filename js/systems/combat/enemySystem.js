@@ -165,14 +165,61 @@ export class EnemySystem extends System {
         // Log entity state for debugging
         console.log(`Returning entity ${entity.id} to pool. Has tags: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
         
-        // First, ensure entity is removed from enemies tracking set
+        // ENHANCED CLEANUP: Multiple checks to ensure entity is removed from enemies tracking
+        // 1. Direct check and remove
         if (this.enemies.has(entity.id)) {
             this.enemies.delete(entity.id);
             console.log(`Removed entity ${entity.id} from enemies tracking`);
         }
         
+        // 2. Remove enemy tag FIRST, before adding pooled tag
+        // This ensures consistent state before any other operations
+        if (entity.hasTag && entity.hasTag('enemy')) {
+            entity.removeTag('enemy');
+            console.log(`Explicitly removed 'enemy' tag from entity ${entity.id}`);
+        }
+        
         // Only return to pool if it's not full
         if (this.enemyPool.length < this.maxPoolSize) {
+            // TRAIL CLEANUP: Remove trail component and its visual elements first
+            // This is critical to prevent the trail from persisting after enemy destruction
+            const trailComponent = entity.getComponent('TrailComponent');
+            if (trailComponent) {
+                try {
+                    // Call the onDetached method if it exists to clean up resources
+                    if (typeof trailComponent.onDetached === 'function') {
+                        trailComponent.onDetached();
+                    }
+                    
+                    // Remove from trail system tracking if it exists
+                    if (window.game && window.game.trailSystem) {
+                        window.game.trailSystem.unregisterTrail && 
+                        window.game.trailSystem.unregisterTrail(entity.id);
+                    }
+                    
+                    // If the trail has a mesh or points object, remove it from scene
+                    if (trailComponent.trailMesh && trailComponent.trailMesh.parent) {
+                        trailComponent.trailMesh.parent.remove(trailComponent.trailMesh);
+                    }
+                    
+                    // Dispose of geometry and material
+                    if (trailComponent.trailMesh) {
+                        if (trailComponent.trailMesh.geometry) {
+                            trailComponent.trailMesh.geometry.dispose();
+                        }
+                        if (trailComponent.trailMesh.material) {
+                            trailComponent.trailMesh.material.dispose();
+                        }
+                    }
+                    
+                    // Remove the component from the entity
+                    entity.removeComponent('TrailComponent');
+                    console.log(`Removed and cleaned up TrailComponent from entity ${entity.id}`);
+                } catch (error) {
+                    console.error(`Error cleaning up trail for entity ${entity.id}:`, error);
+                }
+            }
+            
             // Reset the entity's transform
             const transform = entity.getComponent('TransformComponent');
             if (transform) {
@@ -215,12 +262,7 @@ export class EnemySystem extends System {
                 }
             }
 
-            // CRITICAL FIX: Specifically ensure 'enemy' tag is removed
-            if (entity.hasTag && entity.hasTag('enemy')) {
-                entity.removeTag('enemy');
-                console.log(`Explicitly removed 'enemy' tag from entity ${entity.id}`);
-            }
-            
+            // IMPROVED TAG HANDLING:
             // Clear ALL tags first (this uses our new proper method)
             if (entity.clearTags && typeof entity.clearTags === 'function') {
                 entity.clearTags();
@@ -239,9 +281,16 @@ export class EnemySystem extends System {
                 }
             }
             
-            // Now add only the pooled tag
+            // Only now, add the pooled tag when entity is in a clean state
             entity.addTag('pooled');
-            console.log(`Entity ${entity.id} now has tags: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
+            console.log(`Entity ${entity.id} now has ONLY 'pooled' tag: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
+            
+            // Double-check for any tag inconsistencies
+            if (entity.hasTag && entity.hasTag('enemy')) {
+                console.warn(`INCONSISTENCY DETECTED: Entity ${entity.id} still has 'enemy' tag after cleanup!`);
+                entity.removeTag('enemy');
+                console.log(`Fixed inconsistency by force removing 'enemy' tag`);
+            }
             
             // Add to pool
             this.enemyPool.push(entity);
@@ -259,6 +308,10 @@ export class EnemySystem extends System {
                 console.error(`Failed to destroy entity ${entity.id} - world or destroyEntity method not available`);
             }
         }
+        
+        // Always validate references after returning to pool
+        // This is an additional safety check
+        this.validateEnemyReferences();
     }
     
     /**
@@ -346,26 +399,32 @@ export class EnemySystem extends System {
         // Update spawn timer
         this.spawnTimer += deltaTime;
         
-        // Run diagnostics every 10 seconds
+        // Run diagnostics more frequently (every 3 seconds instead of 10)
         if (!this._lastDiagnosticTime) {
             this._lastDiagnosticTime = 0;
         }
         this._lastDiagnosticTime += deltaTime;
         
-        if (this._lastDiagnosticTime >= 10) {
+        if (this._lastDiagnosticTime >= 3) {
             this.runPoolDiagnostics();
             this._lastDiagnosticTime = 0;
         }
         
-        // Validate enemy references periodically to ensure accurate count
+        // Validate enemy references before spawn decision to ensure accurate count
         this.validateEnemyReferences();
+        
+        // STRICT ENFORCEMENT: If we're over the limit, force destroy excess enemies
+        if (this.enemies.size > this.maxEnemies) {
+            console.warn(`ENFORCING ENEMY LIMIT: Current count ${this.enemies.size} exceeds limit of ${this.maxEnemies}`);
+            this.enforceEnemyLimit();
+        }
         
         // Debug logging - show current enemy count and spawn timer
         if (this.spawnTimer > this.spawnInterval * 0.9 || this.enemies.size === 0) {
             console.log(`Spawn status: ${this.enemies.size}/${this.maxEnemies} enemies, timer: ${this.spawnTimer.toFixed(1)}/${this.spawnInterval} seconds`);
         }
         
-        // Check if we should spawn new enemies
+        // Check if we should spawn new enemies - STRICTER CHECK with >= instead of >
         if (this.spawnTimer >= this.spawnInterval && this.enemies.size < this.maxEnemies) {
             // Spawn spectral drone
             console.log("=== SPAWNING SPECTRAL DRONE ===");
@@ -736,12 +795,52 @@ export class EnemySystem extends System {
             return;
         }
         
-        // Make sure it's an enemy
-        if (entity.hasTag && entity.hasTag('enemy')) {
+        // IMPROVED CHECK: Look for either entity.hasTag('enemy') OR entity.id in this.enemies
+        // This ensures we catch all cases where an enemy is destroyed
+        if ((entity.hasTag && entity.hasTag('enemy')) || this.enemies.has(entity.id)) {
             // IMPORTANT: Store entity ID locally before further processing
             const entityId = entity.id;
             
             console.log(`Enemy destroyed: ${entityId}`);
+            
+            // TRAIL CLEANUP: Ensure any trails are properly removed
+            // This prevents the "line to center" visual bug
+            const trailComponent = entity.getComponent('TrailComponent');
+            if (trailComponent) {
+                try {
+                    // Call onDetached to clean up resources
+                    if (typeof trailComponent.onDetached === 'function') {
+                        trailComponent.onDetached();
+                    }
+                    
+                    // Unregister from trail system if available
+                    if (window.game && window.game.trailSystem) {
+                        window.game.trailSystem.unregisterTrail && 
+                        window.game.trailSystem.unregisterTrail(entityId);
+                    }
+                    
+                    // If the trail has a mesh, remove it from the scene
+                    if (trailComponent.trailMesh && trailComponent.trailMesh.parent) {
+                        trailComponent.trailMesh.parent.remove(trailComponent.trailMesh);
+                    }
+                    
+                    // Dispose of geometry and material
+                    if (trailComponent.trailMesh) {
+                        if (trailComponent.trailMesh.geometry) {
+                            trailComponent.trailMesh.geometry.dispose();
+                        }
+                        if (trailComponent.trailMesh.material) {
+                            trailComponent.trailMesh.material.dispose();
+                        }
+                    }
+                    
+                    // Remove the component from the entity
+                    entity.removeComponent('TrailComponent');
+                    console.log(`Cleaned up trail component for destroyed enemy ${entityId}`);
+                } catch (error) {
+                    console.error(`Error cleaning up trail for entity ${entityId}:`, error);
+                }
+            }
             
             // Clean up mesh resources before returning to pool
             const meshComponent = entity.getComponent('MeshComponent');
@@ -756,19 +855,20 @@ export class EnemySystem extends System {
                 }
             }
             
-            // Remove from tracked enemies
-            if (this.enemies.has(entityId)) {
-                this.enemies.delete(entityId);
-                
-                // Increment destroyed counter
-                this.enemiesDestroyed++;
-                
-                // Log remaining enemies
-                console.log(`Enemy ${entityId} removed from tracking. Enemies remaining: ${this.enemies.size}/${this.maxEnemies}`);
-            } else {
-                console.warn(`Warning: Enemy ${entityId} was destroyed but wasn't in the tracked enemies set!`);
-                // Force validation of enemy references
-                this.validateEnemyReferences();
+            // Remove from tracked enemies - MORE AGGRESSIVE CHECK
+            // Remove even if not explicitly in the set to ensure clean state
+            this.enemies.delete(entityId);
+            
+            // Increment destroyed counter
+            this.enemiesDestroyed++;
+            
+            // Log remaining enemies
+            console.log(`Enemy ${entityId} removed from tracking. Enemies remaining: ${this.enemies.size}/${this.maxEnemies}`);
+            
+            // ENSURE PROPER CLEANUP: Make sure entity doesn't have enemy tag
+            if (entity.hasTag && entity.hasTag('enemy')) {
+                console.log(`Explicitly removing 'enemy' tag from destroyed entity ${entityId}`);
+                entity.removeTag('enemy');
             }
             
             // Return the entity to the pool
@@ -788,6 +888,9 @@ export class EnemySystem extends System {
                 // Set the timer to be almost at the spawn interval
                 this.spawnTimer = Math.max(this.spawnTimer, this.spawnInterval * 0.8);
             }
+            
+            // Force validation to catch any remaining inconsistencies
+            this.validateEnemyReferences();
         }
     }
     
@@ -816,8 +919,24 @@ export class EnemySystem extends System {
     spawnSpectralDrone(position) {
         console.log("Setting up spectral drone config...");
         
+        // STRICT LIMIT CHECK: Do not spawn if already at or over capacity
+        if (this.enemies.size >= this.maxEnemies) {
+            console.warn(`SPAWN BLOCKED: Already at maximum enemies (${this.enemies.size}/${this.maxEnemies})`);
+            return null;
+        }
+        
         // Get a spectral drone from the pool
         const entity = this.getEnemyFromPool();
+        
+        // VERIFICATION: Double-check that entity is clean before using
+        if (entity.hasTag('enemy')) {
+            console.warn(`Entity from pool still has enemy tag! Clearing all tags...`);
+            if (entity.clearTags && typeof entity.clearTags === 'function') {
+                entity.clearTags();
+            } else if (entity.hasTag && entity.removeTag) {
+                entity.removeTag('enemy');
+            }
+        }
         
         // Add enemy tags that were not added during pooling
         entity.addTag('enemy');
@@ -959,12 +1078,31 @@ export class EnemySystem extends System {
             this.addSpectralTrail(entity, transform);
         }
         
+        // SYNCHRONIZATION FIX: Remove any existing references to this entity ID before adding
+        // This prevents duplicate tracking if an entity with the same ID is already tracked
+        this.enemies.delete(entity.id);
+        
         // Track this enemy
         this.enemies.add(entity.id);
         this.lastSpawnTime = Date.now();
         
+        // VERIFICATION: Double-check that enemy has required tag after setup
+        if (!entity.hasTag('enemy')) {
+            console.warn(`CRITICAL ERROR: Entity ${entity.id} missing 'enemy' tag after setup!`);
+            entity.addTag('enemy'); // Force re-add the tag
+        }
+        
+        // GLOBAL SYNCHRONIZATION: Register this entity with combat module if available
+        if (window.game && window.game.combat) {
+            // Inform other systems about this enemy
+            window.game.combat.registerEnemy && window.game.combat.registerEnemy(entity.id);
+        }
+        
         console.log(`Spawned spectral drone at position: x=${position.x.toFixed(0)}, y=${position.y.toFixed(0)}, z=${position.z.toFixed(0)}`);
         console.log(`Properties: Speed=${enemyAI.speed}, Amplitude=${enemyAI.spiralAmplitude}, Frequency=${enemyAI.spiralFrequency}`);
+        
+        // ADDITIONAL LOGGING: Log the current state after spawn
+        console.log(`Current enemy count after spawn: ${this.enemies.size}/${this.maxEnemies}`);
         
         return entity;
     }
@@ -1042,6 +1180,24 @@ export class EnemySystem extends System {
             glow: true                // Add glow effect
         });
         
+        // IMPORTANT: Initialize the trail with the current entity position
+        // This ensures the trail starts from the entity's current position 
+        // and not from the origin (0,0,0)
+        if (transform && transform.position) {
+            // Initialize points array with current position to prevent "line to center" visual bug
+            trailComponent.lastPosition = transform.position.clone();
+            
+            // If the trailComponent has a points array, initialize it with the current position
+            if (trailComponent.points) {
+                trailComponent.points = [transform.position.clone()];
+            }
+            
+            // If the component has an initializeTrail method, call it
+            if (typeof trailComponent.initializeTrail === 'function') {
+                trailComponent.initializeTrail(transform.position);
+            }
+        }
+        
         // Attach the trail component to the entity
         entity.addComponent(trailComponent);
         
@@ -1068,6 +1224,10 @@ export class EnemySystem extends System {
             console.log("No trail system found - initializing trail component directly");
             // The trail component will self-initialize when attached to the entity
         }
+        
+        console.log(`Added trail component to entity ${entity.id} at position (${transform.position.x.toFixed(0)}, ${transform.position.y.toFixed(0)}, ${transform.position.z.toFixed(0)})`);
+        
+        return trailComponent;
     }
 
     /**
@@ -1213,5 +1373,60 @@ export class EnemySystem extends System {
         console.log(`Diagnostic results: ${enemyTaggedCount} entities with 'enemy' tag, ${pooledTaggedCount} entities with 'pooled' tag`);
         console.log(`Fixed ${inconsistentEntities} inconsistencies`);
         console.log("=== DIAGNOSTICS COMPLETE ===");
+    }
+
+    /**
+     * Force destroy excess enemies to enforce the enemy limit
+     */
+    enforceEnemyLimit() {
+        // Convert to array for easier manipulation
+        const enemyIds = [...this.enemies];
+        
+        // Calculate how many enemies to remove
+        const excessCount = this.enemies.size - this.maxEnemies;
+        if (excessCount <= 0) return;
+        
+        console.log(`Enforcing enemy limit by removing ${excessCount} excess enemies`);
+        
+        // Remove the oldest enemies first (at the start of the array)
+        for (let i = 0; i < excessCount && i < enemyIds.length; i++) {
+            const entityId = enemyIds[i];
+            const entity = this.world.getEntity(entityId);
+            
+            if (entity) {
+                console.log(`Force destroying excess enemy ${entityId}`);
+                
+                // Remove from tracking first
+                this.enemies.delete(entityId);
+                
+                // If entity has health component, mark as destroyed
+                const health = entity.getComponent('HealthComponent');
+                if (health) {
+                    health.health = 0;
+                    health.isDestroyed = true;
+                }
+                
+                // Create explosion effect
+                if (this.world && this.world.messageBus) {
+                    const transform = entity.getComponent('TransformComponent');
+                    if (transform) {
+                        this.world.messageBus.publish('vfx.explosion', {
+                            position: transform.position.clone(),
+                            scale: 1.0,
+                            duration: 1.0
+                        });
+                    }
+                }
+                
+                // Return to pool or destroy completely
+                this.returnEnemyToPool(entity);
+            } else {
+                // If entity doesn't exist, just remove from tracking
+                this.enemies.delete(entityId);
+            }
+        }
+        
+        // Validate references after cleanup
+        this.validateEnemyReferences();
     }
 }

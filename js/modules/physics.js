@@ -307,7 +307,7 @@ export class Physics {
         this.camera.lookAt(lookAtPoint);
         
         // Force visible frustum (debugging purposes)
-        this.camera.far = 100000; // Ensure far clip plane is beyond skybox
+        this.camera.far = 400000; // Ensure far clip plane is beyond skybox
         this.camera.updateProjectionMatrix();
     }
     
@@ -367,7 +367,7 @@ export class Physics {
                     
                     // Only include objects in the appropriate distance range from the center
                     // This helps avoid mistaking other geometric objects for asteroids
-                    if (distFromCenter > 4000 && distFromCenter < 8000) {
+                    if (distFromCenter > 16000 && distFromCenter < 32000) {
                         asteroidMeshes.push(object);
                     }
                 }
@@ -376,8 +376,8 @@ export class Physics {
         
         // Check distance to each asteroid - precise collision detection
         for (const asteroid of asteroidMeshes) {
-            // Skip null items
-            if (!asteroid) continue;
+            // Skip null items or invisible asteroids
+            if (!asteroid || !asteroid.visible) continue;
             
             const distance = shipPosition.distanceTo(asteroid.position);
             
@@ -389,7 +389,7 @@ export class Physics {
                 asteroidRadius = asteroid.geometry.parameters.radius;
             } else {
                 // Fallback size - more accurate estimation
-                asteroidRadius = 15;
+                asteroidRadius = 60; // 4x original value to match larger asteroids
             }
             
             // If collision detected - uses the sum of actual ship and asteroid radii
@@ -496,17 +496,17 @@ export class Physics {
         if (type === "sun") {
             // Solar collision - big, bright yellow explosion
             explosionColor = 0xffff00;
-            explosionSize = 15;
+            explosionSize = 60; // 4x original size (was 15)
             explosionMessage = "Your ship was incinerated by the sun!";
         } else if (type === "planet") {
             // Planet collision - large blue-tinted explosion
             explosionColor = 0x33ccff;
-            explosionSize = 10;
+            explosionSize = 40; // 4x original size (was 10)
             explosionMessage = "Your ship crashed into a planet!";
         } else {
             // Default asteroid collision - smaller orange explosion
             explosionColor = 0xff6600;
-            explosionSize = 5;
+            explosionSize = 20; // 4x original size (was 5)
             explosionMessage = "Your ship was destroyed by an asteroid!";
         }
         
@@ -608,7 +608,7 @@ export class Physics {
         if (!this.spaceship || !this.scene) return;
         
         // Create a shield-like effect around the ship
-        const shieldGeometry = new THREE.SphereGeometry(15, 32, 32);
+        const shieldGeometry = new THREE.SphereGeometry(60, 32, 32); // 4x original size (was 15)
         const shieldMaterial = new THREE.MeshBasicMaterial({
             color: 0x30cfd0,
             transparent: true,

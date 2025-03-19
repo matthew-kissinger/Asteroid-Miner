@@ -37,15 +37,15 @@ export class Planets {
     createHomeSolarSystem() {
         // Planet data for our Solar System: name, size, distance from sun, orbit speed, color, rings
         const solarSystemPlanets = [
-            { name: "Mercury", size: 55, distance: 1200, speed: 0.0016, color: 0xaaaaaa, rings: false },
-            { name: "Venus", size: 100, distance: 2000, speed: 0.0013, color: 0xe6cc9c, rings: false },
-            { name: "Earth", size: 105, distance: 3000, speed: 0.0010, color: 0x4169e1, rings: false },
-            { name: "Mars", size: 80, distance: 4200, speed: 0.0008, color: 0xc65d45, rings: false },
+            { name: "Mercury", size: 220, distance: 4800, speed: 0.0016, color: 0xaaaaaa, rings: false },
+            { name: "Venus", size: 400, distance: 8000, speed: 0.0013, color: 0xe6cc9c, rings: false },
+            { name: "Earth", size: 420, distance: 12000, speed: 0.0010, color: 0x4169e1, rings: false },
+            { name: "Mars", size: 320, distance: 16800, speed: 0.0008, color: 0xc65d45, rings: false },
             // Wider asteroid belt
-            { name: "Jupiter", size: 250, distance: 7500, speed: 0.0004, color: 0xd6b27e, rings: true },
-            { name: "Saturn", size: 220, distance: 10000, speed: 0.0003, color: 0xf0e5c9, rings: true },
-            { name: "Uranus", size: 180, distance: 14000, speed: 0.0002, color: 0xcaecf1, rings: true },
-            { name: "Neptune", size: 175, distance: 18000, speed: 0.00016, color: 0x5fa3db, rings: false },
+            { name: "Jupiter", size: 1000, distance: 30000, speed: 0.0004, color: 0xd6b27e, rings: true },
+            { name: "Saturn", size: 880, distance: 40000, speed: 0.0003, color: 0xf0e5c9, rings: true },
+            { name: "Uranus", size: 720, distance: 56000, speed: 0.0002, color: 0xcaecf1, rings: true },
+            { name: "Neptune", size: 700, distance: 72000, speed: 0.00016, color: 0x5fa3db, rings: false },
         ];
         
         // Store our solar system planets for future reference
@@ -156,17 +156,17 @@ export class Planets {
             let size;
             if (sizeClass < 0.5) {
                 // Small planet (50% chance)
-                size = (60 + Math.random() * 50) * sizeMultiplier;
+                size = (240 + Math.random() * 200) * sizeMultiplier; // 4x bigger: (60 + random*50) * 4
             } else if (sizeClass < 0.8) {
                 // Medium planet (30% chance)
-                size = (110 + Math.random() * 70) * sizeMultiplier;
+                size = (440 + Math.random() * 280) * sizeMultiplier; // 4x bigger: (110 + random*70) * 4
             } else {
                 // Large planet (20% chance)
-                size = (180 + Math.random() * 90) * sizeMultiplier;
+                size = (720 + Math.random() * 360) * sizeMultiplier; // 4x bigger: (180 + random*90) * 4
             }
             
             // Distance increases with each planet, with some randomness
-            const baseDistance = 1200 + (i * 2000);
+            const baseDistance = 4800 + (i * 8000); // 4x bigger: (1200 + i*2000) * 4
             const distanceVariation = baseDistance * 0.2; // 20% variation
             const distance = (baseDistance + (Math.random() * distanceVariation - distanceVariation/2)) * distanceMultiplier;
             
@@ -177,7 +177,11 @@ export class Planets {
             const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
             
             // Chance of rings based on size (larger planets more likely to have rings)
-            const rings = size > 150 ? Math.random() < 0.4 : false;
+            const rings = size > 600 ? Math.random() < 0.4 : false; // 4x bigger threshold: 150 * 4 = 600
+            
+            // Add axial and orbital tilt
+            const axialTilt = Math.random() * Math.PI * 0.5; // Up to 90 degrees axial tilt
+            const orbitalTilt = Math.random() * Math.PI * 0.2; // Up to ~35 degrees orbital tilt
             
             planetData.push({
                 name,
@@ -185,7 +189,9 @@ export class Planets {
                 distance: Math.floor(distance),
                 speed,
                 color,
-                rings
+                rings,
+                axialTilt,
+                orbitalTilt
             });
         }
         
@@ -278,13 +284,17 @@ export class Planets {
             
             // Set initial position
             const angle = Math.random() * Math.PI * 2;
-            planetMesh.position.x = Math.cos(angle) * planet.distance;
-            planetMesh.position.z = Math.sin(angle) * planet.distance;
+            
+            // Set axial tilt (if defined)
+            if (planet.axialTilt !== undefined) {
+                // Apply axial tilt by rotating the planet mesh
+                planetMesh.rotation.x = planet.axialTilt;
+            }
             
             // Add special features
             if (planet.name === "Venus") {
                 // Add Venus atmosphere
-                const atmosphereGeometry = new THREE.SphereGeometry(planet.size + 1, 32, 32);
+                const atmosphereGeometry = new THREE.SphereGeometry(planet.size + 4, 32, 32); // 4x the original +1
                 const atmosphereMaterial = new THREE.MeshPhongMaterial({
                     map: planetTextures.venus.atmosphere,
                     transparent: true,
@@ -298,8 +308,8 @@ export class Planets {
             // Add rings if needed
             if (planet.rings) {
                 const ringGeometry = new THREE.RingGeometry(
-                    planet.size + 2,
-                    planet.size + (planet.name === "Saturn" ? 20 : 7),
+                    planet.size + 8,
+                    planet.size + (planet.name === "Saturn" ? 80 : 28), // 4x the original values
                     64
                 );
                 const ringMaterial = planet.name === "Saturn" 
@@ -328,7 +338,8 @@ export class Planets {
                 distance: planet.distance,
                 speed: planet.speed,
                 angle: angle,
-                name: planet.name
+                name: planet.name,
+                orbitalTilt: planet.orbitalTilt || 0
             });
             
             // Set the planet region for location tracking
@@ -374,8 +385,25 @@ export class Planets {
         this.planets.forEach(planet => {
             planet.angle += planet.speed;
             
-            planet.mesh.position.x = Math.cos(planet.angle) * planet.distance;
-            planet.mesh.position.z = Math.sin(planet.angle) * planet.distance;
+            // Calculate flat orbital position
+            const flatX = Math.cos(planet.angle) * planet.distance;
+            const flatZ = Math.sin(planet.angle) * planet.distance;
+            
+            // Apply orbital tilt if it exists
+            if (planet.orbitalTilt) {
+                // Apply orbital tilt by rotating the position around the X axis
+                const tiltY = flatZ * Math.sin(planet.orbitalTilt);
+                const tiltZ = flatZ * Math.cos(planet.orbitalTilt);
+                
+                planet.mesh.position.x = flatX;
+                planet.mesh.position.y = tiltY;
+                planet.mesh.position.z = tiltZ;
+            } else {
+                // Regular orbit
+                planet.mesh.position.x = flatX;
+                planet.mesh.position.z = flatZ;
+                planet.mesh.position.y = 0;
+            }
             
             // Slowly rotate the planet
             planet.mesh.rotation.y += 0.001;

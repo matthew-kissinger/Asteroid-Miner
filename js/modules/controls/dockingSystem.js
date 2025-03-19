@@ -12,7 +12,7 @@ export class DockingSystem {
         // Preemptively set a safe undocking position
         if (this.spaceship && this.spaceship.undockLocation && this.mothership) {
             // Position between mothership and sun, but much closer to mothership
-            this.spaceship.undockLocation.set(0, 1500, 0);
+            this.spaceship.undockLocation.set(0, 4000, 0);
         }
         
         console.log("Initializing docking system, ship is " + (this.isDocked ? "docked" : "undocked"));
@@ -376,7 +376,7 @@ export class DockingSystem {
         
         const distance = this.spaceship.mesh.position.distanceTo(mothershipPosition);
         
-        if (distance < 500) { // Within docking range
+        if (distance < 2000) { // Within docking range (4x the original 500)
             this.nearMothership = true;
             if (this.ui && this.ui.mothershipInterface) {
                 this.ui.mothershipInterface.showDockingPrompt();

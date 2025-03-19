@@ -7,7 +7,7 @@
 import { Component } from '../../core/component.js';
 
 export class MiningLaserComponent extends Component {
-    constructor(power = 1, range = 50) {
+    constructor(power = 1, range = 800) {
         super();
         
         // Mining properties
@@ -19,7 +19,7 @@ export class MiningLaserComponent extends Component {
         // Laser beam visual properties
         this.laserBeam = null;
         this.laserColor = 0x00FFFF;
-        this.laserWidth = 0.1;
+        this.laserWidth = 0.4;
         
         // Mining progress visualization
         this.progressIndicator = null;
@@ -38,7 +38,7 @@ export class MiningLaserComponent extends Component {
      */
     initializeLaser(scene) {
         // Create laser beam geometry
-        const laserGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1, 8);
+        const laserGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 8);
         laserGeometry.rotateX(Math.PI / 2);
         laserGeometry.translate(0, 0, 0.5);
         
@@ -66,7 +66,7 @@ export class MiningLaserComponent extends Component {
      */
     _createProgressIndicator(scene) {
         // Create a ring geometry for the progress indicator
-        const ringGeometry = new THREE.RingGeometry(0.6, 0.8, 32);
+        const ringGeometry = new THREE.RingGeometry(2.4, 3.2, 32);
         
         // Material for the progress background
         const ringBackgroundMaterial = new THREE.MeshBasicMaterial({
@@ -89,7 +89,7 @@ export class MiningLaserComponent extends Component {
         
         // Create the foreground ring (progress indicator)
         // We'll use a partial ring geometry that will be updated during mining
-        const foregroundRingGeometry = new THREE.RingGeometry(0.6, 0.8, 32, 1, 0, 0); // Start with 0 progress
+        const foregroundRingGeometry = new THREE.RingGeometry(2.4, 3.2, 32, 1, 0, 0);
         const foregroundRing = new THREE.Mesh(foregroundRingGeometry, ringForegroundMaterial);
         
         // Create a container for the progress indicator
@@ -127,7 +127,7 @@ export class MiningLaserComponent extends Component {
             foregroundRing.geometry.dispose();
         }
         
-        foregroundRing.geometry = new THREE.RingGeometry(0.6, 0.8, 32, 1, 0, progressAngle);
+        foregroundRing.geometry = new THREE.RingGeometry(2.4, 3.2, 32, 1, 0, progressAngle);
     }
     
     /**
@@ -173,7 +173,7 @@ export class MiningLaserComponent extends Component {
         // The ship's coordinate system has -Z as forward direction
         // Add offset to position the laser at the front of the ship
         if (this.entity) {
-            const frontOffset = new THREE.Vector3(0, 0, -5); // Negative Z is forward
+            const frontOffset = new THREE.Vector3(0, 0, -20);
             
             // If the entity has a transform component, use its rotation
             const transform = this.entity.getComponent('TransformComponent');

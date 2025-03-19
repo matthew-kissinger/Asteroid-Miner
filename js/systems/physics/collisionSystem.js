@@ -15,7 +15,7 @@ export class CollisionSystem extends System {
         
         // Spatial partitioning grid
         this.cells = new Map();
-        this.cellSize = 500; // Size of each spatial cell
+        this.cellSize = 2000; // Size of each spatial cell (4x the original 500)
         
         // Collision tracking to prevent duplicates
         this.processedCollisions = new Set();

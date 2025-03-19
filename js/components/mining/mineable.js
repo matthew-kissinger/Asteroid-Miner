@@ -132,21 +132,30 @@ export class MineableComponent extends Component {
     }
     
     /**
-     * Mine resources from this object
+     * Mine resources from the entity
      * @param {number} amount Amount to mine
-     * @returns {object} Mining result with type, amount, and depletion status
+     * @returns {object} Mining result
      */
     mine(amount) {
-        const minedAmount = Math.min(amount, this.remainingAmount);
-        this.remainingAmount -= minedAmount;
+        // Check if the entity exists and is visible
+        if (!this.entity || !this.entity.getComponent('MeshComponent')?.isVisible()) {
+            return { type: this.resourceType, amount: 0, depleted: true };
+        }
         
-        // Update scale based on remaining resources
+        // Record mine time for effects
+        this.lastMineTime = Date.now();
+        
+        // Calculate how much can actually be mined
+        const actualAmount = Math.min(amount, this.remainingAmount);
+        this.remainingAmount -= actualAmount;
+        
+        // Update visual scale
         this._updateScale();
         
         // Return mining result
         return {
             type: this.resourceType,
-            amount: minedAmount,
+            amount: actualAmount,
             depleted: this.isDepleted()
         };
     }

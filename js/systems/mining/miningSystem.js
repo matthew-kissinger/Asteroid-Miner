@@ -43,9 +43,21 @@ export class MiningSystem extends System {
         // Verify target entity has required components
         const targetTransform = targetEntity.getComponent('TransformComponent');
         const mineable = targetEntity.getComponent('MineableComponent');
+        const meshComponent = targetEntity.getComponent('MeshComponent');
         
         if (!targetTransform || !mineable) {
             console.warn('Mining target entity missing required components');
+            return;
+        }
+        
+        // Check if target is visible
+        if (meshComponent && !meshComponent.isVisible()) {
+            console.warn('Cannot mine invisible target');
+            this.world.messageBus.publish('mining.invalidTarget', {
+                sourceEntity,
+                targetEntity,
+                reason: 'Target is not visible'
+            });
             return;
         }
         
@@ -58,14 +70,15 @@ export class MiningSystem extends System {
             return;
         }
         
-        // Check if in range
+        // Check if in range - use an extended range for better usability in the larger solar system
         const distance = transform.position.distanceTo(targetTransform.position);
-        if (distance > miningLaser.range) {
+        // Allow mining from 2x the defined range for better gameplay experience
+        if (distance > miningLaser.range * 2) {
             this.world.messageBus.publish('mining.outOfRange', {
                 sourceEntity,
                 targetEntity,
                 distance,
-                maxRange: miningLaser.range
+                maxRange: miningLaser.range * 2
             });
             return;
         }
@@ -164,14 +177,15 @@ export class MiningSystem extends System {
                 continue;
             }
             
-            // Check if still in range
+            // Check if still in range - use the extended range check here too
             const distance = sourceTransform.position.distanceTo(targetTransform.position);
-            if (distance > miningLaser.range) {
+            // Allow mining from 2x the defined range for better gameplay experience
+            if (distance > miningLaser.range * 2) {
                 this.world.messageBus.publish('mining.outOfRange', {
                     sourceEntity,
                     targetEntity,
                     distance,
-                    maxRange: miningLaser.range
+                    maxRange: miningLaser.range * 2
                 });
                 this.stopMining({ data: { sourceEntity } });
                 continue;

@@ -56,7 +56,7 @@ export class Skybox {
         let starDensity = params?.starDensity || 1.0;
         let nebulaDensity = params?.nebulaDensity || 0.5;
         let skyboxColor = params?.color || 0x000000;
-        const size = 80000; // Very large size to contain entire game world
+        const size = 320000; // Very large size to contain entire game world (4x original)
         
         console.log(`Creating enhanced skybox with star density: ${starDensity}, nebula density: ${nebulaDensity}, color: 0x${skyboxColor.toString(16)}`);
         

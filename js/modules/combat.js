@@ -110,6 +110,13 @@ export class Combat {
             this.enemySystem = new EnemySystem(this.world);
             this.world.registerSystem(this.enemySystem);
             
+            // GLOBAL ACCESS: Make the enemy system accessible to other modules
+            if (window.game) {
+                window.game.ecsWorld = window.game.ecsWorld || {};
+                window.game.ecsWorld.enemySystem = this.enemySystem;
+                console.log("[COMBAT] Made enemy system globally available via window.game.ecsWorld.enemySystem");
+            }
+            
             // Register the trail system for visual effects
             this.trailSystem = new TrailSystem(this.world);
             this.world.registerSystem(this.trailSystem);
@@ -169,6 +176,23 @@ export class Combat {
             
             // Create player reference entity again to ensure it exists
             await this.createPlayerReferenceEntity();
+            
+            // Configure enemy system 
+            if (this.enemySystem) {
+                // Force enemy verification after world is set up
+                this.enemySystem.validateEnemyReferences();
+                
+                // IMPORTANT: Ensure any lingering enemies over the limit are cleaned up
+                if (this.enemySystem.enemies.size > this.enemySystem.maxEnemies) {
+                    console.warn(`[COMBAT] Found ${this.enemySystem.enemies.size} enemies exceeding limit of ${this.enemySystem.maxEnemies} during setup`);
+                    this.enemySystem.enforceEnemyLimit();
+                }
+                
+                // Force enemy system to generate spawn points based on player position
+                this.enemySystem.generateSpawnPoints();
+                
+                console.log(`[COMBAT] Configured enemy system: Max enemies ${this.enemySystem.maxEnemies}`);
+            }
             
             // Mark world as initialized
             this.worldInitialized = true;
@@ -573,6 +597,121 @@ export class Combat {
     }
     
     /**
+     * Create an explosion effect at the given position
+     * @param {THREE.Vector3} position Position for the explosion
+     * @param {number} duration Duration of the explosion in milliseconds
+     * @param {boolean} isVisible Whether the explosion should be visible
+     */
+    createExplosionEffect(position, duration = 1000, isVisible = true) {
+        try {
+            // Create particle geometry for explosion
+            const particleCount = 200;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            
+            // Randomize particle positions in a sphere
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                positions[i3] = (Math.random() - 0.5) * 100;
+                positions[i3 + 1] = (Math.random() - 0.5) * 100;
+                positions[i3 + 2] = (Math.random() - 0.5) * 100;
+            }
+            
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            // Create bright material with additive blending for glow effect
+            const material = new THREE.PointsMaterial({
+                color: 0xff9900,
+                size: 10,
+                transparent: true,
+                opacity: 1,
+                blending: THREE.AdditiveBlending
+            });
+            
+            // Create particle system
+            const explosion = new THREE.Points(geometry, material);
+            explosion.position.copy(position);
+            this.scene.add(explosion);
+            
+            console.log("Created explosion effect at:", position.x.toFixed(0), position.y.toFixed(0), position.z.toFixed(0));
+            
+            // Automatically remove after animation
+            const startTime = Date.now();
+            
+            // Animation function
+            const animateExplosion = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / duration;
+                
+                if (elapsed < duration) {
+                    // Calculate animation progress (0-1)
+                    const progress = elapsed / duration;
+                    
+                    // Expand particles outward
+                    for (let i = 0; i < particleCount; i++) {
+                        const i3 = i * 3;
+                        const x = positions[i3] * (1 + progress * 5);
+                        const y = positions[i3 + 1] * (1 + progress * 5);
+                        const z = positions[i3 + 2] * (1 + progress * 5);
+                        
+                        explosion.geometry.attributes.position.array[i3] = x;
+                        explosion.geometry.attributes.position.array[i3 + 1] = y;
+                        explosion.geometry.attributes.position.array[i3 + 2] = z;
+                    }
+                    
+                    explosion.geometry.attributes.position.needsUpdate = true;
+                    
+                    // Fade out
+                    material.opacity = 1 - progress;
+                    
+                    // Continue animation
+                    requestAnimationFrame(animateExplosion);
+                } else {
+                    // Remove from scene when done
+                    this.scene.remove(explosion);
+                    console.log("Explosion animation complete");
+                }
+            };
+            
+            // Start animation
+            animateExplosion();
+            
+            // Play explosion sound
+            if (window.game && window.game.audio) {
+                window.game.audio.playSound('explosion');
+            }
+        } catch (error) {
+            console.error("Error creating explosion effect:", error);
+        }
+    }
+    
+    /**
+     * Register an enemy entity for synchronization with EnemySystem
+     * @param {string} enemyId ID of the enemy entity
+     */
+    registerEnemy(enemyId) {
+        // Add hook to track enemy entities for external systems
+        if (!this._registeredEnemyIds) {
+            this._registeredEnemyIds = new Set();
+        }
+        
+        // Add enemy to our tracking set
+        this._registeredEnemyIds.add(enemyId);
+        console.log(`Combat module: Registered enemy ${enemyId} for tracking (total: ${this._registeredEnemyIds.size})`);
+    }
+    
+    /**
+     * Unregister an enemy entity
+     * @param {string} enemyId ID of the enemy entity
+     */
+    unregisterEnemy(enemyId) {
+        if (this._registeredEnemyIds && this._registeredEnemyIds.has(enemyId)) {
+            this._registeredEnemyIds.delete(enemyId);
+            console.log(`Combat module: Unregistered enemy ${enemyId} (remaining: ${this._registeredEnemyIds.size})`);
+        }
+    }
+    
+    /**
      * Fire the particle cannon, creating two projectiles
      */
     fireParticleCannon() {
@@ -728,12 +867,55 @@ export class Combat {
                                     }
                                 }
                                 
+                                // SYNCHRONIZATION FIX: Unregister enemy from our registry
+                                this.unregisterEnemy(enemy.id);
+                                
+                                // SYNC WITH ENEMY SYSTEM: Force EnemySystem to handle this destruction properly
+                                if (window.game && window.game.ecsWorld && window.game.ecsWorld.enemySystem) {
+                                    console.log(`Notifying EnemySystem directly about enemy ${enemy.id} destruction`);
+                                    try {
+                                        const enemySystem = window.game.ecsWorld.enemySystem;
+                                        if (typeof enemySystem.handleEntityDestroyed === 'function') {
+                                            enemySystem.handleEntityDestroyed({
+                                                entity: enemy,
+                                                reason: 'projectile'
+                                            });
+                                        }
+                                    } catch (syncError) {
+                                        console.error("Error syncing with EnemySystem:", syncError);
+                                    }
+                                }
+                                
                                 // Method 2: Direct entity destruction only if health is depleted
                                 try {
-                                    this.world.destroyEntity(enemy.id);
-                                    console.log("Enemy destroyed via world.destroyEntity");
+                                    // Use system-specific methods if available
+                                    if (window.game && window.game.ecsWorld && window.game.ecsWorld.enemySystem) {
+                                        const enemySystem = window.game.ecsWorld.enemySystem;
+                                        // Try returnEnemyToPool first which properly handles cleanup
+                                        if (typeof enemySystem.returnEnemyToPool === 'function') {
+                                            console.log(`Using EnemySystem.returnEnemyToPool for enemy ${enemy.id}`);
+                                            enemySystem.returnEnemyToPool(enemy);
+                                        }
+                                        // Force validation of references in EnemySystem
+                                        if (typeof enemySystem.validateEnemyReferences === 'function') {
+                                            enemySystem.validateEnemyReferences();
+                                        }
+                                    } else {
+                                        // Fallback to direct destruction
+                                        this.world.destroyEntity(enemy.id);
+                                        console.log("Enemy destroyed via world.destroyEntity");
+                                    }
                                 } catch (e) {
                                     console.error("Failed to destroy enemy:", e);
+                                }
+                                
+                                // ADDITIONAL SYNC: Publish explicit event about destruction
+                                if (this.world && this.world.messageBus) {
+                                    this.world.messageBus.publish('enemy.destroyed', {
+                                        entityId: enemy.id,
+                                        source: 'playerProjectile',
+                                        position: enemyPosition.clone()
+                                    });
                                 }
                             } else {
                                 console.log(`Enemy hit but survived with ${health.health}/${health.maxHealth} health remaining`);
@@ -751,95 +933,6 @@ export class Combat {
         
         // Return true to indicate successful firing
         return true;
-    }
-    
-    /**
-     * Create an explosion effect at the given position
-     * @param {THREE.Vector3} position Position for the explosion
-     * @param {number} duration Duration of the explosion in milliseconds
-     * @param {boolean} isVisible Whether the explosion should be visible
-     */
-    createExplosionEffect(position, duration = 1000, isVisible = true) {
-        try {
-            // Create particle geometry for explosion
-            const particleCount = 200;
-            const geometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            
-            // Randomize particle positions in a sphere
-            for (let i = 0; i < particleCount; i++) {
-                const i3 = i * 3;
-                positions[i3] = (Math.random() - 0.5) * 100;
-                positions[i3 + 1] = (Math.random() - 0.5) * 100;
-                positions[i3 + 2] = (Math.random() - 0.5) * 100;
-            }
-            
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            
-            // Create bright material with additive blending for glow effect
-            const material = new THREE.PointsMaterial({
-                color: 0xff9900,
-                size: 10,
-                transparent: true,
-                opacity: 1,
-                blending: THREE.AdditiveBlending
-            });
-            
-            // Create particle system
-            const explosion = new THREE.Points(geometry, material);
-            explosion.position.copy(position);
-            this.scene.add(explosion);
-            
-            console.log("Created explosion effect at:", position.x.toFixed(0), position.y.toFixed(0), position.z.toFixed(0));
-            
-            // Automatically remove after animation
-            const startTime = Date.now();
-            
-            // Animation function
-            const animateExplosion = () => {
-                const elapsed = Date.now() - startTime;
-                const progress = elapsed / duration;
-                
-                if (elapsed < duration) {
-                    // Calculate animation progress (0-1)
-                    const progress = elapsed / duration;
-                    
-                    // Expand particles outward
-                    for (let i = 0; i < particleCount; i++) {
-                        const i3 = i * 3;
-                        const x = positions[i3] * (1 + progress * 5);
-                        const y = positions[i3 + 1] * (1 + progress * 5);
-                        const z = positions[i3 + 2] * (1 + progress * 5);
-                        
-                        explosion.geometry.attributes.position.array[i3] = x;
-                        explosion.geometry.attributes.position.array[i3 + 1] = y;
-                        explosion.geometry.attributes.position.array[i3 + 2] = z;
-                    }
-                    
-                    explosion.geometry.attributes.position.needsUpdate = true;
-                    
-                    // Fade out
-                    material.opacity = 1 - progress;
-                    
-                    // Continue animation
-                    requestAnimationFrame(animateExplosion);
-                } else {
-                    // Remove from scene when done
-                    this.scene.remove(explosion);
-                    console.log("Explosion animation complete");
-                }
-            };
-            
-            // Start animation
-            animateExplosion();
-            
-            // Play explosion sound
-            if (window.game && window.game.audio) {
-                window.game.audio.playSound('explosion');
-            }
-        } catch (error) {
-            console.error("Error creating explosion effect:", error);
-        }
     }
     
     /**

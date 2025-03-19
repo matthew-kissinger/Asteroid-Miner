@@ -1,5 +1,7 @@
 // starMap.js - Handles the star map UI for interstellar travel
 
+import { MobileDetector } from '../../utils/mobileDetector.js';
+
 export class StarMap {
     constructor(starSystemGenerator, dockingSystem, mothershipInterface) {
         this.starSystemGenerator = starSystemGenerator;
@@ -8,6 +10,9 @@ export class StarMap {
         this.isVisible = false;
         this.selectedSystem = null;
         this.isTraveling = false;
+        this.isMobile = MobileDetector.isMobile();
+        
+        console.log("StarMap constructor - isMobile:", this.isMobile);
         
         // Create star map UI
         this.setupStarMapUI();
@@ -24,11 +29,20 @@ export class StarMap {
         starMap.style.top = '50%';
         starMap.style.left = '50%';
         starMap.style.transform = 'translate(-50%, -50%)';
-        starMap.style.width = '900px';
-        starMap.style.height = '700px';
+        
+        // Adjust size for mobile devices
+        if (this.isMobile) {
+            starMap.style.width = '95%';
+            starMap.style.height = '90vh';
+            starMap.style.maxHeight = '700px';
+        } else {
+            starMap.style.width = '900px';
+            starMap.style.height = '700px';
+        }
+        
         starMap.style.backgroundColor = 'rgba(10, 15, 30, 0.95)';
         starMap.style.color = '#fff';
-        starMap.style.padding = '30px';
+        starMap.style.padding = this.isMobile ? '15px' : '30px';
         starMap.style.borderRadius = '10px';
         starMap.style.border = '2px solid #30cfd0';
         starMap.style.boxShadow = '0 0 30px #30cfd0';
@@ -43,12 +57,15 @@ export class StarMap {
         title.style.textAlign = 'center';
         title.style.color = '#30cfd0';
         title.style.margin = '0 0 20px 0';
+        title.style.fontSize = this.isMobile ? '24px' : '28px';
         starMap.appendChild(title);
         
-        // Create map content container with two columns
+        // Create map content container with flexible layout
         const content = document.createElement('div');
         content.style.display = 'flex';
-        content.style.height = 'calc(100% - 100px)';
+        content.style.flexDirection = this.isMobile ? 'column' : 'row';
+        content.style.height = this.isMobile ? 'calc(100% - 120px)' : 'calc(100% - 100px)';
+        content.style.gap = this.isMobile ? '15px' : '0';
         
         // Left column - System Map (stars and connections)
         const mapContainer = document.createElement('div');
@@ -59,6 +76,8 @@ export class StarMap {
         mapContainer.style.border = '1px solid #30cfd0';
         mapContainer.style.position = 'relative';
         mapContainer.style.overflow = 'hidden';
+        mapContainer.style.height = this.isMobile ? '40%' : '100%';
+        mapContainer.style.minHeight = this.isMobile ? '250px' : 'auto';
         
         // Create canvas for map visualization
         const canvas = document.createElement('canvas');
@@ -72,18 +91,20 @@ export class StarMap {
         // Right column - System Information
         const infoPanel = document.createElement('div');
         infoPanel.id = 'system-info-panel';
-        infoPanel.style.width = '350px';
-        infoPanel.style.marginLeft = '20px';
+        infoPanel.style.width = this.isMobile ? '100%' : '350px';
+        infoPanel.style.marginLeft = this.isMobile ? '0' : '20px';
         infoPanel.style.overflowY = 'auto';
+        infoPanel.style.height = this.isMobile ? '60%' : '100%';
+        infoPanel.style.webkitOverflowScrolling = 'touch'; // For smooth scrolling on iOS
         
         // Current system section
         const currentSystem = document.createElement('div');
         currentSystem.id = 'current-system-info';
         currentSystem.innerHTML = `
-            <h3 style="color: #30cfd0; margin-top: 0;">CURRENT SYSTEM</h3>
+            <h3 style="color: #30cfd0; margin-top: 0; font-size: ${this.isMobile ? '16px' : '18px'};">CURRENT SYSTEM</h3>
             <div class="system-card" style="background: rgba(0, 0, 0, 0.7); padding: 15px; border-radius: 5px; border: 1px solid #30cfd0; margin-bottom: 20px;">
-                <div id="current-system-name" style="font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 5px;">Solar System</div>
-                <div id="current-system-class" style="font-size: 14px; color: #aaa; margin-bottom: 10px;">Class G - Home System</div>
+                <div id="current-system-name" style="font-size: ${this.isMobile ? '16px' : '18px'}; font-weight: bold; color: #fff; margin-bottom: 5px;">Solar System</div>
+                <div id="current-system-class" style="font-size: ${this.isMobile ? '12px' : '14px'}; color: #aaa; margin-bottom: 10px;">Class G - Home System</div>
                 <div id="current-system-resources" style="margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                         <span>Iron:</span>
@@ -104,10 +125,10 @@ export class StarMap {
                         </div>
                     </div>
                 </div>
-                <div id="current-system-description" style="font-size: 12px; color: #ccc; margin-bottom: 10px;">
+                <div id="current-system-description" style="font-size: ${this.isMobile ? '11px' : '12px'}; color: #ccc; margin-bottom: 10px;">
                     Our home system, with Earth as the starting location.
                 </div>
-                <div id="current-system-features" style="font-size: 12px; color: #30cfd0;">
+                <div id="current-system-features" style="font-size: ${this.isMobile ? '11px' : '12px'}; color: #30cfd0;">
                     Special Features: Earth
                 </div>
             </div>
@@ -118,13 +139,14 @@ export class StarMap {
         const selectedSystem = document.createElement('div');
         selectedSystem.id = 'selected-system-info';
         selectedSystem.innerHTML = `
-            <h3 style="color: #30cfd0;">SELECTED SYSTEM</h3>
+            <h3 style="color: #30cfd0; font-size: ${this.isMobile ? '16px' : '18px'};">SELECTED SYSTEM</h3>
             <div id="selected-system-card" class="system-card" style="background: rgba(0, 0, 0, 0.7); padding: 15px; border-radius: 5px; border: 1px solid #555; margin-bottom: 20px;">
                 <div class="empty-selection" style="color: #777; text-align: center; padding: 20px;">
-                    No system selected.<br>Click on a star system in the map to select it.
+                    No system selected.<br>
+                    ${this.isMobile ? 'Tap' : 'Click'} on a star system in the map to select it.
                 </div>
             </div>
-            <button id="travel-button" disabled style="width: 100%; padding: 12px; background-color: #30cfd0; color: #000; border: none; border-radius: 5px; cursor: not-allowed; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px; opacity: 0.5;">
+            <button id="travel-button" disabled style="width: 100%; padding: ${this.isMobile ? '15px' : '12px'}; background-color: #30cfd0; color: #000; border: none; border-radius: 5px; cursor: not-allowed; font-family: 'Courier New', monospace; font-weight: bold; font-size: ${this.isMobile ? '18px' : '16px'}; opacity: 0.5;">
                 TRAVEL TO SYSTEM
             </button>
         `;
@@ -140,7 +162,7 @@ export class StarMap {
         closeButton.id = 'close-star-map';
         closeButton.textContent = 'RETURN TO MOTHERSHIP';
         closeButton.style.width = '100%';
-        closeButton.style.padding = '12px';
+        closeButton.style.padding = this.isMobile ? '15px' : '12px';
         closeButton.style.marginTop = '20px';
         closeButton.style.backgroundColor = '#555';
         closeButton.style.color = '#fff';
@@ -149,7 +171,7 @@ export class StarMap {
         closeButton.style.cursor = 'pointer';
         closeButton.style.fontFamily = 'Courier New, monospace';
         closeButton.style.fontWeight = 'bold';
-        closeButton.style.fontSize = '16px';
+        closeButton.style.fontSize = this.isMobile ? '18px' : '16px';
         starMap.appendChild(closeButton);
         
         // Add to DOM
@@ -163,30 +185,37 @@ export class StarMap {
             closeButton.addEventListener('click', () => {
                 this.hide();
             });
+            
+            // Add touch event for mobile
+            if (this.isMobile) {
+                closeButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.hide();
+                });
+            }
         }
         
-        // Canvas click handler for selecting systems
+        // Canvas click/touch handler for selecting systems
         const canvas = document.getElementById('star-map-canvas');
         if (canvas) {
+            // Mouse events
             canvas.addEventListener('click', (e) => {
-                // Convert click position to canvas coordinates
-                const rect = canvas.getBoundingClientRect();
-                const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-                const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-                
-                // Check if a star system was clicked
-                const clickedSystem = this.findSystemAtPosition(x, y);
-                if (clickedSystem) {
-                    this.selectSystem(clickedSystem);
-                    this.updateCanvas(); // Redraw to show selection
-                }
+                this.handleMapInteraction(e);
             });
+            
+            // Touch events for mobile
+            if (this.isMobile) {
+                canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.handleMapInteraction(e.changedTouches[0]);
+                });
+            }
         }
         
         // Travel button
         const travelButton = document.getElementById('travel-button');
         if (travelButton) {
-            travelButton.addEventListener('click', () => {
+            const travelHandler = () => {
                 if (this.selectedSystem && this.selectedSystem !== this.starSystemGenerator.currentSystem) {
                     console.log(`Initiating travel to system: ${this.selectedSystem}`);
                     
@@ -226,7 +255,34 @@ export class StarMap {
                         }
                     }
                 }
-            });
+            };
+            
+            // Click event
+            travelButton.addEventListener('click', travelHandler);
+            
+            // Touch event for mobile
+            if (this.isMobile) {
+                travelButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    travelHandler();
+                });
+            }
+        }
+    }
+    
+    // Handler for map interactions (click or touch)
+    handleMapInteraction(event) {
+        // Convert click/touch position to canvas coordinates
+        const canvas = document.getElementById('star-map-canvas');
+        const rect = canvas.getBoundingClientRect();
+        const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+        const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+        
+        // Check if a star system was clicked/tapped
+        const clickedSystem = this.findSystemAtPosition(x, y);
+        if (clickedSystem) {
+            this.selectSystem(clickedSystem);
+            this.updateCanvas(); // Redraw to show selection
         }
     }
     
@@ -251,7 +307,10 @@ export class StarMap {
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             // If click is within the star's radius (make current system bigger)
-            const radius = systemId === currentSystem ? 15 : 10;
+            // Use larger tap area for mobile
+            const radius = systemId === currentSystem ? 
+                          (this.isMobile ? 20 : 15) : 
+                          (this.isMobile ? 15 : 10);
             if (distance <= radius) {
                 return systemId;
             }
@@ -271,7 +330,7 @@ export class StarMap {
             if (selectedCard) {
                 selectedCard.innerHTML = `
                     <div class="empty-selection" style="color: #777; text-align: center; padding: 20px;">
-                        No system selected.<br>Click on a star system in the map to select it.
+                        No system selected.<br>${this.isMobile ? 'Tap' : 'Click'} on a star system in the map to select it.
                     </div>
                 `;
             }
@@ -295,8 +354,8 @@ export class StarMap {
         const selectedCard = document.getElementById('selected-system-card');
         if (selectedCard && system) {
             selectedCard.innerHTML = `
-                <div id="selected-system-name" style="font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 5px;">${system.name}</div>
-                <div id="selected-system-class" style="font-size: 14px; color: #aaa; margin-bottom: 10px;">Class ${system.starClass} - ${system.classification}</div>
+                <div id="selected-system-name" style="font-size: ${this.isMobile ? '16px' : '18px'}; font-weight: bold; color: #fff; margin-bottom: 5px;">${system.name}</div>
+                <div id="selected-system-class" style="font-size: ${this.isMobile ? '12px' : '14px'}; color: #aaa; margin-bottom: 10px;">Class ${system.starClass} - ${system.classification}</div>
                 <div id="selected-system-resources" style="margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                         <span>Iron:</span>
@@ -317,13 +376,21 @@ export class StarMap {
                         </div>
                     </div>
                 </div>
-                <div style="font-size: 12px; color: #ccc; margin-bottom: 10px;">
+                <div style="font-size: ${this.isMobile ? '11px' : '12px'}; color: #ccc; margin-bottom: 10px;">
                     ${system.description}
                 </div>
-                <div style="font-size: 12px; color: #30cfd0;">
+                <div style="font-size: ${this.isMobile ? '11px' : '12px'}; color: #30cfd0;">
                     Special Features: ${system.specialFeatures.join(', ')}
                 </div>
             `;
+            
+            // Scroll to make selected system info visible on mobile
+            if (this.isMobile) {
+                const infoPanel = document.getElementById('system-info-panel');
+                if (infoPanel) {
+                    infoPanel.scrollTop = selectedCard.offsetTop - infoPanel.offsetTop;
+                }
+            }
         }
         
         // Enable/disable travel button
@@ -341,25 +408,6 @@ export class StarMap {
             travelButton.textContent = isCurrentSystem ? 'CURRENT LOCATION' : 
                                       !isConnected ? 'NO DIRECT ROUTE' : 'TRAVEL TO SYSTEM';
         }
-    }
-    
-    // Update the current system information
-    updateCurrentSystemInfo() {
-        const system = this.starSystemGenerator.getCurrentSystemData();
-        if (!system) return;
-        
-        // Update system name and class
-        document.getElementById('current-system-name').textContent = system.name;
-        document.getElementById('current-system-class').textContent = `Class ${system.starClass} - ${system.classification}`;
-        
-        // Update resource indicators
-        document.getElementById('current-iron-indicator').style.width = `${system.resourceMultipliers.iron * 50}%`;
-        document.getElementById('current-gold-indicator').style.width = `${system.resourceMultipliers.gold * 50}%`;
-        document.getElementById('current-platinum-indicator').style.width = `${system.resourceMultipliers.platinum * 50}%`;
-        
-        // Update description and features
-        document.getElementById('current-system-description').textContent = system.description;
-        document.getElementById('current-system-features').textContent = `Special Features: ${system.specialFeatures.join(', ')}`;
     }
     
     // Draw the star map on the canvas
@@ -413,7 +461,7 @@ export class StarMap {
             const x1 = centerX + currentSystemData.position.x;
             const y1 = centerY + currentSystemData.position.y;
             
-            ctx.lineWidth = 2;
+            ctx.lineWidth = this.isMobile ? 3 : 2;
             ctx.strokeStyle = 'rgba(48, 207, 208, 0.8)';
             
             for (const connectedId of currentSystemData.connections) {
@@ -447,15 +495,20 @@ export class StarMap {
             // Draw a circle for the system
             ctx.beginPath();
             
-            // Size based on status
-            const radius = isCurrent ? 15 : isSelected ? 12 : 8;
+            // Size based on status and device
+            let radius;
+            if (this.isMobile) {
+                radius = isCurrent ? 18 : isSelected ? 15 : 10;
+            } else {
+                radius = isCurrent ? 15 : isSelected ? 12 : 8;
+            }
             
             // Fill color based on star class
             ctx.fillStyle = system.starColor ? `#${system.starColor.toString(16).padStart(6, '0')}` : '#ffffff';
             
             // Add glow for current and selected
             if (isCurrent || isSelected) {
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = this.isMobile ? 20 : 15;
                 ctx.shadowColor = isCurrent ? '#30cfd0' : '#ffffff';
             } else {
                 ctx.shadowBlur = 0;
@@ -471,7 +524,7 @@ export class StarMap {
             // Draw border for connected systems
             if (isConnected && !isCurrent) {
                 ctx.strokeStyle = '#30cfd0';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = this.isMobile ? 3 : 2;
                 ctx.beginPath();
                 ctx.arc(x, y, radius + 3, 0, Math.PI * 2);
                 ctx.stroke();
@@ -479,9 +532,11 @@ export class StarMap {
             
             // Draw name label
             ctx.fillStyle = isCurrent ? '#30cfd0' : isSelected ? '#ffffff' : '#aaaaaa';
-            ctx.font = isCurrent ? 'bold 12px Courier New' : '10px Courier New';
+            ctx.font = isCurrent ? 
+                      (this.isMobile ? 'bold 14px Courier New' : 'bold 12px Courier New') : 
+                      (this.isMobile ? '12px Courier New' : '10px Courier New');
             ctx.textAlign = 'center';
-            ctx.fillText(system.name, x, y + radius + 15);
+            ctx.fillText(system.name, x, y + radius + (this.isMobile ? 18 : 15));
         }
     }
     
@@ -490,17 +545,17 @@ export class StarMap {
         // Create notification element
         const notification = document.createElement('div');
         notification.style.position = 'fixed';
-        notification.style.top = '20%';
+        notification.style.top = this.isMobile ? '30%' : '20%';
         notification.style.left = '50%';
         notification.style.transform = 'translate(-50%, -50%)';
         notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
         notification.style.color = '#30cfd0';
-        notification.style.padding = '20px 40px';
+        notification.style.padding = this.isMobile ? '15px 30px' : '20px 40px';
         notification.style.borderRadius = '10px';
         notification.style.border = '2px solid #30cfd0';
         notification.style.boxShadow = '0 0 30px #30cfd0';
         notification.style.fontFamily = 'Courier New, monospace';
-        notification.style.fontSize = '20px';
+        notification.style.fontSize = this.isMobile ? '18px' : '20px';
         notification.style.fontWeight = 'bold';
         notification.style.zIndex = '9999';
         notification.style.textAlign = 'center';
@@ -518,6 +573,25 @@ export class StarMap {
                 notification.remove();
             }, 1000);
         }, 3000);
+    }
+    
+    // Update the current system information
+    updateCurrentSystemInfo() {
+        const system = this.starSystemGenerator.getCurrentSystemData();
+        if (!system) return;
+        
+        // Update system name and class
+        document.getElementById('current-system-name').textContent = system.name;
+        document.getElementById('current-system-class').textContent = `Class ${system.starClass} - ${system.classification}`;
+        
+        // Update resource indicators
+        document.getElementById('current-iron-indicator').style.width = `${system.resourceMultipliers.iron * 50}%`;
+        document.getElementById('current-gold-indicator').style.width = `${system.resourceMultipliers.gold * 50}%`;
+        document.getElementById('current-platinum-indicator').style.width = `${system.resourceMultipliers.platinum * 50}%`;
+        
+        // Update description and features
+        document.getElementById('current-system-description').textContent = system.description;
+        document.getElementById('current-system-features').textContent = `Special Features: ${system.specialFeatures.join(', ')}`;
     }
     
     // Show the star map

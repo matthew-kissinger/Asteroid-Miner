@@ -8,14 +8,18 @@
  * - Holographic UI with neon effects
  */
 
+import { MobileDetector } from '../../utils/mobileDetector.js';
+
 export class BlackjackGame {
     constructor(scene, spaceship, audio) {
         this.scene = scene;
         this.spaceship = spaceship;
         this.audio = audio;
+        this.isMobile = MobileDetector.isMobile();
 
         console.log("BlackjackGame constructor - spaceship:", this.spaceship);
         console.log("BlackjackGame constructor - cargo:", this.spaceship ? this.spaceship.cargo : null);
+        console.log("BlackjackGame constructor - isMobile:", this.isMobile);
         
         // Game state
         this.gameActive = false;
@@ -91,19 +95,37 @@ export class BlackjackGame {
         this.gameUI.style.top = '50%';
         this.gameUI.style.left = '50%';
         this.gameUI.style.transform = 'translate(-50%, -50%)';
-        this.gameUI.style.width = '900px';
-        this.gameUI.style.height = '650px';
+        
+        // Adjust width for mobile
+        if (this.isMobile) {
+            this.gameUI.style.width = '95%';
+            this.gameUI.style.maxWidth = '600px';
+            this.gameUI.style.height = 'auto';
+            this.gameUI.style.maxHeight = '90vh';
+        } else {
+            this.gameUI.style.width = '900px';
+            this.gameUI.style.height = '650px';
+        }
+        
         this.gameUI.style.backgroundColor = 'rgba(6, 22, 31, 0.85)';
         this.gameUI.style.backdropFilter = 'blur(10px)';
         this.gameUI.style.border = '2px solid #33aaff';
         this.gameUI.style.borderRadius = '15px';
         this.gameUI.style.boxShadow = '0 0 30px rgba(51, 170, 255, 0.5)';
-        this.gameUI.style.padding = '25px';
+        this.gameUI.style.padding = this.isMobile ? '15px' : '25px';
         this.gameUI.style.zIndex = '1000';
         this.gameUI.style.display = 'none';
         this.gameUI.style.fontFamily = 'Courier New, monospace';
         this.gameUI.style.color = '#fff';
         this.gameUI.style.userSelect = 'none';
+        this.gameUI.style.overflowY = this.isMobile ? 'auto' : 'hidden';
+        
+        // Add mobile scroll handling
+        if (this.isMobile) {
+            this.gameUI.style.webkitOverflowScrolling = 'touch';
+            this.gameUI.style.touchAction = 'pan-y';
+            this.gameUI.style.overscrollBehavior = 'contain';
+        }
         
         // Add scanline effect
         const scanlines = document.createElement('div');
@@ -130,13 +152,13 @@ export class BlackjackGame {
         title.style.color = '#30cfd0';
         title.style.textShadow = '0 0 10px rgba(48, 207, 208, 0.7)';
         title.style.margin = '0 0 5px 0';
-        title.style.fontSize = '32px';
+        title.style.fontSize = this.isMobile ? '24px' : '32px';
         header.appendChild(title);
         
         const subtitle = document.createElement('div');
         subtitle.textContent = 'WAGER RESOURCES • WIN BIG • BEAT THE DEALER';
         subtitle.style.color = 'rgba(255, 255, 255, 0.6)';
-        subtitle.style.fontSize = '14px';
+        subtitle.style.fontSize = this.isMobile ? '12px' : '14px';
         subtitle.style.letterSpacing = '2px';
         header.appendChild(subtitle);
         
@@ -155,6 +177,13 @@ export class BlackjackGame {
         closeBtn.style.padding = '0 10px';
         closeBtn.style.lineHeight = '1';
         closeBtn.onclick = () => this.hide();
+        
+        // Make close button larger for touch on mobile
+        if (this.isMobile) {
+            closeBtn.style.fontSize = '36px';
+            closeBtn.style.padding = '5px 15px';
+        }
+        
         header.appendChild(closeBtn);
         
         this.gameUI.appendChild(header);
@@ -163,7 +192,7 @@ export class BlackjackGame {
         const gameArea = document.createElement('div');
         gameArea.style.display = 'flex';
         gameArea.style.flexDirection = 'column';
-        gameArea.style.height = 'calc(100% - 80px)';
+        gameArea.style.height = this.isMobile ? 'auto' : 'calc(100% - 80px)';
         
         // Dealer area
         const dealerArea = document.createElement('div');
@@ -206,20 +235,22 @@ export class BlackjackGame {
         dealerCards.style.display = 'flex';
         dealerCards.style.gap = '15px';
         dealerCards.style.flexWrap = 'wrap';
-        dealerCards.style.height = '130px';
+        dealerCards.style.height = this.isMobile ? 'auto' : '130px';
+        dealerCards.style.minHeight = this.isMobile ? '120px' : '130px';
         dealerArea.appendChild(dealerCards);
         
         // Dealer speech bubble
         const speechBubble = document.createElement('div');
         speechBubble.id = 'dealer-speech';
-        speechBubble.style.position = 'absolute';
-        speechBubble.style.bottom = '15px';
-        speechBubble.style.right = '15px';
+        speechBubble.style.position = this.isMobile ? 'relative' : 'absolute';
+        speechBubble.style.bottom = this.isMobile ? 'auto' : '15px';
+        speechBubble.style.right = this.isMobile ? 'auto' : '15px';
+        speechBubble.style.marginTop = this.isMobile ? '10px' : '0';
         speechBubble.style.backgroundColor = 'rgba(15, 40, 55, 0.9)';
         speechBubble.style.border = '1px solid #33aaff';
         speechBubble.style.borderRadius = '8px';
         speechBubble.style.padding = '10px 15px';
-        speechBubble.style.maxWidth = '300px';
+        speechBubble.style.maxWidth = this.isMobile ? '100%' : '300px';
         speechBubble.style.fontStyle = 'italic';
         speechBubble.style.color = '#fff';
         speechBubble.style.boxShadow = '0 0 10px rgba(51, 170, 255, 0.3)';
@@ -246,6 +277,8 @@ export class BlackjackGame {
         gameStatus.style.textAlign = 'center';
         gameStatus.style.fontWeight = 'bold';
         gameStatus.style.letterSpacing = '1px';
+        gameStatus.style.fontSize = this.isMobile ? '12px' : '14px';
+        gameStatus.style.width = this.isMobile ? '100%' : 'auto';
         gameStatus.textContent = 'PLACE YOUR BET TO BEGIN';
         statusArea.appendChild(gameStatus);
         
@@ -291,7 +324,8 @@ export class BlackjackGame {
         playerCards.style.display = 'flex';
         playerCards.style.gap = '15px';
         playerCards.style.flexWrap = 'wrap';
-        playerCards.style.height = '130px';
+        playerCards.style.height = this.isMobile ? 'auto' : '130px';
+        playerCards.style.minHeight = this.isMobile ? '120px' : '130px';
         playerArea.appendChild(playerCards);
         
         gameArea.appendChild(playerArea);
@@ -301,14 +335,16 @@ export class BlackjackGame {
         controlsArea.style.display = 'flex';
         controlsArea.style.justifyContent = 'space-between';
         controlsArea.style.alignItems = 'center';
-        controlsArea.style.height = '100px';
+        controlsArea.style.height = 'auto';
+        controlsArea.style.flexDirection = this.isMobile ? 'column' : 'row';
+        controlsArea.style.gap = this.isMobile ? '15px' : '0';
         
         // Betting controls
         const bettingControls = document.createElement('div');
         bettingControls.id = 'betting-controls';
         bettingControls.style.display = 'flex';
         bettingControls.style.flexDirection = 'column';
-        bettingControls.style.width = '250px';
+        bettingControls.style.width = this.isMobile ? '100%' : '250px';
         
         const bettingTitle = document.createElement('div');
         bettingTitle.textContent = 'PLACE YOUR BET';
@@ -326,7 +362,7 @@ export class BlackjackGame {
             btn.className = 'resource-btn';
             btn.dataset.resource = resource;
             btn.style.flex = '1';
-            btn.style.padding = '8px 5px';
+            btn.style.padding = this.isMobile ? '10px 5px' : '8px 5px';
             btn.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
             btn.style.border = `1px solid ${color}`;
             btn.style.borderRadius = '5px';
@@ -352,17 +388,27 @@ export class BlackjackGame {
             resourceAmount.style.opacity = '0.7';
             btn.appendChild(resourceAmount);
             
-            btn.addEventListener('mouseover', () => {
+            // Add event handlers for both mouse and touch
+            const addHoverEffect = () => {
                 btn.style.backgroundColor = 'rgba(25, 60, 80, 0.8)';
                 btn.style.boxShadow = `0 0 15px ${color}`;
-            });
+            };
             
-            btn.addEventListener('mouseout', () => {
+            const removeHoverEffect = () => {
                 btn.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
                 btn.style.boxShadow = `0 0 10px rgba(${color.split('(')[1].split(')')[0]}, 0.3)`;
-            });
+            };
             
-            btn.addEventListener('click', () => {
+            // Mouse events
+            btn.addEventListener('mouseover', addHoverEffect);
+            btn.addEventListener('mouseout', removeHoverEffect);
+            
+            // Touch events
+            btn.addEventListener('touchstart', addHoverEffect, {passive: true});
+            btn.addEventListener('touchend', removeHoverEffect, {passive: true});
+            
+            // Click/tap handler
+            const clickHandler = () => {
                 if (!this.gameActive) {
                     this.selectBetResource(resource);
                     this.audio.playSound('boink');
@@ -376,6 +422,12 @@ export class BlackjackGame {
                     btn.style.borderWidth = '2px';
                     btn.style.transform = 'scale(1.05)';
                 }
+            };
+            
+            btn.addEventListener('click', clickHandler);
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                clickHandler();
             });
             
             return btn;
@@ -405,15 +457,51 @@ export class BlackjackGame {
         betAmountDisplay.style.fontWeight = 'bold';
         betAmountControls.appendChild(betAmountDisplay);
         
-        const decreaseBtn = document.createElement('button');
-        decreaseBtn.textContent = '-';
-        decreaseBtn.style.width = '40px';
-        decreaseBtn.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
-        decreaseBtn.style.border = '1px solid rgba(51, 170, 255, 0.5)';
-        decreaseBtn.style.borderRadius = '5px';
-        decreaseBtn.style.color = '#fff';
-        decreaseBtn.style.cursor = 'pointer';
-        decreaseBtn.addEventListener('click', () => {
+        // Create a button with both mouse and touch support
+        const createControlButton = (text, handler) => {
+            const btn = document.createElement('button');
+            btn.textContent = text;
+            btn.style.width = this.isMobile ? '50px' : '40px';
+            btn.style.height = this.isMobile ? '40px' : 'auto';
+            btn.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
+            btn.style.border = '1px solid rgba(51, 170, 255, 0.5)';
+            btn.style.borderRadius = '5px';
+            btn.style.color = '#fff';
+            btn.style.cursor = 'pointer';
+            btn.style.fontSize = this.isMobile ? '20px' : '16px';
+            
+            // Hover effects
+            const addHoverEffect = () => {
+                btn.style.backgroundColor = 'rgba(25, 60, 80, 0.8)';
+                btn.style.boxShadow = '0 0 10px rgba(51, 170, 255, 0.3)';
+            };
+            
+            const removeHoverEffect = () => {
+                btn.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
+                btn.style.boxShadow = 'none';
+            };
+            
+            // Mouse events
+            btn.addEventListener('mouseover', addHoverEffect);
+            btn.addEventListener('mouseout', removeHoverEffect);
+            
+            // Touch events
+            btn.addEventListener('touchstart', addHoverEffect, {passive: true});
+            btn.addEventListener('touchend', removeHoverEffect, {passive: true});
+            
+            // Click handler
+            btn.addEventListener('click', handler);
+            
+            // Separate touch handler to prevent click delay
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handler();
+            });
+            
+            return btn;
+        };
+        
+        const decreaseBtn = createControlButton('-', () => {
             if (!this.gameActive && this.currentBet.resource) {
                 this.decreaseBet();
                 this.audio.playSound('boink');
@@ -421,15 +509,7 @@ export class BlackjackGame {
         });
         betAmountControls.appendChild(decreaseBtn);
         
-        const increaseBtn = document.createElement('button');
-        increaseBtn.textContent = '+';
-        increaseBtn.style.width = '40px';
-        increaseBtn.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
-        increaseBtn.style.border = '1px solid rgba(51, 170, 255, 0.5)';
-        increaseBtn.style.borderRadius = '5px';
-        increaseBtn.style.color = '#fff';
-        increaseBtn.style.cursor = 'pointer';
-        increaseBtn.addEventListener('click', () => {
+        const increaseBtn = createControlButton('+', () => {
             if (!this.gameActive && this.currentBet.resource) {
                 this.increaseBet();
                 this.audio.playSound('boink');
@@ -444,6 +524,9 @@ export class BlackjackGame {
         const gameActions = document.createElement('div');
         gameActions.style.display = 'flex';
         gameActions.style.gap = '15px';
+        gameActions.style.flexWrap = this.isMobile ? 'wrap' : 'nowrap';
+        gameActions.style.justifyContent = this.isMobile ? 'center' : 'flex-end';
+        gameActions.style.width = this.isMobile ? '100%' : 'auto';
         
         const actionButtons = [
             { id: 'deal-btn', text: 'DEAL', color: '#30cfd0', handler: () => this.startGame() },
@@ -456,7 +539,7 @@ export class BlackjackGame {
             const button = document.createElement('button');
             button.id = btn.id;
             button.textContent = btn.text;
-            button.style.padding = '12px 18px';
+            button.style.padding = this.isMobile ? '15px 20px' : '12px 18px';
             button.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
             button.style.border = `2px solid ${btn.color}`;
             button.style.borderRadius = '5px';
@@ -465,25 +548,46 @@ export class BlackjackGame {
             button.style.cursor = 'pointer';
             button.style.boxShadow = `0 0 10px ${btn.color}`;
             button.style.transition = 'all 0.2s';
+            button.style.minWidth = this.isMobile ? '80px' : 'auto';
+            button.style.flex = this.isMobile ? '1' : 'none';
             button.disabled = true;
             button.style.opacity = '0.5';
             
-            button.addEventListener('mouseover', () => {
+            // Hover/touch effects
+            const enableHoverEffects = () => {
                 if (!button.disabled) {
                     button.style.backgroundColor = 'rgba(25, 60, 80, 0.8)';
                     button.style.boxShadow = `0 0 15px ${btn.color}`;
                 }
-            });
+            };
             
-            button.addEventListener('mouseout', () => {
+            const disableHoverEffects = () => {
                 if (!button.disabled) {
                     button.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
                     button.style.boxShadow = `0 0 10px ${btn.color}`;
                 }
-            });
+            };
             
+            // Mouse events
+            button.addEventListener('mouseover', enableHoverEffects);
+            button.addEventListener('mouseout', disableHoverEffects);
+            
+            // Touch events
+            button.addEventListener('touchstart', enableHoverEffects, {passive: true});
+            button.addEventListener('touchend', disableHoverEffects, {passive: true});
+            
+            // Click handler
             button.addEventListener('click', () => {
                 if (!button.disabled) {
+                    btn.handler();
+                    this.audio.playSound('boink');
+                }
+            });
+            
+            // Touch handler to prevent delay
+            button.addEventListener('touchend', (e) => {
+                if (!button.disabled) {
+                    e.preventDefault();
                     btn.handler();
                     this.audio.playSound('boink');
                 }
@@ -674,8 +778,17 @@ export class BlackjackGame {
     createCardElement(card, faceDown = false) {
         const cardEl = document.createElement('div');
         cardEl.className = 'card';
-        cardEl.style.width = '100px';
-        cardEl.style.height = '150px';
+        
+        // Adjust card size for mobile
+        if (this.isMobile) {
+            cardEl.style.width = '70px';
+            cardEl.style.height = '105px';
+            cardEl.style.fontSize = '80%';
+        } else {
+            cardEl.style.width = '100px';
+            cardEl.style.height = '150px';
+        }
+        
         cardEl.style.backgroundColor = faceDown ? 'rgba(9, 30, 42, 0.8)' : 'rgba(15, 35, 50, 0.9)';
         cardEl.style.border = faceDown ? 
             '2px solid rgba(51, 170, 255, 0.3)' : 
@@ -697,7 +810,7 @@ export class BlackjackGame {
             topValue.style.position = 'absolute';
             topValue.style.top = '8px';
             topValue.style.left = '8px';
-            topValue.style.fontSize = '20px';
+            topValue.style.fontSize = this.isMobile ? '14px' : '20px';
             topValue.style.fontWeight = 'bold';
             topValue.textContent = card.value;
             topValue.style.color = ['hearts', 'diamonds'].includes(card.suit) ? '#e55c8a' : '#30cfd0';
@@ -708,14 +821,14 @@ export class BlackjackGame {
             topSuit.style.position = 'absolute';
             topSuit.style.top = '8px';
             topSuit.style.right = '8px';
-            topSuit.style.fontSize = '16px';
+            topSuit.style.fontSize = this.isMobile ? '12px' : '16px';
             topSuit.textContent = this.cardSymbols[card.suit];
             topSuit.style.color = ['hearts', 'diamonds'].includes(card.suit) ? '#e55c8a' : '#30cfd0';
             cardEl.appendChild(topSuit);
             
             // Center symbol
             const centerSymbol = document.createElement('div');
-            centerSymbol.style.fontSize = '40px';
+            centerSymbol.style.fontSize = this.isMobile ? '28px' : '40px';
             centerSymbol.style.lineHeight = '1';
             centerSymbol.style.opacity = '0.9';
             centerSymbol.textContent = this.cardSymbols[card.suit];
@@ -727,7 +840,7 @@ export class BlackjackGame {
             bottomValue.style.position = 'absolute';
             bottomValue.style.bottom = '8px';
             bottomValue.style.right = '8px';
-            bottomValue.style.fontSize = '20px';
+            bottomValue.style.fontSize = this.isMobile ? '14px' : '20px';
             bottomValue.style.fontWeight = 'bold';
             bottomValue.style.transform = 'rotate(180deg)';
             bottomValue.textContent = card.value;
@@ -739,7 +852,7 @@ export class BlackjackGame {
             bottomSuit.style.position = 'absolute';
             bottomSuit.style.bottom = '8px';
             bottomSuit.style.left = '8px';
-            bottomSuit.style.fontSize = '16px';
+            bottomSuit.style.fontSize = this.isMobile ? '12px' : '16px';
             bottomSuit.style.transform = 'rotate(180deg)';
             bottomSuit.textContent = this.cardSymbols[card.suit];
             bottomSuit.style.color = ['hearts', 'diamonds'].includes(card.suit) ? '#e55c8a' : '#30cfd0';
@@ -777,7 +890,7 @@ export class BlackjackGame {
             const logo = document.createElement('div');
             logo.style.position = 'absolute';
             logo.style.fontWeight = 'bold';
-            logo.style.fontSize = '14px';
+            logo.style.fontSize = this.isMobile ? '12px' : '14px';
             logo.style.color = 'rgba(51, 170, 255, 0.7)';
             logo.textContent = 'BJ';
             cardEl.appendChild(logo);

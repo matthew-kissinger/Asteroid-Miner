@@ -4,9 +4,9 @@ export class AsteroidBelt {
     constructor(scene) {
         this.scene = scene;
         this.asteroids = [];
-        this.innerRadius = 5000;
-        this.outerRadius = 7000;
-        this.width = 450;
+        this.innerRadius = 20000;
+        this.outerRadius = 28000;
+        this.width = 1800;
         this.resourceMultipliers = { iron: 1.0, gold: 1.0, platinum: 1.0 };
         
         this.createAsteroidBelt();
@@ -17,7 +17,7 @@ export class AsteroidBelt {
         
         for (let i = 0; i < asteroidCount; i++) {
             // Random asteroid size - Much larger for better visibility
-            const size = Math.random() * 30 + 30; // Dramatically increased size for visibility
+            const size = Math.random() * 120 + 120; // Dramatically increased size for visibility
             
             // Use different geometries for variety
             let geometry;
@@ -91,7 +91,7 @@ export class AsteroidBelt {
                 Math.sin(angle) * radius
             );
             
-            // Random rotation
+            // Apply random axial tilt (rotation on local axis)
             mesh.rotation.set(
                 Math.random() * Math.PI,
                 Math.random() * Math.PI,
@@ -101,6 +101,9 @@ export class AsteroidBelt {
             // Setup orbital parameters
             const orbitSpeed = 0.0001 + Math.random() * 0.0001; // Slow orbit
             const orbitRadius = radius; // Use initial radius
+            
+            // Add random orbital tilt
+            const orbitTilt = Math.random() * Math.PI * 0.15; // Reduced to ~27 degrees max tilt
             
             // Add to scene
             this.scene.add(mesh);
@@ -113,6 +116,8 @@ export class AsteroidBelt {
                 orbitSpeed: orbitSpeed,
                 orbitRadius: orbitRadius,
                 orbitAngle: angle,
+                orbitTilt: orbitTilt,
+                initialHeight: heightVariation, // Store initial height variation
                 rotationSpeed: {
                     x: (Math.random() - 0.5) * 0.005,
                     y: (Math.random() - 0.5) * 0.005,
@@ -198,12 +203,13 @@ export class AsteroidBelt {
     }
     
     // Helper function to find the closest asteroid to a point (for mining)
-    findClosestAsteroid(position, maxDistance = 100) {
+    findClosestAsteroid(position, maxDistance = 1600) {
         let closestAsteroid = null;
         let closestDistance = maxDistance;
         
         this.asteroids.forEach(asteroid => {
-            if (!asteroid.minable) return;
+            // Skip asteroids that aren't minable or visible
+            if (!asteroid.minable || !asteroid.mesh.visible) return;
             
             const distance = position.distanceTo(asteroid.mesh.position);
             if (distance < closestDistance) {
@@ -227,17 +233,35 @@ export class AsteroidBelt {
     }
     
     update() {
-        // Update asteroid positions and rotations
+        // Update asteroid positions and rotations with orbital tilt
         this.asteroids.forEach(asteroid => {
-            // Rotate the asteroid
+            // Rotate the asteroid (axial rotation)
             asteroid.mesh.rotation.x += asteroid.rotationSpeed.x;
             asteroid.mesh.rotation.y += asteroid.rotationSpeed.y;
             asteroid.mesh.rotation.z += asteroid.rotationSpeed.z;
             
-            // Orbit around sun
+            // Orbit around sun with tilt
             asteroid.orbitAngle += asteroid.orbitSpeed;
-            asteroid.mesh.position.x = Math.cos(asteroid.orbitAngle) * asteroid.orbitRadius;
-            asteroid.mesh.position.z = Math.sin(asteroid.orbitAngle) * asteroid.orbitRadius;
+            
+            // Calculate orbit position with tilt
+            const flatX = Math.cos(asteroid.orbitAngle) * asteroid.orbitRadius;
+            const flatZ = Math.sin(asteroid.orbitAngle) * asteroid.orbitRadius;
+            
+            // Apply orbit tilt if it exists
+            if (asteroid.orbitTilt) {
+                // Apply orbital tilt by rotating the position around the X axis
+                const tiltY = flatZ * Math.sin(asteroid.orbitTilt);
+                const tiltZ = flatZ * Math.cos(asteroid.orbitTilt);
+                
+                asteroid.mesh.position.x = flatX;
+                asteroid.mesh.position.z = tiltZ;
+                asteroid.mesh.position.y = tiltY + asteroid.initialHeight; // Use stored initial height variation
+            } else {
+                // Regular orbit
+                asteroid.mesh.position.x = flatX;
+                asteroid.mesh.position.z = flatZ;
+                asteroid.mesh.position.y = asteroid.initialHeight;
+            }
         });
     }
 }

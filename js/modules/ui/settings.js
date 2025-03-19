@@ -1,10 +1,15 @@
 // settings.js - Handles game settings and performance options
 
+import { MobileDetector } from '../../utils/mobileDetector.js';
+
 export class Settings {
     constructor(game) {
         this.game = game;
         this.mothershipInterface = null;
         this.isVisible = false;
+        this.isMobile = MobileDetector.isMobile();
+        
+        console.log("Settings constructor - isMobile:", this.isMobile);
         
         // Default settings
         this.settings = {
@@ -68,12 +73,21 @@ export class Settings {
         settingsContainer.style.top = '50%';
         settingsContainer.style.left = '50%';
         settingsContainer.style.transform = 'translate(-50%, -50%)';
-        settingsContainer.style.width = '700px';
-        settingsContainer.style.maxHeight = '90vh';
+        
+        // Adjust size for mobile
+        if (this.isMobile) {
+            settingsContainer.style.width = '95%';
+            settingsContainer.style.maxWidth = '600px';
+            settingsContainer.style.height = '90vh';
+        } else {
+            settingsContainer.style.width = '700px';
+            settingsContainer.style.maxHeight = '90vh';
+        }
+        
         settingsContainer.style.overflowY = 'auto';
         settingsContainer.style.backgroundColor = 'rgba(20, 30, 50, 0.9)';
         settingsContainer.style.color = '#fff';
-        settingsContainer.style.padding = '30px';
+        settingsContainer.style.padding = this.isMobile ? '20px' : '30px';
         settingsContainer.style.borderRadius = '15px';
         settingsContainer.style.border = '2px solid #33aaff';
         settingsContainer.style.boxShadow = '0 0 30px #33aaff';
@@ -81,21 +95,28 @@ export class Settings {
         settingsContainer.style.zIndex = '1000';
         settingsContainer.style.display = 'none';
         
+        // Add mobile-specific scroll support
+        if (this.isMobile) {
+            settingsContainer.style.webkitOverflowScrolling = 'touch';
+            settingsContainer.style.touchAction = 'pan-y';
+            settingsContainer.style.overscrollBehavior = 'contain';
+        }
+        
         // Create settings content
         settingsContainer.innerHTML = `
-            <h2 style="text-align: center; color: #33aaff; margin-top: 0;">GAME SETTINGS</h2>
+            <h2 style="text-align: center; color: #33aaff; margin-top: 0; font-size: ${this.isMobile ? '24px' : '28px'};">GAME SETTINGS</h2>
             
             <div style="margin-bottom: 20px;">
-                <h3 style="color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px;">GRAPHICS SETTINGS</h3>
+                <h3 style="color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px; font-size: ${this.isMobile ? '18px' : '20px'};">GRAPHICS SETTINGS</h3>
                 
                 <!-- Graphical Quality Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Graphical Quality</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Affects overall visual fidelity and performance</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Graphical Quality</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Affects overall visual fidelity and performance</p>
                     </div>
-                    <div>
-                        <select id="graphical-quality" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: 8px; border-radius: 5px;">
+                    <div style="${this.isMobile ? 'width: 100%' : ''}">
+                        <select id="graphical-quality" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
@@ -104,27 +125,27 @@ export class Settings {
                 </div>
                 
                 <!-- Post-processing Effects Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Post-processing Effects</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Bloom, anti-aliasing, and visual effects</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Post-processing Effects</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Bloom, anti-aliasing, and visual effects</p>
                     </div>
-                    <div>
-                        <label class="toggle" style="display: inline-block; position: relative; width: 60px; height: 30px;">
+                    <div style="${this.isMobile ? 'width: 100%; display: flex; justify-content: flex-end;' : ''}">
+                        <label class="toggle" style="display: inline-block; position: relative; width: ${this.isMobile ? '70px' : '60px'}; height: ${this.isMobile ? '34px' : '30px'};">
                             <input type="checkbox" id="post-processing" style="opacity: 0; width: 0; height: 0;">
-                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: 15px; transition: .4s;"></span>
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: ${this.isMobile ? '17px' : '15px'}; transition: .4s;"></span>
                         </label>
                     </div>
                 </div>
                 
                 <!-- Asteroid Detail Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Asteroid Detail</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Affects asteroid count and model complexity</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Asteroid Detail</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Affects asteroid count and model complexity</p>
                     </div>
-                    <div>
-                        <select id="asteroid-detail" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: 8px; border-radius: 5px;">
+                    <div style="${this.isMobile ? 'width: 100%' : ''}">
+                        <select id="asteroid-detail" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
@@ -133,13 +154,13 @@ export class Settings {
                 </div>
                 
                 <!-- Lighting Quality Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Lighting Quality</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Affects light sources and shadows</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Lighting Quality</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Affects light sources and shadows</p>
                     </div>
-                    <div>
-                        <select id="lighting-quality" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: 8px; border-radius: 5px;">
+                    <div style="${this.isMobile ? 'width: 100%' : ''}">
+                        <select id="lighting-quality" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
@@ -148,13 +169,13 @@ export class Settings {
                 </div>
                 
                 <!-- Particle Effects Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Particle Effects</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Affects thruster, explosion, and other particle effects</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Particle Effects</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Affects thruster, explosion, and other particle effects</p>
                     </div>
-                    <div>
-                        <select id="particle-effects" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: 8px; border-radius: 5px;">
+                    <div style="${this.isMobile ? 'width: 100%' : ''}">
+                        <select id="particle-effects" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
@@ -163,13 +184,13 @@ export class Settings {
                 </div>
                 
                 <!-- Resolution Scale Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Resolution Scale</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Adjusts rendering resolution</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Resolution Scale</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Adjusts rendering resolution</p>
                     </div>
-                    <div>
-                        <select id="resolution-scale" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: 8px; border-radius: 5px;">
+                    <div style="${this.isMobile ? 'width: 100%' : ''}">
+                        <select id="resolution-scale" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                             <option value="low">Low (75%)</option>
                             <option value="medium">Medium (100%)</option>
                             <option value="high">High (125%)</option>
@@ -179,16 +200,16 @@ export class Settings {
             </div>
             
             <div style="margin-bottom: 20px;">
-                <h3 style="color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px;">PERFORMANCE SETTINGS</h3>
+                <h3 style="color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px; font-size: ${this.isMobile ? '18px' : '20px'};">PERFORMANCE SETTINGS</h3>
                 
                 <!-- Frame Rate Cap Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Frame Rate Cap</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Limits maximum frame rate</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Frame Rate Cap</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Limits maximum frame rate</p>
                     </div>
-                    <div>
-                        <select id="frame-rate-cap" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: 8px; border-radius: 5px;">
+                    <div style="${this.isMobile ? 'width: 100%' : ''}">
+                        <select id="frame-rate-cap" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                             <option value="30">30 FPS</option>
                             <option value="60">60 FPS</option>
                             <option value="0">Unlimited</option>
@@ -197,73 +218,73 @@ export class Settings {
                 </div>
                 
                 <!-- Show FPS Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Show FPS Counter</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Display current frame rate</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Show FPS Counter</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Display current frame rate</p>
                     </div>
-                    <div>
-                        <label class="toggle" style="display: inline-block; position: relative; width: 60px; height: 30px;">
+                    <div style="${this.isMobile ? 'width: 100%; display: flex; justify-content: flex-end;' : ''}">
+                        <label class="toggle" style="display: inline-block; position: relative; width: ${this.isMobile ? '70px' : '60px'}; height: ${this.isMobile ? '34px' : '30px'};">
                             <input type="checkbox" id="show-fps" style="opacity: 0; width: 0; height: 0;">
-                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: 15px; transition: .4s;"></span>
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: ${this.isMobile ? '17px' : '15px'}; transition: .4s;"></span>
                         </label>
                     </div>
                 </div>
                 
                 <!-- Auto Quality Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Auto-Adjust Quality</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Automatically adjusts settings based on performance</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Auto-Adjust Quality</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Automatically adjusts settings based on performance</p>
                     </div>
-                    <div>
-                        <label class="toggle" style="display: inline-block; position: relative; width: 60px; height: 30px;">
+                    <div style="${this.isMobile ? 'width: 100%; display: flex; justify-content: flex-end;' : ''}">
+                        <label class="toggle" style="display: inline-block; position: relative; width: ${this.isMobile ? '70px' : '60px'}; height: ${this.isMobile ? '34px' : '30px'};">
                             <input type="checkbox" id="auto-quality" style="opacity: 0; width: 0; height: 0;">
-                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: 15px; transition: .4s;"></span>
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: ${this.isMobile ? '17px' : '15px'}; transition: .4s;"></span>
                         </label>
                     </div>
                 </div>
             </div>
             
             <div style="margin-bottom: 20px;">
-                <h3 style="color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px;">AUDIO SETTINGS</h3>
+                <h3 style="color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px; font-size: ${this.isMobile ? '18px' : '20px'};">AUDIO SETTINGS</h3>
                 
                 <!-- Spatial Audio Setting -->
-                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <label style="font-weight: bold;">Spatial Audio</label>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">3D positional sound effects</p>
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Spatial Audio</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">3D positional sound effects</p>
                     </div>
-                    <div>
-                        <label class="toggle" style="display: inline-block; position: relative; width: 60px; height: 30px;">
+                    <div style="${this.isMobile ? 'width: 100%; display: flex; justify-content: flex-end;' : ''}">
+                        <label class="toggle" style="display: inline-block; position: relative; width: ${this.isMobile ? '70px' : '60px'}; height: ${this.isMobile ? '34px' : '30px'};">
                             <input type="checkbox" id="spatial-audio" style="opacity: 0; width: 0; height: 0;">
-                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: 15px; transition: .4s;"></span>
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: ${this.isMobile ? '17px' : '15px'}; transition: .4s;"></span>
                         </label>
                     </div>
                 </div>
             </div>
             
             <div style="margin-bottom: 20px;">
-                <h3 style="color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px;">PRESETS</h3>
+                <h3 style="color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px; font-size: ${this.isMobile ? '18px' : '20px'};">PRESETS</h3>
                 
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                    <button id="preset-performance" style="flex: 1; margin-right: 10px; padding: 10px; background-color: #2a3a5a; color: white; border: 1px solid #33aaff; border-radius: 5px; cursor: pointer;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px; flex-direction: ${this.isMobile ? 'column' : 'row'}; gap: ${this.isMobile ? '10px' : '0'};">
+                    <button id="preset-performance" style="flex: 1; margin-right: ${this.isMobile ? '0' : '10px'}; padding: ${this.isMobile ? '15px' : '10px'}; background-color: #2a3a5a; color: white; border: 1px solid #33aaff; border-radius: 5px; cursor: pointer; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                         PERFORMANCE
                     </button>
-                    <button id="preset-balanced" style="flex: 1; margin-right: 10px; padding: 10px; background-color: #2a3a5a; color: white; border: 1px solid #33aaff; border-radius: 5px; cursor: pointer;">
+                    <button id="preset-balanced" style="flex: 1; margin-right: ${this.isMobile ? '0' : '10px'}; padding: ${this.isMobile ? '15px' : '10px'}; background-color: #2a3a5a; color: white; border: 1px solid #33aaff; border-radius: 5px; cursor: pointer; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                         BALANCED
                     </button>
-                    <button id="preset-quality" style="flex: 1; padding: 10px; background-color: #2a3a5a; color: white; border: 1px solid #33aaff; border-radius: 5px; cursor: pointer;">
+                    <button id="preset-quality" style="flex: 1; padding: ${this.isMobile ? '15px' : '10px'}; background-color: #2a3a5a; color: white; border: 1px solid #33aaff; border-radius: 5px; cursor: pointer; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                         QUALITY
                     </button>
                 </div>
             </div>
             
-            <div style="display: flex; justify-content: space-between;">
-                <button id="apply-settings" style="flex: 1; margin-right: 10px; padding: 15px; background-color: #33aaff; color: black; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px;">
+            <div style="display: flex; justify-content: space-between; flex-direction: ${this.isMobile ? 'column' : 'row'}; gap: ${this.isMobile ? '15px' : '0'};">
+                <button id="apply-settings" style="flex: 1; margin-right: ${this.isMobile ? '0' : '10px'}; padding: ${this.isMobile ? '20px' : '15px'}; background-color: #33aaff; color: black; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: ${this.isMobile ? '18px' : '16px'};">
                     APPLY
                 </button>
-                <button id="settings-back" style="flex: 1; padding: 15px; background-color: #555; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px;">
+                <button id="settings-back" style="flex: 1; padding: ${this.isMobile ? '20px' : '15px'}; background-color: #555; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: ${this.isMobile ? '18px' : '16px'};">
                     BACK
                 </button>
             </div>
@@ -275,8 +296,8 @@ export class Settings {
             .slider:before {
                 position: absolute;
                 content: "";
-                height: 22px;
-                width: 22px;
+                height: ${this.isMobile ? '26px' : '22px'};
+                width: ${this.isMobile ? '26px' : '22px'};
                 left: 4px;
                 bottom: 4px;
                 background-color: white;
@@ -289,7 +310,7 @@ export class Settings {
             }
             
             input:checked + .slider:before {
-                transform: translateX(30px);
+                transform: translateX(${this.isMobile ? '36px' : '30px'});
             }
         `;
         
@@ -302,32 +323,93 @@ export class Settings {
     
     setupEventListeners() {
         // Back button
-        document.getElementById('settings-back').addEventListener('click', () => {
-            this.hide();
-        });
+        const backButton = document.getElementById('settings-back');
+        if (backButton) {
+            // Mouse event
+            backButton.addEventListener('click', () => {
+                this.hide();
+            });
+            
+            // Touch event for mobile
+            if (this.isMobile) {
+                backButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.hide();
+                });
+            }
+        }
         
         // Apply button
-        document.getElementById('apply-settings').addEventListener('click', () => {
-            this.updateSettings();
-            this.saveSettings();
-            this.applyAllSettings();
+        const applyButton = document.getElementById('apply-settings');
+        if (applyButton) {
+            const applyHandler = () => {
+                this.updateSettings();
+                this.saveSettings();
+                this.applyAllSettings();
+                
+                // Show confirmation message
+                this.showSettingsApplied();
+            };
             
-            // Show confirmation message
-            this.showSettingsApplied();
-        });
+            // Mouse event
+            applyButton.addEventListener('click', applyHandler);
+            
+            // Touch event for mobile
+            if (this.isMobile) {
+                applyButton.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    applyHandler();
+                });
+            }
+        }
         
-        // Preset buttons
-        document.getElementById('preset-performance').addEventListener('click', () => {
-            this.applyPreset('performance');
-        });
+        // Preset buttons with both mouse and touch events
+        this.setupPresetButton('preset-performance', 'performance');
+        this.setupPresetButton('preset-balanced', 'balanced');
+        this.setupPresetButton('preset-quality', 'quality');
+    }
+    
+    setupPresetButton(buttonId, presetName) {
+        const button = document.getElementById(buttonId);
+        if (!button) return;
         
-        document.getElementById('preset-balanced').addEventListener('click', () => {
-            this.applyPreset('balanced');
-        });
+        const presetHandler = () => {
+            this.applyPreset(presetName);
+        };
         
-        document.getElementById('preset-quality').addEventListener('click', () => {
-            this.applyPreset('quality');
-        });
+        // Mouse event
+        button.addEventListener('click', presetHandler);
+        
+        // Touch event for mobile
+        if (this.isMobile) {
+            button.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                presetHandler();
+            });
+        }
+        
+        // Add hover/touch effects
+        if (this.isMobile) {
+            button.addEventListener('touchstart', () => {
+                button.style.backgroundColor = '#3a4b6a';
+                button.style.boxShadow = '0 0 10px #33aaff';
+            }, { passive: true });
+            
+            button.addEventListener('touchend', () => {
+                button.style.backgroundColor = '#2a3a5a';
+                button.style.boxShadow = 'none';
+            }, { passive: true });
+        } else {
+            button.addEventListener('mouseover', () => {
+                button.style.backgroundColor = '#3a4b6a';
+                button.style.boxShadow = '0 0 10px #33aaff';
+            });
+            
+            button.addEventListener('mouseout', () => {
+                button.style.backgroundColor = '#2a3a5a';
+                button.style.boxShadow = 'none';
+            });
+        }
     }
     
     updateSettings() {
@@ -609,15 +691,17 @@ export class Settings {
         // Create notification
         const notification = document.createElement('div');
         notification.style.position = 'fixed';
-        notification.style.top = '20%';
+        notification.style.top = this.isMobile ? '25%' : '20%';
         notification.style.left = '50%';
         notification.style.transform = 'translate(-50%, -50%)';
         notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
         notification.style.color = '#33aaff';
-        notification.style.padding = '15px 30px';
+        notification.style.padding = this.isMobile ? '20px 40px' : '15px 30px';
         notification.style.borderRadius = '10px';
         notification.style.fontFamily = 'Courier New, monospace';
+        notification.style.fontSize = this.isMobile ? '18px' : '16px';
         notification.style.zIndex = '9999';
+        notification.style.textAlign = 'center';
         notification.textContent = 'Settings applied and saved';
         
         document.body.appendChild(notification);

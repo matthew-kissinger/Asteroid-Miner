@@ -4,7 +4,7 @@ export class Renderer {
     constructor() {
         console.log("Initializing enhanced renderer...");
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100000);
+        this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 400000);
         
         // Create renderer with HDR support
         this.renderer = new THREE.WebGLRenderer({ 
@@ -43,7 +43,7 @@ export class Renderer {
         this.camera.position.z = 10;
         
         // Make sure the camera can see far enough to show the skybox
-        this.camera.far = 100000;
+        this.camera.far = 400000;
         this.camera.updateProjectionMatrix();
     }
     

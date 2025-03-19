@@ -16,7 +16,7 @@ export class MiningSystem {
             platinum: 0.0004  // 15x slower than iron
         };
         this.miningSpeed = 0.03; // Default speed, will be set based on asteroid type
-        this.miningDistance = 600; // Maximum mining distance
+        this.miningDistance = 6000; // Maximum mining distance (reduced from 24000 to 12000)
         this.miningCooldown = 0;
         
         // Resources collected
@@ -62,19 +62,54 @@ export class MiningSystem {
     }
     
     setTargetAsteroid(asteroid) {
-        this.targetAsteroid = asteroid;
-        
-        // Set mining speed based on asteroid resource type and apply efficiency modifier
-        if (asteroid && asteroid.resourceType) {
-            const resourceType = asteroid.resourceType.toLowerCase();
-            const baseSpeed = this.miningSpeedByType[resourceType] || this.miningSpeedByType.iron;
-            const efficiency = this.getMiningEfficiency();
+        try {
+            console.log("MiningSystem: setTargetAsteroid called", asteroid);
             
-            this.miningSpeed = baseSpeed * efficiency;
-            console.log(`Mining ${resourceType} asteroid with speed: ${this.miningSpeed} (efficiency: ${efficiency}x)`);
-        } else {
-            // Default to iron speed if no resource type is specified
-            this.miningSpeed = this.miningSpeedByType.iron * this.getMiningEfficiency();
+            // Validate asteroid before setting it as the target
+            if (!asteroid || !asteroid.mesh || !asteroid.mesh.position) {
+                console.error("MiningSystem: Invalid asteroid provided to setTargetAsteroid");
+                return false;
+            }
+            
+            this.targetAsteroid = asteroid;
+            
+            // Set mining speed based on asteroid resource type and apply efficiency modifier
+            if (asteroid && asteroid.resourceType) {
+                const resourceType = asteroid.resourceType.toLowerCase();
+                const baseSpeed = this.miningSpeedByType[resourceType] || this.miningSpeedByType.iron;
+                const efficiency = this.getMiningEfficiency();
+                
+                this.miningSpeed = baseSpeed * efficiency;
+                console.log(`Mining ${resourceType} asteroid with speed: ${this.miningSpeed} (efficiency: ${efficiency}x)`);
+                
+                // Update UI to show targeting info
+                const targetInfo = document.getElementById('target-info');
+                if (targetInfo) {
+                    targetInfo.style.display = 'block';
+                    targetInfo.style.color = '#30cfd0';
+                    
+                    // Update target name/type
+                    const targetName = document.getElementById('target-name');
+                    if (targetName) {
+                        targetName.textContent = `${resourceType.toUpperCase()} Asteroid`;
+                    }
+                    
+                    // Update distance to target
+                    const distance = Math.round(this.spaceship.mesh.position.distanceTo(asteroid.mesh.position));
+                    const targetDistance = document.getElementById('target-distance');
+                    if (targetDistance) {
+                        targetDistance.textContent = `Distance: ${distance} units`;
+                    }
+                }
+            } else {
+                // Default to iron speed if no resource type is specified
+                this.miningSpeed = this.miningSpeedByType.iron * this.getMiningEfficiency();
+            }
+            
+            return true;
+        } catch (error) {
+            console.error("MiningSystem: Error in setTargetAsteroid:", error);
+            return false;
         }
     }
     
@@ -329,6 +364,11 @@ export class MiningSystem {
         if (this.miningParticles && this.miningParticles.visible) {
             this.updateMiningParticles();
         }
+        
+        // Update target info if we have a target but aren't mining
+        if (this.targetAsteroid && !this.isMining) {
+            this.updateTargetInfo();
+        }
     }
     
     updateMining() {
@@ -379,7 +419,7 @@ export class MiningSystem {
         
         // Add a small offset to the ship position to start from the FRONT of the mining laser
         // The ship's coordinate system has -Z as the forward direction, so use negative Z
-        const shipOffset = new THREE.Vector3(0, 0, -15); // Negative Z to go to the front of the ship
+        const shipOffset = new THREE.Vector3(0, 0, -60); // 4x the original offset (-15)
         shipOffset.applyQuaternion(this.spaceship.mesh.quaternion);
         shipPosition.add(shipOffset);
         
@@ -464,10 +504,10 @@ export class MiningSystem {
                 positions[i+2] * positions[i+2]
             );
             
-            if (dist > 9) { // Larger reset distance
-                positions[i] = (Math.random() - 0.5) * 6;
-                positions[i+1] = (Math.random() - 0.5) * 6;
-                positions[i+2] = (Math.random() - 0.5) * 6;
+            if (dist > 36) { // 4x original reset distance (was 9)
+                positions[i] = (Math.random() - 0.5) * 24; // 4x original spread (was 6)
+                positions[i+1] = (Math.random() - 0.5) * 24;
+                positions[i+2] = (Math.random() - 0.5) * 24;
             }
         }
         this.miningParticles.geometry.attributes.position.needsUpdate = true;
@@ -553,7 +593,7 @@ export class MiningSystem {
         const particles = new THREE.BufferGeometry();
         const particleMaterial = new THREE.PointsMaterial({
             color: 0xaaaaaa,
-            size: 3, 
+            size: 12, // 4x original size (was 3)
             blending: THREE.AdditiveBlending,
             transparent: true,
             opacity: 0.8
@@ -568,11 +608,11 @@ export class MiningSystem {
             positions[i * 3 + 1] = position.y;
             positions[i * 3 + 2] = position.z;
             
-            // Random velocity in all directions
+            // Random velocity in all directions - 4x faster to match scale
             velocities.push({
-                x: (Math.random() - 0.5) * 2,
-                y: (Math.random() - 0.5) * 2,
-                z: (Math.random() - 0.5) * 2
+                x: (Math.random() - 0.5) * 8,  // 4x original speed (was 2)
+                y: (Math.random() - 0.5) * 8,  // 4x original speed
+                z: (Math.random() - 0.5) * 8   // 4x original speed
             });
         }
         
@@ -615,5 +655,34 @@ export class MiningSystem {
         const destroyedAsteroid = this.lastDestroyedAsteroid;
         this.lastDestroyedAsteroid = null; // Reset after getting it
         return destroyedAsteroid;
+    }
+    
+    // Add a new method to update target info in the UI
+    updateTargetInfo() {
+        if (!this.targetAsteroid || !this.targetAsteroid.mesh) return;
+        
+        try {
+            // Update distance calculation
+            const distance = this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position);
+            
+            // Update UI elements if they exist
+            const targetDistance = document.getElementById('target-distance');
+            if (targetDistance) {
+                targetDistance.textContent = `Distance: ${Math.round(distance)} units`;
+            }
+            
+            // Check if target is still in range and update UI accordingly
+            const inRange = distance <= this.miningDistance;
+            const targetInfo = document.getElementById('target-info');
+            if (targetInfo) {
+                if (inRange) {
+                    targetInfo.style.color = '#30cfd0'; // Blue for in range
+                } else {
+                    targetInfo.style.color = '#ff4400'; // Red for out of range
+                }
+            }
+        } catch (error) {
+            console.error("MiningSystem: Error updating target info:", error);
+        }
     }
 } 
