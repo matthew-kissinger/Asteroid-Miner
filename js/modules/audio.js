@@ -253,6 +253,70 @@ export class AudioManager {
         document.addEventListener('click', handleInteraction);
         document.addEventListener('keydown', handleInteraction);
         document.addEventListener('touchstart', handleInteraction);
+        
+        // Additional handling specifically for mobile devices
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            console.log("Mobile device detected - adding additional audio handlers");
+            
+            // Force audio context resumption on specific UI interactions for mobile
+            const forceAudioResume = () => {
+                // If audio context exists but is suspended, resume it
+                if (typeof Tone !== 'undefined' && Tone.context && Tone.context.state !== 'running') {
+                    Tone.context.resume().then(() => {
+                        console.log("Mobile: Audio context resumed on user action");
+                        this.userHasInteracted = true;
+                        
+                        // Ensure background music is playing
+                        if (this.music.length > 0 && !this.muted) {
+                            const currentTrack = this.music[0];
+                            if (currentTrack.paused) {
+                                console.log("Mobile: Forcing background music playback");
+                                this.playBackgroundMusic();
+                            }
+                        }
+                    }).catch(err => {
+                        console.error("Mobile: Failed to resume audio context:", err);
+                    });
+                }
+            };
+            
+            // Add these handlers to common UI interaction points
+            document.addEventListener('touchend', forceAudioResume, {passive: true});
+            
+            // Attach to specific game buttons when they're created
+            const attachToButtons = () => {
+                // Check for UI elements every 500ms for 5 seconds after page load
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    attempts++;
+                    
+                    // Find and attach to important action buttons
+                    const actionButtons = document.querySelectorAll('button');
+                    if (actionButtons.length > 0) {
+                        console.log(`Mobile: Found ${actionButtons.length} buttons to attach audio handlers`);
+                        actionButtons.forEach(button => {
+                            if (!button.hasAudioHandler) {
+                                button.addEventListener('touchend', forceAudioResume, {passive: true});
+                                button.hasAudioHandler = true;
+                            }
+                        });
+                    }
+                    
+                    // Stop checking after 10 attempts (5 seconds)
+                    if (attempts >= 10) {
+                        clearInterval(interval);
+                    }
+                }, 500);
+            };
+            
+            // Run initially and also after document is fully loaded
+            attachToButtons();
+            if (document.readyState === 'complete') {
+                attachToButtons();
+            } else {
+                window.addEventListener('load', attachToButtons);
+            }
+        }
     }
     
     // Load all music files from the soundtrack folder

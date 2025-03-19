@@ -33,8 +33,9 @@ export class StarMap {
         // Adjust size for mobile devices
         if (this.isMobile) {
             starMap.style.width = '95%';
-            starMap.style.height = '90vh';
+            starMap.style.height = '85vh'; // Reduced to ensure the button is visible
             starMap.style.maxHeight = '700px';
+            starMap.style.paddingBottom = '70px'; // Add padding for the return button
         } else {
             starMap.style.width = '900px';
             starMap.style.height = '700px';
@@ -172,7 +173,60 @@ export class StarMap {
         closeButton.style.fontFamily = 'Courier New, monospace';
         closeButton.style.fontWeight = 'bold';
         closeButton.style.fontSize = this.isMobile ? '18px' : '16px';
+        
+        // Make the button more prominent on mobile
+        if (this.isMobile) {
+            closeButton.style.backgroundColor = '#30cfd0';
+            closeButton.style.color = '#000';
+            closeButton.style.boxShadow = '0 0 15px rgba(48, 207, 208, 0.7)';
+        }
+        
         starMap.appendChild(closeButton);
+        
+        // Add a dedicated fixed position return button for mobile
+        if (this.isMobile) {
+            const fixedReturnBtn = document.createElement('button');
+            fixedReturnBtn.textContent = 'RETURN TO MOTHERSHIP';
+            fixedReturnBtn.style.position = 'fixed';
+            fixedReturnBtn.style.bottom = '10px';
+            fixedReturnBtn.style.left = '50%';
+            fixedReturnBtn.style.transform = 'translateX(-50%)';
+            fixedReturnBtn.style.width = '90%';
+            fixedReturnBtn.style.padding = '15px';
+            fixedReturnBtn.style.backgroundColor = '#30cfd0';
+            fixedReturnBtn.style.color = '#000';
+            fixedReturnBtn.style.border = 'none';
+            fixedReturnBtn.style.borderRadius = '5px';
+            fixedReturnBtn.style.fontFamily = 'Courier New, monospace';
+            fixedReturnBtn.style.fontWeight = 'bold';
+            fixedReturnBtn.style.fontSize = '16px';
+            fixedReturnBtn.style.zIndex = '1600';
+            fixedReturnBtn.style.cursor = 'pointer';
+            fixedReturnBtn.style.boxShadow = '0 0 15px rgba(48, 207, 208, 0.7)';
+            
+            fixedReturnBtn.addEventListener('click', () => {
+                if (window.game && window.game.audio) {
+                    window.game.audio.playSound('boink');
+                }
+                this.hide();
+            });
+            
+            // Add touch event for mobile with better audio handling
+            fixedReturnBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (window.game && window.game.audio) {
+                    console.log("Mobile: Playing sound on star map fixed return button");
+                    window.game.audio.playSound('boink');
+                    // Give time for the sound to start before hiding
+                    setTimeout(() => this.hide(), 50);
+                } else {
+                    this.hide();
+                }
+            });
+            
+            document.body.appendChild(fixedReturnBtn);
+            this.fixedReturnBtn = fixedReturnBtn; // Store reference for later use
+        }
         
         // Add to DOM
         document.body.appendChild(starMap);
@@ -183,6 +237,9 @@ export class StarMap {
         const closeButton = document.getElementById('close-star-map');
         if (closeButton) {
             closeButton.addEventListener('click', () => {
+                if (window.game && window.game.audio) {
+                    window.game.audio.playSound('boink');
+                }
                 this.hide();
             });
             
@@ -190,7 +247,14 @@ export class StarMap {
             if (this.isMobile) {
                 closeButton.addEventListener('touchend', (e) => {
                     e.preventDefault();
-                    this.hide();
+                    if (window.game && window.game.audio) {
+                        console.log("Mobile: Playing sound on star map close button");
+                        window.game.audio.playSound('boink');
+                        // Give time for the sound to start before hiding
+                        setTimeout(() => this.hide(), 50);
+                    } else {
+                        this.hide();
+                    }
                 });
             }
         }
@@ -603,11 +667,25 @@ export class StarMap {
         // Reset selection
         this.selectSystem(null);
         
+        // Force audio context resumption for mobile
+        if (this.isMobile && window.game && window.game.audio) {
+            // Play a sound to kickstart the audio context
+            setTimeout(() => {
+                console.log("Mobile: Attempting to play initial sound in StarMap");
+                window.game.audio.playSound('boink');
+            }, 100);
+        }
+        
         // Show the map
         const starMap = document.getElementById('star-map');
         if (starMap) {
             starMap.style.display = 'block';
             this.isVisible = true;
+            
+            // Show the fixed return button if it exists
+            if (this.isMobile && this.fixedReturnBtn) {
+                this.fixedReturnBtn.style.display = 'block';
+            }
         }
     }
     
@@ -617,6 +695,11 @@ export class StarMap {
         if (starMap) {
             starMap.style.display = 'none';
             this.isVisible = false;
+            
+            // Hide the fixed return button if it exists
+            if (this.isMobile && this.fixedReturnBtn) {
+                this.fixedReturnBtn.style.display = 'none';
+            }
             
             // Show the mothership UI when returning from star map
             if (this.mothershipInterface) {

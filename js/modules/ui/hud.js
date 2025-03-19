@@ -321,15 +321,6 @@ export class HUD {
         hullBar.style.transition = 'width 0.3s ease';
         hullBarContainer.appendChild(hullBar);
         
-        // Engine status
-        this.createStatusRow(statusPanel, 'ENGINE SYSTEMS', 'engine-status', 'NOMINAL');
-        
-        // Mining systems
-        this.createStatusRow(statusPanel, 'MINING SYSTEMS', 'mining-status', 'NOMINAL');
-        
-        // Navigation systems
-        this.createStatusRow(statusPanel, 'NAVIGATION', 'nav-status', 'NOMINAL');
-        
         // Add holographic decorative elements
         this.addHolographicElements(statusPanel);
         
@@ -686,21 +677,7 @@ export class HUD {
     }
     
     addHolographicElements(panel) {
-        // Add decorative digital scan lines
-        for (let i = 0; i < 3; i++) {
-            const scanLine = document.createElement('div');
-            scanLine.style.position = 'absolute';
-            scanLine.style.left = '0';
-            scanLine.style.width = '100%';
-            scanLine.style.height = '1px';
-            scanLine.style.backgroundColor = 'rgba(120, 220, 232, 0.2)';
-            scanLine.style.top = `${20 + i * 30}%`;
-            scanLine.style.opacity = '0.6';
-            scanLine.style.zIndex = '-1';
-            panel.appendChild(scanLine);
-        }
-        
-        // Add corner decorative elements
+        // Add corner decorative elements only
         this.addCornerElements(panel);
     }
     

@@ -113,20 +113,57 @@ export class EnemySystem extends System {
     getEnemyFromPool() {
         // Get from pool if available
         if (this.enemyPool.length > 0) {
+            // Get entity from pool
             const entity = this.enemyPool.pop();
+            
+            // Double-check this entity isn't already in the active enemies list
+            // (This should never happen, but let's be defensive)
+            if (this.enemies.has(entity.id)) {
+                console.warn(`CRITICAL ERROR: Entity ${entity.id} is in both the pool and active enemies!`);
+                
+                // Remove from active enemies to avoid duplicates
+                this.enemies.delete(entity.id);
+                console.log(`Fixed inconsistency: Removed entity ${entity.id} from active enemies`);
+            }
+            
+            // Verify all pooled entities in enemyPool don't include this entity
+            // This ensures no duplicate references exist in the pool
+            for (let i = 0; i < this.enemyPool.length; i++) {
+                if (this.enemyPool[i].id === entity.id) {
+                    console.warn(`CRITICAL ERROR: Duplicate of entity ${entity.id} found in enemy pool!`);
+                    this.enemyPool.splice(i, 1);
+                    console.log(`Fixed inconsistency: Removed duplicate entity ${entity.id} from enemy pool`);
+                    i--; // Adjust index since we removed an element
+                }
+            }
             
             console.log(`Getting entity ${entity.id} from pool. Current tags: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
             
-            // CRITICAL FIX: Use the proper clearTags method first
+            // CRITICAL FIX: Use the proper clearTags method first to completely reset tag state
             if (entity.clearTags && typeof entity.clearTags === 'function') {
                 entity.clearTags();
                 console.log(`Cleared all tags from entity ${entity.id}`);
             } else {
                 console.warn(`Entity ${entity.id} missing clearTags method`);
                 // Remove the pooled tag manually at minimum
-                if (entity.hasTag && entity.hasTag('pooled')) {
-                    entity.removeTag('pooled');
+                if (entity.hasTag && entity.removeTag) {
+                    if (entity.hasTag('pooled')) {
+                        entity.removeTag('pooled');
+                    }
+                    // Clear any other possible tags
+                    if (entity.hasTag('enemy')) entity.removeTag('enemy');
+                    if (entity.hasTag('spectrals')) entity.removeTag('spectrals');
                 }
+            }
+            
+            // Explicitly reset the tag cache flags
+            if (entity._syncTagCache && typeof entity._syncTagCache === 'function') {
+                entity._syncTagCache();
+                console.log(`Reset tag cache for entity ${entity.id}`);
+            } else {
+                // Direct reset of cache variables
+                if (entity._isEnemy !== undefined) entity._isEnemy = false;
+                if (entity._isPooled !== undefined) entity._isPooled = false;
             }
             
             // Reset any component states that might be problematic
@@ -162,21 +199,35 @@ export class EnemySystem extends System {
             return;
         }
         
+        // Get entity ID for consistent logging
+        const entityId = entity.id;
+        
         // Log entity state for debugging
-        console.log(`Returning entity ${entity.id} to pool. Has tags: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
+        console.log(`Returning entity ${entityId} to pool. Has tags: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
         
         // ENHANCED CLEANUP: Multiple checks to ensure entity is removed from enemies tracking
-        // 1. Direct check and remove
-        if (this.enemies.has(entity.id)) {
-            this.enemies.delete(entity.id);
-            console.log(`Removed entity ${entity.id} from enemies tracking`);
+        // 1. Direct check and remove from tracking Set
+        if (this.enemies.has(entityId)) {
+            this.enemies.delete(entityId);
+            console.log(`Removed entity ${entityId} from enemies tracking`);
         }
         
-        // 2. Remove enemy tag FIRST, before adding pooled tag
-        // This ensures consistent state before any other operations
-        if (entity.hasTag && entity.hasTag('enemy')) {
-            entity.removeTag('enemy');
-            console.log(`Explicitly removed 'enemy' tag from entity ${entity.id}`);
+        // 2. FIRST: Clear ALL tags using the improved clearTags method
+        // This will properly update both the tags Set and the cached flags
+        if (entity.clearTags && typeof entity.clearTags === 'function') {
+            entity.clearTags();
+            console.log(`Cleared all tags from entity ${entityId}`);
+        } else {
+            // Fallback if clearTags is not available
+            console.warn(`No clearTags method on entity ${entityId}, using manual tag removal`);
+            
+            // Manually remove known tags
+            if (entity.hasTag && entity.removeTag) {
+                if (entity.hasTag('enemy')) entity.removeTag('enemy');
+                if (entity.hasTag('spectrals')) entity.removeTag('spectrals');
+                if (entity.hasTag('drone')) entity.removeTag('drone');
+                if (entity.hasTag('frozen')) entity.removeTag('frozen');
+            }
         }
         
         // Only return to pool if it's not full
@@ -194,7 +245,7 @@ export class EnemySystem extends System {
                     // Remove from trail system tracking if it exists
                     if (window.game && window.game.trailSystem) {
                         window.game.trailSystem.unregisterTrail && 
-                        window.game.trailSystem.unregisterTrail(entity.id);
+                        window.game.trailSystem.unregisterTrail(entityId);
                     }
                     
                     // If the trail has a mesh or points object, remove it from scene
@@ -214,9 +265,9 @@ export class EnemySystem extends System {
                     
                     // Remove the component from the entity
                     entity.removeComponent('TrailComponent');
-                    console.log(`Removed and cleaned up TrailComponent from entity ${entity.id}`);
+                    console.log(`Removed and cleaned up TrailComponent from entity ${entityId}`);
                 } catch (error) {
-                    console.error(`Error cleaning up trail for entity ${entity.id}:`, error);
+                    console.error(`Error cleaning up trail for entity ${entityId}:`, error);
                 }
             }
             
@@ -239,18 +290,26 @@ export class EnemySystem extends System {
             const enemyAI = entity.getComponent('EnemyAIComponent');
             if (enemyAI) {
                 enemyAI.enabled = false;
+                // Reset internal state variables to prevent stale behavior
+                enemyAI.playerFound = false;
+                enemyAI.timeAlive = 0;
+                enemyAI.spiralPhase = Math.random() * Math.PI * 2; // New random starting phase
             }
             
             // Clean up and hide mesh
             const meshComponent = entity.getComponent('MeshComponent');
             if (meshComponent && meshComponent.mesh) {
-                // Remove from scene first
-                if (meshComponent.mesh.parent) {
-                    meshComponent.mesh.parent.remove(meshComponent.mesh);
+                try {
+                    // Remove from scene if it has a parent
+                    if (meshComponent.mesh.parent) {
+                        meshComponent.mesh.parent.remove(meshComponent.mesh);
+                    }
+                    
+                    // Make the mesh invisible
+                    meshComponent.mesh.visible = false;
+                } catch (error) {
+                    console.error(`Error cleaning up mesh for entity ${entityId}:`, error);
                 }
-                
-                // Make the mesh invisible
-                meshComponent.mesh.visible = false;
             }
             
             // Disable rigidbody physics
@@ -262,50 +321,27 @@ export class EnemySystem extends System {
                 }
             }
 
-            // IMPROVED TAG HANDLING:
-            // Clear ALL tags first (this uses our new proper method)
-            if (entity.clearTags && typeof entity.clearTags === 'function') {
-                entity.clearTags();
-                console.log(`Cleared all tags from entity ${entity.id}`);
-            } else {
-                // Fallback if clearTags is not available
-                console.warn(`No clearTags method on entity ${entity.id}, using manual tag removal`);
-                if (entity.hasTag && entity.removeTag) {
-                    // Get a copy of all tags
-                    const allTags = entity.tags ? [...entity.tags] : [];
-                    
-                    // Remove each tag
-                    for (const tag of allTags) {
-                        entity.removeTag(tag);
-                    }
-                }
-            }
-            
-            // Only now, add the pooled tag when entity is in a clean state
+            // Now, add the pooled tag after all cleanup is done
             entity.addTag('pooled');
-            console.log(`Entity ${entity.id} now has ONLY 'pooled' tag: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
+            console.log(`Entity ${entityId} marked as pooled`);
             
-            // Double-check for any tag inconsistencies
-            if (entity.hasTag && entity.hasTag('enemy')) {
-                console.warn(`INCONSISTENCY DETECTED: Entity ${entity.id} still has 'enemy' tag after cleanup!`);
-                entity.removeTag('enemy');
-                console.log(`Fixed inconsistency by force removing 'enemy' tag`);
-            }
+            // Verify entity state after pooling
+            console.log(`Final entity ${entityId} state - Tags: [${entity.tags ? [...entity.tags] : 'none'}]`);
             
             // Add to pool
             this.enemyPool.push(entity);
             
-            console.log(`Entity ${entity.id} returned to pool. Pool size now ${this.enemyPool.length}`);
+            console.log(`Entity ${entityId} returned to pool. Pool size now ${this.enemyPool.length}`);
         } else {
             // If pool is full, destroy the entity
-            console.log(`Pool is full (${this.maxPoolSize}), destroying entity ${entity.id} instead of pooling`);
+            console.log(`Pool is full (${this.maxPoolSize}), destroying entity ${entityId} instead of pooling`);
             
             // CRITICAL FIX: Ensure entity is completely destroyed
             if (this.world && this.world.destroyEntity) {
-                this.world.destroyEntity(entity.id);
-                console.log(`Entity ${entity.id} fully destroyed`);
+                this.world.destroyEntity(entityId);
+                console.log(`Entity ${entityId} fully destroyed`);
             } else {
-                console.error(`Failed to destroy entity ${entity.id} - world or destroyEntity method not available`);
+                console.error(`Failed to destroy entity ${entityId} - world or destroyEntity method not available`);
             }
         }
         
@@ -486,7 +522,26 @@ export class EnemySystem extends System {
                 } else if (!entity.hasTag) {
                     console.warn(`Removing invalid enemy reference: ${enemyId} - Entity missing hasTag method`);
                 } else if (!entity.hasTag('enemy')) {
-                    console.warn(`Removing invalid enemy reference: ${enemyId} - Entity missing 'enemy' tag. Tags: [${[...entity.tags]}]`);
+                    // Check for tag inconsistency - entity might have the tag in its Set but the cache is wrong
+                    if (entity.tags && entity.tags.has && entity.tags.has('enemy')) {
+                        console.warn(`Entity ${enemyId} has inconsistent tag state: hasTag('enemy')=false but tag exists in Set`);
+                        
+                        // Force sync the entity's tag cache if possible
+                        if (entity._syncTagCache && typeof entity._syncTagCache === 'function') {
+                            entity._syncTagCache();
+                            console.log(`Fixed tag cache for entity ${enemyId}`);
+                            
+                            // Check again if the tag is now recognized
+                            if (entity.hasTag('enemy')) {
+                                console.log(`Entity ${enemyId} now properly recognizes 'enemy' tag, keeping in tracking`);
+                                validEnemies.add(enemyId);
+                                continue;
+                            }
+                        }
+                    }
+                    
+                    // If entity truly doesn't have the enemy tag, log and remove
+                    console.warn(`Removing invalid enemy reference: ${enemyId} - Entity missing 'enemy' tag. Tags: [${Array.from(entity.tags)}]`);
                 } else if (entity.hasTag('pooled')) {
                     console.warn(`Removing invalid enemy reference: ${enemyId} - Entity is pooled but still has 'enemy' tag`);
                     // Critical fix: Ensure pooled entities don't retain 'enemy' tag
@@ -516,6 +571,14 @@ export class EnemySystem extends System {
                     // Add any enemy entities that aren't in our tracking Set
                     // BUT make sure they're not pooled (inactive) entities
                     for (const enemy of enemyEntities) {
+                        // Skip undefined/null entities
+                        if (!enemy) continue;
+                        
+                        // Fix any cache inconsistencies before checking pooled status
+                        if (enemy._syncTagCache && typeof enemy._syncTagCache === 'function') {
+                            enemy._syncTagCache();
+                        }
+                        
                         // CRITICAL FIX: First check if enemy is pooled BEFORE adding to tracking
                         if (!enemy.hasTag('pooled')) {
                             if (!this.enemies.has(enemy.id)) {
@@ -533,10 +596,14 @@ export class EnemySystem extends System {
                             // remove the enemy tag to fix the inconsistency
                             if (enemy.hasTag('enemy')) {
                                 console.log(`Fixing inconsistent tag state: pooled entity ${enemy.id} still has 'enemy' tag`);
+                                // Directly call removeTag to ensure proper cleanup
                                 enemy.removeTag('enemy');
                             }
                         }
                     }
+                    
+                    // Another check: verify if the EntityManager tag maps are consistent with entity tags
+                    this.validateEntityManagerTagMaps();
                 }
             }
         } catch (error) {
@@ -546,6 +613,71 @@ export class EnemySystem extends System {
         // Log if we fixed any tracking issues
         if (originalSize !== this.enemies.size) {
             console.log(`Enemy tracking corrected: ${originalSize} -> ${this.enemies.size} enemies tracked. Scanned ${entitiesScanned} entities.`);
+        }
+    }
+    
+    /**
+     * Additional method to validate and fix EntityManager tag maps
+     * This helps ensure entity tags are consistent with the EntityManager's tracking
+     */
+    validateEntityManagerTagMaps() {
+        if (!this.world || !this.world.entityManager || !this.world.entityManager.entitiesByTag) {
+            return;
+        }
+        
+        try {
+            const entitiesByTag = this.world.entityManager.entitiesByTag;
+            
+            // Check the enemy tag map specifically
+            if (entitiesByTag.has('enemy')) {
+                const enemyMap = entitiesByTag.get('enemy');
+                const invalidEntities = [];
+                
+                // Check each entity in the enemy map
+                for (let i = 0; i < enemyMap.length; i++) {
+                    const entity = enemyMap[i];
+                    
+                    // Skip invalid entities
+                    if (!entity) {
+                        invalidEntities.push(i);
+                        continue;
+                    }
+                    
+                    // If entity doesn't actually have the enemy tag in its tag Set, fix it
+                    if (!entity.tags || !entity.tags.has('enemy')) {
+                        console.warn(`Entity ${entity.id} is in 'enemy' tag map but doesn't have the tag in its Set`);
+                        
+                        // Add the tag properly through the entity's method
+                        if (entity.addTag) {
+                            entity.addTag('enemy');
+                            console.log(`Added missing 'enemy' tag to entity ${entity.id}`);
+                        } else {
+                            // If can't fix, mark for removal
+                            invalidEntities.push(i);
+                        }
+                    }
+                    
+                    // If entity has both enemy and pooled tags, that's an inconsistency
+                    if (entity.hasTag && entity.hasTag('pooled') && entity.hasTag('enemy')) {
+                        console.warn(`Entity ${entity.id} has both 'pooled' and 'enemy' tags - removing 'enemy' tag`);
+                        entity.removeTag('enemy');
+                        invalidEntities.push(i);
+                    }
+                }
+                
+                // Remove invalid entities from the map (in reverse order to avoid index issues)
+                for (let i = invalidEntities.length - 1; i >= 0; i--) {
+                    const index = invalidEntities[i];
+                    enemyMap.splice(index, 1);
+                }
+                
+                // Log changes if any were made
+                if (invalidEntities.length > 0) {
+                    console.log(`Fixed ${invalidEntities.length} inconsistencies in EntityManager 'enemy' tag map`);
+                }
+            }
+        } catch (error) {
+            console.error("Error validating EntityManager tag maps:", error);
         }
     }
     
@@ -795,13 +927,22 @@ export class EnemySystem extends System {
             return;
         }
         
+        // IMPROVED CHECK: Retrieve entity ID first to ensure consistent reference
+        const entityId = entity.id;
+        
+        // VERIFICATION: Check if this is an entity we're tracking
+        const isTrackedEnemy = this.enemies.has(entityId);
+        
         // IMPROVED CHECK: Look for either entity.hasTag('enemy') OR entity.id in this.enemies
         // This ensures we catch all cases where an enemy is destroyed
-        if ((entity.hasTag && entity.hasTag('enemy')) || this.enemies.has(entity.id)) {
-            // IMPORTANT: Store entity ID locally before further processing
-            const entityId = entity.id;
-            
+        if ((entity.hasTag && entity.hasTag('enemy')) || isTrackedEnemy) {
             console.log(`Enemy destroyed: ${entityId}`);
+            
+            // FIRST: Remove from tracking immediately to prevent double-processing
+            if (isTrackedEnemy) {
+                this.enemies.delete(entityId);
+                console.log(`Removed entity ${entityId} from enemies tracking`);
+            }
             
             // TRAIL CLEANUP: Ensure any trails are properly removed
             // This prevents the "line to center" visual bug
@@ -855,15 +996,11 @@ export class EnemySystem extends System {
                 }
             }
             
-            // Remove from tracked enemies - MORE AGGRESSIVE CHECK
-            // Remove even if not explicitly in the set to ensure clean state
-            this.enemies.delete(entityId);
-            
             // Increment destroyed counter
             this.enemiesDestroyed++;
             
             // Log remaining enemies
-            console.log(`Enemy ${entityId} removed from tracking. Enemies remaining: ${this.enemies.size}/${this.maxEnemies}`);
+            console.log(`Enemy ${entityId} destroyed. Enemies remaining: ${this.enemies.size}/${this.maxEnemies}`);
             
             // ENSURE PROPER CLEANUP: Make sure entity doesn't have enemy tag
             if (entity.hasTag && entity.hasTag('enemy')) {
@@ -871,9 +1008,24 @@ export class EnemySystem extends System {
                 entity.removeTag('enemy');
             }
             
-            // Return the entity to the pool
-            this.returnEnemyToPool(entity);
-            console.log(`Returned enemy ${entityId} to pool`);
+            // Check if this entity is incorrectly in the pool already
+            let isInPool = false;
+            for (let i = 0; i < this.enemyPool.length; i++) {
+                if (this.enemyPool[i] && this.enemyPool[i].id === entityId) {
+                    console.warn(`CRITICAL ERROR: Destroyed entity ${entityId} is already in the pool!`);
+                    this.enemyPool.splice(i, 1);
+                    console.log(`Removed entity ${entityId} from pool to prevent double-pooling`);
+                    isInPool = true;
+                    break;
+                }
+            }
+            
+            // Only return to pool if not already there
+            if (!isInPool) {
+                // Return the entity to the pool
+                this.returnEnemyToPool(entity);
+                console.log(`Returned enemy ${entityId} to pool`);
+            }
             
             // Force spawn point regeneration after several enemies have been destroyed
             if (this.enemiesDestroyed % 5 === 0) {
@@ -928,13 +1080,30 @@ export class EnemySystem extends System {
         // Get a spectral drone from the pool
         const entity = this.getEnemyFromPool();
         
-        // VERIFICATION: Double-check that entity is clean before using
-        if (entity.hasTag('enemy')) {
-            console.warn(`Entity from pool still has enemy tag! Clearing all tags...`);
+        // Extra safety check - verify entity exists and isn't already tracked
+        if (!entity) {
+            console.error("Failed to get entity from pool or create new one");
+            return null;
+        }
+        
+        // VERIFY ENTITY STATE: Ensure entity isn't already in use
+        if (this.enemies.has(entity.id)) {
+            console.error(`Entity ${entity.id} is already in the active enemies list!`);
+            return null;
+        }
+        
+        // VERIFICATION: Double-check that entity is in a clean state before setting up
+        // It should have no tags at this point
+        if (entity.tags && entity.tags.size > 0) {
+            console.warn(`Entity ${entity.id} from pool still has tags: [${[...entity.tags]}]. Clearing all tags.`);
             if (entity.clearTags && typeof entity.clearTags === 'function') {
                 entity.clearTags();
-            } else if (entity.hasTag && entity.removeTag) {
-                entity.removeTag('enemy');
+            } else {
+                entity.tags.clear();
+                entity._isEnemy = false;
+                entity._isPooled = false;
+                entity._isPlayer = false;
+                entity._isProjectile = false;
             }
         }
         
@@ -1315,6 +1484,61 @@ export class EnemySystem extends System {
         console.log("=== RUNNING ENEMY POOL DIAGNOSTICS ===");
         console.log(`Active enemies: ${this.enemies.size}, Pool size: ${this.enemyPool.length}`);
         
+        // Track number of fixes made
+        let inconsistenciesFixed = 0;
+        
+        // POOL INTEGRITY CHECK: Check for duplicate entities in the pool
+        const poolEntityIds = new Set();
+        const duplicateIndices = [];
+        
+        for (let i = 0; i < this.enemyPool.length; i++) {
+            const entity = this.enemyPool[i];
+            
+            // Skip invalid entities
+            if (!entity || !entity.id) {
+                console.warn(`Invalid entity at index ${i} in enemy pool - removing`);
+                duplicateIndices.push(i);
+                inconsistenciesFixed++;
+                continue;
+            }
+            
+            // Check if this entity ID is already in the pool
+            if (poolEntityIds.has(entity.id)) {
+                console.warn(`Duplicate entity ${entity.id} found in enemy pool at index ${i} - removing`);
+                duplicateIndices.push(i);
+                inconsistenciesFixed++;
+            } else {
+                poolEntityIds.add(entity.id);
+            }
+        }
+        
+        // Remove duplicates from the pool (in reverse order to avoid index issues)
+        for (let i = duplicateIndices.length - 1; i >= 0; i--) {
+            this.enemyPool.splice(duplicateIndices[i], 1);
+        }
+        
+        // ACTIVE-POOLED CHECK: No entity should be both active and in the pool
+        const activePooledEntities = [];
+        
+        for (let i = 0; i < this.enemyPool.length; i++) {
+            const entity = this.enemyPool[i];
+            
+            // If entity is also in active enemies, that's a critical error
+            if (this.enemies.has(entity.id)) {
+                console.error(`CRITICAL ERROR: Entity ${entity.id} is both active and in the pool!`);
+                activePooledEntities.push(i);
+                inconsistenciesFixed++;
+            }
+        }
+        
+        // Remove entities that are both active and pooled from the pool
+        for (let i = activePooledEntities.length - 1; i >= 0; i--) {
+            const index = activePooledEntities[i];
+            const entityId = this.enemyPool[index].id;
+            this.enemyPool.splice(index, 1);
+            console.log(`Fixed critical inconsistency: Removed entity ${entityId} from pool since it's active`);
+        }
+        
         // Check the enemy tag map
         let enemyTaggedCount = 0;
         let pooledTaggedCount = 0;
@@ -1335,9 +1559,20 @@ export class EnemySystem extends System {
                     console.warn(`INCONSISTENT ENTITY ${entity.id}: Has both 'enemy' and 'pooled' tags`);
                     inconsistentEntities++;
                     
-                    // Fix by removing enemy tag - pooled entities shouldn't be active enemies
-                    entity.removeTag('enemy');
-                    console.log(`Fixed entity ${entity.id} by removing 'enemy' tag while keeping 'pooled' tag`);
+                    // POOL STATUS CHECK: If entity has pooled tag, it MUST be in the pool
+                    const isInPool = this.enemyPool.some(e => e.id === entity.id);
+                    
+                    if (isInPool) {
+                        // Entity is in pool with enemy tag - remove enemy tag
+                        entity.removeTag('enemy');
+                        console.log(`Fixed entity ${entity.id} by removing 'enemy' tag since it's in the pool`);
+                    } else {
+                        // Entity has pooled tag but not in pool - remove pooled tag
+                        entity.removeTag('pooled');
+                        console.log(`Fixed entity ${entity.id} by removing 'pooled' tag since it's not in the pool`);
+                    }
+                    
+                    inconsistenciesFixed++;
                 }
             }
             
@@ -1346,32 +1581,59 @@ export class EnemySystem extends System {
                 const entity = this.world.getEntity(entityId);
                 if (entity && entity.hasTag('pooled')) {
                     console.warn(`INCONSISTENT TRACKING: Entity ${entityId} is in active enemies but has 'pooled' tag`);
-                    this.enemies.delete(entityId);
-                    console.log(`Fixed by removing entity ${entityId} from active enemies set`);
+                    
+                    // Check if entity is actually in the pool
+                    const isInPool = this.enemyPool.some(e => e.id === entityId);
+                    
+                    if (isInPool) {
+                        // Entity is in pool and active list - remove from active list
+                        this.enemies.delete(entityId);
+                        console.log(`Fixed by removing entity ${entityId} from active enemies set since it's in the pool`);
+                    } else {
+                        // Entity has pooled tag but not in pool - remove pooled tag
+                        entity.removeTag('pooled');
+                        console.log(`Fixed entity ${entityId} by removing 'pooled' tag since it's not in the pool`);
+                    }
+                    
                     inconsistentEntities++;
+                    inconsistenciesFixed++;
                 }
             }
             
-            // Check enemy pool for issues
+            // Check enemy pool for tag issues
             for (let i = 0; i < this.enemyPool.length; i++) {
                 const entity = this.enemyPool[i];
+                
+                if (!entity) continue;
+                
+                let entityFixed = false;
+                
+                // Entities in the pool MUST have the pooled tag
                 if (!entity.hasTag('pooled')) {
                     console.warn(`INCONSISTENT POOL: Entity ${entity.id} in enemy pool but missing 'pooled' tag`);
                     entity.addTag('pooled');
                     console.log(`Fixed by adding 'pooled' tag to entity ${entity.id}`);
-                    inconsistentEntities++;
+                    entityFixed = true;
+                    inconsistenciesFixed++;
                 }
+                
+                // Entities in the pool MUST NOT have the enemy tag
                 if (entity.hasTag('enemy')) {
                     console.warn(`INCONSISTENT POOL: Entity ${entity.id} in enemy pool but has 'enemy' tag`);
                     entity.removeTag('enemy');
                     console.log(`Fixed by removing 'enemy' tag from entity ${entity.id}`);
+                    entityFixed = true;
+                    inconsistenciesFixed++;
+                }
+                
+                if (entityFixed) {
                     inconsistentEntities++;
                 }
             }
         }
         
         console.log(`Diagnostic results: ${enemyTaggedCount} entities with 'enemy' tag, ${pooledTaggedCount} entities with 'pooled' tag`);
-        console.log(`Fixed ${inconsistentEntities} inconsistencies`);
+        console.log(`Fixed ${inconsistenciesFixed} inconsistencies across ${inconsistentEntities} entities`);
         console.log("=== DIAGNOSTICS COMPLETE ===");
     }
 

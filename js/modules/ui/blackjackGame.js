@@ -101,7 +101,8 @@ export class BlackjackGame {
             this.gameUI.style.width = '95%';
             this.gameUI.style.maxWidth = '600px';
             this.gameUI.style.height = 'auto';
-            this.gameUI.style.maxHeight = '90vh';
+            this.gameUI.style.maxHeight = '85vh'; // Slightly reduced to ensure buttons are visible
+            this.gameUI.style.paddingBottom = '70px'; // Add padding for the return button
         } else {
             this.gameUI.style.width = '900px';
             this.gameUI.style.height = '650px';
@@ -178,10 +179,20 @@ export class BlackjackGame {
         closeBtn.style.lineHeight = '1';
         closeBtn.onclick = () => this.hide();
         
-        // Make close button larger for touch on mobile
+        // Make close button larger and more visible for touch on mobile
         if (this.isMobile) {
-            closeBtn.style.fontSize = '36px';
+            closeBtn.style.fontSize = '42px';
             closeBtn.style.padding = '5px 15px';
+            closeBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+            closeBtn.style.borderRadius = '50%';
+            closeBtn.style.width = '50px';
+            closeBtn.style.height = '50px';
+            closeBtn.style.display = 'flex';
+            closeBtn.style.justifyContent = 'center';
+            closeBtn.style.alignItems = 'center';
+            closeBtn.style.boxShadow = '0 0 10px rgba(51, 170, 255, 0.5)';
+            closeBtn.style.right = '5px';
+            closeBtn.style.top = '5px';
         }
         
         header.appendChild(closeBtn);
@@ -600,6 +611,50 @@ export class BlackjackGame {
         gameArea.appendChild(controlsArea);
         
         this.gameUI.appendChild(gameArea);
+        
+        // Add a dedicated "Return to Mothership" button at the bottom for mobile
+        if (this.isMobile) {
+            const returnBtn = document.createElement('button');
+            returnBtn.textContent = 'RETURN TO MOTHERSHIP';
+            returnBtn.style.position = 'fixed';
+            returnBtn.style.bottom = '10px';
+            returnBtn.style.left = '50%';
+            returnBtn.style.transform = 'translateX(-50%)';
+            returnBtn.style.width = '90%';
+            returnBtn.style.padding = '15px';
+            returnBtn.style.backgroundColor = '#33aaff';
+            returnBtn.style.color = '#000';
+            returnBtn.style.border = 'none';
+            returnBtn.style.borderRadius = '5px';
+            returnBtn.style.fontFamily = 'Courier New, monospace';
+            returnBtn.style.fontWeight = 'bold';
+            returnBtn.style.fontSize = '16px';
+            returnBtn.style.zIndex = '1100';
+            returnBtn.style.cursor = 'pointer';
+            returnBtn.style.boxShadow = '0 0 15px rgba(51, 170, 255, 0.7)';
+            
+            returnBtn.addEventListener('click', () => {
+                this.audio.playSound('boink');
+                this.hide();
+            });
+            
+            // Add touch event for mobile with better audio handling
+            returnBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                // Ensure audio context is resumed
+                if (this.audio) {
+                    console.log("Mobile: Attempting to play sound on return button press");
+                    this.audio.playSound('boink');
+                    // Give time for the sound to start before hiding
+                    setTimeout(() => this.hide(), 50);
+                } else {
+                    this.hide();
+                }
+            });
+            
+            this.gameUI.appendChild(returnBtn);
+        }
+        
         document.body.appendChild(this.gameUI);
         
         // Set initial button states
@@ -613,6 +668,15 @@ export class BlackjackGame {
         if (this.gameUI) {
             this.gameUI.style.display = 'block';
             this.reset();
+            
+            // Force audio context resumption for mobile
+            if (this.audio && this.isMobile) {
+                // Play a sound to kickstart the audio context
+                setTimeout(() => {
+                    console.log("Mobile: Attempting to play initial sound in BlackjackGame");
+                    this.audio.playSound('boink');
+                }, 100);
+            }
             
             // Check if we need to synchronize with the game's resource system
             if (window.game && window.game.controls && window.game.controls.resources) {

@@ -12,6 +12,12 @@ export class Entity {
         this.world = world;
         this.components = new Map();
         this.tags = new Set();
+        
+        // Cache flags for commonly checked tags (initialize as undefined)
+        this._isEnemy = undefined;
+        this._isPlayer = undefined;
+        this._isProjectile = undefined;
+        this._isPooled = undefined;
     }
     
     /**
@@ -94,13 +100,33 @@ export class Entity {
     }
     
     /**
+     * Sync internal tag cache with actual tags
+     * @private
+     */
+    _syncTagCache() {
+        // Reset all cached flags to match actual tag state
+        this._isEnemy = this.tags.has('enemy');
+        this._isPlayer = this.tags.has('player');
+        this._isProjectile = this.tags.has('projectile');
+        this._isPooled = this.tags.has('pooled');
+    }
+    
+    /**
      * Add a tag to this entity
      * @param {string} tag The tag to add
      * @returns {Entity} This entity for chaining
      */
     addTag(tag) {
         if (!this.tags.has(tag)) {
+            // Add tag to local Set
             this.tags.add(tag);
+            
+            // Update cached flags immediately
+            if (tag === 'enemy') this._isEnemy = true;
+            else if (tag === 'player') this._isPlayer = true;
+            else if (tag === 'projectile') this._isProjectile = true;
+            else if (tag === 'pooled') this._isPooled = true;
+            
             // Update the entity manager's tag index
             if (this.world && this.world.entityManager) {
                 this.world.entityManager.onTagAdded(this, tag);
@@ -129,7 +155,15 @@ export class Entity {
      */
     removeTag(tag) {
         if (this.tags.has(tag)) {
+            // Remove tag from local Set
             this.tags.delete(tag);
+            
+            // Update cached flags immediately
+            if (tag === 'enemy') this._isEnemy = false;
+            else if (tag === 'player') this._isPlayer = false;
+            else if (tag === 'projectile') this._isProjectile = false;
+            else if (tag === 'pooled') this._isPooled = false;
+            
             // Update the entity manager's tag index
             if (this.world && this.world.entityManager) {
                 this.world.entityManager.onTagRemoved(this, tag);
@@ -151,12 +185,13 @@ export class Entity {
             this.removeTag(tag);
         }
         
-        // Reset cached tag checks
-        this._isEnemy = undefined;
-        this._isPlayer = undefined;
-        this._isProjectile = undefined;
+        // Reset ALL tag caches to ensure consistency
+        this._isEnemy = false;
+        this._isPlayer = false;
+        this._isProjectile = false;
+        this._isPooled = false;
         
-        // Clear the local Set
+        // Verify the local Set is empty
         this.tags.clear();
         
         return this;
@@ -168,22 +203,38 @@ export class Entity {
      * @returns {boolean} True if the entity has the tag
      */
     hasTag(tag) {
-        // Add direct property access for critical tags for faster lookups
-        if (tag === 'enemy' && this._isEnemy !== undefined) {
-            return this._isEnemy;
-        } else if (tag === 'player' && this._isPlayer !== undefined) {
-            return this._isPlayer;
-        } else if (tag === 'projectile' && this._isProjectile !== undefined) {
-            return this._isProjectile;
-        }
-        
-        // Normal tag lookup
+        // Use direct Set lookup instead of potentially stale cached values
         const hasTag = this.tags.has(tag);
         
-        // Cache result for important tags
-        if (tag === 'enemy') this._isEnemy = hasTag;
-        else if (tag === 'player') this._isPlayer = hasTag;
-        else if (tag === 'projectile') this._isProjectile = hasTag;
+        // Check for inconsistency between cache and actual tags
+        // This helps detect and fix cache issues
+        let cacheInconsistent = false;
+        
+        if (tag === 'enemy' && this._isEnemy !== hasTag) {
+            console.warn(`Tag cache inconsistency for entity ${this.id}: _isEnemy=${this._isEnemy}, actual=Set{${Array.from(this.tags)}}`);
+            this._isEnemy = hasTag; // Fix the cache
+            cacheInconsistent = true;
+        } 
+        else if (tag === 'player' && this._isPlayer !== hasTag) {
+            console.warn(`Tag cache inconsistency for entity ${this.id}: _isPlayer=${this._isPlayer}, actual=Set{${Array.from(this.tags)}}`);
+            this._isPlayer = hasTag; // Fix the cache
+            cacheInconsistent = true;
+        } 
+        else if (tag === 'projectile' && this._isProjectile !== hasTag) {
+            console.warn(`Tag cache inconsistency for entity ${this.id}: _isProjectile=${this._isProjectile}, actual=Set{${Array.from(this.tags)}}`);
+            this._isProjectile = hasTag; // Fix the cache
+            cacheInconsistent = true;
+        }
+        else if (tag === 'pooled' && this._isPooled !== hasTag) {
+            console.warn(`Tag cache inconsistency for entity ${this.id}: _isPooled=${this._isPooled}, actual=Set{${Array.from(this.tags)}}`);
+            this._isPooled = hasTag; // Fix the cache
+            cacheInconsistent = true;
+        }
+        
+        // If we detected an inconsistency, sync the entire cache
+        if (cacheInconsistent) {
+            this._syncTagCache();
+        }
         
         return hasTag;
     }

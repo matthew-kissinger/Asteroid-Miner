@@ -27,7 +27,7 @@ export class Combat {
         
         // Tuned these parameters for better gameplay
         this.fireRate = 3; // shots per second
-        this.projectileSpeed = 2000; // Base speed units per frame (will be normalized)
+        this.projectileSpeed = 10000; // Base speed units per frame (will be normalized)
         
         // Track the last time we fired for rate limiting
         this.lastFireTime = 0;
@@ -942,7 +942,7 @@ export class Combat {
      */
     createProjectile(position, direction) {
         // Create projectile geometry and material with improved visuals
-        const geometry = new THREE.SphereGeometry(0.6, 12, 12); // Better quality sphere
+        const geometry = new THREE.SphereGeometry(1.8, 12, 12); // Better quality sphere, 3x size
         const material = new THREE.MeshStandardMaterial({
             color: 0x00ffff,
             emissive: 0x00ffff,
@@ -952,7 +952,7 @@ export class Combat {
         });
         
         // Add glow effect
-        const glowGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+        const glowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
         const glowMaterial = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
             transparent: true,
