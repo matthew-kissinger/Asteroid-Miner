@@ -94,7 +94,4 @@ This game was developed as a learning project using Three.js and modern JavaScri
 
 Created by [Matthew Kissinger](https://github.com/matthew-kissinger)
 
-## License
-
-This project is available under the MIT License. See LICENSE file for details.
 
