@@ -35,6 +35,9 @@ export class EnemyAIComponent extends Component {
         // Direction vector caching
         this.lastDirection = new THREE.Vector3(0, 0, 1);
         
+        // New flag for drone-like movement
+        this.isDroneLike = config.isDroneLike || false;
+        
         console.log(`Created ${this.faction} ${this.type} enemy AI with detection range ${this.detectionRange}`);
     }
     
@@ -179,7 +182,12 @@ export class EnemyAIComponent extends Component {
         
         // Special movement for spectral drones - spiral pattern
         if (this.faction === 'spectrals' && this.type === 'drone') {
-            this.applySpectralDroneMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+            // Check if we should use drone-like movement
+            if (this.isDroneLike) {
+                this.applyDroneLikeMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+            } else {
+                this.applySpectralDroneMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+            }
         } else {
             // Standard kamikaze movement for other enemies
             transform.position.add(baseDirection.multiplyScalar(this.speed * deltaTime));
@@ -266,6 +274,118 @@ export class EnemyAIComponent extends Component {
                 }
             }
         }
+    }
+    
+    /**
+     * Apply drone-like movement pattern - more realistic drone behavior
+     * @param {TransformComponent} transform This entity's transform
+     * @param {TransformComponent} playerTransform Player's transform
+     * @param {THREE.Vector3} baseDirection Base direction to player
+     * @param {number} distanceToPlayer Distance to player
+     * @param {number} deltaTime Delta time for frame
+     */
+    applyDroneLikeMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime) {
+        // Create an orthogonal basis for movement
+        const up = new THREE.Vector3(0, 1, 0);
+        const right = new THREE.Vector3().crossVectors(baseDirection, up).normalize();
+        
+        // In case the direction is parallel to up, we need a fallback
+        if (right.lengthSq() < 0.1) {
+            right.set(1, 0, 0); // Fallback right vector
+        }
+        
+        // Now get a proper up vector that's perpendicular to both
+        const properUp = new THREE.Vector3().crossVectors(right, baseDirection).normalize();
+        
+        // Calculate movement based on distance to player
+        let moveSpeed = this.speed;
+        let finalDirection = new THREE.Vector3();
+        
+        // Different behavior based on distance from player
+        if (distanceToPlayer > 1000) {
+            // Far away - approach rapidly with slight variations
+            moveSpeed = this.speed * 1.2; // Move faster when far away
+            
+            // Add slight zigzag for interesting approach
+            const zigzag = Math.sin(this.timeAlive * 1.5) * 30;
+            finalDirection.copy(baseDirection)
+                .multiplyScalar(moveSpeed)
+                .add(right.clone().multiplyScalar(zigzag));
+                
+        } else if (distanceToPlayer > 400) {
+            // Medium distance - circle and approach
+            const approachWeight = 0.6; // 60% approach, 40% circling
+            const circleSpeed = this.speed * (1 - approachWeight);
+            
+            // Determine circling direction (clockwise or counterclockwise)
+            // Use entity ID to make it consistent for this drone
+            const entityIdSum = this.entity.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+            const circleDir = (entityIdSum % 2 === 0) ? 1 : -1;
+            
+            // Calculate strafing component (perpendicular to player direction)
+            const strafeDir = right.clone().multiplyScalar(circleDir * circleSpeed);
+            
+            // Calculate approach component
+            const approachDir = baseDirection.clone().multiplyScalar(this.speed * approachWeight);
+            
+            // Combine for final movement
+            finalDirection.copy(approachDir).add(strafeDir);
+            
+            // Add slight up/down bobbing
+            const bobAmount = Math.sin(this.timeAlive * 2.0) * 15;
+            finalDirection.add(properUp.clone().multiplyScalar(bobAmount));
+            
+        } else {
+            // Close range - erratic evasive movements with approach
+            
+            // Generate pseudo-random evasive pattern
+            const evasiveTime = this.timeAlive * 3.0; // Faster pattern changes
+            
+            // Horizontal evasion
+            const horizontalEvasion = Math.sin(evasiveTime) * Math.cos(evasiveTime * 1.3) * 80;
+            
+            // Vertical evasion
+            const verticalEvasion = Math.cos(evasiveTime * 0.7) * Math.sin(evasiveTime * 1.1) * 60;
+            
+            // Forward thrust varies with a pulsing pattern (0.5 to 1.0 of base speed)
+            const thrustPulse = 0.5 + (0.5 * (0.5 + 0.5 * Math.sin(evasiveTime * 0.5)));
+            
+            // Combine all movements
+            finalDirection.copy(baseDirection)
+                .multiplyScalar(this.speed * thrustPulse)
+                .add(right.clone().multiplyScalar(horizontalEvasion))
+                .add(properUp.clone().multiplyScalar(verticalEvasion));
+        }
+        
+        // Apply the final movement
+        transform.position.add(finalDirection.multiplyScalar(deltaTime));
+        
+        // Create a look target that leads slightly in the direction of movement
+        // This creates a more natural flight pattern where the drone looks ahead of its movement
+        const lookAheadTime = 0.1; // Look 0.1 seconds ahead
+        const lookTarget = new THREE.Vector3()
+            .copy(transform.position)
+            .add(finalDirection.clone().normalize().multiplyScalar(100)); // Look 100 units ahead
+            
+        // Look at the calculated target point
+        transform.lookAt(lookTarget);
+        
+        // Add realistic banking effect based on lateral movement
+        // Extract the lateral (right) component of our movement
+        const lateralMovement = new THREE.Vector3();
+        lateralMovement.copy(finalDirection).projectOnVector(right);
+        
+        // Calculate bank angle based on lateral movement (max ±25 degrees)
+        const lateralSpeed = lateralMovement.length() * (lateralMovement.dot(right) > 0 ? -1 : 1);
+        const bankAngle = (lateralSpeed / this.speed) * 0.4; // Max ~25 degrees
+        
+        // Apply banking rotation around the forward axis
+        const forward = transform.getForwardVector();
+        const bankQuaternion = new THREE.Quaternion().setFromAxisAngle(forward, bankAngle);
+        transform.quaternion.multiply(bankQuaternion);
+        
+        // Update Euler angles to match quaternion
+        transform.rotation.setFromQuaternion(transform.quaternion);
     }
     
     /**

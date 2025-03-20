@@ -12,6 +12,7 @@ import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { MeshComponent } from '../../components/rendering/mesh.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
 import { TrailComponent } from '../../components/rendering/trail.js';
+// GLTFLoader is loaded globally via script tag - no import needed
 
 export class EnemySystem extends System {
     constructor(world) {
@@ -23,9 +24,9 @@ export class EnemySystem extends System {
         this.enemies = new Set();
         
         // Enemy spawn parameters - adjusted for more frequent spawning
-        this.maxEnemies = 100;           // Allow more enemies to spawn
+        this.maxEnemies = 10;           // Allow more enemies to spawn
         this.spawnTimer = 0;           // Timer since last spawn
-        this.spawnInterval = 1;        // Seconds between spawns (reduced from 10)
+        this.spawnInterval = 3;        // Seconds between spawns (reduced from 10)
         this.spawnPoints = [];         // Will be populated with potential spawn points
         this.lastSpawnTime = Date.now(); // Track the last successful spawn time
         
@@ -71,6 +72,12 @@ export class EnemySystem extends System {
         
         // Force validation to ensure we start with empty tracking
         this.validateEnemyReferences();
+        
+        // Model cache
+        this.modelCache = {};
+        
+        // Pre-load models
+        this.loadModels();
         
         console.log("Enemy system initialized with faster spawn rate and object pooling");
     }
@@ -822,6 +829,52 @@ export class EnemySystem extends System {
             meshComponent.mesh.position.copy(transform.position);
             meshComponent.mesh.quaternion.copy(transform.quaternion);
             meshComponent.mesh.scale.copy(transform.scale);
+            
+            // Process special visual effects if this is an enhanced enemy
+            if (entity.visualVariant === 2 || entity.visualVariant === 3) {
+                // Update any special effects attached to the model
+                meshComponent.mesh.traverse((child) => {
+                    if (child.userData && typeof child.userData.update === 'function') {
+                        child.userData.update(deltaTime);
+                    }
+                });
+                
+                // Add additional visual effects for elite enemies (variant 2)
+                if (entity.visualVariant === 2 && entity.eliteParticleTime === undefined) {
+                    // Occasionally emit a small particle effect for elites
+                    entity.eliteParticleTime = 0;
+                } else if (entity.visualVariant === 2) {
+                    // Update elite particle timer
+                    entity.eliteParticleTime += deltaTime;
+                    
+                    // Every 1.5 seconds, emit a particle
+                    if (entity.eliteParticleTime > 1.5) {
+                        entity.eliteParticleTime = 0;
+                        
+                        // Emit a particle effect using the global VFX system if available
+                        if (this.world && this.world.messageBus) {
+                            this.world.messageBus.publish('vfx.pulse', {
+                                position: transform.position.clone(),
+                                color: 0xaaffff,
+                                scale: 0.7,
+                                duration: 0.8
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Special flickering effect for damaged enemies (variant 1)
+            if (entity.visualVariant === 1 && meshComponent.mesh.material) {
+                // Apply a flickering effect to the material
+                if (Array.isArray(meshComponent.mesh.material)) {
+                    for (const material of meshComponent.mesh.material) {
+                        material.emissiveIntensity = 0.5 + (Math.sin(Date.now() * 0.01) * 0.3);
+                    }
+                } else if (meshComponent.mesh.material.emissiveIntensity !== undefined) {
+                    meshComponent.mesh.material.emissiveIntensity = 0.5 + (Math.sin(Date.now() * 0.01) * 0.3);
+                }
+            }
         }
         
         // Call the component's update method
@@ -1064,6 +1117,39 @@ export class EnemySystem extends System {
     }
 
     /**
+     * Pre-load all enemy models
+     */
+    loadModels() {
+        const loader = new THREE.GLTFLoader();
+        
+        // Load enemy model
+        loader.load(
+            'assets/enemy.glb',
+            (gltf) => {
+                console.log('Enemy model loaded successfully');
+                this.modelCache.enemyDrone = gltf.scene;
+                
+                // Apply any global transformations or material adjustments
+                this.modelCache.enemyDrone.traverse((child) => {
+                    if (child.isMesh) {
+                        // Make materials glow with emissive
+                        if (child.material) {
+                            child.material.emissive = new THREE.Color(0x0088ff);
+                            child.material.emissiveIntensity = 2.0;
+                        }
+                    }
+                });
+            },
+            (xhr) => {
+                console.log('Loading enemy model: ' + (xhr.loaded / xhr.total) * 100 + '% loaded');
+            },
+            (error) => {
+                console.error('Error loading enemy model', error);
+            }
+        );
+    }
+
+    /**
      * Spawns a spectral drone at the given position
      * @param {THREE.Vector3} position The position to spawn at
      * @returns {Entity} The created entity
@@ -1116,15 +1202,44 @@ export class EnemySystem extends System {
         const frequency = this.enemyConfig.spiralFrequency * (0.9 + Math.random() * 0.2); // 90-110% of base
         const speed = this.enemyConfig.speed * (0.7 + Math.random() * 0.6); // 70-130% of base
         
+        // Generate visual variation parameters
+        const sizeVariation = 0.8 + Math.random() * 0.8; // 80% to 160% size variation
+        const baseSize = 80; // Increased base size from 50 to 80
+        const finalSize = baseSize * sizeVariation;
+        
+        // Add slight rotation offset for more natural appearance
+        const rotationOffset = {
+            x: (Math.random() - 0.5) * 0.2, // ±0.1 radians (~±5.7 degrees)
+            y: (Math.random() - 0.5) * 0.2,
+            z: (Math.random() - 0.5) * 0.2
+        };
+        
+        // Choose a visual effect variant (0-3)
+        // 0: Normal, 1: Damaged, 2: Elite, 3: Shielded
+        const visualVariant = Math.floor(Math.random() * 4);
+        entity.visualVariant = visualVariant;
+        
         // Configure transform
         const transform = entity.getComponent('TransformComponent');
         if (transform) {
             transform.position.copy(position);
-            transform.scale.set(50, 50, 50);
+            transform.scale.set(finalSize, finalSize, finalSize);
+            
+            // Apply rotation offset
+            transform.rotation.x += rotationOffset.x;
+            transform.rotation.y += rotationOffset.y;
+            transform.rotation.z += rotationOffset.z;
+            
             transform.needsUpdate = true;
         } else {
             const newTransform = new TransformComponent(position);
-            newTransform.scale.set(50, 50, 50);
+            newTransform.scale.set(finalSize, finalSize, finalSize);
+            
+            // Apply rotation offset
+            newTransform.rotation.x += rotationOffset.x;
+            newTransform.rotation.y += rotationOffset.y;
+            newTransform.rotation.z += rotationOffset.z;
+            
             entity.addComponent(newTransform);
         }
         
@@ -1149,7 +1264,8 @@ export class EnemySystem extends System {
                 damage: this.enemyConfig.damage,
                 speed: speed,
                 spiralAmplitude: amplitude,
-                spiralFrequency: frequency
+                spiralFrequency: frequency,
+                isDroneLike: true  // New flag for drone-like movement
             };
             enemyAI = new EnemyAIComponent(config);
             entity.addComponent(enemyAI);
@@ -1160,52 +1276,57 @@ export class EnemySystem extends System {
             enemyAI.speed = speed;
             enemyAI.spiralAmplitude = amplitude;
             enemyAI.spiralFrequency = frequency;
+            enemyAI.isDroneLike = true;  // New flag for drone-like movement
             enemyAI.enabled = true;
         }
         
-        // IMPORTANT: Completely recreate the mesh to ensure proper appearance
+        // Get the mesh from the GLB model
+        // Store reference to current entity being processed
+        this.currentEntity = entity;
         const spectralMesh = this.createSpectralDroneMesh();
+        // Clear the reference after mesh creation
+        this.currentEntity = null;
         
         // Get existing mesh component if any
         let meshComponent = entity.getComponent('MeshComponent');
         
         // If we don't have a mesh component, create one
         if (!meshComponent) {
-            meshComponent = new MeshComponent(spectralMesh.geometry, spectralMesh.material);
+            meshComponent = new MeshComponent();
             entity.addComponent(meshComponent);
-        } else {
-            // Create new mesh directly
-            if (meshComponent.mesh) {
-                // Remove from scene if it has a parent
-                if (meshComponent.mesh.parent) {
-                    meshComponent.mesh.parent.remove(meshComponent.mesh);
-                }
-                
-                // Clean up old resources
-                if (meshComponent.mesh.geometry) {
-                    meshComponent.mesh.geometry.dispose();
-                }
-                
-                if (meshComponent.mesh.material) {
-                    if (Array.isArray(meshComponent.mesh.material)) {
-                        meshComponent.mesh.material.forEach(mat => mat.dispose());
-                    } else {
-                        meshComponent.mesh.material.dispose();
-                    }
-                }
+        }
+        
+        // Clean up old mesh if exists
+        if (meshComponent.mesh) {
+            if (meshComponent.mesh.parent) {
+                meshComponent.mesh.parent.remove(meshComponent.mesh);
             }
             
-            // Create a new Three.js mesh
-            const newMesh = new THREE.Mesh(spectralMesh.geometry, spectralMesh.material);
+            if (meshComponent.mesh.geometry) {
+                meshComponent.mesh.geometry.dispose();
+            }
             
-            // Assign it to the component
-            meshComponent.mesh = newMesh;
+            if (meshComponent.mesh.material) {
+                if (Array.isArray(meshComponent.mesh.material)) {
+                    meshComponent.mesh.material.forEach(mat => mat.dispose());
+                } else {
+                    meshComponent.mesh.material.dispose();
+                }
+            }
+        }
+        
+        // Assign the mesh to the component
+        if (spectralMesh.isGLTF) {
+            meshComponent.mesh = spectralMesh.model;
+        } else {
+            // This is the placeholder case when model isn't loaded
+            meshComponent.mesh = new THREE.Mesh(spectralMesh.geometry, spectralMesh.material);
         }
         
         // Ensure the mesh will be added to the scene
         meshComponent.onAddedToScene = function(scene) {
             if (this.mesh && !this.mesh.parent && scene) {
-                console.log("Adding spectral drone mesh to scene");
+                console.log("Adding enemy drone mesh to scene");
                 scene.add(this.mesh);
             }
         };
@@ -1223,7 +1344,7 @@ export class EnemySystem extends System {
             meshComponent.mesh.quaternion.copy(transform.quaternion);
             meshComponent.mesh.scale.copy(transform.scale);
             
-            console.log("Added spectral drone mesh to scene immediately");
+            console.log("Added enemy drone mesh to scene immediately");
         }
         
         // Add physics if needed
@@ -1242,7 +1363,7 @@ export class EnemySystem extends System {
             rigidbody.collisionRadius = 50;
         }
         
-        // Add trail effect if not already present
+        // Add trail effect if not already present - thrusting effect
         if (!entity.getComponent('TrailComponent')) {
             this.addSpectralTrail(entity, transform);
         }
@@ -1267,7 +1388,7 @@ export class EnemySystem extends System {
             window.game.combat.registerEnemy && window.game.combat.registerEnemy(entity.id);
         }
         
-        console.log(`Spawned spectral drone at position: x=${position.x.toFixed(0)}, y=${position.y.toFixed(0)}, z=${position.z.toFixed(0)}`);
+        console.log(`Spawned enemy drone at position: x=${position.x.toFixed(0)}, y=${position.y.toFixed(0)}, z=${position.z.toFixed(0)}`);
         console.log(`Properties: Speed=${enemyAI.speed}, Amplitude=${enemyAI.spiralAmplitude}, Frequency=${enemyAI.spiralFrequency}`);
         
         // ADDITIONAL LOGGING: Log the current state after spawn
@@ -1277,76 +1398,26 @@ export class EnemySystem extends System {
     }
 
     /**
-     * Start monitoring the spawn system health
-     */
-    startSpawnMonitoring() {
-        // Set up an interval to check spawn system health
-        this.spawnMonitorInterval = setInterval(() => {
-            this.checkSpawnSystemHealth();
-        }, 10000); // Check every 10 seconds
-        
-        console.log("Spawn system monitoring started");
-    }
-    
-    /**
-     * Check the health of the spawn system
-     */
-    checkSpawnSystemHealth() {
-        const now = Date.now();
-        const timeSinceLastSpawn = (now - this.lastSpawnTime) / 1000; // in seconds
-        
-        console.log(`Spawn system health check: ${this.enemies.size}/${this.maxEnemies} enemies, ${timeSinceLastSpawn.toFixed(1)}s since last spawn`);
-        
-        // If no spawns have happened in a while and we're below max enemies, something might be wrong
-        if (timeSinceLastSpawn > this.spawnInterval * 3 && this.enemies.size < this.maxEnemies) {
-            console.warn("Spawn system appears stuck! Performing recovery...");
-            
-            // Recover the spawn system
-            this.enemies.clear(); // Reset tracked enemies
-            this.generateSpawnPoints(); // Regenerate spawn points
-            this.spawnTimer = this.spawnInterval; // Force spawn soon
-            
-            // Validate enemy references
-            this.validateEnemyReferences();
-            
-            console.log("Spawn system recovery completed");
-        }
-    }
-
-    /**
-     * Clear all tracked enemies
-     */
-    clearAllEnemies() {
-        // Log the current count
-        console.log(`Clearing all enemies. Current count: ${this.enemies.size}`);
-        
-        // Clear the enemies Set
-        this.enemies.clear();
-        
-        // Verify
-        console.log(`After clearing, enemy count: ${this.enemies.size}`);
-    }
-
-    /**
      * Adds a spectral trail effect to an enemy entity
      * @param {Entity} entity The enemy entity
      * @param {TransformComponent} transform The entity's transform component
      */
     addSpectralTrail(entity, transform) {
-        // Create a special trail component for the spectral drone
+        // Create a special trail component for the enemy drone with a thruster-like effect
         const trailComponent = new TrailComponent({
-            maxPoints: 50,           // Trail length in points
-            pointDistance: 5,         // Min distance to record a new point
-            width: 20,                // Trail width
-            color: 0x00ccff,          // Cyan-blue color
-            fadeTime: 2.0,            // Seconds to fade out
+            maxPoints: 50,             // Trail length in points
+            pointDistance: 5,          // Min distance to record a new point
+            width: 15,                 // Trail width slightly narrower for thruster effect
+            color: 0x00ccff,           // Cyan-blue color
+            fadeTime: 1.5,             // Seconds to fade out
             transparent: true,
             alphaTest: 0.01,
             blending: THREE.AdditiveBlending, // Additive blending for glow effect
-            pulse: true,              // Make the trail pulse
-            pulseSpeed: 1.5,          // Speed of pulsing
-            tapering: true,           // Taper the end of the trail
-            glow: true                // Add glow effect
+            pulse: true,               // Make the trail pulse
+            pulseSpeed: 2.5,           // Faster pulsing for thruster effect
+            tapering: true,            // Taper the end of the trail
+            glow: true,                // Add glow effect
+            thrusterMode: true         // New flag for thruster-like behavior
         });
         
         // IMPORTANT: Initialize the trail with the current entity position
@@ -1394,87 +1465,236 @@ export class EnemySystem extends System {
             // The trail component will self-initialize when attached to the entity
         }
         
-        console.log(`Added trail component to entity ${entity.id} at position (${transform.position.x.toFixed(0)}, ${transform.position.y.toFixed(0)}, ${transform.position.z.toFixed(0)})`);
+        console.log(`Added thruster trail component to entity ${entity.id} at position (${transform.position.x.toFixed(0)}, ${transform.position.y.toFixed(0)}, ${transform.position.z.toFixed(0)})`);
         
         return trailComponent;
     }
 
     /**
-     * Creates a spectral drone mesh programmatically
-     * @returns {Object} Object containing geometry and material
+     * Creates a spectral drone mesh from loaded GLB
+     * @returns {Object} Object containing model
      */
     createSpectralDroneMesh() {
-        console.log("Creating enhanced spectral drone mesh...");
+        console.log("Creating spectral drone from GLB model...");
         
-        // We'll use a modified icosahedron with displacement for a more crystalline look
-        // This still works with the physics system but looks more interesting
-        const geometry = new THREE.IcosahedronGeometry(0.8, 2); // Higher detail
-        
-        // Create a random seed for this particular drone
-        const randomSeed = Math.random() * 100;
-        
-        // Apply distortion to the geometry to create a crystalline form
-        const positionAttribute = geometry.attributes.position;
-        
-        for (let i = 0; i < positionAttribute.count; i++) {
-            const x = positionAttribute.getX(i);
-            const y = positionAttribute.getY(i);
-            const z = positionAttribute.getZ(i);
-            
-            // Apply noise-based displacement for a crystalline effect
-            const noise = 0.2 * Math.sin(5 * x + randomSeed) * Math.cos(3 * y + randomSeed) * Math.sin(2 * z);
-            
-            // Keep the core shape but add the noise
-            positionAttribute.setX(i, x * (1.0 + noise));
-            positionAttribute.setY(i, y * (1.0 + noise));
-            positionAttribute.setZ(i, z * (1.0 + noise));
+        // If model isn't loaded yet, create a placeholder mesh
+        if (!this.modelCache.enemyDrone) {
+            console.warn("Enemy model not loaded yet - using temporary placeholder");
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+            return { geometry, material, isPlaceholder: true };
         }
         
-        // Apply the changes
-        positionAttribute.needsUpdate = true;
+        // Clone the model to avoid shared instance issues
+        const model = this.modelCache.enemyDrone.clone();
         
-        // Create a glowing, ethereal material with shimmering effect
-        // Randomly choose one of three color schemes for variety
-        const colorScheme = Math.floor(Math.random() * 3);
-        let mainColor, emissiveColor, specularColor;
+        // Get the visual variant if it exists on the entity being processed
+        let visualVariant = 0;
+        if (this.currentEntity && this.currentEntity.visualVariant !== undefined) {
+            visualVariant = this.currentEntity.visualVariant;
+        }
         
-        switch (colorScheme) {
-            case 0: // Blue/cyan
-                mainColor = 0x00ccff;
-                emissiveColor = 0x0088ff;
-                specularColor = 0xaaffff;
+        // Extended color palette with 10 options instead of just 3
+        const colorPalette = [
+            { main: 0x00ccff, emissive: new THREE.Color(0x0088ff) }, // Blue/cyan
+            { main: 0x8866ff, emissive: new THREE.Color(0x6633ff) }, // Purple/blue
+            { main: 0x00ffcc, emissive: new THREE.Color(0x00bb99) }, // Teal/green
+            { main: 0xff3366, emissive: new THREE.Color(0xcc1144) }, // Red/pink
+            { main: 0xffaa00, emissive: new THREE.Color(0xcc8800) }, // Orange/gold
+            { main: 0x66ff33, emissive: new THREE.Color(0x44cc11) }, // Lime/green
+            { main: 0xff99ff, emissive: new THREE.Color(0xcc66cc) }, // Pink/magenta
+            { main: 0xffff33, emissive: new THREE.Color(0xcccc11) }, // Yellow
+            { main: 0x3366ff, emissive: new THREE.Color(0x1144cc) }, // Deep blue
+            { main: 0xff3333, emissive: new THREE.Color(0xcc1111) }  // Deep red
+        ];
+        
+        // Randomly choose from the extended color palette
+        const colorIndex = Math.floor(Math.random() * colorPalette.length);
+        const selectedColor = colorPalette[colorIndex];
+        
+        // Apply visual effects based on variant type
+        let emissiveIntensity = 1.0;
+        let opacity = 1.0;
+        let additionalEffects = false;
+        
+        switch (visualVariant) {
+            case 0: // Normal
+                emissiveIntensity = 1.0 + (Math.random() * 0.5); // 1.0-1.5
                 break;
-            case 1: // Purple/blue
-                mainColor = 0x8866ff;
-                emissiveColor = 0x6633ff;
-                specularColor = 0xccaaff;
+                
+            case 1: // Damaged - flickering effect, darker colors
+                emissiveIntensity = 0.5 + (Math.sin(Date.now() * 0.01) * 0.3); // 0.2-0.8, flickering
+                // Darken color
+                selectedColor.emissive.multiplyScalar(0.7);
+                // Add damage texturing (simulated with partial transparency)
+                opacity = 0.85;
                 break;
-            case 2: // Teal/green
-                mainColor = 0x00ffcc;
-                emissiveColor = 0x00bb99;
-                specularColor = 0xaaffee;
+                
+            case 2: // Elite - brighter, pulsing glow
+                emissiveIntensity = 2.0 + (Math.sin(Date.now() * 0.003) * 0.5); // 1.5-2.5, slow pulse
+                // Make more vibrant
+                selectedColor.emissive.multiplyScalar(1.2);
+                additionalEffects = true;
+                break;
+                
+            case 3: // Shielded - shimmer effect with interference patterns
+                emissiveIntensity = 1.5;
+                // Shield shimmer effect (simulated with color modulation)
+                const shieldPhase = Date.now() * 0.001;
+                const shimmerValue = 0.8 + (Math.sin(shieldPhase) * 0.2);
+                selectedColor.emissive.r *= shimmerValue;
+                selectedColor.emissive.g *= 1 + (1 - shimmerValue);
+                selectedColor.emissive.b *= 1 + (Math.cos(shieldPhase) * 0.2);
                 break;
         }
         
-        // Create the material with the selected color scheme
-        const material = new THREE.MeshPhongMaterial({
-            color: mainColor,
-            emissive: emissiveColor,
-            emissiveIntensity: 2.0,
-            specular: specularColor,
-            shininess: 150,
-            transparent: true,
-            opacity: 0.9,
-            side: THREE.DoubleSide,
-            flatShading: true
+        // Apply colors and effects to the model
+        model.traverse((child) => {
+            if (child.isMesh && child.material) {
+                // Clone material to avoid shared materials affecting other drones
+                child.material = child.material.clone(); 
+                
+                // Apply main color and emissive effect
+                child.material.color = new THREE.Color(selectedColor.main);
+                child.material.emissive = selectedColor.emissive;
+                child.material.emissiveIntensity = emissiveIntensity;
+                
+                // Apply opacity if needed
+                if (opacity < 1.0) {
+                    child.material.transparent = true;
+                    child.material.opacity = opacity;
+                }
+                
+                // Apply additional effects for elite enemies
+                if (additionalEffects) {
+                    // Add higher shininess for elite enemies
+                    if (child.material.shininess !== undefined) {
+                        child.material.shininess = 100;
+                    }
+                    
+                    // Add env map if supported by the material type
+                    if (child.material.envMap !== undefined) {
+                        // Not creating real env maps here since that would require additional resources
+                        // In a full implementation, we'd add a cube texture
+                        child.material.envMapIntensity = 0.8;
+                    }
+                }
+            }
         });
         
-        console.log(`Spectral drone mesh created with color scheme ${colorScheme}`);
+        // Add any variant-specific visual enhancements to the model
+        if (visualVariant === 2) { // Elite
+            // For elites, we could add extra mesh elements to show their status
+            // Here we'll add a simple halo effect using a ring geometry
+            try {
+                const haloGeometry = new THREE.RingGeometry(1.2, 1.5, 16);
+                const haloMaterial = new THREE.MeshBasicMaterial({
+                    color: selectedColor.main,
+                    transparent: true,
+                    opacity: 0.6,
+                    side: THREE.DoubleSide,
+                    blending: THREE.AdditiveBlending
+                });
+                
+                const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+                halo.rotation.x = Math.PI / 2; // Make it horizontal
+                model.add(halo);
+                
+                // Add animation update handler
+                halo.userData.update = function(delta) {
+                    halo.rotation.z += delta * 0.5; // Slow rotation
+                    
+                    // Pulse size
+                    const pulseScale = 1 + 0.2 * Math.sin(Date.now() * 0.002);
+                    halo.scale.set(pulseScale, pulseScale, pulseScale);
+                };
+            } catch (error) {
+                console.error("Failed to create elite halo effect:", error);
+            }
+        } else if (visualVariant === 3) { // Shielded
+            // For shielded enemies, add a translucent shield sphere
+            try {
+                const shieldGeometry = new THREE.SphereGeometry(1.1, 16, 12);
+                const shieldMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xaaddff,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide,
+                    blending: THREE.AdditiveBlending,
+                    wireframe: false
+                });
+                
+                const shield = new THREE.Mesh(shieldGeometry, shieldMaterial);
+                model.add(shield);
+                
+                // Add animation update handler
+                shield.userData.update = function(delta) {
+                    // Subtle pulsing effect
+                    const pulseScale = 1 + 0.05 * Math.sin(Date.now() * 0.003);
+                    shield.scale.set(pulseScale, pulseScale, pulseScale);
+                    
+                    // Shimmer effect on opacity
+                    shield.material.opacity = 0.2 + 0.1 * Math.sin(Date.now() * 0.002);
+                };
+            } catch (error) {
+                console.error("Failed to create shield effect:", error);
+            }
+        }
         
-        return {
-            geometry: geometry,
-            material: material
-        };
+        console.log(`Enemy drone model created with color #${selectedColor.main.toString(16)} and variant ${visualVariant}`);
+        
+        return { model, isGLTF: true };
+    }
+
+    /**
+     * Start monitoring the spawn system health
+     */
+    startSpawnMonitoring() {
+        // Set up an interval to check spawn system health
+        this.spawnMonitorInterval = setInterval(() => {
+            this.checkSpawnSystemHealth();
+        }, 10000); // Check every 10 seconds
+        
+        console.log("Spawn system monitoring started");
+    }
+     
+    /**
+     * Check the health of the spawn system
+     */
+    checkSpawnSystemHealth() {
+        const now = Date.now();
+        const timeSinceLastSpawn = (now - this.lastSpawnTime) / 1000; // in seconds
+        
+        console.log(`Spawn system health check: ${this.enemies.size}/${this.maxEnemies} enemies, ${timeSinceLastSpawn.toFixed(1)}s since last spawn`);
+        
+        // If no spawns have happened in a while and we're below max enemies, something might be wrong
+        if (timeSinceLastSpawn > this.spawnInterval * 3 && this.enemies.size < this.maxEnemies) {
+            console.warn("Spawn system appears stuck! Performing recovery...");
+            
+            // Recover the spawn system
+            this.enemies.clear(); // Reset tracked enemies
+            this.generateSpawnPoints(); // Regenerate spawn points
+            this.spawnTimer = this.spawnInterval; // Force spawn soon
+            
+            // Validate enemy references
+            this.validateEnemyReferences();
+            
+            console.log("Spawn system recovery completed");
+        }
+    }
+
+    /**
+     * Clear all tracked enemies
+     */
+    clearAllEnemies() {
+        // Log the current count
+        console.log(`Clearing all enemies. Current count: ${this.enemies.size}`);
+        
+        // Clear the enemies Set
+        this.enemies.clear();
+        
+        // Verify
+        console.log(`After clearing, enemy count: ${this.enemies.size}`);
     }
 
     /**

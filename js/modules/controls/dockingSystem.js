@@ -11,8 +11,8 @@ export class DockingSystem {
         
         // Preemptively set a safe undocking position
         if (this.spaceship && this.spaceship.undockLocation && this.mothership) {
-            // Position between mothership and sun, but much closer to mothership
-            this.spaceship.undockLocation.set(0, 4000, 0);
+            // Position in the middle of the mothership
+            this.spaceship.undockLocation.set(0, 10000, 0);
         }
         
         console.log("Initializing docking system, ship is " + (this.isDocked ? "docked" : "undocked"));

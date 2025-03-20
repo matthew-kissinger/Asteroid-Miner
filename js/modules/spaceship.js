@@ -66,7 +66,7 @@ export class Spaceship {
         this.scanRange = 1000; // Base scanner range
         
         // Position where ship should undock to - moved further away from the sun
-        this.undockLocation = new THREE.Vector3(0, 1500, 0); // Moved further from sun
+        this.undockLocation = new THREE.Vector3(0, 10000, 0); // Middle of the mothership
         
         console.log("Creating spaceship...");
         this.createSpaceship();
