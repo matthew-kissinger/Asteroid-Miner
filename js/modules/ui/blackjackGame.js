@@ -102,7 +102,6 @@ export class BlackjackGame {
             this.gameUI.style.maxWidth = '600px';
             this.gameUI.style.height = 'auto';
             this.gameUI.style.maxHeight = '85vh'; // Slightly reduced to ensure buttons are visible
-            this.gameUI.style.paddingBottom = '70px'; // Add padding for the return button
         } else {
             this.gameUI.style.width = '900px';
             this.gameUI.style.height = '650px';
@@ -612,8 +611,10 @@ export class BlackjackGame {
         
         this.gameUI.appendChild(gameArea);
         
-        // Setup event listeners
-        this.setupEventListeners();
+        document.body.appendChild(this.gameUI);
+        
+        // Set initial button states
+        this.updateControls();
     }
     
     /**
@@ -668,13 +669,12 @@ export class BlackjackGame {
     hide() {
         if (this.gameUI) {
             this.gameUI.style.display = 'none';
-        }
-        
-        this.audio.playSound('boink');
-        // Show the mothership interface when exiting blackjack
-        const mothershipUI = document.getElementById('mothership-ui');
-        if (mothershipUI) {
-            mothershipUI.style.display = 'block';
+            this.audio.playSound('boink');
+            // Show the mothership interface when exiting blackjack
+            const mothershipUI = document.getElementById('mothership-ui');
+            if (mothershipUI) {
+                mothershipUI.style.display = 'block';
+            }
         }
     }
     

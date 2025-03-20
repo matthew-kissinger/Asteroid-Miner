@@ -35,7 +35,6 @@ export class StarMap {
             starMap.style.width = '95%';
             starMap.style.height = '85vh'; // Reduced to ensure the button is visible
             starMap.style.maxHeight = '700px';
-            starMap.style.paddingBottom = '70px'; // Add padding for the return button
         } else {
             starMap.style.width = '900px';
             starMap.style.height = '700px';
@@ -161,7 +160,7 @@ export class StarMap {
         // Close button
         const closeButton = document.createElement('button');
         closeButton.id = 'close-star-map';
-        closeButton.textContent = 'CLOSE MAP';
+        closeButton.textContent = 'RETURN TO MOTHERSHIP';
         closeButton.style.width = '100%';
         closeButton.style.padding = this.isMobile ? '15px' : '12px';
         closeButton.style.marginTop = '20px';
