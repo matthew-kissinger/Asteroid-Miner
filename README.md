@@ -4,8 +4,6 @@ A 3D space mining simulation game you can play directly in your browser.
 
 **[► Play Now](https://matthew-kissinger.github.io/Asteroid-Miner/)**
 
-![Solar System Asteroid Miner](https://matthew-kissinger.github.io/Asteroid-Miner/screenshot.jpg)
-
 ## Overview
 
 Navigate the cosmos in your mining vessel, extract valuable resources from asteroids, and trade them at the mothership to upgrade your ship. Explore multiple star systems, each with unique resources and challenges.
