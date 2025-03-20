@@ -23,9 +23,9 @@ export class EnemySystem extends System {
         this.enemies = new Set();
         
         // Enemy spawn parameters - adjusted for more frequent spawning
-        this.maxEnemies = 8;           // Allow more enemies to spawn
+        this.maxEnemies = 100;           // Allow more enemies to spawn
         this.spawnTimer = 0;           // Timer since last spawn
-        this.spawnInterval = 3;        // Seconds between spawns (reduced from 10)
+        this.spawnInterval = 1;        // Seconds between spawns (reduced from 10)
         this.spawnPoints = [];         // Will be populated with potential spawn points
         this.lastSpawnTime = Date.now(); // Track the last successful spawn time
         

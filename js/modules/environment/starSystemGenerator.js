@@ -16,6 +16,19 @@ export class StarSystemGenerator {
             'Peaceful'
         ];
         
+        // Available skybox textures for non-Solar systems
+        this.skyboxTextures = [
+            './assets/s1.jpg',
+            './assets/s2.jpg',
+            './assets/s3.jpg',
+            './assets/s4.jpg',
+            './assets/s5.jpg',
+            './assets/s6.jpg',
+            './assets/s7.jpg',
+            './assets/s8.jpg',
+            './assets/s9.jpg'
+        ];
+        
         // Resource distribution by star type
         this.resourceDistribution = {
             'O': { iron: 0.3, gold: 0.4, platinum: 0.3 }, // Hot blue stars - balanced
@@ -79,7 +92,9 @@ export class StarSystemGenerator {
             skyboxParams: {
                 starDensity: 1.0,
                 nebulaDensity: 0.5,
-                color: 0xFFFFFF
+                color: 0xFFFFFF,
+                texturePath: './assets/2k_stars_milky_way.jpg', // Default Milky Way texture
+                brightness: 1.0 // Full brightness for Solar System
             },
             resourceMultipliers: {
                 iron: 1.0, 
@@ -104,6 +119,9 @@ export class StarSystemGenerator {
             // Calculate resource distribution based on star class and classification
             const resourceMult = this.calculateResourceMultipliers(starClass, classification);
             
+            // Select a random skybox texture
+            const skyboxTexture = this.getRandomSkyboxTexture();
+            
             // Create the system
             const system = {
                 id: id,
@@ -120,13 +138,20 @@ export class StarSystemGenerator {
                 skyboxParams: {
                     starDensity: this.getRandomFloat(0.7, 1.5),
                     nebulaDensity: this.getRandomFloat(0.3, 1.2),
-                    color: this.getSkyboxColorFromClass(starClass)
+                    color: this.getSkyboxColorFromClass(starClass),
+                    texturePath: skyboxTexture,
+                    brightness: 0.8 // Changed from 0.5 to 0.8
                 },
                 resourceMultipliers: resourceMult
             };
             
             this.systems[id] = system;
         }
+    }
+    
+    // Get a random skybox texture for non-Solar systems
+    getRandomSkyboxTexture() {
+        return this.skyboxTextures[this.getRandomInt(0, this.skyboxTextures.length - 1)];
     }
     
     // Create connections between systems
@@ -231,10 +256,24 @@ export class StarSystemGenerator {
             console.log("Player is docked during interstellar travel");
         }
         
-        // Log Solar System params to help track any unexpected changes
-        if (this.systems['Solar System']) {
-            const solarParams = this.systems['Solar System'].skyboxParams;
-            console.log(`Solar System skybox params before travel: color=${solarParams.color.toString(16)}, starDensity=${solarParams.starDensity}, nebulaDensity=${solarParams.nebulaDensity}`);
+        // Log current system params
+        if (this.systems[this.currentSystem]) {
+            const currentParams = this.systems[this.currentSystem].skyboxParams;
+            console.log(`${this.currentSystem} skybox params before travel: 
+                         color=${currentParams.color.toString(16)}, 
+                         starDensity=${currentParams.starDensity}, 
+                         nebulaDensity=${currentParams.nebulaDensity}, 
+                         texture=${currentParams.texturePath}`);
+        }
+        
+        // Log target system params
+        if (this.systems[targetSystemId]) {
+            const targetParams = this.systems[targetSystemId].skyboxParams;
+            console.log(`Traveling to ${targetSystemId} with skybox params: 
+                         color=${targetParams.color.toString(16)}, 
+                         starDensity=${targetParams.starDensity}, 
+                         nebulaDensity=${targetParams.nebulaDensity}, 
+                         texture=${targetParams.texturePath}`);
         }
         
         // Set the new current system

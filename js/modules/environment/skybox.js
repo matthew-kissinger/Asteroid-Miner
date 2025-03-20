@@ -13,11 +13,16 @@ export class Skybox {
         this.milkyWayTexture = this.textureLoader.load('./assets/2k_stars_milky_way.jpg');
         this.milkyWayTexture.encoding = THREE.sRGBEncoding;
         
+        // Store additional skybox textures
+        this.skyboxTextures = {};
+        
         // Store initial parameters for the Solar System
         this.solarSystemParams = {
             starDensity: 1.0,
             nebulaDensity: 0.5,
-            color: 0xFFFFFF
+            color: 0xFFFFFF,
+            texturePath: './assets/2k_stars_milky_way.jpg',
+            brightness: 1.0 // Default brightness for Solar System
         };
         
         this.createProceduralSkybox(this.solarSystemParams);
@@ -51,23 +56,51 @@ export class Skybox {
         this.createProceduralSkybox(params);
     }
     
+    // Load texture if needed and return it
+    getTexture(texturePath) {
+        // Use default Milky Way texture if none specified
+        if (!texturePath) {
+            return this.milkyWayTexture;
+        }
+        
+        // Return Milky Way texture for the default Solar System texture
+        if (texturePath === './assets/2k_stars_milky_way.jpg') {
+            return this.milkyWayTexture;
+        }
+        
+        // Load the texture if not already loaded
+        if (!this.skyboxTextures[texturePath]) {
+            console.log(`Loading new skybox texture: ${texturePath}`);
+            this.skyboxTextures[texturePath] = this.textureLoader.load(texturePath);
+            this.skyboxTextures[texturePath].encoding = THREE.sRGBEncoding;
+        }
+        
+        return this.skyboxTextures[texturePath];
+    }
+    
     createProceduralSkybox(params = {}) {
         // Apply system parameters if provided
         let starDensity = params?.starDensity || 1.0;
         let nebulaDensity = params?.nebulaDensity || 0.5;
         let skyboxColor = params?.color || 0x000000;
+        let brightness = params?.brightness !== undefined ? params.brightness : 1.0;
         const size = 320000; // Very large size to contain entire game world (4x original)
+        const texturePath = params?.texturePath || './assets/2k_stars_milky_way.jpg';
         
-        console.log(`Creating enhanced skybox with star density: ${starDensity}, nebula density: ${nebulaDensity}, color: 0x${skyboxColor.toString(16)}`);
+        console.log(`Creating enhanced skybox with star density: ${starDensity}, nebula density: ${nebulaDensity}, color: 0x${skyboxColor.toString(16)}, texture: ${texturePath}, brightness: ${brightness}`);
         
-        // Create advanced shader material for skybox with Milky Way texture
+        // Get the appropriate texture
+        const skyboxTexture = this.getTexture(texturePath);
+        
+        // Create advanced shader material for skybox with texture
         const skyMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: this.time || 0 },
-                milkyWayTexture: { value: this.milkyWayTexture },
+                milkyWayTexture: { value: skyboxTexture },
                 starDensity: { value: starDensity },
                 nebulaDensity: { value: nebulaDensity },
-                skyColor: { value: new THREE.Color(skyboxColor) }
+                skyColor: { value: new THREE.Color(skyboxColor) },
+                brightness: { value: brightness }
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -85,6 +118,7 @@ export class Skybox {
                 uniform float starDensity;
                 uniform float nebulaDensity;
                 uniform vec3 skyColor;
+                uniform float brightness;
                 
                 varying vec2 vUv;
                 varying vec3 vPosition;
@@ -92,16 +126,16 @@ export class Skybox {
                 void main() {
                     // Sample the Milky Way texture with adjusted brightness
                     vec4 milkyWay = texture2D(milkyWayTexture, vUv);
-                    milkyWay.rgb *= 1.5; // Slightly reduced Milky Way brightness
+                    milkyWay.rgb *= 1.5 * brightness; // Apply brightness factor
                     
                     // Use only the Milky Way texture without procedural stars
-                    vec3 finalColor = milkyWay.rgb * nebulaDensity * 1.2;
+                    vec3 finalColor = milkyWay.rgb * nebulaDensity * 1.2 * brightness;
                     
                     // Reduced ambient light
                     finalColor += vec3(0.05);
                     
                     // Subtle color tint
-                    finalColor = mix(finalColor, skyColor * 1.2, 0.1);
+                    finalColor = mix(finalColor, skyColor * 1.2 * brightness, 0.1);
                     
                     // Apply gamma correction for more natural brightness
                     finalColor = pow(finalColor, vec3(0.9));
@@ -125,7 +159,7 @@ export class Skybox {
         // Store material for updates
         this.skyMaterial = skyMaterial;
         
-        console.log("Enhanced skybox created with Milky Way texture");
+        console.log("Enhanced skybox created with texture");
     }
     
     update(deltaTime = 0.016, camera) {
