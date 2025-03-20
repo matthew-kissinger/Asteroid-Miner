@@ -161,7 +161,7 @@ export class StarMap {
         // Close button
         const closeButton = document.createElement('button');
         closeButton.id = 'close-star-map';
-        closeButton.textContent = 'RETURN TO MOTHERSHIP';
+        closeButton.textContent = 'CLOSE MAP';
         closeButton.style.width = '100%';
         closeButton.style.padding = this.isMobile ? '15px' : '12px';
         closeButton.style.marginTop = '20px';
@@ -182,51 +182,6 @@ export class StarMap {
         }
         
         starMap.appendChild(closeButton);
-        
-        // Add a dedicated fixed position return button for mobile
-        if (this.isMobile) {
-            const fixedReturnBtn = document.createElement('button');
-            fixedReturnBtn.textContent = 'RETURN TO MOTHERSHIP';
-            fixedReturnBtn.style.position = 'fixed';
-            fixedReturnBtn.style.bottom = '10px';
-            fixedReturnBtn.style.left = '50%';
-            fixedReturnBtn.style.transform = 'translateX(-50%)';
-            fixedReturnBtn.style.width = '90%';
-            fixedReturnBtn.style.padding = '15px';
-            fixedReturnBtn.style.backgroundColor = '#30cfd0';
-            fixedReturnBtn.style.color = '#000';
-            fixedReturnBtn.style.border = 'none';
-            fixedReturnBtn.style.borderRadius = '5px';
-            fixedReturnBtn.style.fontFamily = 'Courier New, monospace';
-            fixedReturnBtn.style.fontWeight = 'bold';
-            fixedReturnBtn.style.fontSize = '16px';
-            fixedReturnBtn.style.zIndex = '1600';
-            fixedReturnBtn.style.cursor = 'pointer';
-            fixedReturnBtn.style.boxShadow = '0 0 15px rgba(48, 207, 208, 0.7)';
-            
-            fixedReturnBtn.addEventListener('click', () => {
-                if (window.game && window.game.audio) {
-                    window.game.audio.playSound('boink');
-                }
-                this.hide();
-            });
-            
-            // Add touch event for mobile with better audio handling
-            fixedReturnBtn.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                if (window.game && window.game.audio) {
-                    console.log("Mobile: Playing sound on star map fixed return button");
-                    window.game.audio.playSound('boink');
-                    // Give time for the sound to start before hiding
-                    setTimeout(() => this.hide(), 50);
-                } else {
-                    this.hide();
-                }
-            });
-            
-            document.body.appendChild(fixedReturnBtn);
-            this.fixedReturnBtn = fixedReturnBtn; // Store reference for later use
-        }
         
         // Add to DOM
         document.body.appendChild(starMap);
@@ -681,11 +636,6 @@ export class StarMap {
         if (starMap) {
             starMap.style.display = 'block';
             this.isVisible = true;
-            
-            // Show the fixed return button if it exists
-            if (this.isMobile && this.fixedReturnBtn) {
-                this.fixedReturnBtn.style.display = 'block';
-            }
         }
     }
     
@@ -695,11 +645,6 @@ export class StarMap {
         if (starMap) {
             starMap.style.display = 'none';
             this.isVisible = false;
-            
-            // Hide the fixed return button if it exists
-            if (this.isMobile && this.fixedReturnBtn) {
-                this.fixedReturnBtn.style.display = 'none';
-            }
             
             // Show the mothership UI when returning from star map
             if (this.mothershipInterface) {

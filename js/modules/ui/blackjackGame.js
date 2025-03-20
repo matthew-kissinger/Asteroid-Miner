@@ -612,53 +612,8 @@ export class BlackjackGame {
         
         this.gameUI.appendChild(gameArea);
         
-        // Add a dedicated "Return to Mothership" button at the bottom for mobile
-        if (this.isMobile) {
-            const returnBtn = document.createElement('button');
-            returnBtn.textContent = 'RETURN TO MOTHERSHIP';
-            returnBtn.style.position = 'fixed';
-            returnBtn.style.bottom = '10px';
-            returnBtn.style.left = '50%';
-            returnBtn.style.transform = 'translateX(-50%)';
-            returnBtn.style.width = '90%';
-            returnBtn.style.padding = '15px';
-            returnBtn.style.backgroundColor = '#33aaff';
-            returnBtn.style.color = '#000';
-            returnBtn.style.border = 'none';
-            returnBtn.style.borderRadius = '5px';
-            returnBtn.style.fontFamily = 'Courier New, monospace';
-            returnBtn.style.fontWeight = 'bold';
-            returnBtn.style.fontSize = '16px';
-            returnBtn.style.zIndex = '1100';
-            returnBtn.style.cursor = 'pointer';
-            returnBtn.style.boxShadow = '0 0 15px rgba(51, 170, 255, 0.7)';
-            
-            returnBtn.addEventListener('click', () => {
-                this.audio.playSound('boink');
-                this.hide();
-            });
-            
-            // Add touch event for mobile with better audio handling
-            returnBtn.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                // Ensure audio context is resumed
-                if (this.audio) {
-                    console.log("Mobile: Attempting to play sound on return button press");
-                    this.audio.playSound('boink');
-                    // Give time for the sound to start before hiding
-                    setTimeout(() => this.hide(), 50);
-                } else {
-                    this.hide();
-                }
-            });
-            
-            this.gameUI.appendChild(returnBtn);
-        }
-        
-        document.body.appendChild(this.gameUI);
-        
-        // Set initial button states
-        this.updateControls();
+        // Setup event listeners
+        this.setupEventListeners();
     }
     
     /**
@@ -713,12 +668,13 @@ export class BlackjackGame {
     hide() {
         if (this.gameUI) {
             this.gameUI.style.display = 'none';
-            this.audio.playSound('boink');
-            // Show the mothership interface when exiting blackjack
-            const mothershipUI = document.getElementById('mothership-ui');
-            if (mothershipUI) {
-                mothershipUI.style.display = 'block';
-            }
+        }
+        
+        this.audio.playSound('boink');
+        // Show the mothership interface when exiting blackjack
+        const mothershipUI = document.getElementById('mothership-ui');
+        if (mothershipUI) {
+            mothershipUI.style.display = 'block';
         }
     }
     
