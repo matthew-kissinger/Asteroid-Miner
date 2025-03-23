@@ -27,7 +27,7 @@ export class ApiClient {
         }
         
         // For production - Use the Heroku app URL
-        return 'https://asteroid-miner-api-4319f69205c7.herokuapp.com';
+        return 'https://aminer-backend-b435530d633e.herokuapp.com';
     }
     
     // Check if token is valid and not expired
