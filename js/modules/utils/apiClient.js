@@ -27,7 +27,7 @@ export class ApiClient {
         }
         
         // For production - Use the Heroku app URL
-        return 'https://aminer-backend-b435530d633e.herokuapp.com';
+        return 'https://aminer-skybox-generator-833fe937a945.herokuapp.com';
     }
     
     // Check if token is valid and not expired
