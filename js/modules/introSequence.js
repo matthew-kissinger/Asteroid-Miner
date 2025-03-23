@@ -180,10 +180,20 @@ export class IntroSequence {
             
             // Store the sound
             this.introSounds.warp = {
+                lastPlayTime: 0, // Track when we last played this sound
                 play: () => {
                     if (this.audio && this.audio.muted) return;
                     
                     const now = Tone.now();
+                    
+                    // Prevent playing if it was played too recently (within 0.1 seconds)
+                    if (now - this.introSounds.warp.lastPlayTime < 0.1) {
+                        console.log("Preventing too rapid warp sound playback");
+                        return;
+                    }
+                    
+                    // Update last play time
+                    this.introSounds.warp.lastPlayTime = now;
                     
                     // Set volume - reduced by 40%
                     const volumeLevel = this.audio ? this.audio.sfxVolume * 0.36 : 0.18;
@@ -656,6 +666,8 @@ export class IntroSequence {
         
         // Play warp sound
         if (this.introSounds.warp) {
+            // Initialize lastPlayTime for the first play
+            this.introSounds.warp.lastPlayTime = Tone.now() - 1; // Ensure it's been at least 1 second
             this.introSounds.warp.play();
         }
     }
@@ -929,8 +941,8 @@ export class IntroSequence {
             if (moveProgress > 0.6 && moveProgress < 0.63) {
                 this.flashOverlay(0.4);
                 
-                // Play warp sound for re-entry
-                if (this.introSounds.warp) {
+                // Play warp sound for re-entry but only exactly once at 0.61
+                if (this.introSounds.warp && Math.abs(moveProgress - 0.61) < 0.01) {
                     this.introSounds.warp.play();
                 }
             }
