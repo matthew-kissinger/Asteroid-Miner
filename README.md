@@ -11,27 +11,19 @@ Navigate the cosmos in your mining vessel, extract valuable resources from aster
 ## How to Play
 
 1. **Controls:**
-   - **WASD**: Move forward, left, backward, right
-   - **Mouse**: Look/aim
-   - **Left Mouse Button**: Activate mining laser
-   - **Right Mouse Button**: Fire weapons
-   - **Shift**: Boost (faster movement, uses more fuel)
-   - **Space**: Dock with mothership (when in range)
-   - **M**: Toggle audio
-   - **ESC**: Release mouse / Pause game
-   - **Tab**: View controls
+   - see in game menu
 
-2. **Mining Resources:**
-   - Approach asteroids and use your mining laser (left click)
+3. **Mining Resources:**
+   - Approach asteroids and use your mining laser
    - Different resources have different values and mining times
    - Watch your cargo capacity as you mine
 
-3. **Upgrading Your Ship:**
+4. **Upgrading Your Ship:**
    - Return to the mothership and dock (press Space when near)
    - Sell resources for credits
    - Purchase upgrades to improve your ship's capabilities
 
-4. **Exploring the Universe:**
+5. **Exploring the Universe:**
    - Travel between star systems via the star map at the mothership
    - Each system has different resource distributions
    - Watch your fuel levels when planning longer journeys
