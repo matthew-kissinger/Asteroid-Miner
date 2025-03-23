@@ -12,6 +12,8 @@ import { UI } from './modules/ui.js';
 import { AudioManager } from './modules/audio.js';
 import { Combat } from './modules/combat.js';
 import { MessageBus } from './core/messageBus.js';
+import { IntroSequence } from './modules/introSequence.js';
+import { DifficultyManager } from './core/difficultyManager.js';
 
 // Global vector pool for reusing vector objects
 window.vectorPool = {
@@ -116,14 +118,13 @@ class Game {
             console.log("Initializing settings...");
             this.ui.initializeSettings(this);
             
-            // Initial camera positioning
-            this.camera.position.set(0, 1500, 0);
-        
-        // Game state
+            // Game state
             this.isGameOver = false;
             this.lastUpdateTime = performance.now();
             this.frameCount = 0;
             this.currentFPS = 0;
+            this.introSequenceActive = false; // Flag to prevent player control during intro
+            this.gameTime = 0; // Track total game time in seconds
             
             // Frame rate cap (can be overridden by settings)
             this.frameRateCap = 0; // 0 means unlimited
@@ -134,8 +135,18 @@ class Game {
                 console.log(`Applied frame rate cap from settings: ${this.frameRateCap}`);
             }
             
-            // Start with docked state for initial tutorial/intro
-            this.startDocked();
+            // Time tracking for frame rate cap and FPS calculation
+            this.lastFrameTime = 0;
+            this.actualFrameTime = 0;
+            this.frameStartTime = 0;
+            
+            // FPS averaging for smoother display
+            this.fpsBuffer = [];
+            this.fpsBufferSize = 15; // Smaller buffer for more responsive updates
+            
+            // Initialize difficulty manager 
+            console.log("Initializing difficulty manager...");
+            this.initializeDifficultyManager();
             
             // Register event handlers
             this.setupEventHandlers();
@@ -143,6 +154,27 @@ class Game {
             // Initialize audio after everything else is set up
             this.audio.initialize().then(() => {
                 console.log("Audio system initialized");
+                
+                // Check if intro has been played before
+                const introPlayed = localStorage.getItem('introPlayed') === 'true';
+                
+                if (introPlayed) {
+                    console.log("Intro already played, starting in docked state");
+                    // Only set initial camera position if we're not doing the intro
+                    this.camera.position.set(0, 1500, 0);
+                    // Only start docked if we've already seen the intro
+                    this.startDocked();
+                } else {
+                    console.log("First time playing, preparing for intro sequence");
+                    // Make sure ship is docked but DON'T show the UI
+                    if (this.spaceship && !this.spaceship.isDocked) {
+                        this.spaceship.dock();
+                    }
+                    // Start intro with a small delay to ensure everything is loaded
+                    setTimeout(() => {
+                        this.startIntroSequence();
+                    }, 500);
+                }
             });
             
             console.log("Game initialization complete");
@@ -451,6 +483,137 @@ class Game {
         }, 500);
     }
     
+    /**
+     * Initialize the intro sequence
+     */
+    initIntroSequence() {
+        console.log("Initializing intro sequence...");
+        
+        // Create intro sequence instance
+        this.introSequence = new IntroSequence(
+            this.scene,
+            this.camera,
+            this.spaceship,
+            this.audio
+        );
+        
+        // Store original camera and player positions
+        this.originalCameraPosition = this.camera.position.clone();
+        this.originalCameraRotation = this.camera.rotation.clone();
+        
+        console.log("Intro sequence initialized");
+    }
+    
+    /**
+     * Start the intro sequence
+     */
+    startIntroSequence() {
+        if (!this.introSequence) {
+            this.initIntroSequence();
+        }
+        
+        console.log("Starting intro sequence...");
+        this.introSequenceActive = true; // Mark intro as active to prevent player control
+        
+        // Freeze all enemies during intro sequence
+        if (this.combat && this.combat.world && this.combat.enemySystem) {
+            console.log("Freezing all enemies for intro sequence");
+            this.combat.enemySystem.freezeAllEnemies();
+        } else if (window.game && window.game.ecsWorld && window.game.ecsWorld.enemySystem) {
+            console.log("Freezing all enemies via global reference for intro sequence");
+            window.game.ecsWorld.enemySystem.freezeAllEnemies();
+        }
+        
+        // Set initial camera position to match intro sequence starting position
+        // This prevents any camera flash from being visible
+        this.camera.position.set(0, 6000, 12000);
+        this.camera.lookAt(30000, 5000, 0);
+        
+        // Disable player controls
+        if (this.controls && this.controls.inputHandler) {
+            this.controls.inputHandler.enabled = false;
+        }
+        
+        // Explicitly hide mothership UI
+        if (this.ui && this.ui.mothershipInterface) {
+            console.log("Explicitly hiding mothership UI before intro sequence");
+            this.ui.mothershipInterface.hideMothershipUI();
+        }
+        
+        // Hide all UI elements
+        if (this.ui) {
+            this.ui.hideUI();
+        }
+        
+        // Make sure player ship is initially hidden
+        if (this.spaceship && this.spaceship.mesh) {
+            this.spaceship.mesh.visible = false;
+        }
+        
+        // Start the sequence with a completion callback
+        this.introSequence.startSequence(() => {
+            this.completeIntroSequence();
+        });
+    }
+    
+    /**
+     * Handle completion of the intro sequence
+     */
+    completeIntroSequence() {
+        console.log("Intro sequence completed - final phase");
+        
+        // Unfreeze all enemies after intro sequence
+        if (this.combat && this.combat.world && this.combat.enemySystem) {
+            console.log("Unfreezing all enemies after intro sequence");
+            this.combat.enemySystem.unfreezeAllEnemies();
+        } else if (window.game && window.game.ecsWorld && window.game.ecsWorld.enemySystem) {
+            console.log("Unfreezing all enemies via global reference after intro sequence");
+            window.game.ecsWorld.enemySystem.unfreezeAllEnemies();
+        }
+        
+        // Explicitly hide mothership UI if it's visible
+        if (this.ui && this.ui.mothershipInterface) {
+            console.log("Explicitly hiding mothership UI after intro sequence");
+            this.ui.mothershipInterface.hideMothershipUI();
+        }
+        
+        // Mark intro as complete - now the player can control the ship/camera
+        this.introSequenceActive = false;
+        
+        // Show all UI elements AFTER marking intro inactive
+        if (this.ui) {
+            console.log("Showing game UI elements after intro completion");
+            this.ui.showUI();
+        }
+        
+        // Make sure the player ship is visible and UNDOCKED
+        if (this.spaceship && this.spaceship.mesh) {
+            this.spaceship.mesh.visible = true;
+            
+            // Force undocked state
+            if (this.spaceship.isDocked) {
+                console.log("Forcing undocked state in completeIntroSequence");
+                this.spaceship.isDocked = false;
+            }
+        }
+        
+        // NOW is when we re-enable player controls (at the very end)
+        if (this.controls && this.controls.inputHandler) {
+            console.log("Re-enabling player controls");
+            this.controls.inputHandler.enabled = true;
+        }
+        
+        // Mark intro as played in local storage
+        localStorage.setItem('introPlayed', 'true');
+        
+        // Emit event for other systems
+        if (window.mainMessageBus) {
+            window.mainMessageBus.publish('intro.completed', {});
+        }
+        
+        console.log("Game starting after intro sequence");
+    }
+    
     setupEventHandlers() {
         // Handle window resize
         window.addEventListener('resize', () => {
@@ -494,6 +657,11 @@ class Game {
         // Update spaceship
         if (this.spaceship.update) {
             this.spaceship.update(deltaTime);
+        }
+        
+        // Update difficulty manager (but not during intro sequence)
+        if (this.difficultyManager && !this.introSequenceActive && !this.spaceship.isDocked) {
+            this.difficultyManager.update(deltaTime);
         }
         
         // Update coordinates in HUD after physics update
@@ -584,6 +752,24 @@ class Game {
         
         // Count frames for performance monitoring
         this.frameCount++;
+        
+        // Update the ECS world with the current delta time - skip during intro sequence
+        if (this.world && !this.introSequenceActive) {
+            this.world.update(deltaTime);
+        } else if (this.world && this.introSequenceActive) {
+            // If intro is active, only update essential systems but not enemy systems
+            // This is a fallback in case freezeAllEnemies() wasn't called or doesn't work
+            if (this.world.entityManager && this.world.systemManager) {
+                for (const system of this.world.systemManager.systems) {
+                    // Skip enemy-related systems during intro
+                    if (system.constructor.name !== 'EnemySystem' && 
+                        system.constructor.name !== 'EnemyAISystem' && 
+                        system.constructor.name !== 'CombatSystem') {
+                        system.update(deltaTime);
+                    }
+                }
+            }
+        }
     }
     
     // Update game sounds based on current game state
@@ -821,6 +1007,53 @@ class Game {
                 clearInterval(this.ui.statsInterval);
                 this.ui.statsInterval = null;
             }
+        }
+        
+        // Add global debug command to trigger intro sequence
+        window.playIntro = () => {
+            if (this.startIntroSequence) {
+                console.log("Manually triggering intro sequence");
+                this.startIntroSequence();
+                return "Playing intro sequence...";
+            }
+            return "Intro sequence not available";
+        };
+    }
+    
+    /**
+     * Initialize difficulty manager when combat system is ready
+     */
+    initializeDifficultyManager() {
+        // Get reference to enemy system directly if available
+        let enemySystem = null;
+        
+        if (this.combat && this.combat.world && this.combat.enemySystem) {
+            enemySystem = this.combat.enemySystem;
+        } else if (this.ecsWorld && this.ecsWorld.enemySystem) {
+            enemySystem = this.ecsWorld.enemySystem;
+        }
+        
+        // Create difficulty manager
+        this.difficultyManager = new DifficultyManager(this, enemySystem);
+        
+        // If enemy system isn't available yet, set up a callback to attach it later
+        if (!enemySystem) {
+            console.log("Enemy system not available yet, will connect later");
+            
+            // Check for combat system initialization
+            const checkForCombat = setInterval(() => {
+                if (this.combat && this.combat.enemySystem) {
+                    console.log("Combat system now available, connecting to difficulty manager");
+                    this.difficultyManager.enemySystem = this.combat.enemySystem;
+                    clearInterval(checkForCombat);
+                } else if (this.ecsWorld && this.ecsWorld.enemySystem) {
+                    console.log("ECS world now available, connecting to difficulty manager");
+                    this.difficultyManager.enemySystem = this.ecsWorld.enemySystem;
+                    clearInterval(checkForCombat);
+                }
+            }, 1000);
+        } else {
+            console.log("Difficulty manager connected to enemy system");
         }
     }
 }

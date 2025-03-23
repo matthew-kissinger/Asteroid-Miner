@@ -12,7 +12,11 @@ import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { MeshComponent } from '../../components/rendering/mesh.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
 import { TrailComponent } from '../../components/rendering/trail.js';
-// GLTFLoader is loaded globally via script tag - no import needed
+
+// Import the new modularized components
+import { EnemyPoolManager } from './enemyPoolManager.js';
+import { EnemySpawner } from './enemySpawner.js';
+import { EnemyLifecycle } from './enemyLifecycle.js';
 
 export class EnemySystem extends System {
     constructor(world) {
@@ -23,27 +27,16 @@ export class EnemySystem extends System {
         // Initialize enemies set
         this.enemies = new Set();
         
-        // Enemy spawn parameters - adjusted for more frequent spawning
+        // Default enemy spawn parameters (will be modified by difficulty scaling)
         this.maxEnemies = 10;           // Allow more enemies to spawn
         this.spawnTimer = 0;           // Timer since last spawn
         this.spawnInterval = 3;        // Seconds between spawns (reduced from 10)
-        this.spawnPoints = [];         // Will be populated with potential spawn points
         this.lastSpawnTime = Date.now(); // Track the last successful spawn time
         
-        // Enemy object pool
-        this.enemyPool = [];
-        
-        // Pool size configuration
-        this.maxPoolSize = 20;
-        
-        // Enemy type configuration
-        this.enemyConfig = {
-            health: 20,
-            damage: 15,
-            speed: 700,
-            spiralAmplitude: 150,
-            spiralFrequency: 2.0
-        };
+        // Initialize the managers for different aspects of enemy handling
+        this.poolManager = new EnemyPoolManager(world);
+        this.spawner = new EnemySpawner(world);
+        this.lifecycle = new EnemyLifecycle(world);
         
         // Track player docked status
         this.playerIsDocked = false;
@@ -58,303 +51,16 @@ export class EnemySystem extends System {
         // Set up event listeners
         this.setupEventListeners();
         
-        // Set up initial spawn points
-        this.generateSpawnPoints();
+        // Initialize with a clean enemy count
+        this.lifecycle.clearAllEnemies(this.enemies);
+        
+        // Force validation to ensure we start with empty tracking
+        this.lifecycle.validateEnemyReferences(this.enemies);
         
         // Start continuous monitoring for spawn health
         this.startSpawnMonitoring();
         
-        // Initialize with a clean enemy count
-        this.clearAllEnemies();
-        
-        // Pre-allocate enemy pool
-        this.preallocateEnemyPool();
-        
-        // Force validation to ensure we start with empty tracking
-        this.validateEnemyReferences();
-        
-        // Model cache
-        this.modelCache = {};
-        
-        // Pre-load models
-        this.loadModels();
-        
         console.log("Enemy system initialized with faster spawn rate and object pooling");
-    }
-    
-    /**
-     * Pre-allocate enemy pool to avoid runtime allocations
-     */
-    preallocateEnemyPool() {
-        // Pre-allocate spectral drones
-        for (let i = 0; i < 10; i++) {
-            const spectralEntity = this.createEnemyEntity();
-            // IMPORTANT: Don't add pooled entities to tracking
-            // The entity will be tracked only when spawned
-            this.enemyPool.push(spectralEntity);
-        }
-        
-        console.log(`Pre-allocated enemy pool with ${this.enemyPool.length} spectral drones`);
-    }
-    
-    /**
-     * Create a basic enemy entity (for pooling)
-     * @returns {Entity} The created enemy entity
-     */
-    createEnemyEntity() {
-        const entity = this.world.createEntity('enemy_spectral');
-        // Add tags but ensure they aren't tracked until spawned
-        entity.addTag('pooled'); // Add 'pooled' tag to mark as inactive
-        
-        // Add basic components
-        entity.addComponent(new TransformComponent());
-        entity.addComponent(new MeshComponent());
-        
-        return entity;
-    }
-    
-    /**
-     * Get an enemy from the pool or create a new one if the pool is empty
-     * @returns {Entity} An enemy entity
-     */
-    getEnemyFromPool() {
-        // Get from pool if available
-        if (this.enemyPool.length > 0) {
-            // Get entity from pool
-            const entity = this.enemyPool.pop();
-            
-            // Double-check this entity isn't already in the active enemies list
-            // (This should never happen, but let's be defensive)
-            if (this.enemies.has(entity.id)) {
-                console.warn(`CRITICAL ERROR: Entity ${entity.id} is in both the pool and active enemies!`);
-                
-                // Remove from active enemies to avoid duplicates
-                this.enemies.delete(entity.id);
-                console.log(`Fixed inconsistency: Removed entity ${entity.id} from active enemies`);
-            }
-            
-            // Verify all pooled entities in enemyPool don't include this entity
-            // This ensures no duplicate references exist in the pool
-            for (let i = 0; i < this.enemyPool.length; i++) {
-                if (this.enemyPool[i].id === entity.id) {
-                    console.warn(`CRITICAL ERROR: Duplicate of entity ${entity.id} found in enemy pool!`);
-                    this.enemyPool.splice(i, 1);
-                    console.log(`Fixed inconsistency: Removed duplicate entity ${entity.id} from enemy pool`);
-                    i--; // Adjust index since we removed an element
-                }
-            }
-            
-            console.log(`Getting entity ${entity.id} from pool. Current tags: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
-            
-            // CRITICAL FIX: Use the proper clearTags method first to completely reset tag state
-            if (entity.clearTags && typeof entity.clearTags === 'function') {
-                entity.clearTags();
-                console.log(`Cleared all tags from entity ${entity.id}`);
-            } else {
-                console.warn(`Entity ${entity.id} missing clearTags method`);
-                // Remove the pooled tag manually at minimum
-                if (entity.hasTag && entity.removeTag) {
-                    if (entity.hasTag('pooled')) {
-                        entity.removeTag('pooled');
-                    }
-                    // Clear any other possible tags
-                    if (entity.hasTag('enemy')) entity.removeTag('enemy');
-                    if (entity.hasTag('spectrals')) entity.removeTag('spectrals');
-                }
-            }
-            
-            // Explicitly reset the tag cache flags
-            if (entity._syncTagCache && typeof entity._syncTagCache === 'function') {
-                entity._syncTagCache();
-                console.log(`Reset tag cache for entity ${entity.id}`);
-            } else {
-                // Direct reset of cache variables
-                if (entity._isEnemy !== undefined) entity._isEnemy = false;
-                if (entity._isPooled !== undefined) entity._isPooled = false;
-            }
-            
-            // Reset any component states that might be problematic
-            const enemyAI = entity.getComponent('EnemyAIComponent');
-            if (enemyAI) {
-                // Reset internal state
-                enemyAI.playerFound = false;
-                enemyAI.timeAlive = 0;
-                enemyAI.spiralPhase = Math.random() * Math.PI * 2; // New random starting phase
-                enemyAI.enabled = true; // Ensure it's enabled
-            }
-            
-            // Verify the entity is clean
-            console.log(`Entity ${entity.id} prepared for reuse. Current tags: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
-            
-            return entity;
-        }
-        
-        // Otherwise create a new one
-        const newEntity = this.createEnemyEntity();
-        console.log(`Created new entity ${newEntity.id} because pool was empty`);
-        return newEntity;
-    }
-    
-    /**
-     * Return an enemy to the pool
-     * @param {Entity} entity Enemy entity
-     */
-    returnEnemyToPool(entity) {
-        // Safeguard against null/undefined entities
-        if (!entity) {
-            console.warn("Attempt to return null/undefined entity to pool");
-            return;
-        }
-        
-        // Get entity ID for consistent logging
-        const entityId = entity.id;
-        
-        // Log entity state for debugging
-        console.log(`Returning entity ${entityId} to pool. Has tags: [${entity.tags ? [...entity.tags] : 'undefined'}]`);
-        
-        // ENHANCED CLEANUP: Multiple checks to ensure entity is removed from enemies tracking
-        // 1. Direct check and remove from tracking Set
-        if (this.enemies.has(entityId)) {
-            this.enemies.delete(entityId);
-            console.log(`Removed entity ${entityId} from enemies tracking`);
-        }
-        
-        // 2. FIRST: Clear ALL tags using the improved clearTags method
-        // This will properly update both the tags Set and the cached flags
-        if (entity.clearTags && typeof entity.clearTags === 'function') {
-            entity.clearTags();
-            console.log(`Cleared all tags from entity ${entityId}`);
-        } else {
-            // Fallback if clearTags is not available
-            console.warn(`No clearTags method on entity ${entityId}, using manual tag removal`);
-            
-            // Manually remove known tags
-            if (entity.hasTag && entity.removeTag) {
-                if (entity.hasTag('enemy')) entity.removeTag('enemy');
-                if (entity.hasTag('spectrals')) entity.removeTag('spectrals');
-                if (entity.hasTag('drone')) entity.removeTag('drone');
-                if (entity.hasTag('frozen')) entity.removeTag('frozen');
-            }
-        }
-        
-        // Only return to pool if it's not full
-        if (this.enemyPool.length < this.maxPoolSize) {
-            // TRAIL CLEANUP: Remove trail component and its visual elements first
-            // This is critical to prevent the trail from persisting after enemy destruction
-            const trailComponent = entity.getComponent('TrailComponent');
-            if (trailComponent) {
-                try {
-                    // Call the onDetached method if it exists to clean up resources
-                    if (typeof trailComponent.onDetached === 'function') {
-                        trailComponent.onDetached();
-                    }
-                    
-                    // Remove from trail system tracking if it exists
-                    if (window.game && window.game.trailSystem) {
-                        window.game.trailSystem.unregisterTrail && 
-                        window.game.trailSystem.unregisterTrail(entityId);
-                    }
-                    
-                    // If the trail has a mesh or points object, remove it from scene
-                    if (trailComponent.trailMesh && trailComponent.trailMesh.parent) {
-                        trailComponent.trailMesh.parent.remove(trailComponent.trailMesh);
-                    }
-                    
-                    // Dispose of geometry and material
-                    if (trailComponent.trailMesh) {
-                        if (trailComponent.trailMesh.geometry) {
-                            trailComponent.trailMesh.geometry.dispose();
-                        }
-                        if (trailComponent.trailMesh.material) {
-                            trailComponent.trailMesh.material.dispose();
-                        }
-                    }
-                    
-                    // Remove the component from the entity
-                    entity.removeComponent('TrailComponent');
-                    console.log(`Removed and cleaned up TrailComponent from entity ${entityId}`);
-                } catch (error) {
-                    console.error(`Error cleaning up trail for entity ${entityId}:`, error);
-                }
-            }
-            
-            // Reset the entity's transform
-            const transform = entity.getComponent('TransformComponent');
-            if (transform) {
-                transform.position.set(0, 0, 0);
-                transform.rotation.set(0, 0, 0);
-                transform.scale.set(1, 1, 1);
-            }
-            
-            // Reset health if present
-            const health = entity.getComponent('HealthComponent');
-            if (health) {
-                health.health = 0;
-                health.isDestroyed = true;
-            }
-            
-            // Disable AI component if present
-            const enemyAI = entity.getComponent('EnemyAIComponent');
-            if (enemyAI) {
-                enemyAI.enabled = false;
-                // Reset internal state variables to prevent stale behavior
-                enemyAI.playerFound = false;
-                enemyAI.timeAlive = 0;
-                enemyAI.spiralPhase = Math.random() * Math.PI * 2; // New random starting phase
-            }
-            
-            // Clean up and hide mesh
-            const meshComponent = entity.getComponent('MeshComponent');
-            if (meshComponent && meshComponent.mesh) {
-                try {
-                    // Remove from scene if it has a parent
-                    if (meshComponent.mesh.parent) {
-                        meshComponent.mesh.parent.remove(meshComponent.mesh);
-                    }
-                    
-                    // Make the mesh invisible
-                    meshComponent.mesh.visible = false;
-                } catch (error) {
-                    console.error(`Error cleaning up mesh for entity ${entityId}:`, error);
-                }
-            }
-            
-            // Disable rigidbody physics
-            const rigidbody = entity.getComponent('RigidbodyComponent');
-            if (rigidbody) {
-                rigidbody.isFrozen = true;
-                if (rigidbody.velocity) {
-                    rigidbody.velocity.set(0, 0, 0);
-                }
-            }
-
-            // Now, add the pooled tag after all cleanup is done
-            entity.addTag('pooled');
-            console.log(`Entity ${entityId} marked as pooled`);
-            
-            // Verify entity state after pooling
-            console.log(`Final entity ${entityId} state - Tags: [${entity.tags ? [...entity.tags] : 'none'}]`);
-            
-            // Add to pool
-            this.enemyPool.push(entity);
-            
-            console.log(`Entity ${entityId} returned to pool. Pool size now ${this.enemyPool.length}`);
-        } else {
-            // If pool is full, destroy the entity
-            console.log(`Pool is full (${this.maxPoolSize}), destroying entity ${entityId} instead of pooling`);
-            
-            // CRITICAL FIX: Ensure entity is completely destroyed
-            if (this.world && this.world.destroyEntity) {
-                this.world.destroyEntity(entityId);
-                console.log(`Entity ${entityId} fully destroyed`);
-            } else {
-                console.error(`Failed to destroy entity ${entityId} - world or destroyEntity method not available`);
-            }
-        }
-        
-        // Always validate references after returning to pool
-        // This is an additional safety check
-        this.validateEnemyReferences();
     }
     
     /**
@@ -384,7 +90,7 @@ export class EnemySystem extends System {
         this.playerIsDocked = true;
         
         // Then freeze all enemies
-        this.freezeAllEnemies();
+        this.lifecycle.freezeAllEnemies(this.enemies);
         
         // Additional logging for debug purposes
         console.log(`Froze ${this.enemies.size} enemies due to player docking`);
@@ -401,7 +107,7 @@ export class EnemySystem extends System {
         this.playerIsDocked = false;
         
         // Then unfreeze all enemies
-        this.unfreezeAllEnemies();
+        this.lifecycle.unfreezeAllEnemies(this.enemies);
         
         // Additional logging for debug purposes
         console.log(`Unfroze ${this.enemies.size} enemies due to player undocking`);
@@ -422,9 +128,9 @@ export class EnemySystem extends System {
                 
                 // Apply the appropriate freeze/unfreeze based on the new state
                 if (this.playerIsDocked) {
-                    this.freezeAllEnemies();
+                    this.lifecycle.freezeAllEnemies(this.enemies);
                 } else {
-                    this.unfreezeAllEnemies();
+                    this.lifecycle.unfreezeAllEnemies(this.enemies);
                 }
             }
         }
@@ -436,11 +142,8 @@ export class EnemySystem extends System {
             return;
         }
         
-        // Process all enemy entities through processEntity
+        // Process all enemy entities
         super.update(deltaTime);
-        
-        // Update spawn timer
-        this.spawnTimer += deltaTime;
         
         // Run diagnostics more frequently (every 3 seconds instead of 10)
         if (!this._lastDiagnosticTime) {
@@ -449,17 +152,21 @@ export class EnemySystem extends System {
         this._lastDiagnosticTime += deltaTime;
         
         if (this._lastDiagnosticTime >= 3) {
-            this.runPoolDiagnostics();
+            this.poolManager.runPoolDiagnostics(this.enemies);
             this._lastDiagnosticTime = 0;
         }
         
         // Validate enemy references before spawn decision to ensure accurate count
-        this.validateEnemyReferences();
+        this.lifecycle.validateEnemyReferences(this.enemies);
+        
+        // Apply difficulty scaling from game object if available
+        this.updateDifficultyScaling();
         
         // STRICT ENFORCEMENT: If we're over the limit, force destroy excess enemies
         if (this.enemies.size > this.maxEnemies) {
             console.warn(`ENFORCING ENEMY LIMIT: Current count ${this.enemies.size} exceeds limit of ${this.maxEnemies}`);
-            this.enforceEnemyLimit();
+            this.lifecycle.enforceEnemyLimit(this.enemies, this.maxEnemies, 
+                (entity) => this.poolManager.returnEnemyToPool(entity, this.enemies));
         }
         
         // Debug logging - show current enemy count and spawn timer
@@ -467,325 +174,40 @@ export class EnemySystem extends System {
             console.log(`Spawn status: ${this.enemies.size}/${this.maxEnemies} enemies, timer: ${this.spawnTimer.toFixed(1)}/${this.spawnInterval} seconds`);
         }
         
-        // Check if we should spawn new enemies - STRICTER CHECK with >= instead of >
-        if (this.spawnTimer >= this.spawnInterval && this.enemies.size < this.maxEnemies) {
-            // Spawn spectral drone
-            console.log("=== SPAWNING SPECTRAL DRONE ===");
-            
-            // Get a spawn point
-            const spawnPoint = this.getRandomSpawnPoint();
-            if (!spawnPoint) {
-                console.error("Failed to get spawn point! Generating new spawn points.");
-                this.generateSpawnPoints();
-                return;
-            }
-            
-            // Spawn the drone
-            const drone = this.spawnSpectralDrone(spawnPoint);
-            
-            // Verify the drone was properly created and tracked
-            if (drone) {
-                console.log(`Successfully spawned drone with ID: ${drone.id}, current count: ${this.enemies.size}/${this.maxEnemies}`);
-            } else {
-                console.error("Failed to spawn drone!");
-            }
-            
-            // Reset spawn timer
-            this.spawnTimer = 0;
-        }
+        // Update spawn timer and try to spawn new enemies
+        this.spawner.update(deltaTime, this.enemies, this.maxEnemies, (spawnPoint) => {
+            return this.spawnSpectralDrone(spawnPoint);
+        });
         
         // FAILSAFE: If we have no enemies and it's been a while since spawning,
         // reset the enemy count and regenerate spawn points
         if (this.enemies.size === 0 && this.spawnTimer > this.spawnInterval * 2) {
             console.warn("FAILSAFE: No enemies detected for extended period. Resetting spawn system.");
             this.enemies.clear();
-            this.generateSpawnPoints();
+            this.spawner.generateSpawnPoints();
             this.spawnTimer = this.spawnInterval; // Force a spawn next frame
         }
     }
     
     /**
-     * Validate enemy references to ensure all tracked enemies exist
-     * This helps prevent "ghost" references that block new spawns
+     * Update enemy parameters based on difficulty scaling from game object
      */
-    validateEnemyReferences() {
-        // Store original size for logging
-        const originalSize = this.enemies.size;
-        
-        // Create a new Set to hold valid enemy IDs
-        const validEnemies = new Set();
-        
-        // Check each enemy ID in our tracking Set
-        for (const enemyId of this.enemies) {
-            // Get the entity from the world
-            const entity = this.world.getEntity(enemyId);
+    updateDifficultyScaling() {
+        // Check if there's a global difficulty manager
+        if (window.game && window.game.difficultyManager && window.game.difficultyManager.params) {
+            const diffParams = window.game.difficultyManager.params;
             
-            // If entity exists, is an enemy, and is NOT pooled, keep tracking it
-            if (entity && entity.hasTag && entity.hasTag('enemy') && !entity.hasTag('pooled')) {
-                validEnemies.add(enemyId);
-            } else {
-                if (!entity) {
-                    console.warn(`Removing invalid enemy reference: ${enemyId} - Entity does not exist`);
-                } else if (!entity.hasTag) {
-                    console.warn(`Removing invalid enemy reference: ${enemyId} - Entity missing hasTag method`);
-                } else if (!entity.hasTag('enemy')) {
-                    // Check for tag inconsistency - entity might have the tag in its Set but the cache is wrong
-                    if (entity.tags && entity.tags.has && entity.tags.has('enemy')) {
-                        console.warn(`Entity ${enemyId} has inconsistent tag state: hasTag('enemy')=false but tag exists in Set`);
-                        
-                        // Force sync the entity's tag cache if possible
-                        if (entity._syncTagCache && typeof entity._syncTagCache === 'function') {
-                            entity._syncTagCache();
-                            console.log(`Fixed tag cache for entity ${enemyId}`);
-                            
-                            // Check again if the tag is now recognized
-                            if (entity.hasTag('enemy')) {
-                                console.log(`Entity ${enemyId} now properly recognizes 'enemy' tag, keeping in tracking`);
-                                validEnemies.add(enemyId);
-                                continue;
-                            }
-                        }
-                    }
-                    
-                    // If entity truly doesn't have the enemy tag, log and remove
-                    console.warn(`Removing invalid enemy reference: ${enemyId} - Entity missing 'enemy' tag. Tags: [${Array.from(entity.tags)}]`);
-                } else if (entity.hasTag('pooled')) {
-                    console.warn(`Removing invalid enemy reference: ${enemyId} - Entity is pooled but still has 'enemy' tag`);
-                    // Critical fix: Ensure pooled entities don't retain 'enemy' tag
-                    if (entity.hasTag('enemy')) {
-                        console.log(`Fixing inconsistent tag state: entity ${enemyId} is pooled but still has 'enemy' tag`);
-                        entity.removeTag('enemy');
-                    }
-                }
+            // Update our parameters if they exist in the difficulty manager
+            if (diffParams.maxEnemies !== undefined && this.maxEnemies !== diffParams.maxEnemies) {
+                console.log(`Updating max enemies from ${this.maxEnemies} to ${diffParams.maxEnemies}`);
+                this.maxEnemies = diffParams.maxEnemies;
+            }
+            
+            if (diffParams.spawnInterval !== undefined && this.spawnInterval !== diffParams.spawnInterval) {
+                console.log(`Updating spawn interval from ${this.spawnInterval} to ${diffParams.spawnInterval}`);
+                this.spawnInterval = diffParams.spawnInterval;
             }
         }
-        
-        // Replace our tracking Set with the validated Set
-        this.enemies = validEnemies;
-        
-        // Double-check: also scan for any enemies that might not be in our tracking
-        let entitiesScanned = 0;
-        try {
-            if (this.world && this.world.entityManager) {
-                // Try to get entities with the 'enemy' tag first
-                let enemyEntities = [];
-                
-                if (this.world.entityManager.entitiesByTag && 
-                    this.world.entityManager.entitiesByTag.get) {
-                    enemyEntities = this.world.entityManager.entitiesByTag.get('enemy') || [];
-                    entitiesScanned = enemyEntities.length;
-                    
-                    // Add any enemy entities that aren't in our tracking Set
-                    // BUT make sure they're not pooled (inactive) entities
-                    for (const enemy of enemyEntities) {
-                        // Skip undefined/null entities
-                        if (!enemy) continue;
-                        
-                        // Fix any cache inconsistencies before checking pooled status
-                        if (enemy._syncTagCache && typeof enemy._syncTagCache === 'function') {
-                            enemy._syncTagCache();
-                        }
-                        
-                        // CRITICAL FIX: First check if enemy is pooled BEFORE adding to tracking
-                        if (!enemy.hasTag('pooled')) {
-                            if (!this.enemies.has(enemy.id)) {
-                                console.log(`Found untracked enemy: ${enemy.id}, adding to tracking. Tags: [${[...enemy.tags]}]`);
-                                this.enemies.add(enemy.id);
-                            }
-                        } else {
-                            // Make sure pooled enemies are not in our tracking
-                            if (this.enemies.has(enemy.id)) {
-                                console.log(`Removing pooled enemy from tracking: ${enemy.id}`);
-                                this.enemies.delete(enemy.id);
-                            }
-                            
-                            // CRITICAL FIX: If an entity is pooled but still has the enemy tag, 
-                            // remove the enemy tag to fix the inconsistency
-                            if (enemy.hasTag('enemy')) {
-                                console.log(`Fixing inconsistent tag state: pooled entity ${enemy.id} still has 'enemy' tag`);
-                                // Directly call removeTag to ensure proper cleanup
-                                enemy.removeTag('enemy');
-                            }
-                        }
-                    }
-                    
-                    // Another check: verify if the EntityManager tag maps are consistent with entity tags
-                    this.validateEntityManagerTagMaps();
-                }
-            }
-        } catch (error) {
-            console.error("Error during entity scan:", error);
-        }
-        
-        // Log if we fixed any tracking issues
-        if (originalSize !== this.enemies.size) {
-            console.log(`Enemy tracking corrected: ${originalSize} -> ${this.enemies.size} enemies tracked. Scanned ${entitiesScanned} entities.`);
-        }
-    }
-    
-    /**
-     * Additional method to validate and fix EntityManager tag maps
-     * This helps ensure entity tags are consistent with the EntityManager's tracking
-     */
-    validateEntityManagerTagMaps() {
-        if (!this.world || !this.world.entityManager || !this.world.entityManager.entitiesByTag) {
-            return;
-        }
-        
-        try {
-            const entitiesByTag = this.world.entityManager.entitiesByTag;
-            
-            // Check the enemy tag map specifically
-            if (entitiesByTag.has('enemy')) {
-                const enemyMap = entitiesByTag.get('enemy');
-                const invalidEntities = [];
-                
-                // Check each entity in the enemy map
-                for (let i = 0; i < enemyMap.length; i++) {
-                    const entity = enemyMap[i];
-                    
-                    // Skip invalid entities
-                    if (!entity) {
-                        invalidEntities.push(i);
-                        continue;
-                    }
-                    
-                    // If entity doesn't actually have the enemy tag in its tag Set, fix it
-                    if (!entity.tags || !entity.tags.has('enemy')) {
-                        console.warn(`Entity ${entity.id} is in 'enemy' tag map but doesn't have the tag in its Set`);
-                        
-                        // Add the tag properly through the entity's method
-                        if (entity.addTag) {
-                            entity.addTag('enemy');
-                            console.log(`Added missing 'enemy' tag to entity ${entity.id}`);
-                        } else {
-                            // If can't fix, mark for removal
-                            invalidEntities.push(i);
-                        }
-                    }
-                    
-                    // If entity has both enemy and pooled tags, that's an inconsistency
-                    if (entity.hasTag && entity.hasTag('pooled') && entity.hasTag('enemy')) {
-                        console.warn(`Entity ${entity.id} has both 'pooled' and 'enemy' tags - removing 'enemy' tag`);
-                        entity.removeTag('enemy');
-                        invalidEntities.push(i);
-                    }
-                }
-                
-                // Remove invalid entities from the map (in reverse order to avoid index issues)
-                for (let i = invalidEntities.length - 1; i >= 0; i--) {
-                    const index = invalidEntities[i];
-                    enemyMap.splice(index, 1);
-                }
-                
-                // Log changes if any were made
-                if (invalidEntities.length > 0) {
-                    console.log(`Fixed ${invalidEntities.length} inconsistencies in EntityManager 'enemy' tag map`);
-                }
-            }
-        } catch (error) {
-            console.error("Error validating EntityManager tag maps:", error);
-        }
-    }
-    
-    /**
-     * Freeze all enemy entities in place
-     */
-    freezeAllEnemies() {
-        // Filter out pooled (inactive) enemies
-        const activeEnemies = Array.from(this.enemies).filter(enemyId => {
-            const enemy = this.world.getEntity(enemyId);
-            return enemy && !enemy.hasTag('pooled');
-        });
-        
-        console.log(`Freezing all ${activeEnemies.length} active enemies...`);
-        
-        // Iterate through all active enemies and stop their movement
-        for (const enemyId of activeEnemies) {
-            const enemy = this.world.getEntity(enemyId);
-            if (!enemy) {
-                // Skip if entity doesn't exist
-                console.warn(`Enemy ${enemyId} not found when freezing - may have been destroyed`);
-                continue;
-            }
-            
-            // Get the rigidbody component if it exists
-            const rigidbody = enemy.getComponent('RigidbodyComponent');
-            if (rigidbody) {
-                // Set velocity to zero
-                rigidbody.velocity.set(0, 0, 0);
-                
-                // Set angular velocity to zero if it exists
-                if (rigidbody.angularVelocity) {
-                    rigidbody.angularVelocity.set(0, 0, 0);
-                }
-                
-                // Mark as frozen
-                rigidbody.isFrozen = true;
-            }
-            
-            // Get the enemy AI component
-            const enemyAI = enemy.getComponent('EnemyAIComponent');
-            if (enemyAI) {
-                // Store original enabled state if not already stored
-                if (enemyAI.originalEnabledState === undefined) {
-                    enemyAI.originalEnabledState = enemyAI.enabled;
-                }
-                
-                // Disable the AI component
-                enemyAI.enabled = false;
-            }
-            
-            // Mark the entity as frozen for other systems to recognize
-            enemy.addTag('frozen');
-        }
-        
-        console.log("All enemies frozen successfully");
-    }
-    
-    /**
-     * Unfreeze all enemy entities and re-enable their AI
-     */
-    unfreezeAllEnemies() {
-        // Filter out pooled (inactive) enemies
-        const activeEnemies = Array.from(this.enemies).filter(enemyId => {
-            const enemy = this.world.getEntity(enemyId);
-            return enemy && !enemy.hasTag('pooled');
-        });
-        
-        console.log(`Unfreezing all ${activeEnemies.length} active enemies...`);
-        
-        // Iterate through all active enemies and re-enable their AI
-        for (const enemyId of activeEnemies) {
-            const enemy = this.world.getEntity(enemyId);
-            if (!enemy) {
-                // Skip if entity doesn't exist
-                console.warn(`Enemy ${enemyId} not found when unfreezing - may have been destroyed`);
-                continue;
-            }
-            
-            // Get the rigidbody component if it exists
-            const rigidbody = enemy.getComponent('RigidbodyComponent');
-            if (rigidbody) {
-                // Un-mark as frozen
-                rigidbody.isFrozen = false;
-            }
-            
-            // Get the enemy AI component
-            const enemyAI = enemy.getComponent('EnemyAIComponent');
-            if (enemyAI) {
-                // Restore original enabled state or default to enabled
-                enemyAI.enabled = (enemyAI.originalEnabledState !== undefined) ? 
-                    enemyAI.originalEnabledState : true;
-            }
-            
-            // Remove the frozen tag
-            if (enemy.hasTag && enemy.hasTag('frozen')) {
-                enemy.removeTag('frozen');
-            }
-        }
-        
-        console.log("All enemies unfrozen successfully");
     }
     
     /**
@@ -794,178 +216,7 @@ export class EnemySystem extends System {
      * @param {number} deltaTime Time since last update in seconds
      */
     processEntity(entity, deltaTime) {
-        // Get enemy AI component
-        const enemyAI = entity.getComponent('EnemyAIComponent');
-        
-        // Skip if entity is missing an enemy AI component
-        if (!enemyAI) return;
-        
-        // Get transform component
-        const transform = entity.getComponent('TransformComponent');
-        
-        // Skip if entity is missing a transform component
-        if (!transform) return;
-        
-        // Get mesh component
-        const meshComponent = entity.getComponent('MeshComponent');
-        
-        // Check if mesh component exists and has been added to scene
-        if (meshComponent && meshComponent.mesh) {
-            // Ensure mesh visibility
-            meshComponent.mesh.visible = true;
-            
-            // Check if mesh has been added to scene
-            if (!meshComponent.mesh.parent && this.world.scene) {
-                console.log(`Adding enemy mesh to scene`);
-                this.world.scene.add(meshComponent.mesh);
-                
-                // Call the onAddedToScene method if it exists
-                if (meshComponent.onAddedToScene) {
-                    meshComponent.onAddedToScene(this.world.scene);
-                }
-            }
-            
-            // Update mesh position to match entity transform
-            meshComponent.mesh.position.copy(transform.position);
-            meshComponent.mesh.quaternion.copy(transform.quaternion);
-            meshComponent.mesh.scale.copy(transform.scale);
-            
-            // Process special visual effects if this is an enhanced enemy
-            if (entity.visualVariant === 2 || entity.visualVariant === 3) {
-                // Update any special effects attached to the model
-                meshComponent.mesh.traverse((child) => {
-                    if (child.userData && typeof child.userData.update === 'function') {
-                        child.userData.update(deltaTime);
-                    }
-                });
-                
-                // Add additional visual effects for elite enemies (variant 2)
-                if (entity.visualVariant === 2 && entity.eliteParticleTime === undefined) {
-                    // Occasionally emit a small particle effect for elites
-                    entity.eliteParticleTime = 0;
-                } else if (entity.visualVariant === 2) {
-                    // Update elite particle timer
-                    entity.eliteParticleTime += deltaTime;
-                    
-                    // Every 1.5 seconds, emit a particle
-                    if (entity.eliteParticleTime > 1.5) {
-                        entity.eliteParticleTime = 0;
-                        
-                        // Emit a particle effect using the global VFX system if available
-                        if (this.world && this.world.messageBus) {
-                            this.world.messageBus.publish('vfx.pulse', {
-                                position: transform.position.clone(),
-                                color: 0xaaffff,
-                                scale: 0.7,
-                                duration: 0.8
-                            });
-                        }
-                    }
-                }
-            }
-            
-            // Special flickering effect for damaged enemies (variant 1)
-            if (entity.visualVariant === 1 && meshComponent.mesh.material) {
-                // Apply a flickering effect to the material
-                if (Array.isArray(meshComponent.mesh.material)) {
-                    for (const material of meshComponent.mesh.material) {
-                        material.emissiveIntensity = 0.5 + (Math.sin(Date.now() * 0.01) * 0.3);
-                    }
-                } else if (meshComponent.mesh.material.emissiveIntensity !== undefined) {
-                    meshComponent.mesh.material.emissiveIntensity = 0.5 + (Math.sin(Date.now() * 0.01) * 0.3);
-                }
-            }
-        }
-        
-        // Call the component's update method
-        enemyAI.update(deltaTime);
-        
-        // Get health component to update shield regeneration
-        const health = entity.getComponent('HealthComponent');
-        if (health) {
-            health.update(deltaTime);
-        }
-    }
-    
-    /**
-     * Get a random spawn point for enemies
-     * @returns {THREE.Vector3} Spawn position
-     */
-    getRandomSpawnPoint() {
-        // Make sure spawn points are available
-        if (this.spawnPoints.length === 0) {
-            this.generateSpawnPoints();
-        }
-        
-        // Choose a random spawn point
-        if (this.spawnPoints.length > 0) {
-            const index = Math.floor(Math.random() * this.spawnPoints.length);
-            return this.spawnPoints[index].clone();
-        } else {
-            // Fallback - spawn at a fixed distance from origin
-            console.warn("No spawn points available, using fallback position");
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 2000;
-            return new THREE.Vector3(
-                Math.cos(angle) * distance,
-                (Math.random() - 0.5) * 500,
-                Math.sin(angle) * distance
-            );
-        }
-    }
-    
-    /**
-     * Generate spawn points for enemies based on player position
-     */
-    generateSpawnPoints() {
-        // Clear existing spawn points
-        this.spawnPoints = [];
-        
-        // Find player position
-        const players = this.world.entityManager.getEntitiesByTag('player');
-        if (players.length === 0) {
-            // Default spawn points in a circle around origin if no player found
-            const radius = 3000;
-            const count = 10;
-            
-            for (let i = 0; i < count; i++) {
-                const angle = (i / count) * Math.PI * 2;
-                const x = Math.cos(angle) * radius;
-                const y = (Math.random() - 0.5) * 1000;
-                const z = Math.sin(angle) * radius;
-                this.spawnPoints.push(new THREE.Vector3(x, y, z));
-            }
-            
-            console.log(`Generated ${this.spawnPoints.length} default spawn points around origin`);
-            return;
-        }
-        
-        // Get player position
-        const player = players[0];
-        const transform = player.getComponent('TransformComponent');
-        if (!transform) {
-            console.warn("Player entity has no transform component, using default spawn points");
-            return;
-        }
-        
-        // Generate spawn points in a sphere around player
-        const center = transform.position.clone();
-        const radius = 2500; // Spawn at a reasonable distance
-        const count = 12;
-        
-        for (let i = 0; i < count; i++) {
-            // Generate random points on a sphere
-            const phi = Math.acos(2 * Math.random() - 1);
-            const theta = Math.random() * Math.PI * 2;
-            
-            const x = center.x + radius * Math.sin(phi) * Math.cos(theta);
-            const y = center.y + radius * Math.sin(phi) * Math.sin(theta);
-            const z = center.z + radius * Math.cos(phi);
-            
-            this.spawnPoints.push(new THREE.Vector3(x, y, z));
-        }
-        
-        console.log(`Generated ${this.spawnPoints.length} spawn points around player at position ${center.x.toFixed(0)}, ${center.y.toFixed(0)}, ${center.z.toFixed(0)}`);
+        this.lifecycle.processEntityUpdate(entity, deltaTime);
     }
     
     /**
@@ -1063,10 +314,10 @@ export class EnemySystem extends System {
             
             // Check if this entity is incorrectly in the pool already
             let isInPool = false;
-            for (let i = 0; i < this.enemyPool.length; i++) {
-                if (this.enemyPool[i] && this.enemyPool[i].id === entityId) {
+            for (let i = 0; i < this.poolManager.enemyPool.length; i++) {
+                if (this.poolManager.enemyPool[i] && this.poolManager.enemyPool[i].id === entityId) {
                     console.warn(`CRITICAL ERROR: Destroyed entity ${entityId} is already in the pool!`);
-                    this.enemyPool.splice(i, 1);
+                    this.poolManager.enemyPool.splice(i, 1);
                     console.log(`Removed entity ${entityId} from pool to prevent double-pooling`);
                     isInPool = true;
                     break;
@@ -1076,14 +327,14 @@ export class EnemySystem extends System {
             // Only return to pool if not already there
             if (!isInPool) {
                 // Return the entity to the pool
-                this.returnEnemyToPool(entity);
+                this.poolManager.returnEnemyToPool(entity, this.enemies);
                 console.log(`Returned enemy ${entityId} to pool`);
             }
             
             // Force spawn point regeneration after several enemies have been destroyed
             if (this.enemiesDestroyed % 5 === 0) {
                 console.log("Regenerating spawn points after multiple enemy destructions");
-                this.generateSpawnPoints();
+                this.spawner.generateSpawnPoints();
             }
             
             // CRITICAL: If this was the last enemy, make sure to reset the spawn timer
@@ -1095,7 +346,7 @@ export class EnemySystem extends System {
             }
             
             // Force validation to catch any remaining inconsistencies
-            this.validateEnemyReferences();
+            this.lifecycle.validateEnemyReferences(this.enemies);
         }
     }
     
@@ -1115,537 +366,7 @@ export class EnemySystem extends System {
         
         console.log("Enemy system disabled");
     }
-
-    /**
-     * Pre-load all enemy models
-     */
-    loadModels() {
-        const loader = new THREE.GLTFLoader();
-        
-        // Load enemy model
-        loader.load(
-            'assets/enemy.glb',
-            (gltf) => {
-                console.log('Enemy model loaded successfully');
-                this.modelCache.enemyDrone = gltf.scene;
-                
-                // Apply any global transformations or material adjustments
-                this.modelCache.enemyDrone.traverse((child) => {
-                    if (child.isMesh) {
-                        // Make materials glow with emissive
-                        if (child.material) {
-                            child.material.emissive = new THREE.Color(0x0088ff);
-                            child.material.emissiveIntensity = 2.0;
-                        }
-                    }
-                });
-            },
-            (xhr) => {
-                console.log('Loading enemy model: ' + (xhr.loaded / xhr.total) * 100 + '% loaded');
-            },
-            (error) => {
-                console.error('Error loading enemy model', error);
-            }
-        );
-    }
-
-    /**
-     * Spawns a spectral drone at the given position
-     * @param {THREE.Vector3} position The position to spawn at
-     * @returns {Entity} The created entity
-     */
-    spawnSpectralDrone(position) {
-        console.log("Setting up spectral drone config...");
-        
-        // STRICT LIMIT CHECK: Do not spawn if already at or over capacity
-        if (this.enemies.size >= this.maxEnemies) {
-            console.warn(`SPAWN BLOCKED: Already at maximum enemies (${this.enemies.size}/${this.maxEnemies})`);
-            return null;
-        }
-        
-        // Get a spectral drone from the pool
-        const entity = this.getEnemyFromPool();
-        
-        // Extra safety check - verify entity exists and isn't already tracked
-        if (!entity) {
-            console.error("Failed to get entity from pool or create new one");
-            return null;
-        }
-        
-        // VERIFY ENTITY STATE: Ensure entity isn't already in use
-        if (this.enemies.has(entity.id)) {
-            console.error(`Entity ${entity.id} is already in the active enemies list!`);
-            return null;
-        }
-        
-        // VERIFICATION: Double-check that entity is in a clean state before setting up
-        // It should have no tags at this point
-        if (entity.tags && entity.tags.size > 0) {
-            console.warn(`Entity ${entity.id} from pool still has tags: [${[...entity.tags]}]. Clearing all tags.`);
-            if (entity.clearTags && typeof entity.clearTags === 'function') {
-                entity.clearTags();
-            } else {
-                entity.tags.clear();
-                entity._isEnemy = false;
-                entity._isPooled = false;
-                entity._isPlayer = false;
-                entity._isProjectile = false;
-            }
-        }
-        
-        // Add enemy tags that were not added during pooling
-        entity.addTag('enemy');
-        entity.addTag('spectrals');
-        
-        // Add some randomness to the drone properties for visual variety
-        const amplitude = this.enemyConfig.spiralAmplitude * (0.8 + Math.random() * 0.4); // 80-120% of base
-        const frequency = this.enemyConfig.spiralFrequency * (0.9 + Math.random() * 0.2); // 90-110% of base
-        const speed = this.enemyConfig.speed * (0.7 + Math.random() * 0.6); // 70-130% of base
-        
-        // Generate visual variation parameters
-        const sizeVariation = 0.8 + Math.random() * 0.8; // 80% to 160% size variation
-        const baseSize = 80; // Increased base size from 50 to 80
-        const finalSize = baseSize * sizeVariation;
-        
-        // Add slight rotation offset for more natural appearance
-        const rotationOffset = {
-            x: (Math.random() - 0.5) * 0.2, // ±0.1 radians (~±5.7 degrees)
-            y: (Math.random() - 0.5) * 0.2,
-            z: (Math.random() - 0.5) * 0.2
-        };
-        
-        // Choose a visual effect variant (0-3)
-        // 0: Normal, 1: Damaged, 2: Elite, 3: Shielded
-        const visualVariant = Math.floor(Math.random() * 4);
-        entity.visualVariant = visualVariant;
-        
-        // Configure transform
-        const transform = entity.getComponent('TransformComponent');
-        if (transform) {
-            transform.position.copy(position);
-            transform.scale.set(finalSize, finalSize, finalSize);
-            
-            // Apply rotation offset
-            transform.rotation.x += rotationOffset.x;
-            transform.rotation.y += rotationOffset.y;
-            transform.rotation.z += rotationOffset.z;
-            
-            transform.needsUpdate = true;
-        } else {
-            const newTransform = new TransformComponent(position);
-            newTransform.scale.set(finalSize, finalSize, finalSize);
-            
-            // Apply rotation offset
-            newTransform.rotation.x += rotationOffset.x;
-            newTransform.rotation.y += rotationOffset.y;
-            newTransform.rotation.z += rotationOffset.z;
-            
-            entity.addComponent(newTransform);
-        }
-        
-        // Add or update health component
-        let health = entity.getComponent('HealthComponent');
-        if (!health) {
-            health = new HealthComponent(this.enemyConfig.health, 0);
-            entity.addComponent(health);
-        } else {
-            health.maxHealth = this.enemyConfig.health;
-            health.health = this.enemyConfig.health;
-            health.isDestroyed = false;
-        }
-        
-        // Configure AI component
-        let enemyAI = entity.getComponent('EnemyAIComponent');
-        if (!enemyAI) {
-            const config = {
-                faction: 'spectrals',
-                type: 'drone',
-                health: this.enemyConfig.health,
-                damage: this.enemyConfig.damage,
-                speed: speed,
-                spiralAmplitude: amplitude,
-                spiralFrequency: frequency,
-                isDroneLike: true  // New flag for drone-like movement
-            };
-            enemyAI = new EnemyAIComponent(config);
-            entity.addComponent(enemyAI);
-        } else {
-            enemyAI.faction = 'spectrals';
-            enemyAI.type = 'drone';
-            enemyAI.damage = this.enemyConfig.damage;
-            enemyAI.speed = speed;
-            enemyAI.spiralAmplitude = amplitude;
-            enemyAI.spiralFrequency = frequency;
-            enemyAI.isDroneLike = true;  // New flag for drone-like movement
-            enemyAI.enabled = true;
-        }
-        
-        // Get the mesh from the GLB model
-        // Store reference to current entity being processed
-        this.currentEntity = entity;
-        const spectralMesh = this.createSpectralDroneMesh();
-        // Clear the reference after mesh creation
-        this.currentEntity = null;
-        
-        // Get existing mesh component if any
-        let meshComponent = entity.getComponent('MeshComponent');
-        
-        // If we don't have a mesh component, create one
-        if (!meshComponent) {
-            meshComponent = new MeshComponent();
-            entity.addComponent(meshComponent);
-        }
-        
-        // Clean up old mesh if exists
-        if (meshComponent.mesh) {
-            if (meshComponent.mesh.parent) {
-                meshComponent.mesh.parent.remove(meshComponent.mesh);
-            }
-            
-            if (meshComponent.mesh.geometry) {
-                meshComponent.mesh.geometry.dispose();
-            }
-            
-            if (meshComponent.mesh.material) {
-                if (Array.isArray(meshComponent.mesh.material)) {
-                    meshComponent.mesh.material.forEach(mat => mat.dispose());
-                } else {
-                    meshComponent.mesh.material.dispose();
-                }
-            }
-        }
-        
-        // Assign the mesh to the component
-        if (spectralMesh.isGLTF) {
-            meshComponent.mesh = spectralMesh.model;
-        } else {
-            // This is the placeholder case when model isn't loaded
-            meshComponent.mesh = new THREE.Mesh(spectralMesh.geometry, spectralMesh.material);
-        }
-        
-        // Ensure the mesh will be added to the scene
-        meshComponent.onAddedToScene = function(scene) {
-            if (this.mesh && !this.mesh.parent && scene) {
-                console.log("Adding enemy drone mesh to scene");
-                scene.add(this.mesh);
-            }
-        };
-        
-        // Try to add to the scene immediately if it's available
-        if (this.world && this.world.scene && meshComponent.mesh) {
-            // Make the mesh visible
-            meshComponent.mesh.visible = true;
-            
-            // Add to scene
-            this.world.scene.add(meshComponent.mesh);
-            
-            // Ensure mesh position, rotation, and scale match entity transform
-            meshComponent.mesh.position.copy(transform.position);
-            meshComponent.mesh.quaternion.copy(transform.quaternion);
-            meshComponent.mesh.scale.copy(transform.scale);
-            
-            console.log("Added enemy drone mesh to scene immediately");
-        }
-        
-        // Add physics if needed
-        let rigidbody = entity.getComponent('RigidbodyComponent');
-        if (!rigidbody) {
-            rigidbody = new RigidbodyComponent(1);
-            rigidbody.useGravity = false;
-            rigidbody.drag = 0.1;
-            rigidbody.shape = 'sphere';
-            rigidbody.collisionRadius = 50;
-            entity.addComponent(rigidbody);
-        } else {
-            rigidbody.isFrozen = false;
-            rigidbody.velocity.set(0, 0, 0);
-            // Make sure collision radius is set correctly
-            rigidbody.collisionRadius = 50;
-        }
-        
-        // Add trail effect if not already present - thrusting effect
-        if (!entity.getComponent('TrailComponent')) {
-            this.addSpectralTrail(entity, transform);
-        }
-        
-        // SYNCHRONIZATION FIX: Remove any existing references to this entity ID before adding
-        // This prevents duplicate tracking if an entity with the same ID is already tracked
-        this.enemies.delete(entity.id);
-        
-        // Track this enemy
-        this.enemies.add(entity.id);
-        this.lastSpawnTime = Date.now();
-        
-        // VERIFICATION: Double-check that enemy has required tag after setup
-        if (!entity.hasTag('enemy')) {
-            console.warn(`CRITICAL ERROR: Entity ${entity.id} missing 'enemy' tag after setup!`);
-            entity.addTag('enemy'); // Force re-add the tag
-        }
-        
-        // GLOBAL SYNCHRONIZATION: Register this entity with combat module if available
-        if (window.game && window.game.combat) {
-            // Inform other systems about this enemy
-            window.game.combat.registerEnemy && window.game.combat.registerEnemy(entity.id);
-        }
-        
-        console.log(`Spawned enemy drone at position: x=${position.x.toFixed(0)}, y=${position.y.toFixed(0)}, z=${position.z.toFixed(0)}`);
-        console.log(`Properties: Speed=${enemyAI.speed}, Amplitude=${enemyAI.spiralAmplitude}, Frequency=${enemyAI.spiralFrequency}`);
-        
-        // ADDITIONAL LOGGING: Log the current state after spawn
-        console.log(`Current enemy count after spawn: ${this.enemies.size}/${this.maxEnemies}`);
-        
-        return entity;
-    }
-
-    /**
-     * Adds a spectral trail effect to an enemy entity
-     * @param {Entity} entity The enemy entity
-     * @param {TransformComponent} transform The entity's transform component
-     */
-    addSpectralTrail(entity, transform) {
-        // Create a special trail component for the enemy drone with a thruster-like effect
-        const trailComponent = new TrailComponent({
-            maxPoints: 50,             // Trail length in points
-            pointDistance: 5,          // Min distance to record a new point
-            width: 15,                 // Trail width slightly narrower for thruster effect
-            color: 0x00ccff,           // Cyan-blue color
-            fadeTime: 1.5,             // Seconds to fade out
-            transparent: true,
-            alphaTest: 0.01,
-            blending: THREE.AdditiveBlending, // Additive blending for glow effect
-            pulse: true,               // Make the trail pulse
-            pulseSpeed: 2.5,           // Faster pulsing for thruster effect
-            tapering: true,            // Taper the end of the trail
-            glow: true,                // Add glow effect
-            thrusterMode: true         // New flag for thruster-like behavior
-        });
-        
-        // IMPORTANT: Initialize the trail with the current entity position
-        // This ensures the trail starts from the entity's current position 
-        // and not from the origin (0,0,0)
-        if (transform && transform.position) {
-            // Initialize points array with current position to prevent "line to center" visual bug
-            trailComponent.lastPosition = transform.position.clone();
-            
-            // If the trailComponent has a points array, initialize it with the current position
-            if (trailComponent.points) {
-                trailComponent.points = [transform.position.clone()];
-            }
-            
-            // If the component has an initializeTrail method, call it
-            if (typeof trailComponent.initializeTrail === 'function') {
-                trailComponent.initializeTrail(transform.position);
-            }
-        }
-        
-        // Attach the trail component to the entity
-        entity.addComponent(trailComponent);
-        
-        // Check if the world has a registered trail system
-        let trailSystemRegistered = false;
-        
-        // Method 1: Check for a global trail system
-        if (window.game && window.game.trailSystem) {
-            window.game.trailSystem.registerTrail(entity.id, trailComponent);
-            trailSystemRegistered = true;
-        }
-        
-        // Method 2: Check if the world has a trail system in its system manager
-        if (!trailSystemRegistered && this.world && this.world.systemManager) {
-            const trailSystem = this.world.systemManager.getSystem('TrailSystem');
-            if (trailSystem) {
-                trailSystem.registerTrail(entity.id, trailComponent);
-                trailSystemRegistered = true;
-            }
-        }
-        
-        // If no trail system is registered, we'll need to manually initialize the trail
-        if (!trailSystemRegistered) {
-            console.log("No trail system found - initializing trail component directly");
-            // The trail component will self-initialize when attached to the entity
-        }
-        
-        console.log(`Added thruster trail component to entity ${entity.id} at position (${transform.position.x.toFixed(0)}, ${transform.position.y.toFixed(0)}, ${transform.position.z.toFixed(0)})`);
-        
-        return trailComponent;
-    }
-
-    /**
-     * Creates a spectral drone mesh from loaded GLB
-     * @returns {Object} Object containing model
-     */
-    createSpectralDroneMesh() {
-        console.log("Creating spectral drone from GLB model...");
-        
-        // If model isn't loaded yet, create a placeholder mesh
-        if (!this.modelCache.enemyDrone) {
-            console.warn("Enemy model not loaded yet - using temporary placeholder");
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
-            return { geometry, material, isPlaceholder: true };
-        }
-        
-        // Clone the model to avoid shared instance issues
-        const model = this.modelCache.enemyDrone.clone();
-        
-        // Get the visual variant if it exists on the entity being processed
-        let visualVariant = 0;
-        if (this.currentEntity && this.currentEntity.visualVariant !== undefined) {
-            visualVariant = this.currentEntity.visualVariant;
-        }
-        
-        // Extended color palette with 10 options instead of just 3
-        const colorPalette = [
-            { main: 0x00ccff, emissive: new THREE.Color(0x0088ff) }, // Blue/cyan
-            { main: 0x8866ff, emissive: new THREE.Color(0x6633ff) }, // Purple/blue
-            { main: 0x00ffcc, emissive: new THREE.Color(0x00bb99) }, // Teal/green
-            { main: 0xff3366, emissive: new THREE.Color(0xcc1144) }, // Red/pink
-            { main: 0xffaa00, emissive: new THREE.Color(0xcc8800) }, // Orange/gold
-            { main: 0x66ff33, emissive: new THREE.Color(0x44cc11) }, // Lime/green
-            { main: 0xff99ff, emissive: new THREE.Color(0xcc66cc) }, // Pink/magenta
-            { main: 0xffff33, emissive: new THREE.Color(0xcccc11) }, // Yellow
-            { main: 0x3366ff, emissive: new THREE.Color(0x1144cc) }, // Deep blue
-            { main: 0xff3333, emissive: new THREE.Color(0xcc1111) }  // Deep red
-        ];
-        
-        // Randomly choose from the extended color palette
-        const colorIndex = Math.floor(Math.random() * colorPalette.length);
-        const selectedColor = colorPalette[colorIndex];
-        
-        // Apply visual effects based on variant type
-        let emissiveIntensity = 1.0;
-        let opacity = 1.0;
-        let additionalEffects = false;
-        
-        switch (visualVariant) {
-            case 0: // Normal
-                emissiveIntensity = 1.0 + (Math.random() * 0.5); // 1.0-1.5
-                break;
-                
-            case 1: // Damaged - flickering effect, darker colors
-                emissiveIntensity = 0.5 + (Math.sin(Date.now() * 0.01) * 0.3); // 0.2-0.8, flickering
-                // Darken color
-                selectedColor.emissive.multiplyScalar(0.7);
-                // Add damage texturing (simulated with partial transparency)
-                opacity = 0.85;
-                break;
-                
-            case 2: // Elite - brighter, pulsing glow
-                emissiveIntensity = 2.0 + (Math.sin(Date.now() * 0.003) * 0.5); // 1.5-2.5, slow pulse
-                // Make more vibrant
-                selectedColor.emissive.multiplyScalar(1.2);
-                additionalEffects = true;
-                break;
-                
-            case 3: // Shielded - shimmer effect with interference patterns
-                emissiveIntensity = 1.5;
-                // Shield shimmer effect (simulated with color modulation)
-                const shieldPhase = Date.now() * 0.001;
-                const shimmerValue = 0.8 + (Math.sin(shieldPhase) * 0.2);
-                selectedColor.emissive.r *= shimmerValue;
-                selectedColor.emissive.g *= 1 + (1 - shimmerValue);
-                selectedColor.emissive.b *= 1 + (Math.cos(shieldPhase) * 0.2);
-                break;
-        }
-        
-        // Apply colors and effects to the model
-        model.traverse((child) => {
-            if (child.isMesh && child.material) {
-                // Clone material to avoid shared materials affecting other drones
-                child.material = child.material.clone(); 
-                
-                // Apply main color and emissive effect
-                child.material.color = new THREE.Color(selectedColor.main);
-                child.material.emissive = selectedColor.emissive;
-                child.material.emissiveIntensity = emissiveIntensity;
-                
-                // Apply opacity if needed
-                if (opacity < 1.0) {
-                    child.material.transparent = true;
-                    child.material.opacity = opacity;
-                }
-                
-                // Apply additional effects for elite enemies
-                if (additionalEffects) {
-                    // Add higher shininess for elite enemies
-                    if (child.material.shininess !== undefined) {
-                        child.material.shininess = 100;
-                    }
-                    
-                    // Add env map if supported by the material type
-                    if (child.material.envMap !== undefined) {
-                        // Not creating real env maps here since that would require additional resources
-                        // In a full implementation, we'd add a cube texture
-                        child.material.envMapIntensity = 0.8;
-                    }
-                }
-            }
-        });
-        
-        // Add any variant-specific visual enhancements to the model
-        if (visualVariant === 2) { // Elite
-            // For elites, we could add extra mesh elements to show their status
-            // Here we'll add a simple halo effect using a ring geometry
-            try {
-                const haloGeometry = new THREE.RingGeometry(1.2, 1.5, 16);
-                const haloMaterial = new THREE.MeshBasicMaterial({
-                    color: selectedColor.main,
-                    transparent: true,
-                    opacity: 0.6,
-                    side: THREE.DoubleSide,
-                    blending: THREE.AdditiveBlending
-                });
-                
-                const halo = new THREE.Mesh(haloGeometry, haloMaterial);
-                halo.rotation.x = Math.PI / 2; // Make it horizontal
-                model.add(halo);
-                
-                // Add animation update handler
-                halo.userData.update = function(delta) {
-                    halo.rotation.z += delta * 0.5; // Slow rotation
-                    
-                    // Pulse size
-                    const pulseScale = 1 + 0.2 * Math.sin(Date.now() * 0.002);
-                    halo.scale.set(pulseScale, pulseScale, pulseScale);
-                };
-            } catch (error) {
-                console.error("Failed to create elite halo effect:", error);
-            }
-        } else if (visualVariant === 3) { // Shielded
-            // For shielded enemies, add a translucent shield sphere
-            try {
-                const shieldGeometry = new THREE.SphereGeometry(1.1, 16, 12);
-                const shieldMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xaaddff,
-                    transparent: true,
-                    opacity: 0.3,
-                    side: THREE.DoubleSide,
-                    blending: THREE.AdditiveBlending,
-                    wireframe: false
-                });
-                
-                const shield = new THREE.Mesh(shieldGeometry, shieldMaterial);
-                model.add(shield);
-                
-                // Add animation update handler
-                shield.userData.update = function(delta) {
-                    // Subtle pulsing effect
-                    const pulseScale = 1 + 0.05 * Math.sin(Date.now() * 0.003);
-                    shield.scale.set(pulseScale, pulseScale, pulseScale);
-                    
-                    // Shimmer effect on opacity
-                    shield.material.opacity = 0.2 + 0.1 * Math.sin(Date.now() * 0.002);
-                };
-            } catch (error) {
-                console.error("Failed to create shield effect:", error);
-            }
-        }
-        
-        console.log(`Enemy drone model created with color #${selectedColor.main.toString(16)} and variant ${visualVariant}`);
-        
-        return { model, isGLTF: true };
-    }
-
+    
     /**
      * Start monitoring the spawn system health
      */
@@ -1673,242 +394,36 @@ export class EnemySystem extends System {
             
             // Recover the spawn system
             this.enemies.clear(); // Reset tracked enemies
-            this.generateSpawnPoints(); // Regenerate spawn points
+            this.spawner.generateSpawnPoints(); // Regenerate spawn points
             this.spawnTimer = this.spawnInterval; // Force spawn soon
             
             // Validate enemy references
-            this.validateEnemyReferences();
+            this.lifecycle.validateEnemyReferences(this.enemies);
             
             console.log("Spawn system recovery completed");
         }
     }
-
+    
     /**
-     * Clear all tracked enemies
+     * Spawns a spectral drone at the given position - convenience method
+     * @param {THREE.Vector3} position The position to spawn at
+     * @returns {Entity} The created entity
      */
-    clearAllEnemies() {
-        // Log the current count
-        console.log(`Clearing all enemies. Current count: ${this.enemies.size}`);
-        
-        // Clear the enemies Set
-        this.enemies.clear();
-        
-        // Verify
-        console.log(`After clearing, enemy count: ${this.enemies.size}`);
+    spawnSpectralDrone(position) {
+        return this.spawner.spawnSpectralDrone(position, this.poolManager, this.enemies, this.maxEnemies);
     }
-
+    
     /**
-     * Run diagnostics on the enemy pool system to detect and fix inconsistencies
+     * Freeze all enemy entities in place - wrapper for lifecycle method
      */
-    runPoolDiagnostics() {
-        console.log("=== RUNNING ENEMY POOL DIAGNOSTICS ===");
-        console.log(`Active enemies: ${this.enemies.size}, Pool size: ${this.enemyPool.length}`);
-        
-        // Track number of fixes made
-        let inconsistenciesFixed = 0;
-        
-        // POOL INTEGRITY CHECK: Check for duplicate entities in the pool
-        const poolEntityIds = new Set();
-        const duplicateIndices = [];
-        
-        for (let i = 0; i < this.enemyPool.length; i++) {
-            const entity = this.enemyPool[i];
-            
-            // Skip invalid entities
-            if (!entity || !entity.id) {
-                console.warn(`Invalid entity at index ${i} in enemy pool - removing`);
-                duplicateIndices.push(i);
-                inconsistenciesFixed++;
-                continue;
-            }
-            
-            // Check if this entity ID is already in the pool
-            if (poolEntityIds.has(entity.id)) {
-                console.warn(`Duplicate entity ${entity.id} found in enemy pool at index ${i} - removing`);
-                duplicateIndices.push(i);
-                inconsistenciesFixed++;
-            } else {
-                poolEntityIds.add(entity.id);
-            }
-        }
-        
-        // Remove duplicates from the pool (in reverse order to avoid index issues)
-        for (let i = duplicateIndices.length - 1; i >= 0; i--) {
-            this.enemyPool.splice(duplicateIndices[i], 1);
-        }
-        
-        // ACTIVE-POOLED CHECK: No entity should be both active and in the pool
-        const activePooledEntities = [];
-        
-        for (let i = 0; i < this.enemyPool.length; i++) {
-            const entity = this.enemyPool[i];
-            
-            // If entity is also in active enemies, that's a critical error
-            if (this.enemies.has(entity.id)) {
-                console.error(`CRITICAL ERROR: Entity ${entity.id} is both active and in the pool!`);
-                activePooledEntities.push(i);
-                inconsistenciesFixed++;
-            }
-        }
-        
-        // Remove entities that are both active and pooled from the pool
-        for (let i = activePooledEntities.length - 1; i >= 0; i--) {
-            const index = activePooledEntities[i];
-            const entityId = this.enemyPool[index].id;
-            this.enemyPool.splice(index, 1);
-            console.log(`Fixed critical inconsistency: Removed entity ${entityId} from pool since it's active`);
-        }
-        
-        // Check the enemy tag map
-        let enemyTaggedCount = 0;
-        let pooledTaggedCount = 0;
-        let inconsistentEntities = 0;
-        
-        if (this.world && this.world.entityManager && this.world.entityManager.entitiesByTag) {
-            // Count entities with enemy tag
-            const enemyTaggedEntities = this.world.entityManager.entitiesByTag.get('enemy') || [];
-            enemyTaggedCount = enemyTaggedEntities.length;
-            
-            // Count entities with pooled tag
-            const pooledTaggedEntities = this.world.entityManager.entitiesByTag.get('pooled') || [];
-            pooledTaggedCount = pooledTaggedEntities.length;
-            
-            // Check for inconsistent state: entities with both 'enemy' and 'pooled' tags
-            for (const entity of enemyTaggedEntities) {
-                if (entity.hasTag('pooled')) {
-                    console.warn(`INCONSISTENT ENTITY ${entity.id}: Has both 'enemy' and 'pooled' tags`);
-                    inconsistentEntities++;
-                    
-                    // POOL STATUS CHECK: If entity has pooled tag, it MUST be in the pool
-                    const isInPool = this.enemyPool.some(e => e.id === entity.id);
-                    
-                    if (isInPool) {
-                        // Entity is in pool with enemy tag - remove enemy tag
-                        entity.removeTag('enemy');
-                        console.log(`Fixed entity ${entity.id} by removing 'enemy' tag since it's in the pool`);
-                    } else {
-                        // Entity has pooled tag but not in pool - remove pooled tag
-                        entity.removeTag('pooled');
-                        console.log(`Fixed entity ${entity.id} by removing 'pooled' tag since it's not in the pool`);
-                    }
-                    
-                    inconsistenciesFixed++;
-                }
-            }
-            
-            // Check for inconsistent state: pooled entities in active enemies set
-            for (const entityId of this.enemies) {
-                const entity = this.world.getEntity(entityId);
-                if (entity && entity.hasTag('pooled')) {
-                    console.warn(`INCONSISTENT TRACKING: Entity ${entityId} is in active enemies but has 'pooled' tag`);
-                    
-                    // Check if entity is actually in the pool
-                    const isInPool = this.enemyPool.some(e => e.id === entityId);
-                    
-                    if (isInPool) {
-                        // Entity is in pool and active list - remove from active list
-                        this.enemies.delete(entityId);
-                        console.log(`Fixed by removing entity ${entityId} from active enemies set since it's in the pool`);
-                    } else {
-                        // Entity has pooled tag but not in pool - remove pooled tag
-                        entity.removeTag('pooled');
-                        console.log(`Fixed entity ${entityId} by removing 'pooled' tag since it's not in the pool`);
-                    }
-                    
-                    inconsistentEntities++;
-                    inconsistenciesFixed++;
-                }
-            }
-            
-            // Check enemy pool for tag issues
-            for (let i = 0; i < this.enemyPool.length; i++) {
-                const entity = this.enemyPool[i];
-                
-                if (!entity) continue;
-                
-                let entityFixed = false;
-                
-                // Entities in the pool MUST have the pooled tag
-                if (!entity.hasTag('pooled')) {
-                    console.warn(`INCONSISTENT POOL: Entity ${entity.id} in enemy pool but missing 'pooled' tag`);
-                    entity.addTag('pooled');
-                    console.log(`Fixed by adding 'pooled' tag to entity ${entity.id}`);
-                    entityFixed = true;
-                    inconsistenciesFixed++;
-                }
-                
-                // Entities in the pool MUST NOT have the enemy tag
-                if (entity.hasTag('enemy')) {
-                    console.warn(`INCONSISTENT POOL: Entity ${entity.id} in enemy pool but has 'enemy' tag`);
-                    entity.removeTag('enemy');
-                    console.log(`Fixed by removing 'enemy' tag from entity ${entity.id}`);
-                    entityFixed = true;
-                    inconsistenciesFixed++;
-                }
-                
-                if (entityFixed) {
-                    inconsistentEntities++;
-                }
-            }
-        }
-        
-        console.log(`Diagnostic results: ${enemyTaggedCount} entities with 'enemy' tag, ${pooledTaggedCount} entities with 'pooled' tag`);
-        console.log(`Fixed ${inconsistenciesFixed} inconsistencies across ${inconsistentEntities} entities`);
-        console.log("=== DIAGNOSTICS COMPLETE ===");
+    freezeAllEnemies() {
+        this.lifecycle.freezeAllEnemies(this.enemies);
     }
-
+    
     /**
-     * Force destroy excess enemies to enforce the enemy limit
+     * Unfreeze all enemy entities and re-enable their AI - wrapper for lifecycle method
      */
-    enforceEnemyLimit() {
-        // Convert to array for easier manipulation
-        const enemyIds = [...this.enemies];
-        
-        // Calculate how many enemies to remove
-        const excessCount = this.enemies.size - this.maxEnemies;
-        if (excessCount <= 0) return;
-        
-        console.log(`Enforcing enemy limit by removing ${excessCount} excess enemies`);
-        
-        // Remove the oldest enemies first (at the start of the array)
-        for (let i = 0; i < excessCount && i < enemyIds.length; i++) {
-            const entityId = enemyIds[i];
-            const entity = this.world.getEntity(entityId);
-            
-            if (entity) {
-                console.log(`Force destroying excess enemy ${entityId}`);
-                
-                // Remove from tracking first
-                this.enemies.delete(entityId);
-                
-                // If entity has health component, mark as destroyed
-                const health = entity.getComponent('HealthComponent');
-                if (health) {
-                    health.health = 0;
-                    health.isDestroyed = true;
-                }
-                
-                // Create explosion effect
-                if (this.world && this.world.messageBus) {
-                    const transform = entity.getComponent('TransformComponent');
-                    if (transform) {
-                        this.world.messageBus.publish('vfx.explosion', {
-                            position: transform.position.clone(),
-                            scale: 1.0,
-                            duration: 1.0
-                        });
-                    }
-                }
-                
-                // Return to pool or destroy completely
-                this.returnEnemyToPool(entity);
-            } else {
-                // If entity doesn't exist, just remove from tracking
-                this.enemies.delete(entityId);
-            }
-        }
-        
-        // Validate references after cleanup
-        this.validateEnemyReferences();
+    unfreezeAllEnemies() {
+        this.lifecycle.unfreezeAllEnemies(this.enemies);
     }
 }

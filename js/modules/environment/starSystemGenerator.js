@@ -464,4 +464,110 @@ export class StarSystemGenerator {
     getRandomFloat(min, max) {
         return Math.random() * (max - min) + min;
     }
+    
+    // Add this method to the StarSystemGenerator class
+    addCustomSystem(systemData) {
+        if (!systemData || !systemData.id || !systemData.name) {
+            console.error('Invalid system data', systemData);
+            return false;
+        }
+        
+        // Check if a system with this ID already exists
+        if (this.systems[systemData.id]) {
+            console.warn(`System with ID ${systemData.id} already exists, overwriting`);
+        }
+        
+        console.log(`Adding custom system: ${systemData.name} (${systemData.id})`);
+        
+        // Create or update the custom system
+        const customSystem = {
+            id: systemData.id,
+            name: systemData.name,
+            starClass: systemData.starClass || this.getRandomStarClass(),
+            classification: systemData.classification || 'Custom',
+            starColor: systemData.starColor || this.getStarColorFromClass(systemData.starClass || 'G'),
+            planetCount: systemData.planetData ? systemData.planetData.length : 0,
+            asteroidDensity: systemData.asteroidDensity || 1.0,
+            specialFeatures: systemData.specialFeatures || ['User Created'],
+            description: systemData.description || 'A custom star system created by the user',
+            connections: [], // Will be populated by createConnection
+            position: systemData.position || this.generateMapPosition(),
+            skyboxParams: {
+                starDensity: systemData.skyboxParams?.starDensity || 1.0,
+                nebulaDensity: systemData.skyboxParams?.nebulaDensity || 0.8,
+                color: systemData.skyboxParams?.color || this.getSkyboxColorFromClass(systemData.starClass || 'G'),
+                texturePath: systemData.skyboxUrl || this.getRandomSkyboxTexture(),
+                brightness: systemData.skyboxParams?.brightness || 0.8,
+                isCustomTexture: !!systemData.skyboxUrl // Flag to indicate custom texture
+            },
+            resourceMultipliers: systemData.resourceMultipliers || {
+                iron: 1.0,
+                gold: 1.0,
+                platinum: 1.0
+            },
+            isCustomSystem: true // Flag to mark as custom
+        };
+        
+        // Store custom planet data if provided
+        if (systemData.planetData && Array.isArray(systemData.planetData)) {
+            this.storePlanetData(systemData.id, systemData.planetData);
+        }
+        
+        // Add the system to our collection
+        this.systems[systemData.id] = customSystem;
+        
+        // Create a connection to Solar System or another random system
+        this.createConnection('Solar System', systemData.id);
+        
+        // Create an additional random connection
+        const randomSystem = this.getRandomSystemExcept(systemData.id, 'Solar System');
+        if (randomSystem) {
+            this.createConnection(systemData.id, randomSystem);
+        }
+        
+        console.log(`Custom system ${systemData.name} added successfully with connections to Solar System and ${randomSystem || 'no other system'}`);
+        
+        return true;
+    }
+    
+    // Add this method to store custom planet data
+    storePlanetData(systemId, planetData) {
+        if (!Array.isArray(planetData)) {
+            console.error('Planet data must be an array');
+            return;
+        }
+        
+        // Create a new array to store standardized planet data
+        const standardizedPlanets = [];
+        
+        // Process each planet
+        for (let i = 0; i < planetData.length; i++) {
+            const planet = planetData[i];
+            
+            standardizedPlanets.push({
+                name: planet.name || `Planet-${i+1}`,
+                size: planet.size || (300 + Math.random() * 500),
+                distance: planet.distance || (4800 + (i * 8000) + (Math.random() * 2000)),
+                speed: planet.speed || (0.001 + (Math.random() * 0.001)),
+                color: planet.color || this.getRandomColor(),
+                rings: planet.rings !== undefined ? planet.rings : Math.random() > 0.7,
+                textureUrl: planet.textureUrl || null, // Custom texture URL
+                axialTilt: planet.axialTilt || (Math.random() * Math.PI * 0.5),
+                orbitalTilt: planet.orbitalTilt || (Math.random() * Math.PI * 0.2)
+            });
+        }
+        
+        // Store the planet data for this system
+        if (!this.customPlanetData) {
+            this.customPlanetData = {};
+        }
+        
+        this.customPlanetData[systemId] = standardizedPlanets;
+        console.log(`Stored ${standardizedPlanets.length} planets for system ${systemId}`);
+    }
+    
+    // Helper method to generate a random color
+    getRandomColor() {
+        return Math.floor(Math.random() * 0xFFFFFF);
+    }
 }

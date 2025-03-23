@@ -10,21 +10,77 @@ The game is built around an Entity Component System (ECS) architecture, providin
 
 ### ECS Implementation
 
+The game uses a custom ECS (Entity Component System) architecture that separates data (Components) from behavior (Systems), with Entities acting as containers. This approach enables high performance, code organization, and modularity.
+
+The core elements of the ECS implementation are:
+
+- **Entities**: Containers for components identified by unique IDs with optional tags
+- **Components**: Pure data containers that define entity properties and state
+- **Systems**: Process entities with specific component requirements in priority order
+- **World**: Central coordinator that manages entities, systems, and messaging
+
+#### Data Flow
+1. World manages the game simulation state and time tracking
+2. EntityManager handles entity creation, destruction, and querying
+3. SystemManager prioritizes and executes systems each frame
+4. Systems process entities that have required components
+5. MessageBus enables decoupled communication between systems
+6. Components store entity-specific data that systems process
+7. Data-oriented storage with typed arrays provides performance optimization
+
+The ECS implementation is enhanced with performance optimizations like object pooling, tag caching, data-oriented design, and specialized factories for common entity types.
+
+#### Performance Optimization Strategies
+
+The ECS implementation incorporates several key performance optimization techniques:
+
+- **Data-Oriented Design**:
+  - Component data separated from behavior for cache efficiency
+  - Typed arrays for numerical data (positions, velocities, etc.)
+  - Contiguous memory layout through specialized DataStore classes
+  - Minimized indirection for hot path operations
+
+- **Memory Management**:
+  - Entity recycling pool to minimize garbage collection
+  - Pre-allocated component arrays with fixed maximum size
+  - Index recycling within DataStore for reusing memory slots
+  - Object pooling for frequently created/destroyed entities
+
+- **Caching Strategies**:
+  - Direct property access for frequently checked tags (`_isEnemy`, `_isPlayer`, etc.)
+  - Entity list caching in systems with dirty flag for invalidation
+  - Reusable vector objects with object pooling for calculations
+  - Optimized message dispatch for high-frequency events
+
+- **Algorithmic Optimizations**:
+  - O(1) entity lookups using Maps and indices
+  - Specialized fast paths for common operations
+  - Batch processing entities with similar components
+  - Tag-based filtering using Set data structures
+  - Event-based updates to avoid polling
+
+These techniques significantly reduce CPU usage, minimize memory churn, and maintain consistent frame rates, especially during intensive gameplay with numerous entities.
+
 #### Entity Class (`js/core/entity.js`)
 
 - Base class for all game objects in the game world
 - Contains a unique ID and Map collection of components
 - Maintains a Set of tags for categorization (player, enemy, projectile)
-- Implements performance-critical tag caching for `player`, `enemy`, and `projectile` tags
-  - Uses direct property access via `_isEnemy`, `_isPlayer`, `_isProjectile` flags
+- Implements performance-critical tag caching for `player`, `enemy`, `projectile`, and `pooled` tags
+  - Uses direct property access via `_isEnemy`, `_isPlayer`, `_isProjectile`, and `_isPooled` flags
   - Significantly faster than Set lookups for frequently checked tags
+  - Includes cache consistency checking and automatic repair
 - Provides methods for component and tag management:
   - Components can be retrieved by class reference or string name
   - Component addition/removal triggers lifecycle hooks
   - Tag changes update EntityManager indices
 - Implements error detection and self-repair for tag registration failures
+  - Logs errors when entity tags fail to register properly
+  - Automatically fixes tag registration with manual fallback
+  - Verifies tag consistency between cache and actual tags
 - Publishes events to MessageBus for component/tag changes:
   - `component.added`, `component.removed`
+  - `tag.added`, `tag.removed` (via EntityManager)
 
 #### Component Class (`js/core/component.js`)
 
@@ -47,21 +103,35 @@ The game is built around an Entity Component System (ECS) architecture, providin
 - Default implementation for entity iteration and processing:
   - `update(deltaTime)` - Processes all matching entities
   - `processEntity(entity, deltaTime)` - Processes individual entities
+  - `initialize()` - Called once when system is registered with SystemManager
+- Entity validation:
+  - `checkEntity(entity)` - Verifies entity has all required components
+  - `getEntities()` - Returns all compatible entities from the world
 - Enable/disable functionality for toggling entire systems
+- Automatic entity filtering by required component types
 
 #### OptimizedEntityFactory (`js/core/optimizedEntityFactory.js`)
 
 - Factory pattern for creating common entity types with optimized components
 - Creates entities with pre-configured optimized component sets
 - Utility methods for creating:
-  - Basic entities with transforms
-  - Physics entities with rigidbody components
-  - Asteroids with randomized properties
-  - Projectiles with directional velocity
-- Uses optimized component implementations for better performance
+  - `createBasicEntity` - Basic entities with transform components
+  - `createPhysicsEntity` - Physics entities with transform and rigidbody
+  - `createAsteroid` - Asteroids with randomized properties:
+    - Random rotation and angular velocity
+    - Slight scale variation for visual diversity
+    - Proper collision radius setup
+  - `createProjectile` - Projectiles with directional velocity:
+    - Automatic direction normalization
+    - Look-at functionality for proper orientation
+    - Speed-based velocity setting
+    - Appropriate physics properties (low mass, small collision radius)
+- Integrates with optimized component implementations:
+  - OptimizedTransformComponent for positioning
+  - OptimizedRigidbodyComponent for physics
+- Sets appropriate tags and physics parameters automatically
 - Configures entity properties through unified interface
-- Automatically sets appropriate tags and physics parameters
-- Sets default properties with sensible values to reduce boilerplate
+- Uses sensible defaults to reduce boilerplate code
 
 #### ComponentDataStore (`js/core/dataStore.js`)
 
@@ -69,6 +139,11 @@ The game is built around an Entity Component System (ECS) architecture, providin
 - Uses typed arrays for cache-coherent memory layout
 - Separates component data from entity references for improved performance
 - Implements index recycling to reuse memory allocations
+- Core API:
+  - `allocate(entityId)` - Reserves space in the typed arrays 
+  - `free(entityId)` - Returns space to the pool for reuse
+  - `getIndex(entityId)` - Maps entity IDs to array indices
+  - `hasEntity(entityId)` - Checks if an entity has this component
 - Features:
   - Entity-to-index mapping for fast lookups
   - Typed array storage for numeric properties
@@ -76,8 +151,18 @@ The game is built around an Entity Component System (ECS) architecture, providin
   - Automatic cleanup and index reclamation
   - Optimized batch operations for high-performance updates
 - Specialized implementations:
-  - `TransformDataStore`: Positions, rotations, and scales
-  - `RigidbodyDataStore`: Physics properties and forces
+  - `TransformDataStore`: 
+    - `positions` (Float32Array): 3 values per entity for x, y, z coordinates
+    - `quaternions` (Float32Array): 4 values per entity for x, y, z, w quaternion
+    - `scales` (Float32Array): 3 values per entity for x, y, z scaling
+    - `needsUpdate` (Uint8Array): 1 bit flag for matrix updates
+  - `RigidbodyDataStore`: 
+    - `velocities` (Float32Array): 3 values per entity for x, y, z velocity
+    - `angularVelocities` (Float32Array): 3 values per entity for x, y, z rotation
+    - `forces` (Float32Array): 3 values per entity for accumulated force
+    - `torques` (Float32Array): 3 values per entity for rotational force
+    - `properties` (Float32Array): 4 values per entity for mass, drag, angularDrag, collisionRadius
+    - `flags` (Uint8Array): 4 values per entity for isKinematic, freezeRotation, useGravity, isTrigger
 
 ### Enhanced Systems
 
@@ -95,11 +180,14 @@ The game is built around an Entity Component System (ECS) architecture, providin
   - Maintains cached entity list for processing
   - Listens for relevant entity/component events to update cache
   - Only rebuilds entity cache when necessary
+  - Uses dirtyEntityIds flag to track when cache needs rebuilding
 - Performance optimizations:
   - Avoids creating temporary objects in hot path
-  - Uses pre-allocated temporary vectors
+  - Uses pre-allocated temporary vectors for calculations
   - Processes entities in memory-order when possible
   - Applies direct math operations on typed arrays
+  - Early exits for kinematic entities
+  - Separate processing for rotation-frozen bodies
 
 #### World Class (`js/core/world.js`)
 
@@ -109,9 +197,19 @@ The game is built around an Entity Component System (ECS) architecture, providin
   - `entityManager` - Handles entity lifecycle
   - `systemManager` - Manages system execution
   - `messageBus` - Provides communication
-- Handles time tracking with delta time calculation (capped at 100ms)
+- MessageBus integration:
+  - Can use shared or dedicated message bus
+  - Sets global `window.mainMessageBus` if creating new bus
+  - Ensures consistent message bus access across systems
+- Handles time tracking with delta time calculation:
+  - Uses `performance.now()` for precise timing
+  - Caps delta time at 100ms to prevent large jumps
+  - Maintains cumulative time
+- Lifecycle events:
+  - Publishes `world.initialized` when setup complete
+  - Publishes `world.preUpdate` at start of frame
+  - Publishes `world.postUpdate` at end of frame
 - Exposes convenience methods for entity and system operations
-- Publishes frame events: `world.preUpdate` and `world.postUpdate`
 - Debug facilities for entity counting and performance monitoring
 - Implements global message bus access via `window.mainMessageBus`
 
@@ -122,11 +220,22 @@ The game is built around an Entity Component System (ECS) architecture, providin
   - Entity recycling pool (max 100 entities) to reduce garbage collection
   - Maps for O(1) entity lookups by ID, component type, and tag
   - WeakMap references to allow garbage collection of unused entities
-- Entity lifecycle handling with proper event publishing
-- Entity queries by tag or component requirements
-- Automatic cleanup of entity references when entities are destroyed
-- Adds entity name as tag automatically during creation
-- Proper component cleanup during entity destruction
+  - Optimized entity reuse with automatic state clearing
+- Entity lifecycle handling with proper event publishing:
+  - Entity creation with automatic name-to-tag conversion
+  - Component cleanup during entity destruction
+  - Proper reference removal from all indices
+- Tag-based entity management:
+  - Efficient tag indices for fast querying
+  - Automatic tag cleanup during entity destruction
+  - Empty tag set removal for memory optimization
+- Query capabilities:
+  - Entities by single tag
+  - Entities with specific components
+  - All entities in the world
+- Event publishing for entity lifecycle:
+  - 'entity.created' on creation
+  - 'entity.destroyed' before removal
 
 #### SystemManager Class (`js/core/systemManager.js`)
 
@@ -148,42 +257,90 @@ The game is built around an Entity Component System (ECS) architecture, providin
   - Fast path for high-frequency messages (`transform.updated`, `physics.update`, `render.update`)
   - Message queuing to prevent re-entrancy issues during dispatch
   - Optimized message handling for critical paths
+  - `fastPublish` method for minimal overhead on performance-critical events
 - Robust error handling:
   - Global access via `window.mainMessageBus` for critical events
   - Emergency game over trigger mechanism with multiple fallbacks
   - Event forwarding between message bus instances
   - Detailed error logging and recovery for critical messages
+  - Global message bus registry for emergency access
+- Enhanced handling for critical game events:
+  - Special case for `game.over` events with guaranteed delivery
+  - Multiple fallback mechanisms for `game.over` handling:
+    - Forwarding to main message bus
+    - Direct window.game.gameOver() call as last resort
+  - Logging and tracing of event paths
 - Self-registration in global registry for emergency access
-- Enhanced handling for critical game events (especially `game.over`)
-- Each subscription returns an unsubscribe function for cleanup
+- Unsubscribe functions returned by subscribe for automatic cleanup
 
 ### Entity-Component Relationships
 
-- Components store a reference to their parent entity
-- Entities store components in a Map keyed by component class name
-- Component lifecycle hooks are called during attachment/detachment
-- Event notifications are published for component changes
-- Entities can be queried by their component composition
-- Components can access other components on the same entity
+- Components store a reference to their parent entity via the `entity` property
+- Entity attaches components using `addComponent()` method:
+  - Sets up bi-directional reference between entity and component
+  - Components are stored in a Map keyed by component class name
+  - Automatically calls component's lifecycle hooks
+- Component retrieval is optimized:
+  - Direct access via `getComponent(ComponentClass)` or `getComponent("ComponentName")`
+  - O(1) lookup time using Map-based storage
+  - Type-safe access with class reference
+- Lifecycle management:
+  - Component `onAttached()` hook called when added to entity
+  - Component `onDetached()` hook called when removed from entity
+  - Enable/disable state changes trigger `onEnabled()`/`onDisabled()` hooks
+- Event notifications are published for component changes:
+  - `component.added` when a component is attached
+  - `component.removed` when a component is detached
+- Component access pattern:
+  - Systems typically access multiple components on same entity
+  - Components can access other components on the same entity: `this.entity.getComponent(OtherComponent)`
+  - Component state can be modified by any system with access to the entity
 
 ### System-Entity Relationships
 
-- Systems define required components for processing
-- Entities are automatically filtered based on component requirements
+- Systems define required components for processing via `requiredComponents` array
+- Entity filtering occurs automatically through the following mechanism:
+  - System calls `getEntities()` to retrieve compatible entities
+  - World's `getEntitiesWithComponents()` is invoked with required components
+  - EntityManager performs the actual filtering by component requirements
+- Optimized for performance:
+  - Entity lookups use fast Map-based indices
+  - Tag-based filtering uses specialized caching
+  - Commonly checked tags use direct property access for speed
 - Systems process entities in sequence during each update cycle
 - Entity updates receive delta time for time-based processing
 - Systems can be enabled/disabled to control processing
+- Entity-System communication happens via:
+  - Direct component access (reading/writing component data)
+  - MessageBus events for decoupled communication
+  - Shared world reference for global access
 
 ### Event-Driven Communication
 
 - Systems communicate via MessageBus rather than direct references
-- Events include:
+- Publication-subscription model:
+  - Components/systems can publish messages with `messageBus.publish(type, data)`
+  - Subscribers register interest with `messageBus.subscribe(type, callback)`
+  - Each subscription returns an unsubscribe function for cleanup
+  - `fastPublish` method available for high-frequency, performance-critical events
+- Message structure:
+  - `type` - String identifier for the message category
+  - `data` - Payload object with event-specific information
+  - `timestamp` - Automatic timestamp for processing order
+- Core event categories:
   - Entity lifecycle: `entity.created`, `entity.destroyed`
   - Component changes: `component.added`, `component.removed`
   - Frame timing: `world.preUpdate`, `world.postUpdate`
   - Game state: `game.over`
-- Message data includes type, payload, and timestamp
-- Queuing mechanism prevents cascading event issues
+- Message queueing system:
+  - Prevents re-entrancy issues during event dispatching
+  - Manages the order of event processing
+  - Handles recursive event triggering safely
+  - Prevents cascading event issues
+- Global messaging capabilities:
+  - Window-level access via `window.mainMessageBus`
+  - Registry of message buses for emergency access
+  - Critical event forwarding between bus instances
 
 ## Core Components
 
@@ -252,24 +409,41 @@ The game is built around an Entity Component System (ECS) architecture, providin
 
 - Controls enemy behavior with attack patterns
 - Enemy characteristics:
-  - `faction` and `type` properties for enemy categorization
+  - `faction` and `type` properties for enemy categorization (spectrals, drone)
   - `detectionRange` for player awareness radius
   - `damage` for collision impact damage
   - `speed` for movement rate
+- Special movement parameters:
+  - `spiralAmplitude` - Controls radius of spiral pattern
+  - `spiralFrequency` - Controls how tight the spiral is
+  - `spiralPhase` - Random starting phase for varied movements
+  - `timeAlive` - Tracks lifetime for movement calculations
+  - `isDroneLike` flag for special drone movement patterns
+- Advanced player detection:
+  - Multiple fallback detection methods with priority order:
+    1. Direct world.playerEntity reference
+    2. Global window.game.combat.playerEntity reference
+    3. Entity tag-based search via getEntitiesByTag('player')
+    4. Entity manager tag index lookup
+    5. Brute force search of all entities
+    6. Fallback to direct spaceship mesh from global game object
+  - Comprehensive error handling with graceful degradation
+  - Defensive code to prevent errors when entities are missing or destroyed
 - Movement patterns:
   - Optimized player entity lookup with direct tag access
   - Kamikaze direct pursuit behavior
   - Specialized spiral movement pattern for spectral drones
   - Banking effect for realistic turning visualization
+- Implementation details:
+  - Direction vector caching to avoid allocations
+  - Periodic error messaging to avoid console spam
+  - Rotation smoothing for natural movement
+  - Velocity adjustment based on time alive
 - Attack implementation:
   - Collision detection based on distance threshold
   - Damage application to player health component
   - Direct spaceship object damage for multi-system synchronization
   - Explosion effects and sounds on collision
-- Robust error handling:
-  - Multiple fallback mechanisms for player entity detection
-  - Comprehensive logging for debugging
-  - Safety checks for destroyed entities
 
 ### CargoComponent (`js/components/spaceship/cargo.js`)
 
@@ -418,13 +592,44 @@ The game is built around an Entity Component System (ECS) architecture, providin
 
 ### EnemySystem (`js/systems/combat/enemySystem.js`)
 
-- Enemy spawning and management
-- AI behavior processing
-- Target acquisition and tracking
-- Attack execution and coordination
-- Difficulty scaling based on game progression
-- Enemy limit enforcement for balance
-- Visual indicators for enemy states
+- Comprehensive enemy entity management using a modular architecture
+- Core modules:
+  - `EnemyPoolManager` - Object pool system for enemy entities
+  - `EnemySpawner` - Spawn point generation and enemy instantiation
+  - `EnemyLifecycle` - Enemy reference management and state tracking
+- Entity pooling system:
+  - Pre-allocated enemy pool to minimize garbage collection
+  - Entity recycling with complete state reset
+  - Pool size management with configurable parameters
+  - Tag management with proper cache handling
+  - Component state reset during recycling
+- Spawn mechanics:
+  - Dynamic spawn point generation in sphere around player
+  - Smart spawn interval management with configurable timers
+  - Position randomization for unpredictable enemy placement
+  - Enemy limit enforcement for balanced difficulty
+  - Spawn diagnostics for ensuring system health
+- Player docking integration:
+  - Automatic enemy freezing when player is docked
+  - Event-based docking state synchronization via MessageBus
+  - Global game state synchronization as fallback
+  - Proper unfreezing when player undocks
+- Self-healing capabilities:
+  - Continuous spawn system monitoring
+  - Periodic validation of enemy references
+  - Removal of invalid entities from tracking
+  - Regeneration of spawn points as needed
+  - Automatic recovery from error states
+- Event-driven architecture:
+  - Entity lifecycle events for tracking
+  - Subscription to player docking/undocking events
+  - Combat statistics tracking (enemies destroyed)
+  - Entity tag state validation
+- Debugging facilities:
+  - Periodic diagnostic reporting
+  - Robust error logging with context
+  - Global state accessibility for emergency intervention
+  - Performance metrics tracking
 
 ## High-Level Modules
 
@@ -462,6 +667,78 @@ The game is built around an Entity Component System (ECS) architecture, providin
   - Comprehensive dispose() method for complete teardown
   - Material and geometry reuse where possible
 
+## Python FastAPI Backend
+
+### API Server (`api_server.py`)
+
+- Python-based backend server for AI-powered content generation
+- Core technologies:
+  - FastAPI for API endpoint implementation
+  - Google Gemini AI for image generation
+  - JWT for secure token-based authentication
+  - CORS middleware for cross-origin requests
+- API endpoints:
+  - `/token` - Authentication endpoint for JWT token generation
+  - `/generate-skybox` - Creates space skybox images from text descriptions
+  - `/generate-planet` - Creates planet texture images from text descriptions
+- AI image generation:
+  - Uses Gemini AI's image generation capabilities
+  - Structured prompting for consistent results
+  - Format optimization for seamless texture mapping
+  - Customized wrappers for different asset types
+- Security features:
+  - JWT token-based authentication
+  - Configurable client ID validation
+  - Environment variable-based configuration
+  - CORS protection for production deployment
+- Asset management:
+  - Automatic file saving and organization
+  - Unique ID generation for image files
+  - Proper MIME type handling and detection
+  - URL path conversion for frontend consumption
+  - Fallback image generation for error cases
+
+### JavaScript API Integration (`js/modules/utils/apiClient.js`)
+
+- Client-side API wrapper for communicating with the backend
+- Features:
+  - Automatic token management with localStorage persistence
+  - Token expiration handling and renewal
+  - Environment-aware API URL construction
+  - Response processing and error handling
+  - Image URL normalization
+- Core methods:
+  - `getToken()` - Authenticates and stores JWT token
+  - `generateSkybox()` - Creates space environment textures
+  - `generatePlanet()` - Creates planet surface textures
+  - `getFullImageUrl()` - Converts API paths to usable URLs
+- Environment detection:
+  - Local development vs production configuration
+  - Automatic base URL selection
+  - Parameterized client identification
+
+### Custom System Creator (`js/modules/ui/customSystemCreator.js`)
+
+- UI interface for creating custom star systems using AI
+- Features:
+  - Comprehensive form for system design
+  - Star class selection with visual preview
+  - Planet creation with configurable properties
+  - Interactive sliders for physical parameters
+  - Real-time UI feedback during generation
+  - Visual preview of generated assets
+- Integration points:
+  - Uses ApiClient for backend communication
+  - Connects to StarSystemGenerator for system integration
+  - Stores custom textures for rendering
+  - Provides complete travel functionality to new systems
+- Implementation details:
+  - DOM-based UI with event handling
+  - Progressive generation workflow
+  - Structured data collection and validation
+  - Error handling with user feedback
+  - Preview rendering before system integration
+
 ### Physics (`js/modules/physics.js`)
 
 - Newtonian physics simulation in zero-gravity
@@ -493,7 +770,11 @@ The game is built around an Entity Component System (ECS) architecture, providin
 - Projectile creation and management
 - Damage calculation and application
 - Visual effects for weapons and impacts
-- Enemy spawning and AI control
+- Enemy management:
+  - Modular implementation with dedicated subsystems
+  - Object pooling for performance optimization
+  - Self-healing reference management
+  - State synchronization with main game
 - Combat statistics tracking
 - Difficulty scaling mechanics
 - Entity reference tracking for targeting
@@ -512,6 +793,12 @@ The game is built around an Entity Component System (ECS) architecture, providin
 - Resource node placement and management
 - Mothership creation and positioning
 - Safe zone implementation around mothership
+- Custom system integration:
+  - AI-generated skybox and planet textures 
+  - User-defined system properties
+  - Seamless integration with procedural systems
+  - Persistence of custom systems data
+  - System connections via warp gates
 
 ### Audio (`js/modules/audio.js`)
 
@@ -583,10 +870,25 @@ The game initialization process follows these steps:
    - Entity creation and component attachment
    - Event handler registration
    
-3. **Game Loop**
+3. **Intro Sequence Check**
+   - Check localStorage for previous intro playback
+   - For first-time players:
+     - Initialize the intro sequence components
+     - Position camera for optimal intro viewing
+     - Hide UI elements and disable controls
+     - Start cinematic sequence with Star Dreadnought
+   - For returning players:
+     - Skip intro sequence
+     - Start in docked state at the mothership
+     - Show tutorial prompts if needed
+   
+4. **Game Loop**
    - Frame timing with requestAnimationFrame
    - Delta time calculation with capping (100ms max)
-   - Systems update in priority order:
+   - Conditional system updates:
+     - During intro: Only essential non-enemy systems updated
+     - Normal gameplay: All systems updated in priority order
+   - Standard update sequence:
      1. Physics update (collisions, movement)
      2. Spaceship update (controls, thrust)
      3. Combat update (weapons, enemies)
@@ -704,10 +1006,15 @@ The game initialization process follows these steps:
 │   │   ├── messageBus.js    # Event system
 │   │   ├── system.js        # Base system class
 │   │   ├── systemManager.js # System execution management
-│   │   └── world.js         # Top-level ECS container
+│   │   ├── world.js         # Top-level ECS container
+│   │   ├── dataStore.js     # Data-oriented storage
+│   │   └── optimizedEntityFactory.js # Factory for optimized entities
 │   │
 │   ├── components/          # Game components
 │   │   ├── transform.js     # Position, rotation, scale
+│   │   ├── optimized/       # Data-oriented components
+│   │   │   ├── transformComponent.js  # Optimized transform
+│   │   │   └── rigidbodyComponent.js  # Optimized physics
 │   │   ├── combat/          # Combat-related components
 │   │   │   ├── healthComponent.js    # Health and shields
 │   │   │   └── enemyAI.js            # Enemy behavior
@@ -726,6 +1033,21 @@ The game initialization process follows these steps:
 │   ├── entities/            # Entity definitions and factories
 │   │   └── spaceship.js     # Player ship creation
 │   │
+│   ├── systems/             # Game systems
+│   │   ├── combat/          # Combat logic
+│   │   │   ├── combatSystem.js       # Projectile and damage
+│   │   │   ├── enemySystem.js        # Main enemy manager
+│   │   │   ├── enemyPoolManager.js   # Enemy object pooling
+│   │   │   ├── enemySpawner.js       # Enemy spawn generation
+│   │   │   └── enemyLifecycle.js     # Enemy lifecycle tracking
+│   │   ├── input/           # Input processing
+│   │   ├── mining/          # Mining mechanics
+│   │   ├── physics/         # Physics calculations
+│   │   │   ├── collisionSystem.js    # Collision detection
+│   │   │   ├── movementSystem.js     # Position updates
+│   │   │   └── optimizedMovementSystem.js # Data-oriented physics
+│   │   └── rendering/       # Rendering logic
+│   │
 │   ├── modules/             # High-level game modules
 │   │   ├── audio.js         # Sound system
 │   │   ├── combat.js        # Combat mechanics
@@ -739,27 +1061,38 @@ The game initialization process follows these steps:
 │   │   ├── combat/          # Combat subsystems
 │   │   ├── controls/        # Control subsystems
 │   │   ├── environment/     # Environment objects
-│   │   └── ui/              # UI components
-│   │
-│   ├── systems/             # Game systems
-│   │   ├── combat/          # Combat logic
-│   │   │   ├── combatSystem.js       # Projectile and damage
-│   │   │   └── enemySystem.js        # Enemy management
-│   │   ├── input/           # Input processing
-│   │   ├── mining/          # Mining mechanics
-│   │   ├── physics/         # Physics calculations
-│   │   │   ├── collisionSystem.js    # Collision detection
-│   │   │   └── movementSystem.js     # Position updates
-│   │   └── rendering/       # Rendering logic
+│   │   │   ├── asteroidBelt.js       # Asteroid field generation
+│   │   │   ├── mothership.js         # Mothership creation
+│   │   │   ├── planets.js            # Planet generation
+│   │   │   ├── skybox.js             # Space background
+│   │   │   ├── starDreadnought.js    # Intro sequence ship
+│   │   │   ├── starSystemGenerator.js # System generation
+│   │   │   └── systemTransition.js   # System travel effects
+│   │   ├── ui/              # UI components
+│   │   │   ├── hud.js                # In-game interface
+│   │   │   ├── mothershipInterface.js # Docking interface
+│   │   │   ├── starMap.js            # System navigation
+│   │   │   ├── customSystemCreator.js # AI system creator
+│   │   │   └── blackjackGame.js      # Mini-game
+│   │   └── utils/           # Utility modules
+│   │       └── apiClient.js          # Backend API integration
 │   │
 │   ├── utils/               # Utility functions and helpers
 │   │   └── pathUtils.js     # Path handling utilities
 │   │
+│   ├── tests/               # Test suites for components and systems
+│   ├── examples/            # Example implementations and demos
 │   └── main.js              # Main entry point
 │
 ├── assets/                  # Game assets (models, textures)
+├── css/                     # CSS stylesheets
 ├── sounds/                  # Audio files
-└── index.html               # Main HTML file
+├── static/                  # Static assets and resources
+│   └── images/              # Generated images from AI API
+├── index.html               # Main HTML file
+├── api_server.py            # Python-based API server
+├── requirements.txt         # Python dependencies
+└── README-custom-systems.md # Custom system documentation
 ``` 
 
 ## Core Modules
@@ -776,6 +1109,12 @@ The game initialization process follows these steps:
   - Processes input via Controls module
   - Orchestrates combat and weapon systems
   - Handles global events through MessageBus
+- Intro sequence management:
+  - Initializes and controls the cinematic intro sequence
+  - Tracks intro playback state with localStorage
+  - Freezes gameplay systems during intro (enemies, physics, controls)
+  - Handles intro completion and transition to gameplay
+  - Enables skip functionality for repeat players
 - Game over handling:
   - Multiple fallback mechanisms for reliability
   - Event-based game over triggering via MessageBus
@@ -962,24 +1301,117 @@ The game initialization process follows these steps:
 
 #### EnemySystem (`js/systems/combat/enemySystem.js`)
 
-- Comprehensive enemy entity management with advanced optimization techniques
-- Features sophisticated enemy pooling system for performance:
-  - Pre-allocated entity pool to minimize garbage collection
-  - Entity recycling with component reset functionality
-  - State management for active vs. pooled entities
+- Comprehensive enemy entity management using a modular architecture
+- Core modules:
+  - `EnemyPoolManager` - Object pool system for enemy entities
+  - `EnemySpawner` - Spawn point generation and enemy instantiation
+  - `EnemyLifecycle` - Enemy reference management and state tracking
+- Entity pooling system:
+  - Pre-allocated enemy pool to minimize garbage collection
+  - Entity recycling with complete state reset
+  - Pool size management with configurable parameters
+  - Tag management with proper cache handling
+  - Component state reset during recycling
 - Spawn mechanics:
-  - Dynamic spawn point generation based on player position
-  - Self-healing spawn system with periodic validation
-  - Spawn rate adjustment based on game state
-  - Health monitoring for spawn system diagnostics
-- Enemy AI integration:
-  - Spectral drone implementation with unique visual effects
-  - Customizable movement patterns (spiral amplitude, frequency)
-  - Varied color schemes and mesh distortion for visual variety
-  - Trail effects with custom particle rendering
-- Player docking state synchronization with global game state
-- Automatic entity cleanup and scene management
-- Comprehensive reference validation to prevent memory leaks
+  - Dynamic spawn point generation in sphere around player
+  - Smart spawn interval management with configurable timers
+  - Position randomization for unpredictable enemy placement
+  - Enemy limit enforcement for balanced difficulty
+  - Spawn diagnostics for ensuring system health
+- Player docking integration:
+  - Automatic enemy freezing when player is docked
+  - Event-based docking state synchronization via MessageBus
+  - Global game state synchronization as fallback
+  - Proper unfreezing when player undocks
+- Self-healing capabilities:
+  - Continuous spawn system monitoring
+  - Periodic validation of enemy references
+  - Removal of invalid entities from tracking
+  - Regeneration of spawn points as needed
+  - Automatic recovery from error states
+- Event-driven architecture:
+  - Entity lifecycle events for tracking
+  - Subscription to player docking/undocking events
+  - Combat statistics tracking (enemies destroyed)
+  - Entity tag state validation
+- Debugging facilities:
+  - Periodic diagnostic reporting
+  - Robust error logging with context
+  - Global state accessibility for emergency intervention
+  - Performance metrics tracking
+
+#### EnemyPoolManager (`js/systems/combat/enemyPoolManager.js`)
+
+- Specialized object pooling system for enemy entities
+- Pre-allocation features:
+  - Initial pool creation with configurable size (default 20)
+  - Pre-creation of spectral drone entities
+  - Component initialization during pooling
+  - Proper tag management for pooled entities
+- Entity reuse:
+  - Comprehensive state clearing for reused entities
+  - Tag cache synchronization with _syncTagCache
+  - Component state reset for clean entity reuse
+  - Removal of pooled tag when activated
+- Error prevention:
+  - Duplicate detection and correction
+  - Inconsistency detection between pool and active entities
+  - Component-specific state validation
+  - Defensive entity state verification
+- Technical implementation:
+  - Complete tag clearing with fallback mechanisms
+  - Direct cache flag manipulation when necessary
+  - Proper component cleanup on entity return
+  - Comprehensive debugging and logging
+
+#### EnemySpawner (`js/systems/combat/enemySpawner.js`)
+
+- Handles generation of spawn points and enemy instantiation
+- Model management:
+  - Pre-loading of enemy models with GLTFLoader
+  - Model caching for performance
+  - Material adjustments for visual effects
+  - Error handling for model loading failures
+- Spawn point generation:
+  - Dynamic generation around player position
+  - Fallback spawn points when player not found
+  - Spherical distribution for surrounding threats
+  - Configurable spawn radius and count
+  - Periodic regeneration to follow player
+- Enemy configuration:
+  - Customizable health, damage, and speed settings
+  - Randomized spawn parameters for variety
+  - Resource-efficient model reuse
+  - Proper material setup with emissive properties
+- Technical implementation:
+  - Three.js integration with mesh handling
+  - Random position generation with proper math
+  - Spawn validation with fallback mechanisms
+  - Proper debug logging for spawn operations
+
+#### EnemyLifecycle (`js/systems/combat/enemyLifecycle.js`)
+
+- Manages the complete lifecycle of enemy entities
+- Reference validation:
+  - Periodic checking of enemy entity references
+  - Removal of invalid or destroyed entities
+  - Consistency checking of entity tag state
+  - Auto-repair of tag cache inconsistencies
+- Docking state management:
+  - Global freeze/unfreeze of all enemies
+  - Component-level enabling/disabling
+  - State preservation during docked mode
+  - Proper resumption after undocking
+- Cleanup operations:
+  - Safe entity removal and cleanup
+  - Component state cleanup during entity recycling
+  - Proper MessageBus notification
+  - Memory leak prevention
+- Error recovery:
+  - Detection of inconsistent entity states
+  - Automatic tag cache synchronization
+  - Component reset for problematic entities
+  - Comprehensive logging for troubleshooting
 
 ### Physics System Implementation
 
@@ -1203,16 +1635,31 @@ The game initialization process follows these steps:
 #### Mothership (`js/modules/environment/mothership.js`)
 
 - Central base station for player with advanced visual design
-- Components:
-  - Main cylindrical body with docking bay
-  - Animated navigation lights with flicker effects
-  - Solar panel arrays and communication dishes
-  - Point lights around docking area for better visibility
-- Technical features:
-  - Composite Three.js Group structure for complex model
-  - Animated light intensity for realistic flashing
-  - Slow rotation for dynamic visuals
-  - Region definition for docking detection
+- Visual Components:
+  - Main ring structure with matte black material
+  - Neon turquoise accent rings for visual emphasis
+  - Advanced portal effect in the center using custom shader material
+  - Counter-rotating inner rings for dynamic visual interest
+  - Navigation lights with animated intensity for realism
+  - Numerous decorative neon details along the structure
+- Technical implementation:
+  - THREE.Group-based structure for organized hierarchy
+  - Custom shader implementation for interactive portal effect:
+    - Noise-based animations for organic movement
+    - Fractal Brownian Motion for complex patterns
+    - Time-based animations for continuous visual change
+  - Programmatically generated geometry for consistent scale
+  - Emissive materials with bloom-compatible properties
+  - Animated elements with independent rotation cycles
+- Positioning and Scale:
+  - Located high above the play area for visibility
+  - Proper scale to serve as a significant landmark
+  - Horizontal orientation with the portal facing downward
+- Gameplay Integration:
+  - Acts as a safe zone and resource trading hub
+  - Docking target for player ship
+  - Provides region information for proximity detection
+  - Updates animations continuously through game loop
 
 #### Planets (`js/modules/environment/planets.js`)
 
@@ -1393,17 +1840,36 @@ The game initialization process follows these steps:
 #### Mothership Interface (`js/modules/ui/mothershipInterface.js`)
 
 - Comprehensive docking UI for resource trading and ship upgrades
-- Features:
+- Tab-based interface organization:
+  - Resources tab for selling mined materials
+  - Upgrades tab for enhancing ship capabilities
+  - Services tab for repair and refueling
+  - Travel tab for accessing the star map
+  - Games tab for playing the blackjack mini-game
+- Core functionality:
   - Resource selling interface with dynamic pricing
-  - Ship status panels for fuel, shield, and hull
-  - Repair and refueling services
-  - Ship upgrade system with progressive capabilities
-  - Access to mini-games and star map
+  - Ship status display (cargo, fuel, shield, hull)
+  - Upgrade progression system with tiered improvements
+  - Credit-based economy for purchasing upgrades
+  - Repair and refueling services with cost calculation
+  - Integration with all ship systems for upgrades
+- Advanced UI features:
+  - Tabbed interface with dynamic content loading
+  - Modal dialogs for confirmations
+  - Resource icons with color-coded categories
+  - Upgrade progress bars with visual feedback
+  - Animated transitions between interface states
+  - Responsive design with scrolling for smaller screens
 - Technical implementation:
-  - Complex multi-panel layout with consistent styling
-  - Dynamic button state management based on resource availability
-  - Progress bars for upgrade levels
-  - Cross-module integration with game systems
+  - DOM-based UI with CSS styling
+  - Event-driven updates for real-time data
+  - Touch-optimized for mobile device support
+  - Clean integration with game systems:
+    - Star map for system navigation
+    - Blackjack game for resource gambling
+    - Settings menu for game configuration
+  - Dock/undock prompting system
+  - Advanced mobile touch handling with proper scrolling
 
 #### Star Map (`js/modules/ui/starMap.js`)
 
@@ -1553,4 +2019,71 @@ The game implements an advanced memory management system to reduce garbage colle
   - Global `window.MemoryStats` access for debugging
 
 ### Game Module (`js/modules/game.js`)
-``` 
+
+### Intro Sequence (`js/modules/introSequence.js`)
+
+- Cinematic game introduction system with Star Dreadnought ship
+- Animation sequence:
+  - Arrival phase with portal formation and ship entrance
+  - Player ship deployment phase with teleporter beam 
+  - Departure phase with dramatic exit
+- Technical components:
+  - `StarDreadnought` class (`js/modules/environment/starDreadnought.js`):
+    - Massive capital ship created procedurally using THREE.js geometries
+    - Advanced engine glow effects with particle systems
+    - Teleport beam with shader-based animation and particles
+    - Detailed surface features (turrets, trenches, shield generators)
+    - Animated components synchronized with sequence timing
+  - Portal effect:
+    - Custom shader-based warp tunnel implementation
+    - Particle systems for enhanced visual appeal
+    - Ripple animations with time-based parameters
+  - Camera animations:
+    - Keyframe-based camera movements throughout sequence
+    - Custom easing functions for natural motion
+    - Smooth transitions between sequence phases
+- Visual effects:
+  - Screen flash effects via DOM overlay
+  - Teleport beam with particle emission
+  - Engine trail particles on the Star Dreadnought
+  - Shield effect when player ship is released
+- Sequence control:
+  - Time-based progress tracking for animations
+  - Phase system for managing different parts of the sequence
+  - Skip functionality with local storage persistence
+  - Completion callback for game state transition
+- Integration with game systems:
+  - Temporarily disables player control during sequence
+  - Freezes enemy spawning and movement
+  - Hides UI elements until completion
+  - Preserves initial camera state for restoration
+
+The intro sequence provides a dramatic, cinematic introduction to the game while also explaining the player's arrival in the star system, serving both narrative and tutorial purposes. 
+
+### Star System Generator (`js/modules/environment/starSystemGenerator.js`)
+
+- Star system procedural generation system
+- Core features:
+  - System classification with varied resource distribution
+  - Star class implementation (O, B, A, F, G, K, M)
+  - Skybox and lighting configuration
+  - System connection network via warp gates
+  - Resource multiplier calculation based on star properties
+  - Procedurally generated planet placement and properties
+- Custom system integration:
+  - `addCustomSystem()` method for API-generated systems
+  - Custom texture URL support for skyboxes and planets
+  - Planet data storage for AI-generated assets
+  - Connection of custom systems to existing network
+  - Parameter validation and fallback generation
+  - Custom system flagging for special handling
+  - Storage of custom planet data with `storePlanetData()`
+- System characteristics:
+  - Unique visual identity for each system
+  - System-specific resource distribution
+  - Star color based on stellar classification
+  - Random but consistent naming convention
+  - Position data for star map visualization
+  - Classification-based special features
+
+### Audio (`js/modules/audio.js`)

@@ -611,6 +611,35 @@ export class HUD {
         notificationsArea.style.alignItems = 'center';
         notificationsArea.style.gap = '10px';
         parent.appendChild(notificationsArea);
+        
+        // Add survival timer display
+        const timerDisplay = document.createElement('div');
+        timerDisplay.id = 'survival-timer';
+        timerDisplay.className = 'hud-panel';
+        timerDisplay.style.backgroundColor = 'rgba(6, 22, 31, 0.7)';
+        timerDisplay.style.backdropFilter = 'blur(5px)';
+        timerDisplay.style.borderRadius = '8px';
+        timerDisplay.style.border = '1px solid rgba(120, 220, 232, 0.3)';
+        timerDisplay.style.boxShadow = '0 0 15px rgba(120, 220, 232, 0.2)';
+        timerDisplay.style.padding = '8px 12px 8px 12px';
+        timerDisplay.style.marginBottom = '10px';
+        timerDisplay.style.fontSize = '18px';
+        timerDisplay.style.fontWeight = '600';
+        timerDisplay.style.letterSpacing = '1px';
+        timerDisplay.style.display = 'flex';
+        timerDisplay.style.alignItems = 'center';
+        timerDisplay.style.justifyContent = 'center';
+        timerDisplay.style.gap = '6px';
+        timerDisplay.innerHTML = `
+            <span style="opacity: 0.7; font-size: 14px;">SURVIVAL TIME:</span>
+            <span id="timer-value">00:00</span>
+            <span id="difficulty-indicator" style="font-size: 12px; margin-left: 3px; padding: 2px 5px; background-color: rgba(120, 220, 232, 0.2); border-radius: 4px;">LEVEL 1</span>
+        `;
+        
+        // Add decorative corner elements
+        this.addCornerElements(timerDisplay);
+        
+        notificationsArea.appendChild(timerDisplay);
     }
     
     // Helper methods for UI elements
@@ -915,6 +944,39 @@ export class HUD {
         
         // Update hull integrity - important for value sync 
         this.updateHullDisplay();
+        
+        // Update survival timer
+        if (window.game && window.game.gameTime !== undefined) {
+            const timerValue = document.getElementById('timer-value');
+            const difficultyIndicator = document.getElementById('difficulty-indicator');
+            
+            if (timerValue) {
+                // Format time as mm:ss
+                const totalSeconds = Math.floor(window.game.gameTime);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            if (difficultyIndicator && window.game.difficultyManager) {
+                difficultyIndicator.textContent = `LEVEL ${window.game.difficultyManager.currentLevel}`;
+                
+                // Change color based on difficulty level
+                const levelColors = [
+                    'rgba(120, 220, 232, 0.8)', // Level 1
+                    'rgba(120, 232, 120, 0.8)', // Level 2
+                    'rgba(232, 232, 120, 0.8)', // Level 3
+                    'rgba(232, 160, 120, 0.8)', // Level 4
+                    'rgba(232, 120, 120, 0.8)'  // Level 5+
+                ];
+                
+                const colorIndex = Math.min(window.game.difficultyManager.currentLevel - 1, levelColors.length - 1);
+                difficultyIndicator.style.backgroundColor = `rgba(6, 22, 31, 0.7)`;
+                difficultyIndicator.style.color = levelColors[colorIndex];
+                difficultyIndicator.style.borderColor = levelColors[colorIndex];
+                difficultyIndicator.style.boxShadow = `0 0 8px ${levelColors[colorIndex]}`;
+            }
+        }
     }
     
     // Add a new method to update shield display directly from HealthComponent

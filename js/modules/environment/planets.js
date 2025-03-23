@@ -28,8 +28,9 @@ for (let i = 1; i <= 22; i++) {
 }
 
 export class Planets {
-    constructor(scene) {
+    constructor(scene, starSystemGenerator) {
         this.scene = scene;
+        this.starSystemGenerator = starSystemGenerator;
         this.planets = [];
         this.planetRegions = {};
         this.currentSystemId = 'Solar System'; // Default to our Solar System
@@ -84,6 +85,24 @@ export class Planets {
     // Generate procedural planets for a new star system
     generatePlanetsForSystem(systemId) {
         console.log(`Generating new planets for system: ${systemId}`);
+        
+        // Check if this is a custom system with predefined planets
+        if (this.starSystemGenerator && this.starSystemGenerator.customPlanetData && this.starSystemGenerator.customPlanetData[systemId]) {
+            const customPlanets = this.starSystemGenerator.customPlanetData[systemId];
+            console.log(`Using ${customPlanets.length} custom planets for system: ${systemId}`);
+            
+            // Log the texture URLs for debugging
+            customPlanets.forEach(planet => {
+                if (planet.textureUrl) {
+                    console.log(`Custom planet ${planet.name} has texture URL: ${planet.textureUrl}`);
+                } else {
+                    console.log(`Custom planet ${planet.name} does not have a texture URL`);
+                }
+            });
+            
+            // Return the custom planet data directly
+            return this.starSystemGenerator.customPlanetData[systemId];
+        }
         
         // Planet name word banks for procedural generation
         const prefixes = [
@@ -206,154 +225,193 @@ export class Planets {
     
     // Create planet objects from data array
     createPlanetsFromData(planetData) {
+        // Clear existing planets first
+        this.clearPlanets();
+        
         planetData.forEach(planet => {
             // Create planet
             const planetGeometry = new THREE.SphereGeometry(planet.size, 32, 32);
             let planetMaterial;
             
-            // Create materials based on planet type
-            switch(planet.name) {
-                case "Mercury":
-                    planetMaterial = new THREE.MeshPhongMaterial({
-                        map: planetTextures.mercury,
-                        shininess: 5,
-                        flatShading: false
-                    });
-                    break;
-                    
-                case "Venus":
-                    // Create Venus with surface and atmosphere
-                    planetMaterial = new THREE.MeshPhongMaterial({
-                        map: planetTextures.venus.surface,
-                        shininess: 10,
-                        flatShading: false
-                    });
-                    break;
-                    
-                case "Earth":
-                    planetMaterial = new THREE.MeshPhongMaterial({
-                        map: planetTextures.earth,
-                        shininess: 10,
-                        flatShading: false
-                    });
-                    break;
-                    
-                case "Mars":
-                    planetMaterial = new THREE.MeshPhongMaterial({
-                        map: planetTextures.mars,
-                        shininess: 5,
-                        flatShading: false
-                    });
-                    break;
-                    
-                case "Jupiter":
-                    planetMaterial = new THREE.MeshPhongMaterial({
-                        map: planetTextures.jupiter,
-                        shininess: 10,
-                        flatShading: false
-                    });
-                    break;
-                    
-                case "Saturn":
-                    planetMaterial = new THREE.MeshPhongMaterial({
-                        map: planetTextures.saturn.surface,
-                        shininess: 10,
-                        flatShading: false
-                    });
-                    break;
-                    
-                case "Uranus":
-                    planetMaterial = new THREE.MeshPhongMaterial({
-                        map: planetTextures.uranus,
-                        shininess: 10,
-                        flatShading: false
-                    });
-                    break;
-                    
-                case "Neptune":
-                    planetMaterial = new THREE.MeshPhongMaterial({
-                        map: planetTextures.neptune,
-                        shininess: 10,
-                        flatShading: false
-                    });
-                    break;
-                    
-                default:
-                    // Use random texture from procedural textures for procedurally generated planets
-                    const randomTexture = proceduralTextures[Math.floor(Math.random() * proceduralTextures.length)];
-                    planetMaterial = new THREE.MeshPhongMaterial({
-                        map: randomTexture,
-                        shininess: 10,
-                        flatShading: false
-                    });
+            // Check if this is a custom planet with its own texture
+            if (planet.textureUrl) {
+                console.log(`Creating planet ${planet.name} with custom texture: ${planet.textureUrl}`);
+                
+                // Fix texture path for API server images
+                let adjustedTextureUrl = planet.textureUrl;
+                
+                // Check if this is an image from our API server
+                if (planet.textureUrl.startsWith('/images/')) {
+                    // If running on port 8000, adjust URL to point to port 8001
+                    if (window.location.port === '8000') {
+                        const serverHost = window.location.hostname;
+                        adjustedTextureUrl = `http://${serverHost}:8001${planet.textureUrl}`;
+                        console.log(`Adjusted planet texture path to API server: ${adjustedTextureUrl}`);
+                    }
+                }
+                
+                // Load the custom texture
+                const customTexture = textureLoader.load(adjustedTextureUrl);
+                customTexture.encoding = THREE.sRGBEncoding;
+                
+                // Create material with custom texture
+                planetMaterial = new THREE.MeshPhongMaterial({
+                    map: customTexture,
+                    shininess: 10,
+                    flatShading: false
+                });
+            } else {
+                // Use standard planet textures based on planet name
+                switch(planet.name) {
+                    case "Mercury":
+                        planetMaterial = new THREE.MeshPhongMaterial({
+                            map: planetTextures.mercury,
+                            shininess: 5,
+                            flatShading: false
+                        });
+                        break;
+                        
+                    case "Venus":
+                        // Create Venus with surface and atmosphere
+                        planetMaterial = new THREE.MeshPhongMaterial({
+                            map: planetTextures.venus.surface,
+                            shininess: 10,
+                            flatShading: false
+                        });
+                        break;
+                        
+                    case "Earth":
+                        planetMaterial = new THREE.MeshPhongMaterial({
+                            map: planetTextures.earth,
+                            shininess: 10,
+                            flatShading: false
+                        });
+                        break;
+                        
+                    case "Mars":
+                        planetMaterial = new THREE.MeshPhongMaterial({
+                            map: planetTextures.mars,
+                            shininess: 5,
+                            flatShading: false
+                        });
+                        break;
+                        
+                    case "Jupiter":
+                        planetMaterial = new THREE.MeshPhongMaterial({
+                            map: planetTextures.jupiter,
+                            shininess: 5,
+                            flatShading: false
+                        });
+                        break;
+                        
+                    case "Saturn":
+                        planetMaterial = new THREE.MeshPhongMaterial({
+                            map: planetTextures.saturn.surface,
+                            shininess: 5,
+                            flatShading: false
+                        });
+                        break;
+                        
+                    case "Uranus":
+                        planetMaterial = new THREE.MeshPhongMaterial({
+                            map: planetTextures.uranus,
+                            shininess: 5,
+                            flatShading: false
+                        });
+                        break;
+                        
+                    case "Neptune":
+                        planetMaterial = new THREE.MeshPhongMaterial({
+                            map: planetTextures.neptune,
+                            shininess: 5,
+                            flatShading: false
+                        });
+                        break;
+                        
+                    default:
+                        // For other planets, use a procedural texture from the collection
+                        const textureIndex = Math.floor(Math.random() * proceduralTextures.length);
+                        planetMaterial = new THREE.MeshPhongMaterial({
+                            map: proceduralTextures[textureIndex],
+                            shininess: 5,
+                            color: new THREE.Color(planet.color),
+                            flatShading: false
+                        });
+                        break;
+                }
             }
             
+            // Create the planet mesh
             const planetMesh = new THREE.Mesh(planetGeometry, planetMaterial);
             
-            // Set initial position
+            // Position the planet at its orbital distance
             const angle = Math.random() * Math.PI * 2;
             
-            // Set axial tilt (if defined)
-            if (planet.axialTilt !== undefined) {
-                // Apply axial tilt by rotating the planet mesh
-                planetMesh.rotation.x = planet.axialTilt;
-            }
+            // Apply orbital tilt if specified
+            let orbitalTilt = planet.orbitalTilt || 0;
+            let axialTilt = planet.axialTilt || 0;
             
-            // Add special features
-            if (planet.name === "Venus") {
-                // Add Venus atmosphere
-                const atmosphereGeometry = new THREE.SphereGeometry(planet.size + 4, 32, 32); // 4x the original +1
-                const atmosphereMaterial = new THREE.MeshPhongMaterial({
-                    map: planetTextures.venus.atmosphere,
-                    transparent: true,
-                    opacity: 0.4,
-                    side: THREE.DoubleSide
-                });
-                const atmosphereMesh = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
-                planetMesh.add(atmosphereMesh);
-            }
+            // Position planet with orbital tilt
+            planetMesh.position.x = Math.cos(angle) * planet.distance;
+            planetMesh.position.y = Math.sin(orbitalTilt) * planet.distance;
+            planetMesh.position.z = Math.sin(angle) * Math.cos(orbitalTilt) * planet.distance;
             
-            // Add rings if needed
+            // Apply axial tilt to planet rotation
+            planetMesh.rotation.x = axialTilt;
+            
+            // Add the planet to the scene
+            this.scene.add(planetMesh);
+            
+            // Create planet rings if specified
             if (planet.rings) {
-                const ringGeometry = new THREE.RingGeometry(
-                    planet.size + 8,
-                    planet.size + (planet.name === "Saturn" ? 80 : 28), // 4x the original values
-                    64
-                );
-                const ringMaterial = planet.name === "Saturn" 
-                    ? new THREE.MeshBasicMaterial({
+                let ringGeometry, ringMaterial, ringMesh;
+                
+                // Special case for Saturn
+                if (planet.name === "Saturn") {
+                    // Create ring geometry
+                    ringGeometry = new THREE.RingGeometry(planet.size * 1.4, planet.size * 2.0, 32);
+                    
+                    // Create custom material for Saturn with transparency
+                    ringMaterial = new THREE.MeshBasicMaterial({
                         map: planetTextures.saturn.rings,
-                        transparent: true,
-                        side: THREE.DoubleSide
-                    })
-                    : new THREE.MeshBasicMaterial({
-                        color: 0xffffff,
                         side: THREE.DoubleSide,
-                        opacity: 0.5,
-                        transparent: true
+                        transparent: true,
+                        opacity: 0.8
                     });
-                const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+                } else {
+                    // Generic rings for other planets
+                    ringGeometry = new THREE.RingGeometry(planet.size * 1.3, planet.size * 1.8, 32);
+                    ringMaterial = new THREE.MeshBasicMaterial({
+                        color: planet.color,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.4
+                    });
+                }
+                
+                ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+                
+                // Rotate rings to be flat (perpendicular to y-axis)
                 ringMesh.rotation.x = Math.PI / 2;
+                
+                // Add rings to planet
                 planetMesh.add(ringMesh);
             }
             
-            // Add planet to scene
-            this.scene.add(planetMesh);
-            
-            // Store planet data
+            // Store planet data for orbiting
             this.planets.push({
                 mesh: planetMesh,
                 distance: planet.distance,
                 speed: planet.speed,
                 angle: angle,
-                name: planet.name,
-                orbitalTilt: planet.orbitalTilt || 0
+                orbitalTilt: orbitalTilt
             });
             
-            // Set the planet region for location tracking
+            // Store planet regions for game mechanics
             this.planetRegions[planet.name] = {
-                center: new THREE.Vector3(planetMesh.position.x, planetMesh.position.y, planetMesh.position.z),
-                radius: planet.size * 20 // Increased region radius to better fit scale
+                name: planet.name,
+                position: planetMesh.position.clone(),
+                radius: planet.size * 2
             };
         });
     }
@@ -388,36 +446,36 @@ export class Planets {
         return this.planets;
     }
     
-    update() {
-        // Update planet positions (orbit around sun)
+    update(deltaTime) {
+        // Update planet orbits
         this.planets.forEach(planet => {
-            planet.angle += planet.speed;
+            // Update orbit angle based on speed
+            planet.angle += planet.speed * deltaTime;
             
-            // Calculate flat orbital position
-            const flatX = Math.cos(planet.angle) * planet.distance;
-            const flatZ = Math.sin(planet.angle) * planet.distance;
+            // Calculate new position
+            planet.mesh.position.x = Math.cos(planet.angle) * planet.distance;
+            planet.mesh.position.z = Math.sin(planet.angle) * Math.cos(planet.orbitalTilt) * planet.distance;
+            planet.mesh.position.y = Math.sin(planet.angle) * Math.sin(planet.orbitalTilt) * planet.distance;
             
-            // Apply orbital tilt if it exists
-            if (planet.orbitalTilt) {
-                // Apply orbital tilt by rotating the position around the X axis
-                const tiltY = flatZ * Math.sin(planet.orbitalTilt);
-                const tiltZ = flatZ * Math.cos(planet.orbitalTilt);
-                
-                planet.mesh.position.x = flatX;
-                planet.mesh.position.y = tiltY;
-                planet.mesh.position.z = tiltZ;
-            } else {
-                // Regular orbit
-                planet.mesh.position.x = flatX;
-                planet.mesh.position.z = flatZ;
-                planet.mesh.position.y = 0;
+            // Rotate the planet
+            planet.mesh.rotation.y += deltaTime * 0.1;
+            
+            // FIXED: Update planet region for location tracking
+            // Use the planet mesh's position directly to find the matching planet region
+            // since the planet object doesn't contain the name property
+            if (planet.mesh) {
+                // Iterate through planet regions and find the one with a position matching this planet
+                Object.values(this.planetRegions).forEach(region => {
+                    if (region && region.position) {
+                        // Check if this region position is close to the planet position
+                        // If it's very close, it's likely the same planet
+                        const distance = region.position.distanceTo(planet.mesh.position);
+                        if (distance < 5000) { // A reasonable threshold
+                            region.position.copy(planet.mesh.position);
+                        }
+                    }
+                });
             }
-            
-            // Slowly rotate the planet
-            planet.mesh.rotation.y += 0.001;
-            
-            // Update planet region for location tracking
-            this.planetRegions[planet.name].center.copy(planet.mesh.position);
         });
     }
 }

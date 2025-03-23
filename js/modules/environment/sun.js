@@ -277,7 +277,7 @@ export class Sun {
     }
     
     // Update sun based on star type (O, B, A, F, G, K, M)
-    updateSunType(type) {
+    updateSunType(type, lightIntensityMultiplier = 1.0) {
         this.sunType = type || 'G';
         let color, temperature, activity;
         
@@ -351,11 +351,11 @@ export class Sun {
         // Update light color
         if (this.sunLight) {
             this.sunLight.color.setHex(color);
-            // Adjust light intensity based on temperature
-            this.sunLight.intensity = 1.5 + (temperature / 10000);
+            // Adjust light intensity based on temperature and apply the multiplier
+            this.sunLight.intensity = (1.5 + (temperature / 10000)) * lightIntensityMultiplier;
         }
         
-        console.log(`Updated sun to type ${this.sunType}, color: ${color.toString(16)}`);
+        console.log(`Updated sun to type ${this.sunType}, color: ${color.toString(16)}, intensity multiplier: ${lightIntensityMultiplier}`);
     }
     
     getRadius() {
@@ -394,12 +394,13 @@ export class Sun {
             this.sunFlickerDirection = Math.random() * 0.03;
         }
         
-        // Apply flickering to light intensity
+        // Apply flickering to light intensity - preserve any multiplier that was applied
         if (this.sunLight) {
+            const intensityMultiplier = this.sunLight._intensityMultiplier || 1.0;
             const baseIntensity = 1.5 + (this.sunType === 'G' ? 0.5 : 
                                        (this.sunType === 'O' || this.sunType === 'B') ? 1.5 : 
                                        (this.sunType === 'M') ? 0.2 : 0.8);
-            this.sunLight.intensity = baseIntensity * this.sunFlickerIntensity;
+            this.sunLight.intensity = baseIntensity * this.sunFlickerIntensity * intensityMultiplier;
         }
         
         // Update camera-relative uniforms if available

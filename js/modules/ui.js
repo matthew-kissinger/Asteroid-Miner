@@ -299,6 +299,35 @@ export class UI {
     hideUI() {
         console.log("Hiding UI elements");
         
+        // Force hide ALL UI elements during intro sequence
+        if (window.game && window.game.introSequenceActive) {
+            console.log("Intro sequence active - forcing ALL UI elements to be hidden");
+            
+            // Get references to each UI element we need to hide
+            const elements = [
+                document.getElementById('hud-container'),
+                document.getElementById('mobile-hud-container'),
+                document.getElementById('pointer-lock-instructions'),
+                document.getElementById('notifications-area')
+            ];
+            
+            // Hide each found element (being careful to check if it exists)
+            elements.forEach(element => {
+                if (element) {
+                    element.style.display = 'none';
+                }
+            });
+            
+            // Hide any additional UI panels that might be visible
+            const allPanels = document.querySelectorAll('.ui-panel, .panel, .hud-panel, .status-panel');
+            allPanels.forEach(panel => {
+                panel.style.display = 'none';
+            });
+            
+            return; // Skip standard hiding - we've handled everything
+        }
+        
+        // Standard UI hiding for non-intro cases
         // Hide main UI elements but not game over screen
         if (this.hud && this.hud.hide) {
             this.hud.hide();
@@ -329,8 +358,14 @@ export class UI {
     showUI() {
         console.log("Showing UI elements");
         
-        // Show all UI elements
+        // Add debug output to check if intro is active
+        if (window.game && window.game.introSequenceActive) {
+            console.warn("showUI called while intro is still active - this is likely a bug");
+        }
+        
+        // First, show UI components through their interfaces
         if (this.hud && this.hud.show) {
+            console.log("Calling hud.show()");
             this.hud.show();
         }
         
@@ -342,6 +377,47 @@ export class UI {
         if (this.isMobile && this.controls && this.controls.touchControls) {
             this.controls.touchControls.show();
         }
+        
+        // FORCE restore elements that might have been forcibly hidden
+        console.log("Forcing all UI elements to be displayed");
+        
+        // Ensure HUD container is visible
+        const hudContainer = document.getElementById('hud-container');
+        if (hudContainer) {
+            console.log("Setting hudContainer to display:block");
+            hudContainer.style.display = 'block';
+            hudContainer.style.visibility = 'visible'; // Double ensure visibility
+        } else {
+            console.warn("HUD container not found - could not make visible");
+        }
+        
+        // Ensure mobile HUD is visible if on mobile
+        const mobileHudContainer = document.getElementById('mobile-hud-container');
+        if (mobileHudContainer) {
+            mobileHudContainer.style.display = 'block';
+            mobileHudContainer.style.visibility = 'visible';
+        }
+        
+        // Show pointer lock instructions only if not locked
+        const pointerLockInstructions = document.getElementById('pointer-lock-instructions');
+        if (pointerLockInstructions && !document.pointerLockElement) {
+            pointerLockInstructions.style.display = 'block';
+            pointerLockInstructions.style.visibility = 'visible';
+        }
+        
+        // Show notifications area
+        const notificationsArea = document.getElementById('notifications-area');
+        if (notificationsArea) {
+            notificationsArea.style.display = 'block';
+            notificationsArea.style.visibility = 'visible';
+        }
+
+        // Also show any panels that might have been hidden
+        const allPanels = document.querySelectorAll('.ui-panel, .panel, .hud-panel, .status-panel');
+        allPanels.forEach(panel => {
+            panel.style.display = 'block';
+            panel.style.visibility = 'visible';
+        });
     }
     
     /**

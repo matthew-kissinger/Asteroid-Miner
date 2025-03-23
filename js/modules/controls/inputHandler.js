@@ -14,7 +14,8 @@ export class InputHandler {
     setupKeyboardControls() {
         // Keyboard controls
         document.addEventListener('keydown', e => {
-            if (this.spaceship.isDocked) return; // Ignore inputs when docked
+            // Ignore inputs when docked or intro sequence is active
+            if (this.spaceship.isDocked || (window.game && window.game.introSequenceActive)) return;
             
             switch (e.key.toLowerCase()) {
                 case 'w': 
@@ -32,26 +33,27 @@ export class InputHandler {
                 case 'shift': 
                     this.spaceship.thrust.boost = true; 
                     break;
-                case ' ': // Spacebar for firing particle cannon
-                    if (window.game && window.game.combat) {
-                        window.game.combat.setFiring(true);
-                    }
-                    break;
             }
         });
         
         document.addEventListener('keyup', e => {
+            // Still process key up events when intro is active to prevent stuck keys
+            if (window.game && window.game.introSequenceActive) {
+                // Force reset all thrusters during intro sequence
+                this.spaceship.thrust.forward = false;
+                this.spaceship.thrust.backward = false;
+                this.spaceship.thrust.right = false;
+                this.spaceship.thrust.left = false;
+                this.spaceship.thrust.boost = false;
+                return;
+            }
+            
             switch (e.key.toLowerCase()) {
                 case 'w': this.spaceship.thrust.forward = false; break;
                 case 's': this.spaceship.thrust.backward = false; break;
                 case 'a': this.spaceship.thrust.right = false; break; // A fires right thruster (moves left)
                 case 'd': this.spaceship.thrust.left = false; break;  // D fires left thruster (moves right)
                 case 'shift': this.spaceship.thrust.boost = false; break;
-                case ' ': // Spacebar for firing particle cannon
-                    if (window.game && window.game.combat) {
-                        window.game.combat.setFiring(false);
-                    }
-                    break;
             }
         });
     }
@@ -108,6 +110,9 @@ export class InputHandler {
     }
     
     handleMouseMove(e) {
+        // Skip mouse movement handling during intro sequence
+        if (window.game && window.game.introSequenceActive) return;
+        
         if (!this.isPointerLocked) return;
         
         // Use movementX and movementY for rotation
@@ -116,7 +121,10 @@ export class InputHandler {
         const movementY = e.movementY || 0;
         
         // Update the physics rotation based on these movements
-        this.physics.updateRotation(movementX * this.mouseSensitivity, movementY * this.mouseSensitivity);
+        this.physics.updateRotation(
+            movementX * this.mouseSensitivity, 
+            movementY * this.mouseSensitivity
+        );
     }
     
     isLocked() {

@@ -63,10 +63,10 @@ export class ControlsMenu {
         controlsMenu.appendChild(createControlRow('D', 'Right Thrust'));
         controlsMenu.appendChild(createControlRow('SHIFT', 'Boost'));
         controlsMenu.appendChild(createControlRow('Mouse', 'Ship Rotation'));
-        controlsMenu.appendChild(createControlRow('Click', 'Mine Asteroid'));
-        controlsMenu.appendChild(createControlRow('T', 'Target Lock-On'));
+        controlsMenu.appendChild(createControlRow('Click', 'Fire Particle Cannon'));
+        controlsMenu.appendChild(createControlRow('E', 'Target Lock-On'));
         controlsMenu.appendChild(createControlRow('TAB', 'Cycle Targets'));
-        controlsMenu.appendChild(createControlRow('E', 'Toggle Mining'));
+        controlsMenu.appendChild(createControlRow('R', 'Toggle Mining'));
         controlsMenu.appendChild(createControlRow('Q', 'Dock with Mothership'));
         
         // Set up event listeners for the controls menu

@@ -27,7 +27,7 @@ export class Combat {
         
         // Tuned these parameters for better gameplay
         this.fireRate = 3; // shots per second
-        this.projectileSpeed = 10000; // Base speed units per frame (will be normalized)
+        this.projectileSpeed = 30000; // Base speed units per frame (will be normalized)
         
         // Track the last time we fired for rate limiting
         this.lastFireTime = 0;
@@ -360,6 +360,9 @@ export class Combat {
         // Skip if disabled
         if (!this.scene || !this.spaceship) return;
         
+        // Skip enemy updates if intro sequence is active
+        const introActive = window.game && window.game.introSequenceActive;
+        
         // Update the player reference entity position
         this.updatePlayerReference();
         
@@ -375,8 +378,19 @@ export class Combat {
         }
         
         // Update the ECS world with the current delta time
-        if (this.world) {
+        if (this.world && !introActive) {
             this.world.update(deltaTime);
+        } else if (this.world && introActive) {
+            // During intro, only update non-enemy systems
+            if (this.world.systems) {
+                for (const system of this.world.systems) {
+                    // Skip enemy systems when intro is active
+                    if (system.constructor.name !== 'EnemySystem' && 
+                        system.constructor.name !== 'EnemyAISystem') {
+                        system.update(deltaTime);
+                    }
+                }
+            }
         }
     }
     
@@ -764,17 +778,33 @@ export class Combat {
         // Add slight forward offset so projectiles spawn in front of ship
         const forwardOffset = new THREE.Vector3().copy(direction).multiplyScalar(7);
         
-        // Create left projectile
+        // Calculate weapon port positions (where the flash should originate)
+        // Use smaller forward offset for weapon ports to place them closer to the ship
+        const weaponForwardOffset = new THREE.Vector3().copy(direction).multiplyScalar(4);
+        
+        const leftWeaponPosition = new THREE.Vector3().copy(shipPosition)
+            .add(leftOffset)
+            .add(weaponForwardOffset);
+            
+        const rightWeaponPosition = new THREE.Vector3().copy(shipPosition)
+            .add(rightOffset)
+            .add(weaponForwardOffset);
+        
+        // Create left projectile (still uses original forward offset)
         const leftPosition = new THREE.Vector3().copy(shipPosition)
             .add(leftOffset)
             .add(forwardOffset);
         const leftProjectile = this.createProjectile(leftPosition, direction);
         
-        // Create right projectile
+        // Create right projectile (still uses original forward offset)
         const rightPosition = new THREE.Vector3().copy(shipPosition)
             .add(rightOffset)
             .add(forwardOffset);
         const rightProjectile = this.createProjectile(rightPosition, direction);
+        
+        // Create flash effects at the weapon port positions
+        this.createMuzzleFlash(leftWeaponPosition, direction);
+        this.createMuzzleFlash(rightWeaponPosition, direction);
         
         // Play projectile sound
         if (window.game && window.game.audio) {
@@ -1335,5 +1365,93 @@ export class Combat {
         animateTracer();
         
         return tracerLine;
+    }
+    
+    /**
+     * Create a laser burst effect that travels forward with the projectile
+     * @param {THREE.Vector3} position Position for the effect
+     * @param {THREE.Vector3} direction Direction the effect should travel
+     */
+    createMuzzleFlash(position, direction) {
+        // Create conical beam that travels forward
+        const segments = 12;
+        const coneLength = 15; // Slightly longer cone
+        
+        // Create a custom geometry for the energy cone
+        const coneGeometry = new THREE.CylinderGeometry(0.5, 2, coneLength, 12, 1, true);
+        // Rotate it to point forward (cylinder's default axis is Y)
+        coneGeometry.rotateX(Math.PI / 2);
+        // Shift it forward so the starting point is at position
+        coneGeometry.translate(0, 0, coneLength / 2);
+        
+        // Create material with additive blending for energy-like effect
+        const coneMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff, // Cyan color to match projectiles
+            transparent: true,
+            opacity: 0.7,
+            blending: THREE.AdditiveBlending,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+            wireframe: false
+        });
+        
+        // Create the cone mesh
+        const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+        cone.position.copy(position);
+        
+        // Orient the cone along the firing direction
+        cone.lookAt(position.clone().add(direction));
+        
+        // Add to scene
+        this.scene.add(cone);
+        
+        // Create a small point light at the firing position
+        const flashLight = new THREE.PointLight(0x00ffff, 2, 10);
+        flashLight.position.copy(position);
+        this.scene.add(flashLight);
+        
+        // Animate the laser burst - travel forward and fade out MUCH faster
+        const startTime = performance.now();
+        const burstDuration = 70; // Much shorter duration (was 200ms)
+        const travelDistance = 300; // Much greater distance (was 30)
+        
+        // Store initial position to calculate travel
+        const initialPosition = position.clone();
+        
+        const animateBurst = () => {
+            const elapsed = performance.now() - startTime;
+            const progress = elapsed / burstDuration;
+            
+            if (progress < 1) {
+                // Move forward along direction vector at high speed
+                const travelProgress = Math.min(progress * 2.5, 1); // Even faster travel speed
+                const newPosition = initialPosition.clone().add(
+                    direction.clone().multiplyScalar(travelDistance * travelProgress)
+                );
+                cone.position.copy(newPosition);
+                
+                // Fade out as it travels
+                cone.material.opacity = 0.7 * (1 - progress);
+                flashLight.intensity = 2 * (1 - progress * 3); // Light fades very quickly
+                
+                // Stretch the cone as it travels
+                const stretchFactor = 1 + progress * 1.5; // More stretching for higher speed sensation
+                cone.scale.set(1, 1, stretchFactor);
+                
+                // Continue animation
+                requestAnimationFrame(animateBurst);
+            } else {
+                // Remove effects when animation is complete
+                this.scene.remove(cone);
+                this.scene.remove(flashLight);
+                
+                // Dispose resources
+                cone.geometry.dispose();
+                cone.material.dispose();
+            }
+        };
+        
+        // Start animation
+        animateBurst();
     }
 }

@@ -68,10 +68,23 @@ export class Skybox {
             return this.milkyWayTexture;
         }
         
+        // Fix texture path for API server images
+        let adjustedTexturePath = texturePath;
+        
+        // Check if this is an image from our API server
+        if (texturePath.startsWith('/images/')) {
+            // If running on port 8000, adjust URL to point to port 8001
+            if (window.location.port === '8000') {
+                const serverHost = window.location.hostname;
+                adjustedTexturePath = `http://${serverHost}:8001${texturePath}`;
+                console.log(`Adjusted texture path to API server: ${adjustedTexturePath}`);
+            }
+        }
+        
         // Load the texture if not already loaded
         if (!this.skyboxTextures[texturePath]) {
-            console.log(`Loading new skybox texture: ${texturePath}`);
-            this.skyboxTextures[texturePath] = this.textureLoader.load(texturePath);
+            console.log(`Loading new skybox texture: ${adjustedTexturePath}`);
+            this.skyboxTextures[texturePath] = this.textureLoader.load(adjustedTexturePath);
             this.skyboxTextures[texturePath].encoding = THREE.sRGBEncoding;
         }
         

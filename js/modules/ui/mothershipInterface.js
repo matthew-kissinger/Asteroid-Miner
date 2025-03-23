@@ -9,6 +9,7 @@ export class MothershipInterface {
         this.settings = null;
         this.isMobile = MobileDetector.isMobile();
         this.setupMothershipUI();
+        this.setupEventHandlers();
     }
     
     setStarMap(starMap) {
@@ -173,6 +174,12 @@ export class MothershipInterface {
                     STAR MAP
                 </button>
                 <p style="font-size: 12px; color: #aaa; margin: 0;">Access the star map to travel between star systems</p>
+                
+                <!-- Added custom star system creator button -->
+                <button id="create-custom-system" style="width: 100%; padding: 15px; margin-top: 15px; margin-bottom: 10px; background: linear-gradient(135deg, #2c5a8c 0%, #4a76a8 100%); color: #fff; border: 1px solid #4a9dff; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px; box-shadow: 0 0 10px rgba(74, 157, 255, 0.3);">
+                    CREATE NEW SYSTEM
+                </button>
+                <p style="font-size: 12px; color: #aaa; margin: 0;">Create your own custom star system with AI-generated skybox and planets</p>
             </div>
             <div style="border-top: 1px solid #33aaff; padding-top: 20px; margin-bottom: 20px;">
                 <h3 style="color: #33aaff;">ENTERTAINMENT</h3>
@@ -435,6 +442,11 @@ export class MothershipInterface {
             mothershipUI.style.display = 'none';
         }
     }
+
+    // Add alias for compatibility
+    hide() {
+        this.hideMothershipUI();
+    }
     
     updateMothershipUI(spaceship, resources) {
         // Update resource display with visual elements
@@ -633,6 +645,25 @@ export class MothershipInterface {
                     // Simulate a click event
                     button.click();
                 });
+            });
+        }
+    }
+    
+    setupEventHandlers() {
+        // Add event handler for custom system button
+        const customSystemBtn = document.getElementById('create-custom-system');
+        if (customSystemBtn) {
+            customSystemBtn.addEventListener('click', () => {
+                // Check if custom system creator is available on environment
+                if (window.game && window.game.environment && window.game.environment.customSystemCreator) {
+                    // Close mothership interface
+                    this.hide();
+                    
+                    // Show custom system creator
+                    window.game.environment.customSystemCreator.show();
+                } else {
+                    console.error('Custom system creator not available');
+                }
             });
         }
     }

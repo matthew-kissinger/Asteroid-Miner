@@ -7,6 +7,7 @@ import { AsteroidBelt } from './environment/asteroidBelt.js';
 import { Mothership } from './environment/mothership.js';
 import { StarSystemGenerator } from './environment/starSystemGenerator.js';
 import { SystemTransition } from './environment/systemTransition.js';
+import { CustomSystemCreator } from './ui/customSystemCreator.js';
 
 export class Environment {
     constructor(scene) {
@@ -19,15 +20,22 @@ export class Environment {
         // Initialize environment components
         this.skybox = new Skybox(scene);
         this.sun = new Sun(scene);
-        this.planets = new Planets(scene);
+        
+        // Initialize star system generator first
+        this.starSystemGenerator = new StarSystemGenerator(scene);
+        
+        // Initialize planets with reference to starSystemGenerator
+        this.planets = new Planets(scene, this.starSystemGenerator);
+        
         this.asteroidBelt = new AsteroidBelt(scene);
         this.mothership = new Mothership(scene);
         
-        // Initialize star system generator
-        this.starSystemGenerator = new StarSystemGenerator(scene);
-        
         // Initialize system transition effects
         this.systemTransition = new SystemTransition(scene, scene.camera);
+        
+        // Initialize the custom system creator
+        this.customSystemCreator = new CustomSystemCreator(this.starSystemGenerator, this);
+        console.log("Custom system creator initialized:", this.customSystemCreator);
         
         // Store references for easier access
         this.asteroids = this.asteroidBelt.getAsteroids();
@@ -125,11 +133,27 @@ export class Environment {
         }
         
         // Update star (sun) color and properties
-        if (this.sun && this.sun.updateColor) {
-            console.log(`Updating sun color for ${systemId} to:`, systemData.starColor.toString(16));
-            this.sun.updateColor(systemData.starColor);
+        if (this.sun) {
+            // First check if it's a custom system with an intensity multiplier
+            const lightIntensityMultiplier = systemData.lightIntensityMultiplier || 1.0;
+            
+            // Check which update method to use
+            if (this.sun.updateSunType && systemData.starClass) {
+                console.log(`Updating sun type for ${systemId} to ${systemData.starClass} with intensity multiplier: ${lightIntensityMultiplier}`);
+                this.sun.updateSunType(systemData.starClass, lightIntensityMultiplier);
+            } else if (this.sun.updateColor) {
+                console.log(`Updating sun color for ${systemId} to:`, systemData.starColor.toString(16));
+                this.sun.updateColor(systemData.starColor);
+                
+                // Store the multiplier for use in the update method
+                if (this.sun.sunLight) {
+                    this.sun.sunLight._intensityMultiplier = lightIntensityMultiplier;
+                }
+            } else {
+                console.warn("Sun update methods not available");
+            }
         } else {
-            console.warn("Sun or updateColor method not available");
+            console.warn("Sun not available");
         }
         
         // Update planets for this system

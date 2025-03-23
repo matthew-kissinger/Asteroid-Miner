@@ -51,31 +51,7 @@ export class GameOverScreen {
         gameOverContainer.appendChild(gameOverMessage);
         
         // Restart button
-        const restartButton = document.createElement('button');
-        restartButton.textContent = 'RESTART MISSION';
-        restartButton.style.padding = '15px 30px';
-        restartButton.style.backgroundColor = '#30cfd0';
-        restartButton.style.color = '#000';
-        restartButton.style.border = 'none';
-        restartButton.style.borderRadius = '30px';
-        restartButton.style.fontSize = '18px';
-        restartButton.style.cursor = 'pointer';
-        restartButton.style.fontFamily = 'Courier New, monospace';
-        restartButton.style.fontWeight = 'bold';
-        restartButton.style.transition = 'all 0.2s';
-        restartButton.style.pointerEvents = 'all';
-        restartButton.addEventListener('mouseover', () => {
-            restartButton.style.backgroundColor = '#ffffff';
-            restartButton.style.boxShadow = '0 0 20px #ffffff';
-        });
-        restartButton.addEventListener('mouseout', () => {
-            restartButton.style.backgroundColor = '#30cfd0';
-            restartButton.style.boxShadow = 'none';
-        });
-        restartButton.addEventListener('click', () => {
-            location.reload();
-        });
-        gameOverContainer.appendChild(restartButton);
+        this.setupRestartButton(gameOverContainer);
         
         // Resources collected summary (for game over screen)
         const resourcesSummary = document.createElement('div');
@@ -84,6 +60,72 @@ export class GameOverScreen {
         resourcesSummary.style.fontSize = '16px';
         resourcesSummary.style.textAlign = 'center';
         gameOverContainer.appendChild(resourcesSummary);
+    }
+    
+    setupRestartButton(container) {
+        const restartButton = document.createElement('button');
+        restartButton.id = 'restart-game-button';
+        restartButton.textContent = 'RESTART MISSION';
+        restartButton.style.backgroundColor = 'rgba(120, 220, 232, 0.2)';
+        restartButton.style.color = '#fff';
+        restartButton.style.border = '1px solid rgba(120, 220, 232, 0.5)';
+        restartButton.style.borderRadius = '5px';
+        restartButton.style.padding = '15px 30px';
+        restartButton.style.fontSize = '20px';
+        restartButton.style.fontFamily = '"Rajdhani", sans-serif';
+        restartButton.style.cursor = 'pointer';
+        restartButton.style.marginTop = '30px';
+        restartButton.style.transition = 'all 0.2s ease';
+        
+        restartButton.addEventListener('mouseover', () => {
+            restartButton.style.backgroundColor = 'rgba(120, 220, 232, 0.4)';
+            restartButton.style.boxShadow = '0 0 15px rgba(120, 220, 232, 0.5)';
+        });
+        
+        restartButton.addEventListener('mouseout', () => {
+            restartButton.style.backgroundColor = 'rgba(120, 220, 232, 0.2)';
+            restartButton.style.boxShadow = 'none';
+        });
+        
+        restartButton.addEventListener('click', () => {
+            // Play the click sound
+            if (this.audio) {
+                this.audio.playSound('uiClick');
+            }
+            
+            // Show loading status
+            const loadingStatus = document.createElement('div');
+            loadingStatus.textContent = 'Restarting mission...';
+            loadingStatus.style.color = 'rgba(120, 220, 232, 0.9)';
+            loadingStatus.style.marginTop = '10px';
+            container.appendChild(loadingStatus);
+            
+            // Disable the button during reload
+            restartButton.disabled = true;
+            restartButton.style.opacity = '0.5';
+            restartButton.style.cursor = 'default';
+            
+            // Reset game state before reloading
+            // This is critical to ensure difficulty level resets properly
+            if (window.game) {
+                // Reset time-based difficulty scaling
+                if (window.game.difficultyManager) {
+                    window.game.difficultyManager.gameTime = 0;
+                    window.game.difficultyManager.currentLevel = 1;
+                    console.log("Reset difficulty level to 1");
+                }
+                
+                // Reset game time counter
+                window.game.gameTime = 0;
+            }
+            
+            // Reload the page with a small delay to allow the UI update to be seen
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+        });
+        
+        container.appendChild(restartButton);
     }
     
     show(resources, message) {

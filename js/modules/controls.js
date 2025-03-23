@@ -98,11 +98,11 @@ export class Controls {
             return;
         }
         
-        // Add T key for targeting system
+        // Add key event handlers for targeting and mining
         document.addEventListener('keydown', e => {
             switch (e.key.toLowerCase()) {
-                case 't': 
-                    // Toggle targeting system
+                case 'e': 
+                    // Toggle targeting system (changed from 't' to 'e')
                     this.targetingSystem.toggleLockOn();
                     break;
                 case 'tab': 
@@ -115,7 +115,7 @@ export class Controls {
                     }
                     e.preventDefault(); // Prevent tab from changing focus
                     break;
-                case 'e': 
+                case 'r': // Changed from 'e' to 'r' (an unused key)
                     // Toggle mining if targeting is enabled and we have a target
                     if (this.targetingSystem.isLockOnEnabled()) {
                         const target = this.targetingSystem.getCurrentTarget();
@@ -135,11 +135,9 @@ export class Controls {
         // Add mouse click for mining
         document.addEventListener('mousedown', e => {
             if (e.button === 0 && this.inputHandler.isLocked()) { // Left mouse button
-                // If we have a locked-on target, start mining
-                const target = this.targetingSystem.getCurrentTarget();
-                if (target) {
-                    this.miningSystem.setTargetAsteroid(target);
-                    this.miningSystem.startMining();
+                // Fire particle cannon
+                if (window.game && window.game.combat) {
+                    window.game.combat.setFiring(true);
                 }
             }
         });
@@ -147,7 +145,10 @@ export class Controls {
         // Add mouseup to stop mining when button is released
         document.addEventListener('mouseup', e => {
             if (e.button === 0) { // Left mouse button
-                this.miningSystem.stopMining();
+                // Stop firing
+                if (window.game && window.game.combat) {
+                    window.game.combat.setFiring(false);
+                }
             }
         });
     }
@@ -173,6 +174,11 @@ export class Controls {
     }
     
     update() {
+        // Skip ALL updates if intro sequence is active
+        if (window.game && window.game.introSequenceActive) {
+            return;
+        }
+        
         // Check if docking status changed
         if (this.spaceship) {
             const wasDocked = this._wasDocked;

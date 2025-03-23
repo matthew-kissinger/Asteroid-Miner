@@ -45,9 +45,14 @@ export class Physics {
         // Check if ship is docked - skip physics if docked
         if (this.spaceship.isDocked) return;
         
+        // Skip physics updates if intro sequence is active
+        if (window.game && window.game.introSequenceActive) {
+            return;
+        }
+        
         // Use a normalized deltaTime to standardize physics at 60 FPS feel
         // This is the key to frame rate independence
-        this.normalizedDeltaTime = deltaTime * 60; 
+        this.normalizedDeltaTime = deltaTime * 60;
         
         // Check if we have fuel
         const hasFuel = this.spaceship.consumeFuel();
@@ -287,6 +292,12 @@ export class Physics {
     
     updateCamera() {
         if (!this.spaceship || !this.camera) return;
+        
+        // Skip camera updates if intro sequence is active
+        if (window.game && window.game.introSequenceActive) {
+            console.log("Skipping camera update - intro sequence active");
+            return;
+        }
         
         // Update the camera to follow the spaceship with offset
         // Camera moved much closer to ship for a zoomed-in view
