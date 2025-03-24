@@ -2085,5 +2085,3 @@ The intro sequence provides a dramatic, cinematic introduction to the game while
   - Random but consistent naming convention
   - Position data for star map visualization
   - Classification-based special features
-
-### Audio (`js/modules/audio.js`)
