@@ -621,6 +621,12 @@ export class BlackjackGame {
      * Show the game UI and sync with current game resources
      */
     show() {
+        // Don't show during intro sequence
+        if (window.game && window.game.introSequenceActive) {
+            console.log("BlackjackGame: Not showing game UI during intro sequence");
+            return;
+        }
+        
         if (this.gameUI) {
             this.gameUI.style.display = 'block';
             this.reset();

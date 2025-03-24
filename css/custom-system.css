@@ -251,4 +251,200 @@
 .special-btn:hover {
     background: linear-gradient(135deg, #3a6fa8 0%, #5a8bc4 100%);
     box-shadow: 0 0 15px rgba(74, 157, 255, 0.5);
+}
+
+/* Mobile optimizations */
+@media (max-width: 900px) {
+    .modal-content {
+        width: 94%;
+        border-radius: 10px;
+        max-height: 85vh;
+        padding-bottom: 100px;
+    }
+    
+    .modal-header {
+        padding: 16px;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .close-btn {
+        font-size: 28px;
+        padding: 12px;
+        min-height: 48px;
+        min-width: 48px;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+    
+    .form-group {
+        margin-bottom: 24px;
+    }
+    
+    .form-group label {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    
+    .form-group input, 
+    .form-group textarea,
+    .form-group select {
+        font-size: 16px !important;
+        padding: 14px !important;
+        height: auto !important;
+    }
+    
+    .planet-input {
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .planet-input h3 {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+    
+    .property-row {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+    
+    .property-row label {
+        margin-bottom: 10px;
+        width: 100%;
+    }
+    
+    .slider {
+        width: 100%;
+        margin: 10px 0;
+        height: 30px !important;
+    }
+    
+    .slider-value {
+        margin-top: 5px;
+        align-self: flex-end;
+    }
+    
+    /* Better sliders for touch */
+    input[type="range"] {
+        -webkit-appearance: none;
+        height: 30px;
+        background: #0d1e2f;
+        border-radius: 15px;
+        padding: 0;
+        outline: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #4a9dff;
+        cursor: pointer;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #4a9dff;
+        cursor: pointer;
+        border: none;
+    }
+    
+    /* Active slider state */
+    .slider-active {
+        background: #3a5472 !important;
+    }
+    
+    .remove-planet-btn {
+        min-height: 50px;
+        padding: 8px 12px;
+        font-size: 16px;
+        right: 15px;
+        top: 15px;
+    }
+    
+    .primary-btn, 
+    .secondary-btn, 
+    .danger-btn {
+        width: 100%;
+        margin: 10px 0;
+        min-height: 50px;
+        font-size: 16px;
+        padding: 14px;
+    }
+    
+    .primary-btn {
+        min-height: 54px;
+        font-size: 18px;
+    }
+    
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .form-actions button {
+        margin: 8px 0;
+    }
+    
+    /* Preview section adjustments */
+    .preview-container {
+        flex-direction: column;
+    }
+    
+    .skybox-preview,
+    .planets-preview {
+        width: 100%;
+    }
+    
+    .skybox-preview {
+        margin-bottom: 20px;
+    }
+    
+    .planet-preview {
+        flex: 0 0 100%;
+        margin-bottom: 15px;
+    }
+    
+    /* Better touch feedback */
+    button:active {
+        transform: scale(0.95);
+    }
+    
+    /* Custom checkboxes for mobile */
+    input[type="checkbox"] {
+        transform: scale(1.7);
+        margin: 0 15px;
+        min-height: 24px;
+        min-width: 24px;
+    }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    @media (max-width: 900px) {
+        /* Fix for iOS input zooming issue */
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+        
+        /* Fix for iOS momentum scrolling */
+        .modal-content {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Fix for iOS button tap highlight */
+        button, input[type="button"] {
+            -webkit-tap-highlight-color: transparent;
+        }
+    }
 } 

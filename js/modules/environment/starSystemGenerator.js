@@ -570,4 +570,48 @@ export class StarSystemGenerator {
     getRandomColor() {
         return Math.floor(Math.random() * 0xFFFFFF);
     }
+
+    /**
+     * Returns player to mothership after interstellar travel
+     * Should be called after travel to ensure proper docking state
+     */
+    returnFromTravel() {
+        console.log("StarSystemGenerator: Handling return from interstellar travel");
+        
+        // Check if game and spaceship are available
+        if (!window.game || !window.game.spaceship) {
+            console.error("StarSystemGenerator: Cannot return from travel - game or spaceship not found");
+            return false;
+        }
+        
+        // Ensure the player is docked after travel
+        if (!window.game.spaceship.isDocked) {
+            console.log("StarSystemGenerator: Setting ship to docked state after travel");
+            window.game.spaceship.dock();
+        }
+        
+        // Reposition ship near mothership
+        const dockingSystem = window.game.controls?.dockingSystem;
+        if (dockingSystem) {
+            console.log("StarSystemGenerator: Repositioning ship near mothership");
+            dockingSystem.positionNearMothership();
+            
+            // Show mothership UI
+            if (typeof dockingSystem.showMothershipUI === 'function') {
+                console.log("StarSystemGenerator: Showing mothership UI via docking system");
+                dockingSystem.showMothershipUI();
+                return true;
+            }
+        }
+        
+        // Fallback - try to find UI or mothership interface directly
+        if (window.game.ui?.mothershipInterface?.showMothershipUI) {
+            console.log("StarSystemGenerator: Showing mothership UI via game.ui.mothershipInterface");
+            window.game.ui.mothershipInterface.showMothershipUI();
+            return true;
+        }
+        
+        console.warn("StarSystemGenerator: Could not fully complete return from travel");
+        return false;
+    }
 }

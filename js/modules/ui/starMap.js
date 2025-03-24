@@ -648,6 +648,15 @@ export class StarMap {
             // Show the mothership UI when returning from star map
             if (this.mothershipInterface) {
                 this.mothershipInterface.showMothershipUI();
+            } else if (window.game && window.game.ui && window.game.ui.mothershipInterface) {
+                // Try to find mothership UI via game instance if direct reference fails
+                window.game.ui.mothershipInterface.showMothershipUI();
+            } else {
+                // Direct DOM access as last resort
+                const mothershipUI = document.getElementById('mothership-ui');
+                if (mothershipUI) {
+                    mothershipUI.style.display = 'block';
+                }
             }
         }
     }

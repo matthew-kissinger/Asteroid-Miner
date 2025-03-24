@@ -223,22 +223,27 @@ export class TouchControls {
         const button = document.createElement('div');
         button.className = 'mobile-action-button';
         button.textContent = text;
-        button.style.width = '70px';  // Larger size
-        button.style.height = '70px'; // Larger size
+        button.style.width = '60px';
+        button.style.height = '60px'; 
         button.style.borderRadius = '50%';
         button.style.backgroundColor = 'rgba(10, 20, 30, 0.7)';
-        button.style.border = `3px solid ${color}`; // Thicker border
+        button.style.border = `2px solid ${color}`;
         button.style.color = color;
         button.style.display = 'flex';
         button.style.justifyContent = 'center';
         button.style.alignItems = 'center';
         button.style.fontFamily = '"Rajdhani", sans-serif';
-        button.style.fontSize = '16px'; // Larger font
+        button.style.fontSize = '16px';
         button.style.fontWeight = 'bold';
-        button.style.boxShadow = `0 0 15px ${color}`; // More glow
+        button.style.boxShadow = `0 0 10px ${color}`;
         button.style.userSelect = 'none';
         button.style.touchAction = 'manipulation';
-        button.style.cursor = 'pointer'; // Show pointer cursor
+        button.style.cursor = 'pointer';
+        
+        // Add hardware acceleration for better performance on mobile
+        button.style.transform = 'translateZ(0)';
+        button.style.webkitTapHighlightColor = 'transparent';
+        button.style.backfaceVisibility = 'hidden';
         
         if (parent) {
             parent.appendChild(button);
@@ -260,7 +265,9 @@ export class TouchControls {
             position: { left: '50%', top: '50%' },
             color: 'rgba(120, 220, 232, 0.8)',
             size: 100,
-            threshold: this.threshold
+            threshold: this.threshold,
+            dynamicPage: true, // Better performance for scrolling
+            fadeTime: 100 // Faster fade for better performance
         });
         
         // Initialize right joystick (rotation control)
@@ -270,7 +277,9 @@ export class TouchControls {
             position: { left: '50%', top: '50%' },
             color: 'rgba(120, 220, 232, 0.8)',
             size: 100,
-            threshold: this.threshold
+            threshold: this.threshold,
+            dynamicPage: true, // Better performance for scrolling
+            fadeTime: 100 // Faster fade for better performance
         });
         
         // Set up event handlers for joysticks
@@ -698,8 +707,12 @@ export class TouchControls {
     }
     
     show() {
-        // Only show controls when not docked
-        if (this.spaceship && this.spaceship.isDocked) return;
+        // Only show controls when not docked and not in intro sequence
+        if ((this.spaceship && this.spaceship.isDocked) || 
+            (window.game && window.game.introSequenceActive)) {
+            console.log("TouchControls: Not showing controls during docked state or intro sequence");
+            return;
+        }
         
         // Show joystick zones
         const leftZone = document.getElementById('leftJoystickZone');
@@ -744,67 +757,57 @@ export class TouchControls {
             return;
         }
         
-        console.log("TouchControls: Adding events to button:", button.textContent);
-        
         // For continuous actions (like firing and mining)
         if (endHandler) {
-            // Touch events
+            // Touch events with passive when possible for better performance
             button.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                button.style.transform = 'scale(0.95)';
-                console.log(`TouchControls: ${button.textContent} button touchstart triggered`);
+                button.style.transform = 'scale(0.95) translateZ(0)';
                 startHandler();
             }, { passive: false });
             
             button.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                button.style.transform = 'scale(1)';
-                console.log(`TouchControls: ${button.textContent} button touchend triggered`);
+                button.style.transform = 'scale(1) translateZ(0)';
                 endHandler();
             }, { passive: false });
             
             // Mouse events
             button.addEventListener('mousedown', () => {
-                button.style.transform = 'scale(0.95)';
-                console.log(`TouchControls: ${button.textContent} button mousedown triggered`);
+                button.style.transform = 'scale(0.95) translateZ(0)';
                 startHandler();
             });
             
             button.addEventListener('mouseup', () => {
-                button.style.transform = 'scale(1)';
-                console.log(`TouchControls: ${button.textContent} button mouseup triggered`);
+                button.style.transform = 'scale(1) translateZ(0)';
                 endHandler();
             });
-        } 
+        }
         // For single actions (like targeting and docking)
         else {
             // Touch events
             button.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                button.style.transform = 'scale(0.95)';
-                console.log(`TouchControls: ${button.textContent} button touchstart triggered`);
+                button.style.transform = 'scale(0.95) translateZ(0)';
             }, { passive: false });
             
             button.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                button.style.transform = 'scale(1)';
-                console.log(`TouchControls: ${button.textContent} button touchend triggered`);
+                button.style.transform = 'scale(1) translateZ(0)';
                 startHandler();
             }, { passive: false });
             
             // Mouse events
             button.addEventListener('mousedown', () => {
-                button.style.transform = 'scale(0.95)';
-                console.log(`TouchControls: ${button.textContent} button mousedown triggered`);
+                button.style.transform = 'scale(0.95) translateZ(0)';
             });
             
             button.addEventListener('mouseup', () => {
-                button.style.transform = 'scale(1)';
-                console.log(`TouchControls: ${button.textContent} button mouseup triggered`);
+                button.style.transform = 'scale(1) translateZ(0)';
                 startHandler();
             });
         }

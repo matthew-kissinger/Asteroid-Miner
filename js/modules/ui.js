@@ -358,9 +358,10 @@ export class UI {
     showUI() {
         console.log("Showing UI elements");
         
-        // Add debug output to check if intro is active
+        // Don't show UI if intro sequence is active
         if (window.game && window.game.introSequenceActive) {
-            console.warn("showUI called while intro is still active - this is likely a bug");
+            console.warn("showUI called while intro is still active - not showing UI elements");
+            return; // Exit early - don't show any UI during intro
         }
         
         // First, show UI components through their interfaces
@@ -379,6 +380,11 @@ export class UI {
         }
         
         // FORCE restore elements that might have been forcibly hidden
+        // But only if intro is not active
+        if (window.game && window.game.introSequenceActive) {
+            return; // Double-check intro is not active before forcing visibility
+        }
+        
         console.log("Forcing all UI elements to be displayed");
         
         // Ensure HUD container is visible

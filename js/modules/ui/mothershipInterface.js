@@ -71,12 +71,20 @@ export class MothershipInterface {
         mothershipUI.style.top = '50%';
         mothershipUI.style.left = '50%';
         mothershipUI.style.transform = 'translate(-50%, -50%)';
-        mothershipUI.style.width = '700px';  // Increased width to accommodate more upgrades
-        mothershipUI.style.maxHeight = '90vh';  // Maximum height with viewport percentage
-        mothershipUI.style.overflowY = 'auto';  // Add scrolling for smaller screens
+        
+        // Use responsive width based on device type
+        if (this.isMobile) {
+            mothershipUI.style.width = '95%';
+            mothershipUI.style.maxWidth = '600px'; // Cap width on larger tablets
+        } else {
+            mothershipUI.style.width = '700px';
+        }
+        
+        mothershipUI.style.maxHeight = '90vh';
+        mothershipUI.style.overflowY = 'auto';
         mothershipUI.style.backgroundColor = 'rgba(20, 30, 50, 0.9)';
         mothershipUI.style.color = '#fff';
-        mothershipUI.style.padding = '30px';
+        mothershipUI.style.padding = this.isMobile ? '20px' : '30px';
         mothershipUI.style.borderRadius = '15px';
         mothershipUI.style.border = '2px solid #33aaff';
         mothershipUI.style.boxShadow = '0 0 30px #33aaff';
@@ -89,6 +97,7 @@ export class MothershipInterface {
             mothershipUI.style.webkitOverflowScrolling = 'touch';
             mothershipUI.style.touchAction = 'pan-y';
             mothershipUI.style.overscrollBehavior = 'contain';
+            mothershipUI.style.paddingBottom = '100px'; // Extra padding for mobile to ensure content isn't hidden behind touch controls
         }
         
         mothershipUI.innerHTML = `

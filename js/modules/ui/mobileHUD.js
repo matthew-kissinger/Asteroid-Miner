@@ -14,17 +14,21 @@ export class MobileHUD {
         hudContainer.style.position = 'absolute';
         hudContainer.style.top = '10px';
         hudContainer.style.right = '10px';
-        hudContainer.style.width = '120px'; // Keep it compact
-        hudContainer.style.backgroundColor = 'rgba(6, 22, 31, 0.7)';
+        hudContainer.style.width = 'min(140px, 25vw)'; // Responsive width with minimum
+        hudContainer.style.backgroundColor = 'rgba(6, 22, 31, 0.8)';
         hudContainer.style.backdropFilter = 'blur(5px)';
+        hudContainer.style.webkitBackdropFilter = 'blur(5px)'; // For Safari
         hudContainer.style.borderRadius = '8px';
         hudContainer.style.border = '1px solid rgba(120, 220, 232, 0.3)';
         hudContainer.style.padding = '10px';
         hudContainer.style.color = 'rgba(120, 220, 232, 0.9)';
         hudContainer.style.fontFamily = '"Rajdhani", "Electrolize", sans-serif';
         hudContainer.style.fontSize = '14px';
-        hudContainer.style.boxShadow = '0 0 15px rgba(120, 220, 232, 0.2)';
+        hudContainer.style.boxShadow = '0 0 10px rgba(120, 220, 232, 0.2)';
         hudContainer.style.zIndex = '1000';
+        // Add hardware acceleration to improve performance
+        hudContainer.style.transform = 'translateZ(0)';
+        hudContainer.style.backfaceVisibility = 'hidden';
         document.body.appendChild(hudContainer);
 
         // Create status bars with labels
@@ -42,12 +46,14 @@ export class MobileHUD {
         const cargoLabel = document.createElement('div');
         cargoLabel.textContent = 'C';
         cargoLabel.style.marginRight = '10px';
+        cargoLabel.style.fontSize = '14px';
         
         const cargoValue = document.createElement('div');
         cargoValue.id = 'cargo-value-mobile';
         cargoValue.textContent = '0 / 1000';
         cargoValue.style.textAlign = 'right';
         cargoValue.style.flexGrow = '1';
+        cargoValue.style.fontSize = '14px';
         
         cargoContainer.appendChild(cargoLabel);
         cargoContainer.appendChild(cargoValue);
@@ -65,9 +71,10 @@ export class MobileHUD {
         
         const labelElement = document.createElement('div');
         labelElement.textContent = label;
-        labelElement.style.marginRight = '10px';
-        labelElement.style.width = '15px';
+        labelElement.style.marginRight = '8px';
+        labelElement.style.width = '16px';
         labelElement.style.textAlign = 'center';
+        labelElement.style.fontSize = '14px';
         
         const barContainer = document.createElement('div');
         barContainer.style.flexGrow = '1';
@@ -81,7 +88,7 @@ export class MobileHUD {
         bar.style.width = '100%';
         bar.style.height = '100%';
         bar.style.backgroundColor = color;
-        bar.style.transition = 'width 0.3s ease';
+        bar.style.transition = 'width 0.2s ease';
         
         barContainer.appendChild(bar);
         container.appendChild(labelElement);
@@ -265,6 +272,12 @@ export class MobileHUD {
     }
     
     show() {
+        // Check if intro sequence is active
+        if (window.game && window.game.introSequenceActive) {
+            console.log("MobileHUD: Not showing HUD during intro sequence");
+            return; // Don't show during intro
+        }
+        
         const container = document.getElementById('mobile-hud-container');
         if (container) {
             container.style.display = 'block';

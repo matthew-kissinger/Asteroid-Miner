@@ -4,16 +4,20 @@
  */
 
 /* Basic mobile adjustments */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     /* Improve touch targets */
     button, 
     select, 
     input[type="button"], 
-    input[type="submit"] {
-        min-height: 44px;
-        min-width: 44px;
-        padding: 12px;
-        font-size: 16px;
+    input[type="submit"],
+    .button-like {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 12px !important;
+        font-size: 16px !important;
+        margin-bottom: 10px !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important; /* Remove tap highlight on iOS */
     }
     
     /* Hide desktop HUD elements */
@@ -23,27 +27,79 @@
     
     /* Ensure text readability */
     body {
-        font-size: 16px;
+        font-size: 16px !important;
+        -webkit-text-size-adjust: 100%; /* Prevent iOS from adjusting font sizes */
     }
     
     /* Adjust control instructions for mobile */
     #pointer-lock-instructions {
         display: none !important;
     }
+    
+    /* Ensure buttons have proper spacing and sizing */
+    button {
+        margin: 8px !important;
+    }
+    
+    /* Make links and interactive elements more tappable */
+    a, .clickable, [onclick] {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        display: inline-block !important;
+        padding: 10px !important;
+        touch-action: manipulation !important;
+    }
+    
+    /* Fix known iOS Safari bottom bar issue */
+    html, body {
+        height: -webkit-fill-available;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+/* iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+    /* iOS-only CSS */
+    body {
+        /* Fix for iOS momentum scrolling */
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Fix for iOS input zooming issue */
+    input, select, textarea {
+        font-size: 16px !important; /* Prevent iOS zoom on focus */
+    }
+    
+    /* Fix scrolling containers on iOS */
+    [style*="overflow-y: auto"], [style*="overflow: auto"] {
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* Android-specific fixes */
+@supports not (-webkit-touch-callout: none) {
+    /* Non-iOS devices (Android) */
+    button:active, [role="button"]:active {
+        transform: scale(0.97); /* Give tactile feedback */
+    }
 }
 
 /* Responsive Mothership Terminal */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     /* Main mothership UI container */
     #mothership-ui {
-        width: 90% !important;
-        max-width: 90vw !important;
-        max-height: 80vh !important;
-        padding: 15px !important;
+        width: 92% !important;
+        max-width: 92vw !important;
+        max-height: 85vh !important;
+        padding: 20px !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important; /* Enable smooth scrolling on iOS */
         touch-action: pan-y !important; /* Enable vertical touch scrolling */
         overscroll-behavior: contain !important; /* Prevent overscroll effects */
+        margin: 0 auto !important; /* Center on screen */
     }
     
     /* Convert horizontal layout to vertical for small screens */
@@ -61,33 +117,35 @@
     
     /* Ensure buttons are tappable */
     #mothership-ui button {
-        margin-bottom: 12px !important;
+        margin-bottom: 15px !important;
         padding: 12px !important;
+        min-height: 44px !important;
     }
     
     /* Add more space between elements for easier touch interactions */
     #mothership-ui h3 {
         margin-top: 20px !important;
         margin-bottom: 10px !important;
+        font-size: 18px !important;
     }
     
     /* Improve mothership content scrolling */
     #mothership-content {
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
-        padding-bottom: 20px !important;
+        padding-bottom: 30px !important;
     }
     
     /* Adjust upgrade section for vertical layout */
     #upgrades-container {
         flex-direction: column !important;
-        padding: 10px !important;
+        padding: 15px !important;
     }
     
     /* Make upgrade columns stack properly */
     #upgrades-container > div {
         width: 100% !important;
-        margin-bottom: 15px !important;
+        margin-bottom: 20px !important;
     }
     
     /* Adjust star map button */
@@ -95,6 +153,8 @@
         margin-top: 10px !important;
         margin-bottom: 10px !important;
         width: 100% !important;
+        padding: 14px !important;
+        font-size: 16px !important;
     }
     
     /* Make sure scrollable areas have enough contrast for the scrollbar */
@@ -112,44 +172,26 @@
     
     .tab button {
         flex: 1 0 auto !important;
-        font-size: 14px !important;
+        font-size: 16px !important;
+        min-height: 44px !important;
+        padding: 10px !important;
     }
     
     /* Additional padding to prevent content from being hidden behind fixed elements */
     .tabcontent {
-        padding-bottom: 20px !important;
-    }
-    
-    /* Styling for scrollbars in mothership panels */
-    #mothership-ui::-webkit-scrollbar {
-        width: 8px !important;
-    }
-    
-    #mothership-ui::-webkit-scrollbar-track {
-        background-color: rgba(0, 0, 0, 0.3) !important;
-        border-radius: 8px !important;
-    }
-    
-    #mothership-ui::-webkit-scrollbar-thumb {
-        background-color: rgba(51, 153, 255, 0.5) !important;
-        border-radius: 8px !important;
-    }
-    
-    /* Allow content within the UI to be selectable for copy/paste */
-    #mothership-ui div, #mothership-ui span {
-        user-select: text !important;
-        -webkit-user-select: text !important;
+        padding-bottom: 30px !important;
     }
 }
 
 /* Star Map Adjustments */
-@media (max-width: 768px) {
-    #star-map-container {
-        width: 90% !important;
-        max-width: 90vw !important;
-        max-height: 80vh !important;
+@media (max-width: 900px) {
+    #star-map {
+        width: 92% !important;
+        max-width: 92vw !important;
+        max-height: 85vh !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
+        padding: 15px !important;
     }
     
     #star-map-controls {
@@ -159,22 +201,42 @@
     #star-map-controls button {
         margin: 5px 0 !important;
         width: 100% !important;
+        min-height: 44px !important;
+        padding: 12px !important;
+    }
+    
+    /* Adjust card sizing for touch */
+    .system-card {
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Make close button larger and more tappable */
+    #close-star-map {
+        padding: 14px !important;
+        font-size: 16px !important;
+        min-height: 44px !important;
+        background-color: #30cfd0 !important; /* Make more visible */
+        color: #000 !important;
+        font-weight: bold !important;
     }
     
     /* Add spacing for scrolling content */
     #star-map-details {
-        padding-bottom: 20px !important;
+        padding-bottom: 30px !important;
     }
 }
 
 /* Blackjack Game UI Adjustments */
-@media (max-width: 768px) {
-    #blackjack-container {
-        width: 90% !important;
-        max-width: 90vw !important;
-        max-height: 80vh !important;
+@media (max-width: 900px) {
+    #blackjack-container, #blackjack-game {
+        width: 92% !important;
+        max-width: 92vw !important;
+        max-height: 85vh !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-y !important;
+        padding: 15px !important;
     }
     
     #blackjack-controls {
@@ -184,50 +246,85 @@
     #blackjack-controls button {
         margin: 5px 0 !important;
         width: 100% !important;
+        min-height: 44px !important;
+        padding: 12px !important;
     }
     
     .card {
         width: 60px !important;
         height: 90px !important;
+        margin: 5px !important;
+    }
+    
+    /* Make dealer cards container scroll horizontally */
+    #dealer-cards, #player-cards {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 10px !important;
+        min-height: 100px !important;
+    }
+    
+    /* Larger close button */
+    #blackjack-game button[onclick*="hide"] {
+        font-size: 32px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        position: absolute !important;
+        top: 10px !important;
+        right: 10px !important;
+        padding: 0 !important;
+        z-index: 10 !important;
     }
 }
 
 /* Settings UI Adjustments */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     #settings-container {
-        width: 90% !important;
-        max-width: 90vw !important;
-        max-height: 80vh !important;
-        padding: 15px !important;
+        width: 95% !important;
+        max-width: 95vw !important;
+        max-height: 85vh !important;
+        padding: 20px !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
     }
     
     .settings-section {
-        padding: 10px !important;
+        padding: 15px !important;
     }
     
     .settings-row {
         flex-direction: column !important;
         align-items: flex-start !important;
+        margin-bottom: 20px !important;
     }
     
     .settings-row label {
-        margin-bottom: 5px !important;
+        margin-bottom: 10px !important;
+        font-size: 16px !important;
     }
     
     .settings-row input[type="range"] {
         width: 100% !important;
+        height: 30px !important; /* Taller for better touch control */
+    }
+    
+    /* Make buttons more tappable */
+    #settings-container button {
+        min-height: 50px !important;
+        padding: 14px !important;
+        font-size: 16px !important;
+        margin: 10px 5px !important;
     }
 }
 
 /* Game Over Screen Adjustments */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     #game-over-container {
-        width: 90% !important;
-        max-width: 90vw !important;
-        padding: 15px !important;
-        max-height: 80vh !important;
+        width: 95% !important;
+        max-width: 95vw !important;
+        padding: 20px !important;
+        max-height: 85vh !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
     }
@@ -242,18 +339,38 @@
     
     #game-over-resources > div {
         width: 100% !important;
-        margin-bottom: 15px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    /* Make restart button larger for touch */
+    #restart-game-button {
+        padding: 20px !important;
+        font-size: 20px !important;
+        min-height: 60px !important;
+        margin-top: 30px !important;
     }
 }
 
 /* Mining Display Adjustments */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     #mining-display {
         top: auto !important;
-        bottom: 200px !important;
+        bottom: 220px !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
-        width: 80% !important;
+        width: 85% !important;
+        max-width: 400px !important;
+        padding: 15px !important;
+    }
+    
+    /* Make mining bar larger */
+    #mining-progress {
+        height: 15px !important;
+    }
+    
+    /* Larger fonts for readability */
+    #mining-display div {
+        font-size: 16px !important;
     }
 }
 
@@ -268,6 +385,9 @@
     box-shadow: 0 0 10px rgba(120, 220, 232, 0.5);
     user-select: none;
     touch-action: manipulation;
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 16px !important;
 }
 
 .mobile-action-button:active {
@@ -279,30 +399,50 @@
     background-color: rgba(10, 20, 30, 0.3);
     border-radius: 50%;
     border: 1px dashed rgba(120, 220, 232, 0.3);
+    width: 110px !important;
+    height: 110px !important;
 }
 
 /* General mobile scrolling improvements */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     /* Add extra padding to the bottom of all scrollable elements to ensure content isn't hidden behind controls */
     [style*="overflow-y: auto"], [style*="overflow: auto"], 
-    #mothership-ui, #star-map-container, #blackjack-container, 
+    #mothership-ui, #star-map, #blackjack-container, #blackjack-game, 
     #settings-container, #game-over-container, .tabcontent {
-        padding-bottom: 150px !important; /* Extra padding to account for touch controls */
+        padding-bottom: 100px !important; /* Extra padding to account for touch controls */
     }
     
-    /* Ensure scrollbars are visible and styled consistently */
+    /* Prevent text selection on interactive elements */
+    button, .button-like, [role="button"] {
+        user-select: none !important;
+        -webkit-user-select: none !important;
+    }
+
+    /* Fix for Safari 100vh issue */
+    .full-height {
+        height: 100%;
+        height: -webkit-fill-available;
+    }
+    
+    /* Fix iOS input focus issues */
+    input:focus, textarea:focus, select:focus {
+        font-size: 16px !important;
+        -webkit-appearance: none;
+    }
+    
+    /* Ensure touch events are properly handled */
+    html {
+        touch-action: manipulation;
+    }
+    
+    /* Adjust scrollbar styling for better touch control */
     ::-webkit-scrollbar {
-        width: 8px !important;
-        height: 8px !important;
+        width: 6px !important;
+        height: 6px !important;
     }
     
-    ::-webkit-scrollbar-track {
-        background-color: rgba(0, 0, 0, 0.3) !important;
-        border-radius: 8px !important;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background-color: rgba(51, 153, 255, 0.5) !important;
-        border-radius: 8px !important;
+    /* Fix Android elastic overscroll effect */
+    body {
+        overscroll-behavior-y: none;
     }
 } 
