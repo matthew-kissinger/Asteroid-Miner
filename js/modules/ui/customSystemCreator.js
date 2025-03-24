@@ -38,12 +38,12 @@ export class CustomSystemCreator {
         
         // Create modal content with mobile optimizations
         this.container.innerHTML = `
-            <div class="modal-content" style="${this.isMobile ? 'width: 94%; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 100px;' : ''}">
+            <div class="modal-content" style="${this.isMobile ? 'width: 94%; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 100px; overscroll-behavior: contain;' : ''}">
                 <div class="modal-header">
                     <h2>Create New Star System</h2>
                     <button id="close-system-creator" class="close-btn" style="${this.isMobile ? 'font-size: 28px; padding: 12px; min-height: 48px; min-width: 48px;' : ''}">&times;</button>
                 </div>
-                <div class="modal-body" style="${this.isMobile ? 'padding-bottom: 120px;' : ''}">
+                <div class="modal-body" style="${this.isMobile ? 'padding-bottom: 150px;' : ''}">
                     <div id="system-creator-form">
                         <div class="form-group">
                             <label for="system-name">System Name:</label>
@@ -409,6 +409,19 @@ export class CustomSystemCreator {
                 this.hide();
                 this.playUISound();
             });
+            
+            // Ensure scrolling works by fixing container event handling
+            this.container.addEventListener('touchmove', (e) => {
+                // Allow default touchmove behavior (scrolling)
+                e.stopPropagation();
+            }, { passive: true });
+            
+            // Improve scroll performance
+            const modalContent = this.container.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.addEventListener('touchstart', () => {}, { passive: true });
+                modalContent.addEventListener('touchmove', () => {}, { passive: true });
+            }
         }
         
         // Add Planet button
@@ -580,11 +593,34 @@ export class CustomSystemCreator {
             }
         }
         
-        // If on mobile, scroll to the new planet section
+        // If on mobile, scroll to the new planet section with improved handling
         if (this.isMobile) {
-            setTimeout(() => {
-                planetDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 50);
+            // Clear any existing scroll timeout
+            if (this.scrollTimeout) {
+                clearTimeout(this.scrollTimeout);
+            }
+            
+            // Use a safer scrolling approach that won't freeze the UI
+            this.scrollTimeout = setTimeout(() => {
+                try {
+                    const modalContent = this.container.querySelector('.modal-content');
+                    const newPlanet = this.planetDescriptions.lastElementChild;
+                    
+                    if (modalContent && newPlanet) {
+                        // Calculate scroll position
+                        const planetPos = newPlanet.offsetTop;
+                        const scrollPos = planetPos - (modalContent.clientHeight / 4);
+                        
+                        // Use manual scrolling instead of scrollIntoView for better control
+                        modalContent.scrollTo({
+                            top: scrollPos,
+                            behavior: 'smooth'
+                        });
+                    }
+                } catch (err) {
+                    console.warn("Error during scroll:", err);
+                }
+            }, 100);
         }
     }
     
@@ -922,6 +958,9 @@ export class CustomSystemCreator {
     
     show() {
         if (this.container) {
+            // Reset any previous state
+            this.cleanupBeforeHiding();
+            
             this.container.style.display = 'flex';
             this.isVisible = true;
             
@@ -933,14 +972,54 @@ export class CustomSystemCreator {
             // Play sound if available
             this.playUISound();
             
-            // Focus on system name input
-            setTimeout(() => {
-                if (this.systemNameInput) {
-                    this.systemNameInput.focus();
+            // For mobile, ensure scrolling works properly
+            if (this.isMobile) {
+                // Enable proper scrolling
+                const modalContent = this.container.querySelector('.modal-content');
+                if (modalContent) {
+                    // Reset scroll position to top
+                    modalContent.scrollTop = 0;
+                    
+                    // Ensure overflow settings are correct
+                    modalContent.style.overflowY = 'auto';
+                    modalContent.style.webkitOverflowScrolling = 'touch';
+                    modalContent.style.overscrollBehavior = 'contain';
                 }
-            }, 300);
+                
+                // Add body class to prevent background scrolling
+                document.body.classList.add('modal-open');
+                
+                // Delayed focus to avoid iOS keyboard issues
+                this.scrollTimeout = setTimeout(() => {
+                    if (this.systemNameInput) {
+                        this.systemNameInput.focus();
+                    }
+                }, 300);
+            } else {
+                // Focus on system name input
+                setTimeout(() => {
+                    if (this.systemNameInput) {
+                        this.systemNameInput.focus();
+                    }
+                }, 300);
+            }
             
-            // Inject CSS for new UI elements if it doesn't exist
+            // Add CSS for the modal-open class if it doesn't exist
+            if (!document.getElementById('modal-open-style') && this.isMobile) {
+                const style = document.createElement('style');
+                style.id = 'modal-open-style';
+                style.textContent = `
+                    .modal-open {
+                        overflow: hidden;
+                        position: fixed;
+                        width: 100%;
+                        height: 100%;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Restore custom styles which were removed in previous edit
             if (!document.getElementById('custom-system-creator-styles')) {
                 const style = document.createElement('style');
                 style.id = 'custom-system-creator-styles';
@@ -1014,6 +1093,9 @@ export class CustomSystemCreator {
     
     hide() {
         if (this.container && !this.isGenerating) {
+            // Stop any ongoing processes
+            this.cleanupBeforeHiding();
+            
             this.container.style.display = 'none';
             this.isVisible = false;
             
@@ -1022,19 +1104,21 @@ export class CustomSystemCreator {
             
             // Show the mothership UI when closing the custom system creator
             // Similar to how StarMap does it
-            if (window.game && window.game.ui && window.game.ui.mothershipInterface) {
-                console.log("CustomSystemCreator: Returning to mothership UI");
-                window.game.ui.mothershipInterface.showMothershipUI();
-            } else {
-                // Direct DOM access as last resort
-                const mothershipUI = document.getElementById('mothership-ui');
-                if (mothershipUI) {
-                    mothershipUI.style.display = 'block';
-                    console.log("CustomSystemCreator: Showed mothership UI via direct DOM access");
+            setTimeout(() => {
+                if (window.game && window.game.ui && window.game.ui.mothershipInterface) {
+                    console.log("CustomSystemCreator: Returning to mothership UI");
+                    window.game.ui.mothershipInterface.showMothershipUI();
                 } else {
-                    console.warn("CustomSystemCreator: Could not find mothership UI to return to");
+                    // Direct DOM access as last resort
+                    const mothershipUI = document.getElementById('mothership-ui');
+                    if (mothershipUI) {
+                        mothershipUI.style.display = 'block';
+                        console.log("CustomSystemCreator: Showed mothership UI via direct DOM access");
+                    } else {
+                        console.warn("CustomSystemCreator: Could not find mothership UI to return to");
+                    }
                 }
-            }
+            }, 100); // Short delay to ensure state is settled
         }
     }
     
@@ -1043,6 +1127,48 @@ export class CustomSystemCreator {
             this.hide();
         } else {
             this.show();
+        }
+    }
+    
+    // Add a new method to handle cleanup before hiding
+    cleanupBeforeHiding() {
+        // Reset form state if needed
+        if (this.isGenerating) {
+            this.isGenerating = false;
+            this.generationProgress.style.display = 'none';
+            this.systemForm.style.display = 'block';
+        }
+        
+        // Cancel any pending animations/scrolls
+        if (this.scrollTimeout) {
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = null;
+        }
+        
+        // Ensure we're not in transition state
+        document.body.style.pointerEvents = 'auto';
+        
+        // Force release any touch captures (helps with freezing issues)
+        if (this.isMobile) {
+            document.body.style.touchAction = 'auto';
+            
+            // Force redraw to clear any pending UI states
+            this.container.style.display = 'none';
+            void this.container.offsetHeight; // Force reflow
+        }
+    }
+    
+    // Add method to clean up when component is destroyed
+    destroy() {
+        // Clean up any event listeners or resources
+        this.cleanupBeforeHiding();
+        
+        // Remove modal-open class if it was added
+        document.body.classList.remove('modal-open');
+        
+        // Remove from DOM
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
         }
     }
 } 

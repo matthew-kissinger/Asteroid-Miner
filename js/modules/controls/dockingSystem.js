@@ -255,6 +255,9 @@ export class DockingSystem {
             isDocked: this.spaceship.isDocked
         });
         
+        // Close any open modals that could cause issues
+        this.closeAllModals();
+        
         // Store the shield value before undocking to handle potential resets
         this.preUndockShieldValue = this.spaceship.shield;
         console.log(`Storing pre-undock shield value: ${this.preUndockShieldValue}`);
@@ -265,6 +268,27 @@ export class DockingSystem {
             console.log("Hiding mothership interface");
         } else {
             console.warn("Could not hide mothership interface: UI or mothershipInterface is null");
+        }
+        
+        // Reset mobile scroll issues for the entire body
+        if (this.isMobileDevice()) {
+            document.body.style.overflow = 'auto';
+            document.body.style.position = 'static';
+            document.body.style.height = 'auto';
+            document.body.style.width = 'auto';
+            document.body.classList.remove('modal-open');
+            
+            // Force any scrollable containers to reset
+            const scrollContainers = document.querySelectorAll('.modal-content');
+            scrollContainers.forEach(container => {
+                if (container.style) {
+                    container.style.overflow = 'auto';
+                    container.scrollTop = 0;
+                }
+            });
+            
+            // Clear any touch events that might be stuck
+            this.clearTouchEvents();
         }
         
         // Show the game UI
@@ -287,7 +311,7 @@ export class DockingSystem {
         });
         
         // Sync the values with a slight delay to ensure player entity is fully active
-        setTimeout(() => {
+        this.undockTimeoutId = setTimeout(() => {
             console.log("Delayed health sync - ensuring values are transferred");
             console.log("Spaceship state BEFORE delayed sync:", {
                 shield: this.spaceship.shield,
@@ -339,11 +363,114 @@ export class DockingSystem {
         // Reset docking available status - need to move away to dock again
         this.dockingAvailable = false;
         
-        // Request pointer lock if configured
-        if (this.autoPointerLockOnUndock) {
+        // Request pointer lock if configured - but not on mobile
+        if (this.autoPointerLockOnUndock && !this.isMobileDevice()) {
             setTimeout(() => {
                 this.requestPointerLock();
             }, 500); // Short delay to ensure UI updates are complete
+        }
+    }
+    
+    // Method to detect mobile devices
+    isMobileDevice() {
+        return ('ontouchstart' in window) || 
+               (navigator.maxTouchPoints > 0) || 
+               (navigator.msMaxTouchPoints > 0) ||
+               (window.innerWidth < 900);
+    }
+    
+    // Method to close any open modal UI that might conflict with undocking
+    closeAllModals() {
+        try {
+            // Close custom system creator if it's open
+            const customSystemCreator = document.getElementById('custom-system-creator');
+            if (customSystemCreator && window.getComputedStyle(customSystemCreator).display !== 'none') {
+                console.log("Closing custom system creator before undocking");
+                // See if we can find the close button and simulate a click
+                const closeBtn = customSystemCreator.querySelector('#close-system-creator');
+                if (closeBtn) {
+                    closeBtn.click();
+                } else {
+                    // Otherwise just hide it directly
+                    customSystemCreator.style.display = 'none';
+                }
+                
+                // Force game objects to clean up their modal state
+                if (window.game && window.game.ui) {
+                    // Check for star map
+                    if (window.game.ui.starMap && typeof window.game.ui.starMap.hide === 'function') {
+                        window.game.ui.starMap.hide();
+                    }
+                    
+                    // Check for custom system creator
+                    if (window.game.ui.customSystemCreator && typeof window.game.ui.customSystemCreator.hide === 'function') {
+                        window.game.ui.customSystemCreator.hide();
+                    }
+                    
+                    // Cleanup any modal state on the body
+                    document.body.classList.remove('modal-open');
+                }
+            }
+            
+            // Close star map if open
+            const starMap = document.getElementById('star-map');
+            if (starMap && window.getComputedStyle(starMap).display !== 'none') {
+                console.log("Closing star map before undocking");
+                const closeStarMapBtn = starMap.querySelector('#close-star-map');
+                if (closeStarMapBtn) {
+                    closeStarMapBtn.click();
+                } else {
+                    starMap.style.display = 'none';
+                }
+            }
+            
+            // Close any other modals
+            const allModals = document.querySelectorAll('.modal-container');
+            allModals.forEach(modal => {
+                if (window.getComputedStyle(modal).display !== 'none') {
+                    console.log("Closing modal before undocking:", modal.id || 'unnamed modal');
+                    modal.style.display = 'none';
+                }
+            });
+        } catch (err) {
+            console.warn("Error while closing modals:", err);
+        }
+    }
+    
+    // Method to forcibly clear any stuck touch events
+    clearTouchEvents() {
+        try {
+            // Create a transparent overlay that captures and immediately clears any stuck events
+            const touchClearOverlay = document.createElement('div');
+            touchClearOverlay.id = 'touch-clear-overlay';
+            touchClearOverlay.style.position = 'fixed';
+            touchClearOverlay.style.top = '0';
+            touchClearOverlay.style.left = '0';
+            touchClearOverlay.style.width = '100vw';
+            touchClearOverlay.style.height = '100vh';
+            touchClearOverlay.style.zIndex = '10000';
+            touchClearOverlay.style.backgroundColor = 'transparent';
+            touchClearOverlay.style.pointerEvents = 'auto';
+            
+            // Add it to the DOM
+            document.body.appendChild(touchClearOverlay);
+            
+            // Handle all touch events and prevent them
+            const preventEvent = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            };
+            
+            touchClearOverlay.addEventListener('touchstart', preventEvent, { passive: false });
+            touchClearOverlay.addEventListener('touchmove', preventEvent, { passive: false });
+            touchClearOverlay.addEventListener('touchend', preventEvent, { passive: false });
+            
+            // Remove it after a short timeout
+            setTimeout(() => {
+                document.body.removeChild(touchClearOverlay);
+            }, 100);
+        } catch (err) {
+            console.warn("Error in clearTouchEvents:", err);
         }
     }
     
