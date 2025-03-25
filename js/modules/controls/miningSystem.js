@@ -345,7 +345,7 @@ export class MiningSystem {
         
         // Stop laser sound
         if (window.game && window.game.audio) {
-            window.game.audio.stopSound('laser');
+            window.game.audio.stopSound('mining-laser');
         }
     }
     
