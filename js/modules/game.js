@@ -402,8 +402,8 @@ export class Game {
         this.isGameOver = true;
         // Play explosion sound if available
         if (this.audio) {
-            console.log("Game: Playing explosion sound");
-            this.audio.playSound('explosion');
+            console.log("Game: Playing boink sound");
+            this.audio.playSound('boink');
         }
         // Show game over screen with resources collected and combat stats
         const gameStats = {

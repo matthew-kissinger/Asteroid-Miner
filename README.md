@@ -11,7 +11,14 @@ Navigate the cosmos in your mining vessel, extract valuable resources from aster
 ## How to Play
 
 1. **Controls:**
-   - see in game menu
+   - WASD: Ship movement
+   - Mouse: Ship rotation
+   - Click: Fire particle cannon
+   - SHIFT: Boost
+   - E: Target lock-on
+   - TAB: Cycle targets
+   - R: Toggle mining
+   - Q: Dock with mothership
 
 3. **Mining Resources:**
    - Approach asteroids and use your mining laser

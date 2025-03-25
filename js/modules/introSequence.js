@@ -651,10 +651,8 @@ export class IntroSequence {
         this.lastTime = performance.now();
         requestAnimationFrame(this.animate);
         
-        // Setup skip functionality for repeat players
-        if (this.skipEnabled) {
-            this.setupSkipHandler();
-        }
+        // Setup skip functionality
+        this.setupSkipHandler();
         
         // Setup dialogue UI
         this.setupDialogueUI();
@@ -1015,16 +1013,18 @@ export class IntroSequence {
         skipButton.id = 'skip-intro-button';
         skipButton.textContent = 'SKIP INTRO';
         skipButton.style.position = 'fixed';
-        skipButton.style.bottom = '20px';
-        skipButton.style.right = '20px';
+        skipButton.style.bottom = '10px';
+        skipButton.style.left = '50%';
+        skipButton.style.transform = 'translateX(-50%)';
         skipButton.style.padding = '10px 15px';
         skipButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        skipButton.style.color = '#fff';
-        skipButton.style.border = '1px solid #fff';
+        skipButton.style.color = '#30f0c0';
+        skipButton.style.border = '1px solid #30f0c0';
         skipButton.style.borderRadius = '5px';
         skipButton.style.cursor = 'pointer';
         skipButton.style.zIndex = '10000';
-        skipButton.style.fontFamily = 'Arial, sans-serif';
+        skipButton.style.fontFamily = 'Courier New, monospace';
+        skipButton.style.boxShadow = '0 0 10px rgba(48, 240, 192, 0.3)';
         
         skipButton.addEventListener('click', () => {
             this.skipSequence();
@@ -1035,8 +1035,35 @@ export class IntroSequence {
     }
     
     skipSequence() {
-        // Jump to end of sequence
+        console.log("Skipping intro sequence");
+        
+        // End the sequence immediately
         this.completeSequence();
+        
+        // Make sure the ship is properly docked
+        if (this.spaceship) {
+            // Ensure the ship is docked
+            this.spaceship.isDocked = true;
+            
+            // Set ship to proper docking position if necessary
+            if (this.spaceship.mesh) {
+                // Position near mothership (these values should match your mothership position)
+                this.spaceship.mesh.position.set(22000, 5000, 0);
+            }
+        }
+        
+        // Show the mothership UI terminal
+        // Access the game instance to use its docking functionality
+        if (window.gameInstance && 
+            window.gameInstance.controls && 
+            window.gameInstance.controls.dockingSystem) {
+            
+            // Explicitly show mothership UI
+            setTimeout(() => {
+                window.gameInstance.controls.dockingSystem.dockWithMothership();
+                console.log("Mothership UI shown after skip");
+            }, 100);
+        }
     }
     
     completeSequence() {

@@ -252,7 +252,7 @@ export class EnemyAIComponent extends Component {
                 
                 // Play explosion sound if available
                 if (window.game && window.game.audio) {
-                    window.game.audio.playSound('explosion');
+                    window.game.audio.playSound('boink');
                 }
                 
                 // Properly destroy this enemy entity

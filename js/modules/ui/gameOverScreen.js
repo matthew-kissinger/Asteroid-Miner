@@ -172,12 +172,12 @@ export class GameOverScreen {
             console.log("GameOverScreen: Attempting simple audio playback");
             
             // Create a direct audio element without attaching to DOM
-            const explosionSound = new Audio(this.getPath('sounds/game/explosion.wav'));
-            explosionSound.volume = 0.8;
+            const boinkSound = new Audio(this.getPath('sounds/effects/boink.wav'));
+            boinkSound.volume = 0.8;
             
             // Play with a slight delay to avoid conflict with other sounds
             setTimeout(() => {
-                explosionSound.play().catch(err => {
+                boinkSound.play().catch(err => {
                     console.warn("GameOverScreen: Simple sound failed:", err);
                 });
             }, 100);

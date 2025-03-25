@@ -692,7 +692,7 @@ export class Combat {
             
             // Play explosion sound
             if (window.game && window.game.audio) {
-                window.game.audio.playSound('explosion');
+                window.game.audio.playSound('boink');
             }
         } catch (error) {
             console.error("Error creating explosion effect:", error);
@@ -893,7 +893,7 @@ export class Combat {
                                     
                                     // Play explosion sound if available
                                     if (window.game && window.game.audio) {
-                                        window.game.audio.playSound('explosion');
+                                        window.game.audio.playSound('boink');
                                     }
                                 }
                                 

@@ -66,6 +66,11 @@ export class VisualEffectsSystem extends System {
         
         // Create explosion effect
         this.createExplosionEffect(position, scale, duration);
+        
+        // Play explosion sound (use boink instead of explosion)
+        if (window.game && window.game.audio) {
+            window.game.audio.playSound('boink');
+        }
     }
     
     /**

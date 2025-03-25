@@ -15,23 +15,23 @@ export class AudioManager {
         this.musicVolume = 0.21; // Reduced by 30% from 0.3
         this.sfxVolume = 0.5; // Default sound effects volume
         
-        // Store active audio nodes
+        // Store active audio elements
         this.activeNodes = new Set();
         
-        // Store active audio contexts
+        // Track active continuous sounds
         this.activeSounds = {
             laser: null,
             thrust: null,
-            projectile: null
+            "mining-laser": null
         };
         
         // Track if the user has interacted with the page (for autoplay policies)
         this.userHasInteracted = false;
         
-        console.log("Initializing audio manager with improved resource management...");
+        console.log("Initializing audio manager with WAV-based sound effects...");
         
-        // Initialize Tone.js (now loaded from CDN in index.html)
-        this.initializeTone();
+        // Set up compatibility layer for intro sequence
+        this.initializeToneCompatibility();
         
         // Listen for user interaction to enable audio
         this.setupUserInteractionListener();
@@ -51,18 +51,15 @@ export class AudioManager {
     cleanupInactiveNodes() {
         let count = 0;
         this.activeNodes.forEach(node => {
-            // If a node is inactive (e.g., a one-shot sound that's finished playing)
+            // Check if node is inactive
             if (node._inactive || (node.disposed === true)) {
-                if (typeof node.dispose === 'function') {
-                    node.dispose();
-                    count++;
-                }
                 this.activeNodes.delete(node);
+                count++;
             }
         });
         
         if (count > 0) {
-            console.log(`Audio manager: cleaned up ${count} inactive audio nodes`);
+            console.log(`Audio manager: cleaned up ${count} inactive audio objects`);
         }
     }
     
@@ -74,43 +71,18 @@ export class AudioManager {
         return node;
     }
     
-    // Initialize Tone.js effects chain
-    initializeTone() {
-        if (typeof Tone === 'undefined') {
-            console.error("Tone.js not available. Check that it's properly loaded in index.html");
-            return;
-        }
+    // Initialize a minimal Tone.js compatibility layer for the intro sequence
+    initializeToneCompatibility() {
+        // Create a dummy masterEQ object that the intro sequence can connect to
+        // This allows the intro sequence code to remain unchanged
+        this.masterEQ = {
+            // Dummy connect method that returns the input
+            connect: function(node) {
+                return node;
+            }
+        };
         
-        try {
-            console.log("Initializing Tone.js...");
-            
-            // Create master effects for ASMR-like quality
-            this.masterReverb = this.trackNode(new Tone.Reverb({
-                decay: 1.5,
-                wet: 0.2
-            }).toDestination());
-            
-            this.masterCompressor = this.trackNode(new Tone.Compressor({
-                threshold: -24,
-                ratio: 4,
-                attack: 0.005,
-                release: 0.1
-            }).connect(this.masterReverb));
-            
-            // Create ASMR EQ profile
-            this.masterEQ = this.trackNode(new Tone.EQ3({
-                low: 2,
-                mid: 0,
-                high: 3
-            }).connect(this.masterCompressor));
-            
-            // Connect to destination
-            Tone.Destination.volume.value = -6; // Lower overall volume
-            
-            console.log("Tone.js initialized with ASMR sound profile");
-        } catch (error) {
-            console.error("Error initializing Tone.js:", error);
-        }
+        console.log("Audio compatibility layer initialized for intro sequence");
     }
     
     // Initialize audio - load all sounds and music
@@ -124,7 +96,7 @@ export class AudioManager {
             // First, load the background music
             await this.loadBackgroundMusic();
             
-            // Then create the programmatic sound effects
+            // Then load the sound effects from WAV files
             this.createSoundEffects();
             
             console.log("Audio initialization complete");
@@ -146,18 +118,22 @@ export class AudioManager {
     
     // Check if the required sound directories exist and notify user if they don't
     async checkSoundDirectories() {
-        // Only check for soundtrack directory since we're generating other sounds
+        // Check for sounds directory
         const soundsDirExists = await this.checkFileExists(this.getPath('sounds'));
         if (!soundsDirExists.exists) {
             console.warn("Sounds directory not found, but will attempt to load files directly anyway.");
-            // Removed notification call since sound is working fine
         }
         
         // Check for soundtrack directory
         const soundtrackDirExists = await this.checkFileExists(this.getPath('sounds/soundtrack'));
         if (!soundtrackDirExists.exists) {
             console.warn("Soundtrack directory not found, but will attempt to load files directly anyway.");
-            // Removed notification call since sound is working fine
+        }
+        
+        // Check for sound effects directory
+        const effectsDirExists = await this.checkFileExists(this.getPath('sounds/effects'));
+        if (!effectsDirExists.exists) {
+            console.warn("Sound effects directory not found. Some sounds may not play correctly.");
         }
         
         // Always return true to continue loading process
@@ -223,21 +199,10 @@ export class AudioManager {
     
     // Set up a listener to detect the first user interaction
     setupUserInteractionListener() {
-        // Remove pending explosion tracking
-        
         const handleInteraction = () => {
             if (!this.userHasInteracted) {
                 this.userHasInteracted = true;
                 console.log("User interaction detected, enabling audio playback");
-                
-                // Start Tone.js audio context
-                if (typeof Tone !== 'undefined') {
-                    Tone.start().then(() => {
-                        console.log("Tone.js audio context started");
-                    }).catch(err => {
-                        console.error("Error starting Tone.js audio context:", err);
-                    });
-                }
                 
                 // Start playing background music once the user interacts
                 this.playBackgroundMusic();
@@ -260,23 +225,15 @@ export class AudioManager {
             
             // Force audio context resumption on specific UI interactions for mobile
             const forceAudioResume = () => {
-                // If audio context exists but is suspended, resume it
-                if (typeof Tone !== 'undefined' && Tone.context && Tone.context.state !== 'running') {
-                    Tone.context.resume().then(() => {
-                        console.log("Mobile: Audio context resumed on user action");
-                        this.userHasInteracted = true;
-                        
-                        // Ensure background music is playing
-                        if (this.music.length > 0 && !this.muted) {
-                            const currentTrack = this.music[0];
-                            if (currentTrack.paused) {
-                                console.log("Mobile: Forcing background music playback");
-                                this.playBackgroundMusic();
-                            }
-                        }
-                    }).catch(err => {
-                        console.error("Mobile: Failed to resume audio context:", err);
-                    });
+                this.userHasInteracted = true;
+                
+                // Ensure background music is playing
+                if (this.music.length > 0 && !this.muted) {
+                    const currentTrack = this.music[0];
+                    if (currentTrack.paused) {
+                        console.log("Mobile: Forcing background music playback");
+                        this.playBackgroundMusic();
+                    }
                 }
             };
             
@@ -461,439 +418,215 @@ export class AudioManager {
         }
     }
     
-    // Create programmatic sound effects using Tone.js
+    // Create sound effects using WAV files
     createSoundEffects() {
-        if (typeof Tone === 'undefined') {
-            console.error("Can't create sound effects: Tone.js not loaded");
-            this.createDummySounds();
-            return;
-        }
-        
         try {
-            console.log("Creating programmatic ASMR sound effects...");
+            console.log("Loading WAV sound effects...");
             
-            // 1. Thrust sound - low hum (continuous)
+            // Create individual sound effects
             this.createThrustSound();
-            
-            // 2. Laser/projectile sound - pew pew (not too high pitch)
             this.createLaserSound();
-            
-            // 3. Explosion sound - funny sound
             this.createExplosionSound();
-            
-            // 4. Boink sound for UI - satisfying click
             this.createBoinkSound();
-            
-            // 5. Additional UI sounds
             this.createPhaserUpSound();
             this.createPhaserDownSound();
             
-            console.log("Programmatic ASMR sound effects created successfully");
+            console.log("WAV sound effects loaded successfully");
         } catch (error) {
-            console.error("Error creating programmatic sound effects:", error);
+            console.error("Error loading WAV sound effects:", error);
             this.createDummySounds();
         }
     }
     
-    // Create dummy sounds if Tone.js fails
+    // Create dummy sounds if WAV loading fails
     createDummySounds() {
         console.warn("Creating dummy silent audio elements as fallback");
         
-        const soundEffects = ['laser', 'thrust', 'explosion', 'boink', 'phaserUp', 'phaserDown'];
+        const soundEffects = ['laser', 'thrust', 'explosion', 'boink', 'phaserUp', 'phaserDown', 'mining-laser'];
         
         for (const name of soundEffects) {
             const dummyAudio = new Audio();
-            dummyAudio.loop = name === 'laser' || name === 'thrust';
+            dummyAudio.loop = name === 'laser' || name === 'thrust' || name === 'mining-laser';
             this.sounds[name] = dummyAudio;
         }
     }
     
-    // Create a low hum for thrust
+    // Load thruster sound WAV file
     createThrustSound() {
-        // Create a synth for the base drone - deeper pitch and more vibration
-        const droneFilter = new Tone.Filter({
-            type: "lowpass",
-            frequency: 400, // Lower from 600 to 400 for deeper sound
-            Q: 2.5 // Slightly more resonance
-        }).connect(this.masterEQ);
-        
-        // More pronounced vibrato for oscillation effect
-        const vibrato = new Tone.Vibrato({
-            frequency: 4, // Increased from 0.5 to 4 for faster oscillation
-            depth: 0.3    // Increased from 0.1 to 0.3 for more pronounced effect
-        }).connect(droneFilter);
-        
-        // Lower frequency oscillator
-        const thrustSynth = new Tone.FatOscillator({
-            type: "sine",
-            frequency: 80,  // Lowered from 120 to 80 for deeper bass
-            spread: 30,     // Increased spread for wider sound
-            count: 5        // More oscillators for richer texture
-        }).connect(vibrato);
-        
-        // Add subtle noise for texture
-        const noiseFilter = new Tone.Filter({
-            type: "bandpass",
-            frequency: 150, // Lower noise filter frequency
-            Q: 0.8
-        }).connect(this.masterEQ);
-        
-        // Add tremolo for additional oscillation
-        const tremolo = new Tone.Tremolo({
-            frequency: 6,
-            depth: 0.4
-        }).connect(noiseFilter).start();
-        
-        // More pronounced noise component
-        const noiseGain = new Tone.Gain(0.1).connect(tremolo);
-        const noise = new Tone.Noise("brown").connect(noiseGain); // Brown noise for deeper texture
-        
-        // Store synths for later control
-        this.sounds.thrust = {
-            type: "synth",
-            synths: [thrustSynth, noise],
-            volume: this.sfxVolume * 2.5,
-            play: () => {
-                thrustSynth.start();
-                noise.start();
-            },
-            stop: () => {
-                thrustSynth.stop();
-                noise.stop();
-            },
-            setVolume: (vol) => {
-                const scaledVol = Math.min(1.0, vol);
-                thrustSynth.volume.value = Tone.gainToDb(scaledVol * 0.5); // Louder base oscillator
-                noiseGain.gain.value = scaledVol * 0.1; // More noise component
-            }
-        };
-        
-        console.log("Created enhanced ASMR thrust sound: deep vibrating hum");
+        try {
+            const thrustSound = new Audio(this.getPath('sounds/effects/thrust.wav'));
+            thrustSound.loop = true;
+            thrustSound.volume = this.sfxVolume * 0.5; // Default volume
+            
+            // Store the sound
+            this.sounds.thrust = thrustSound;
+            
+            console.log("Loaded thrust sound WAV file");
+        } catch (error) {
+            console.error("Error loading thrust sound WAV:", error);
+            // Create a silent dummy sound as fallback
+            this.sounds.thrust = new Audio();
+            this.sounds.thrust.loop = true;
+        }
     }
     
-    // Create pew pew sound for laser/projectiles
+    // Load laser sound WAV file
     createLaserSound() {
-        // Filter for smoothing
-        const filter = new Tone.Filter({
-            type: "bandpass",
-            frequency: 800,
-            Q: 1.5
-        }).connect(this.masterEQ);
-        
-        // Add reverb for ASMR feel
-        const laserReverb = new Tone.Reverb({
-            decay: 0.8,
-            wet: 0.3
-        }).connect(filter);
-        
-        // Create synth
-        const laserSynth = new Tone.Synth({
-            oscillator: {
-                type: "triangle"
-            },
-            envelope: {
-                attack: 0.01,
-                decay: 0.1,
-                sustain: 0.3,
-                release: 0.5
-            }
-        }).connect(laserReverb);
-        
-        // Store synthesized sound
-        this.sounds.laser = {
-            type: "synth",
-            synth: laserSynth,
-            volume: this.sfxVolume * 0.5,
-            isPlaying: false,
-            loop: null,
-            play: () => {
-                if (this.sounds.laser.isPlaying) return;
-                
-                laserSynth.volume.value = Tone.gainToDb(this.sounds.laser.volume);
-                
-                // Create a repeating pattern for the pew-pew effect
-                this.sounds.laser.isPlaying = true;
-                this.sounds.laser.loop = Tone.Transport.scheduleRepeat((time) => {
-                    laserSynth.triggerAttackRelease("A4", 0.1, time);
-                    laserSynth.triggerAttackRelease("E5", 0.1, time + 0.15);
-                }, 0.4);
-                
-                Tone.Transport.start();
-            },
-            stop: () => {
-                if (!this.sounds.laser.isPlaying) return;
-                
-                if (this.sounds.laser.loop !== null) {
-                    Tone.Transport.clear(this.sounds.laser.loop);
-                    this.sounds.laser.loop = null;
+        try {
+            // Main laser sound (continuous firing)
+            const laserSound = new Audio(this.getPath('sounds/effects/laser.wav'));
+            laserSound.loop = true;
+            laserSound.volume = this.sfxVolume * 0.5;
+            
+            // Store the sound
+            this.sounds.laser = laserSound;
+            
+            // Load mining laser sound
+            const miningLaserSound = new Audio(this.getPath('sounds/effects/mining-laser.wav'));
+            miningLaserSound.loop = true;
+            miningLaserSound.volume = this.sfxVolume * 0.5;
+            
+            // Store mining laser sound
+            this.sounds['mining-laser'] = miningLaserSound;
+            
+            // Create projectile sound for single shots (uses laser.wav but plays it once)
+            this.sounds.projectile = {
+                play: () => {
+                    if (this.muted) return;
+                    
+                    // Create a new instance to allow overlapping sounds
+                    const projectileSound = new Audio(this.getPath('sounds/effects/laser.wav'));
+                    projectileSound.volume = this.sfxVolume * 0.6;
+                    projectileSound.loop = false;
+                    projectileSound.play().catch(err => {
+                        console.warn(`Error playing projectile sound:`, err);
+                    });
                 }
-                this.sounds.laser.isPlaying = false;
-            }
-        };
-        
-        console.log("Created ASMR laser sound: pew pew");
-        
-        // Create dedicated projectile sound (one-shot "pew" for each projectile fired)
-        const projectileFilter = new Tone.Filter({
-            type: "bandpass",
-            frequency: 900,
-            Q: 2
-        }).connect(this.masterEQ);
-        
-        const projectileReverb = new Tone.Reverb({
-            decay: 1.2,
-            wet: 0.4
-        }).connect(projectileFilter);
-        
-        const projectileSynth = new Tone.Synth({
-            oscillator: {
-                type: "sawtooth",  // More pronounced waveform for projectiles
-                width: 0.5
-            },
-            envelope: {
-                attack: 0.005,
-                decay: 0.1,
-                sustain: 0.1,
-                release: 0.8
-            }
-        }).connect(projectileReverb);
-        
-        // Second synth for layered effect
-        const projectileSynth2 = new Tone.Synth({
-            oscillator: {
-                type: "sine"
-            },
-            envelope: {
-                attack: 0.001,
-                decay: 0.1,
-                sustain: 0,
-                release: 0.4
-            }
-        }).connect(projectileReverb);
-        
-        // Store synthesized sound
-        this.sounds.projectile = {
-            type: "oneshot",
-            play: () => {
-                if (this.muted) return;
-                
-                // Set volume
-                projectileSynth.volume.value = Tone.gainToDb(this.sfxVolume * 0.6);
-                projectileSynth2.volume.value = Tone.gainToDb(this.sfxVolume * 0.4);
-                
-                // Create a satisfying "pew" sound that sweeps upward
-                const now = Tone.now();
-                
-                // Main projectile sound - sweep from low to high
-                projectileSynth.triggerAttack("C4", now);
-                projectileSynth.frequency.exponentialRampTo("C6", 0.15, now);
-                projectileSynth.triggerRelease(now + 0.2);
-                
-                // Add higher pitched accent for definition
-                projectileSynth2.triggerAttackRelease("G5", 0.1, now + 0.05);
-            }
-        };
-        
-        console.log("Created ASMR projectile sound: distinct pew for each shot");
+            };
+            
+            console.log("Loaded laser sound WAV files");
+        } catch (error) {
+            console.error("Error loading laser sound WAV:", error);
+            // Create silent dummy sounds as fallback
+            this.sounds.laser = new Audio();
+            this.sounds.laser.loop = true;
+            this.sounds['mining-laser'] = new Audio();
+            this.sounds['mining-laser'].loop = true;
+            this.sounds.projectile = { play: () => {} };
+        }
     }
     
-    // Create funny sound for explosions
+    // Load explosion sound WAV file
     createExplosionSound() {
-        const explosionFilter = new Tone.Filter({
-            type: "lowpass",
-            frequency: 1000,
-            Q: 1
-        }).connect(this.masterEQ);
-        
-        const explosionSynth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: {
-                type: "fmsquare",
-                modulationType: "sine",
-                modulationIndex: 3,
-                harmonicity: 3.4
-            },
-            envelope: {
-                attack: 0.001,
-                decay: 0.3,
-                sustain: 0.1,
-                release: 0.4
-            }
-        }).connect(explosionFilter);
-        
-        // Add a noise burst
-        const noiseFilter = new Tone.Filter({
-            type: "lowpass",
-            frequency: 800,
-            Q: 0.2
-        }).connect(this.masterEQ);
-        
-        // Store synthesized sound
-        this.sounds.explosion = {
-            type: "oneshot",
-            play: () => {
-                if (this.muted) return;
-                
-                // Set volume
-                explosionSynth.volume.value = Tone.gainToDb(this.sfxVolume * 0.5);
-                
-                // Funny explosion - cartoonish sound
-                const now = Tone.now();
-                
-                // Play descending notes
-                explosionSynth.triggerAttackRelease(["C4", "G3", "E3"], 0.2, now);
-                explosionSynth.triggerAttackRelease(["B2", "G2"], 0.3, now + 0.1);
-                
-                // Comedic bounce-back
-                setTimeout(() => {
-                    explosionSynth.triggerAttackRelease("D5", 0.05, Tone.now());
-                    setTimeout(() => {
-                        explosionSynth.triggerAttackRelease("G5", 0.05, Tone.now());
-                    }, 100);
-                }, 300);
-                
-                // Create a noise burst with envelope
-                const noise = new Tone.Noise("brown").connect(noiseFilter);
-                const noiseEnv = new Tone.AmplitudeEnvelope({
-                    attack: 0.001,
-                    decay: 0.2,
-                    sustain: 0.1,
-                    release: 0.4
-                }).connect(noiseFilter.frequency);
-                
-                // Set fixed frequency modulation
-                noiseEnv.baseFrequency = 800;
-                noiseEnv.octaves = 2.5;
-                noiseEnv.exponent = 1.5;
-                
-                // Play noise burst
-                noise.start();
-                noiseEnv.triggerAttackRelease(0.5);
-                
-                // Stop noise after envelope completes
-                setTimeout(() => {
-                    noise.stop();
-                }, 1000);
-            }
-        };
-        
-        console.log("Created ASMR explosion sound: funny cartoonish effect");
+        try {
+            // Load the sound file
+            const explosionSound = new Audio(this.getPath('sounds/effects/explosion.wav'));
+            explosionSound.volume = this.sfxVolume;
+            
+            // Store the sound with a play method that creates a new instance
+            // This allows multiple explosions to play simultaneously
+            this.sounds.explosion = {
+                play: () => {
+                    if (this.muted) return;
+                    
+                    const sound = explosionSound.cloneNode();
+                    sound.volume = this.sfxVolume;
+                    sound.play().catch(err => {
+                        console.warn(`Error playing explosion sound:`, err);
+                    });
+                }
+            };
+            
+            console.log("Loaded explosion sound WAV file");
+        } catch (error) {
+            console.error("Error loading explosion sound WAV:", error);
+            // Create a dummy sound as fallback
+            this.sounds.explosion = { play: () => {} };
+        }
     }
     
-    // Create a satisfying click/boink sound
+    // Load boink/UI feedback sound WAV file
     createBoinkSound() {
-        const boinkFilter = new Tone.Filter({
-            type: "bandpass",
-            frequency: 1200,
-            Q: 2
-        }).connect(this.masterEQ);
-        
-        const boinkSynth = new Tone.Synth({
-            oscillator: {
-                type: "sine"
-            },
-            envelope: {
-                attack: 0.001,
-                decay: 0.1,
-                sustain: 0.05,
-                release: 0.3
-            }
-        }).connect(boinkFilter);
-        
-        // Store synthesized sound
-        this.sounds.boink = {
-            type: "oneshot",
-            play: () => {
-                if (this.muted) return;
-                
-                // Set volume
-                boinkSynth.volume.value = Tone.gainToDb(this.sfxVolume * 0.5);
-                
-                // Play a satisfying click sound
-                boinkSynth.triggerAttackRelease("C6", 0.08);
-            }
-        };
-        
-        console.log("Created ASMR boink sound: satisfying click");
+        try {
+            // Load the sound file
+            const boinkSound = new Audio(this.getPath('sounds/effects/boink.wav'));
+            boinkSound.volume = this.sfxVolume;
+            
+            // Store the sound with a play method that creates a new instance
+            this.sounds.boink = {
+                play: () => {
+                    if (this.muted) return;
+                    
+                    const sound = boinkSound.cloneNode();
+                    sound.volume = this.sfxVolume;
+                    sound.play().catch(err => {
+                        console.warn(`Error playing boink sound:`, err);
+                    });
+                }
+            };
+            
+            console.log("Loaded boink sound WAV file");
+        } catch (error) {
+            console.error("Error loading boink sound WAV:", error);
+            // Create a dummy sound as fallback
+            this.sounds.boink = { play: () => {} };
+        }
     }
     
-    // Create upward phaser sound for wins
+    // Load phaser up sound WAV file
     createPhaserUpSound() {
-        const phaserUpFilter = new Tone.Filter({
-            type: "highpass",
-            frequency: 400,
-            Q: 1
-        }).connect(this.masterEQ);
-        
-        const phaserUpSynth = new Tone.Synth({
-            oscillator: {
-                type: "sine"
-            },
-            envelope: {
-                attack: 0.01,
-                decay: 0.1,
-                sustain: 0.5,
-                release: 0.5
-            }
-        }).connect(phaserUpFilter);
-        
-        // Store synthesized sound
-        this.sounds.phaserUp = {
-            type: "oneshot",
-            play: () => {
-                if (this.muted) return;
-                
-                // Set volume
-                phaserUpSynth.volume.value = Tone.gainToDb(this.sfxVolume * 0.6);
-                
-                // Pleasant rising tone
-                const now = Tone.now();
-                phaserUpSynth.triggerAttack("C5", now);
-                phaserUpSynth.frequency.exponentialRampTo("G5", 0.2, now);
-                phaserUpSynth.triggerRelease(now + 0.3);
-            }
-        };
-        
-        console.log("Created ASMR phaser up sound: pleasant rise");
+        try {
+            // Load the sound file
+            const phaserUpSound = new Audio(this.getPath('sounds/effects/phaserUp.wav'));
+            phaserUpSound.volume = this.sfxVolume;
+            
+            // Store the sound with a play method that creates a new instance
+            this.sounds.phaserUp = {
+                play: () => {
+                    if (this.muted) return;
+                    
+                    const sound = phaserUpSound.cloneNode();
+                    sound.volume = this.sfxVolume;
+                    sound.play().catch(err => {
+                        console.warn(`Error playing phaserUp sound:`, err);
+                    });
+                }
+            };
+            
+            console.log("Loaded phaserUp sound WAV file");
+        } catch (error) {
+            console.error("Error loading phaserUp sound WAV:", error);
+            // Create a dummy sound as fallback
+            this.sounds.phaserUp = { play: () => {} };
+        }
     }
     
-    // Create downward phaser sound for losses
+    // Load phaser down sound WAV file
     createPhaserDownSound() {
-        const phaserDownFilter = new Tone.Filter({
-            type: "lowpass",
-            frequency: 2000,
-            Q: 1
-        }).connect(this.masterEQ);
-        
-        const phaserDownSynth = new Tone.Synth({
-            oscillator: {
-                type: "sine"
-            },
-            envelope: {
-                attack: 0.01,
-                decay: 0.1,
-                sustain: 0.5,
-                release: 0.5
-            }
-        }).connect(phaserDownFilter);
-        
-        // Store synthesized sound
-        this.sounds.phaserDown = {
-            type: "oneshot",
-            play: () => {
-                if (this.muted) return;
-                
-                // Set volume
-                phaserDownSynth.volume.value = Tone.gainToDb(this.sfxVolume * 0.6);
-                
-                // Gentle falling tone
-                const now = Tone.now();
-                phaserDownSynth.triggerAttack("E5", now);
-                phaserDownSynth.frequency.exponentialRampTo("A4", 0.2, now);
-                phaserDownSynth.triggerRelease(now + 0.3);
-            }
-        };
-        
-        console.log("Created ASMR phaser down sound: gentle fall");
+        try {
+            // Load the sound file
+            const phaserDownSound = new Audio(this.getPath('sounds/effects/phaserDown.wav'));
+            phaserDownSound.volume = this.sfxVolume;
+            
+            // Store the sound with a play method that creates a new instance
+            this.sounds.phaserDown = {
+                play: () => {
+                    if (this.muted) return;
+                    
+                    const sound = phaserDownSound.cloneNode();
+                    sound.volume = this.sfxVolume;
+                    sound.play().catch(err => {
+                        console.warn(`Error playing phaserDown sound:`, err);
+                    });
+                }
+            };
+            
+            console.log("Loaded phaserDown sound WAV file");
+        } catch (error) {
+            console.error("Error loading phaserDown sound WAV:", error);
+            // Create a dummy sound as fallback
+            this.sounds.phaserDown = { play: () => {} };
+        }
     }
     
     // Play the next music track in the playlist
@@ -968,43 +701,27 @@ export class AudioManager {
             return;
         }
         
-        // Check if we need to initialize Tone.js
-        if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
-            Tone.start().catch(err => {
-                console.error("Failed to start Tone.js context:", err);
-            });
-        }
-        
         try {
-            // Handle synthesized sounds
-            if (this.sounds[name].type === "synth") {
-                // For continuous synthesized sounds like thrust and laser
+            // Handle looped sounds vs one-shot sounds
+            if (name === 'laser' || name === 'thrust' || name === 'mining-laser') {
+                // For continuous sounds, track the audio element
                 if (!this.activeSounds[name]) {
-                    this.sounds[name].play();
-                    this.activeSounds[name] = true;
+                    this.sounds[name].currentTime = 0;
+                    this.sounds[name].play().catch(err => {
+                        console.warn(`Error playing ${name} sound:`, err);
+                    });
+                    this.activeSounds[name] = this.sounds[name];
                 }
-            } else if (this.sounds[name].type === "oneshot") {
-                // For one-shot sounds like explosion, boink, phaser, projectile
+            } else if (typeof this.sounds[name].play === 'function') {
+                // For one-shot sounds with custom play method
                 this.sounds[name].play();
             } else {
-                // Fallback to audio element approach for imported sounds
-                console.log(`Playing traditional sound: ${name}`);
-                
-                if (name !== 'laser' && name !== 'thrust') {
-                    // One-shot sounds
-                    const sound = this.sounds[name].cloneNode();
-                    sound.volume = this.sfxVolume;
-                    sound.play().catch(err => {
-                        console.warn(`Error playing sound ${name}:`, err);
-                    });
-                } else if (!this.activeSounds[name]) {
-                    // Loop sounds
-                    this.activeSounds[name] = this.sounds[name];
-                    this.sounds[name].play().catch(err => {
-                        console.warn(`Error playing sound ${name}:`, err);
-                        this.activeSounds[name] = null;
-                    });
-                }
+                // For standard Audio elements (one-shot)
+                const sound = this.sounds[name].cloneNode();
+                sound.volume = this.sfxVolume;
+                sound.play().catch(err => {
+                    console.warn(`Error playing ${name} sound:`, err);
+                });
             }
         } catch (err) {
             console.error(`Error playing sound ${name}:`, err);
@@ -1016,15 +733,13 @@ export class AudioManager {
         if (!this.sounds[name]) return;
         
         try {
-            // Handle synthesized sounds
-            if (this.sounds[name].type === "synth") {
-                this.sounds[name].stop();
-                this.activeSounds[name] = null;
-            } else if (this.activeSounds[name]) {
-                // Handle standard Audio elements
-                this.sounds[name].pause();
-                this.sounds[name].currentTime = 0;
-                this.activeSounds[name] = null;
+            if (name === 'laser' || name === 'thrust' || name === 'mining-laser') {
+                // For looping sounds
+                if (this.activeSounds[name]) {
+                    this.activeSounds[name].pause();
+                    this.activeSounds[name].currentTime = 0;
+                    this.activeSounds[name] = null;
+                }
             }
         } catch (err) {
             console.error(`Error stopping sound ${name}:`, err);
@@ -1036,15 +751,8 @@ export class AudioManager {
         if (!this.sounds.thrust) return;
         
         try {
-            // For synthesized thrust sound
-            if (this.sounds.thrust.type === "synth") {
-                const volume = Math.min(1.0, Math.max(0, thrustLevel) * this.sfxVolume * 2.5);
-                this.sounds.thrust.setVolume(volume);
-            } else {
-                // Fallback for Audio element
-                const volume = Math.min(1.0, Math.max(0, thrustLevel) * this.sfxVolume * 2.5);
-                this.sounds.thrust.volume = volume;
-            }
+            const volume = Math.min(1.0, Math.max(0, thrustLevel) * this.sfxVolume);
+            this.sounds.thrust.volume = volume;
         } catch (err) {
             console.error("Error setting thrust volume:", err);
         }
@@ -1059,12 +767,11 @@ export class AudioManager {
             track.muted = this.muted;
         }
         
-        // Stop any active synth sounds if muting
+        // Stop any active sounds if muting
         if (this.muted) {
-            for (const [name, sound] of Object.entries(this.sounds)) {
-                if (sound.type === "synth" && this.activeSounds[name]) {
-                    sound.stop();
-                    this.activeSounds[name] = null;
+            for (const [name, sound] of Object.entries(this.activeSounds)) {
+                if (sound) {
+                    this.stopSound(name);
                 }
             }
         }
@@ -1095,40 +802,17 @@ export class AudioManager {
         }
         
         // Stop and clean up background music
-        if (this.currentMusic) {
+        for (const track of this.music) {
             try {
-                this.currentMusic.stop();
-                this.currentMusic.dispose();
-                this.currentMusic = null;
+                track.pause();
+                track.src = '';
             } catch (e) {
                 console.warn("Error stopping background music:", e);
             }
         }
         
-        // Dispose of all tracked nodes
-        this.activeNodes.forEach(node => {
-            try {
-                if (typeof node.dispose === 'function') {
-                    node.dispose();
-                }
-            } catch (e) {
-                console.warn("Error disposing audio node:", e);
-            }
-        });
+        // Clean up all tracked nodes
         this.activeNodes.clear();
-        
-        // Clean up effect chain
-        if (this.masterReverb && typeof this.masterReverb.dispose === 'function') {
-            this.masterReverb.dispose();
-        }
-        
-        if (this.masterCompressor && typeof this.masterCompressor.dispose === 'function') {
-            this.masterCompressor.dispose();
-        }
-        
-        if (this.masterEQ && typeof this.masterEQ.dispose === 'function') {
-            this.masterEQ.dispose();
-        }
         
         // Clear all sound references
         this.sounds = {};
