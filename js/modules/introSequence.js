@@ -1136,4 +1136,78 @@ export class IntroSequence {
             }, 100);
         }
     }
+
+    /**
+     * Clean up resources when intro sequence is no longer needed
+     */
+    destroy() {
+        // Cancel animation frame if running
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+        
+        // Clean up dialogue interval
+        if (this.typeInterval) {
+            clearInterval(this.typeInterval);
+            this.typeInterval = null;
+        }
+        
+        // Clean up DOM elements
+        if (this.dialogueBox && this.dialogueBox.parentNode) {
+            this.dialogueBox.parentNode.removeChild(this.dialogueBox);
+        }
+        
+        if (this.overlay && this.overlay.parentNode) {
+            this.overlay.parentNode.removeChild(this.overlay);
+        }
+        
+        // Remove skip handler
+        document.removeEventListener('keydown', this.skipHandler);
+        
+        // Remove portal effect from scene
+        if (this.portalMesh && this.portalMesh.parent) {
+            this.portalMesh.parent.remove(this.portalMesh);
+        }
+        if (this.portalFlare && this.portalFlare.parent) {
+            this.portalFlare.parent.remove(this.portalFlare);
+        }
+        
+        // Dispose of THREE.js objects
+        if (this.portalMesh) {
+            if (this.portalMesh.geometry) this.portalMesh.geometry.dispose();
+            if (this.portalMesh.material) this.portalMesh.material.dispose();
+        }
+        if (this.portalFlare) {
+            if (this.portalFlare.geometry) this.portalFlare.geometry.dispose();
+            if (this.portalFlare.material) this.portalFlare.material.dispose();
+        }
+        
+        // Dispose of star dreadnought resources
+        if (this.starDreadnought && typeof this.starDreadnought.destroy === 'function') {
+            this.starDreadnought.destroy();
+        }
+        
+        // Dispose of Tone.js sound effects
+        if (this.introSounds) {
+            Object.values(this.introSounds).forEach(sound => {
+                if (sound.dispose && typeof sound.dispose === 'function') {
+                    sound.dispose();
+                }
+            });
+            this.introSounds = {};
+        }
+        
+        // Clear references to help GC
+        this.scene = null;
+        this.camera = null;
+        this.spaceship = null;
+        this.audio = null;
+        this.starDreadnought = null;
+        this.portalMesh = null;
+        this.portalFlare = null;
+        this.portalGeometry = null;
+        this.portalMaterial = null;
+        this.dialogueWavs = [];
+    }
 } 

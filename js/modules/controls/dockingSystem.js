@@ -240,134 +240,145 @@ export class DockingSystem {
         this.updateMothershipUI();
     }
     
-    undockFromMothership() {
+    // Helper to wrap steps in requestAnimationFrame for smoother UI updates
+    async performStep(stepFunction, stepName) {
+        return new Promise(resolve => {
+            requestAnimationFrame(() => {
+                try {
+                    stepFunction();
+                    console.log(`Completed step: ${stepName}`);
+                } catch (err) {
+                    console.error(`Error during step ${stepName}:`, err);
+                }
+                resolve();
+            });
+        });
+    }
+
+    // Helper to yield control to the browser
+    async yieldToBrowser() {
+        return new Promise(resolve => requestAnimationFrame(resolve));
+    }
+
+    // Optimized method to hide UI elements using a single reflow
+    hideMothershipUI() {
+        if (this.ui && this.ui.mothershipInterface) {
+            // Use CSS class for better performance
+            document.body.classList.add('undocking');
+            this.ui.mothershipInterface.hideMothershipUI();
+            console.log("Hiding mothership interface");
+        }
+    }
+
+    // Optimized method to show game UI elements using a single reflow
+    showGameUI() {
+        if (this.ui) {
+            // Use CSS class for better performance
+            document.body.classList.remove('undocking');
+            this.ui.showUI();
+            console.log("Showing game UI");
+        }
+    }
+
+    // Optimized method to reset mobile styles
+    resetMobileStyles() {
+        // Batch style changes to minimize reflows
+        requestAnimationFrame(() => {
+            document.body.style.cssText = 'overflow: auto; position: static; height: auto; width: auto;';
+            document.body.classList.remove('modal-open');
+            
+            // Reset scrollable containers in a single pass
+            document.querySelectorAll('.modal-content').forEach(container => {
+                if (container.style) {
+                    container.style.cssText = 'overflow: auto;';
+                    container.scrollTop = 0;
+                }
+            });
+        });
+    }
+
+    async undockFromMothership() {
         if (!this.spaceship.isDocked) {
             console.log("Not docked, can't undock");
             return;
         }
-        
-        // Log spaceship state before undocking
-        console.log("Spaceship state BEFORE undock process:", {
-            shield: this.spaceship.shield,
-            maxShield: this.spaceship.maxShield,
-            hull: this.spaceship.hull,
-            maxHull: this.spaceship.maxHull,
-            isDocked: this.spaceship.isDocked
-        });
-        
-        // Close any open modals that could cause issues
-        this.closeAllModals();
-        
-        // Store the shield value before undocking to handle potential resets
-        this.preUndockShieldValue = this.spaceship.shield;
-        console.log(`Storing pre-undock shield value: ${this.preUndockShieldValue}`);
-        
-        // Hide the mothership UI
-        if (this.ui && this.ui.mothershipInterface) {
-            this.ui.mothershipInterface.hideMothershipUI();
-            console.log("Hiding mothership interface");
-        } else {
-            console.warn("Could not hide mothership interface: UI or mothershipInterface is null");
-        }
-        
-        // Reset mobile scroll issues for the entire body
-        if (this.isMobileDevice()) {
-            document.body.style.overflow = 'auto';
-            document.body.style.position = 'static';
-            document.body.style.height = 'auto';
-            document.body.style.width = 'auto';
-            document.body.classList.remove('modal-open');
+
+        // Show loading indicator
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'undocking-indicator';
+        loadingIndicator.textContent = 'Undocking...';
+        document.body.appendChild(loadingIndicator);
+
+        try {
+            console.log("Starting undock sequence...");
             
-            // Force any scrollable containers to reset
-            const scrollContainers = document.querySelectorAll('.modal-content');
-            scrollContainers.forEach(container => {
-                if (container.style) {
-                    container.style.overflow = 'auto';
-                    container.scrollTop = 0;
-                }
-            });
+            // Store shield value before any changes
+            this.preUndockShieldValue = this.spaceship.shield;
+            console.log(`Storing pre-undock shield value: ${this.preUndockShieldValue}`);
+
+            // Step 1: Close all modals
+            await this.performStep(() => this.closeAllModals(), "Closing modals");
+            await this.yieldToBrowser();
+
+            // Step 2: Handle mobile-specific cleanup
+            if (this.isMobileDevice()) {
+                await this.performStep(() => this.resetMobileStyles(), "Resetting mobile styles");
+                await this.yieldToBrowser();
+            }
+
+            // Step 3: Hide mothership UI and show game UI
+            await this.performStep(() => this.hideMothershipUI(), "Hiding mothership UI");
+            await this.yieldToBrowser();
             
-            // Clear any touch events that might be stuck
-            this.clearTouchEvents();
-        }
-        
-        // Show the game UI
-        if (this.ui) {
-            this.ui.showUI();
-            console.log("Showing game UI");
-        }
-        
-        // Call spaceship's undock method to position it correctly
-        console.log("Undocking spaceship");
-        const newPosition = this.spaceship.undock();
-        
-        // Log spaceship state after undocking but before delayed sync
-        console.log("Spaceship state AFTER undock but BEFORE delayed sync:", {
-            shield: this.spaceship.shield,
-            maxShield: this.spaceship.maxShield,
-            hull: this.spaceship.hull,
-            maxHull: this.spaceship.maxHull,
-            isDocked: this.spaceship.isDocked
-        });
-        
-        // Sync the values with a slight delay to ensure player entity is fully active
-        this.undockTimeoutId = setTimeout(() => {
-            console.log("Delayed health sync - ensuring values are transferred");
-            console.log("Spaceship state BEFORE delayed sync:", {
+            await this.performStep(() => this.showGameUI(), "Showing game UI");
+            await this.yieldToBrowser();
+
+            // Step 4: Perform core undock logic
+            console.log("Performing core undock...");
+            const newPosition = this.spaceship.undock();
+            
+            // Step 5: Sync health values immediately
+            console.log("Syncing health values...");
+            
+            // Check for shield reset issue
+            if (this.spaceship.shield === 0 && this.preUndockShieldValue > 0) {
+                console.log(`Fixing shield reset: Restoring to ${this.preUndockShieldValue}`);
+                this.spaceship.shield = this.preUndockShieldValue;
+            }
+
+            // Sync values immediately without setTimeout
+            this.spaceship.syncValuesToHealthComponent();
+
+            // Publish undocked event with correct state
+            const healthData = {
                 shield: this.spaceship.shield,
                 maxShield: this.spaceship.maxShield,
                 hull: this.spaceship.hull,
                 maxHull: this.spaceship.maxHull
-            });
-            
-            // CRITICAL FIX: Check if shield value was reset to 0 unexpectedly 
-            // If we see that shield is 0 now but wasn't 0 when we initiated the undock
-            if (this.spaceship.shield === 0 && this.preUndockShieldValue && this.preUndockShieldValue > 0) {
-                console.log(`CRITICAL FIX: Shield was reset to 0 during undocking! Restoring to previous value: ${this.preUndockShieldValue}`);
-                this.spaceship.shield = this.preUndockShieldValue;
-            }
-            
-            this.spaceship.syncValuesToHealthComponent();
-            
-            // Also publish a player.undocked event that the health component can listen for
-            if (window.game && window.game.messageBus) {
-                const healthData = {
-                    shield: this.spaceship.shield,
-                    maxShield: this.spaceship.maxShield,
-                    hull: this.spaceship.hull,
-                    maxHull: this.spaceship.maxHull
-                };
-                
-                window.game.messageBus.publish('player.undocked', healthData);
+            };
+
+            // Publish to appropriate message bus
+            const messageBus = window.game?.messageBus || window.mainMessageBus;
+            if (messageBus) {
+                messageBus.publish('player.undocked', healthData);
                 console.log("Published player.undocked event with health values:", healthData);
-            } else if (window.mainMessageBus) {
-                const healthData = {
-                    shield: this.spaceship.shield,
-                    maxShield: this.spaceship.maxShield,
-                    hull: this.spaceship.hull,
-                    maxHull: this.spaceship.maxHull
-                };
-                
-                window.mainMessageBus.publish('player.undocked', healthData);
-                console.log("Published player.undocked event with health values (via mainMessageBus):", healthData);
             }
-        }, 500); // 500ms delay to ensure player entity is active
-        
-        // Log the undock position for debugging
-        if (newPosition) {
-            console.log(`Ship undocked, position: ${newPosition}`);
-        } else {
-            console.log("Ship undocked, but no position returned");
-        }
-        
-        // Reset docking available status - need to move away to dock again
-        this.dockingAvailable = false;
-        
-        // Request pointer lock if configured - but not on mobile
-        if (this.autoPointerLockOnUndock && !this.isMobileDevice()) {
-            setTimeout(() => {
-                this.requestPointerLock();
-            }, 500); // Short delay to ensure UI updates are complete
+
+            // Reset docking status
+            this.dockingAvailable = false;
+
+            // Request pointer lock if needed (non-mobile only)
+            if (this.autoPointerLockOnUndock && !this.isMobileDevice()) {
+                await this.performStep(() => this.requestPointerLock(), "Requesting pointer lock");
+            }
+
+            console.log("Undock sequence complete");
+            
+        } catch (error) {
+            console.error("Error during undocking:", error);
+        } finally {
+            // Clean up loading indicator
+            document.body.removeChild(loadingIndicator);
         }
     }
     
@@ -434,43 +445,6 @@ export class DockingSystem {
             });
         } catch (err) {
             console.warn("Error while closing modals:", err);
-        }
-    }
-    
-    // Method to forcibly clear any stuck touch events
-    clearTouchEvents() {
-        try {
-            // Create a transparent overlay that captures and immediately clears any stuck events
-            const touchClearOverlay = document.createElement('div');
-            touchClearOverlay.id = 'touch-clear-overlay';
-            touchClearOverlay.style.position = 'fixed';
-            touchClearOverlay.style.top = '0';
-            touchClearOverlay.style.left = '0';
-            touchClearOverlay.style.width = '100vw';
-            touchClearOverlay.style.height = '100vh';
-            touchClearOverlay.style.zIndex = '10000';
-            touchClearOverlay.style.backgroundColor = 'transparent';
-            touchClearOverlay.style.pointerEvents = 'auto';
-            
-            // Add it to the DOM
-            document.body.appendChild(touchClearOverlay);
-            
-            // Handle all touch events and prevent them
-            const preventEvent = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            };
-            
-            touchClearOverlay.addEventListener('touchstart', preventEvent, { passive: false });
-            touchClearOverlay.addEventListener('touchmove', preventEvent, { passive: false });
-            touchClearOverlay.addEventListener('touchend', preventEvent, { passive: false });
-            
-            // Remove it after a short timeout
-            setTimeout(() => {
-                document.body.removeChild(touchClearOverlay);
-            }, 100);
-        } catch (err) {
-            console.warn("Error in clearTouchEvents:", err);
         }
     }
     

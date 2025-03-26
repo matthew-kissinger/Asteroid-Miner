@@ -616,36 +616,13 @@ class Game {
     
     setupEventHandlers() {
         // Handle window resize
-        window.addEventListener('resize', () => {
-            this.renderer.handleResize();
-        });
+        window.addEventListener('resize', this.handleResize);
         
         // Handle visibility change to pause/resume game
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                this.pause();
-            } else {
-                this.resume();
-            }
-        });
+        document.addEventListener('visibilitychange', this.handleVisibilityChange);
         
-        // Handle ESC key to exit pointer lock
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.pointerLockElement) {
-                document.exitPointerLock();
-            }
-            
-            // Add audio mute toggle (M key)
-            if (e.key.toLowerCase() === 'm' && this.audio) {
-                const isMuted = this.audio.toggleMute();
-                console.log(`Audio ${isMuted ? 'muted' : 'unmuted'}`);
-            }
-            
-            // Add debug mode toggle (D key + Shift)
-            if (e.key.toLowerCase() === 'd' && e.shiftKey) {
-                this.toggleDebugMode();
-            }
-        });
+        // Handle keyboard events
+        document.addEventListener('keydown', this.handleKeyDown);
     }
     
     update(deltaTime) {
@@ -868,6 +845,25 @@ class Game {
         if (this.controls && this.controls.inputHandler) {
             this.controls.inputHandler.exitPointerLock();
         }
+        
+        // Set a timeout to clean up resources after the game over screen has been shown
+        // This ensures all final animations and sounds can play before cleanup
+        this.gameOverCleanupTimeout = setTimeout(() => {
+            // Keep references to the UI and audio for the game over screen
+            const ui = this.ui;
+            const audio = this.audio;
+            
+            // Prevent these specific modules from being cleaned up
+            this.ui = null;
+            this.audio = null;
+            
+            // Clean up other resources
+            this.destroy();
+            
+            // Restore references for the game over screen
+            this.ui = ui;
+            this.audio = audio;
+        }, 5000); // 5 seconds delay
     }
     
     animate(timestamp) {
@@ -1056,6 +1052,167 @@ class Game {
             console.log("Difficulty manager connected to enemy system");
         }
     }
+    
+    /**
+     * Clean up all game resources, event listeners, and references
+     * Call this when the game is no longer needed to prevent memory leaks
+     */
+    destroy() {
+        console.log("Cleaning up game resources...");
+        
+        // Cancel animation frame
+        if (this.boundAnimate) {
+            cancelAnimationFrame(this.boundAnimate);
+            this.boundAnimate = null;
+        }
+        
+        // Clear any pending timeouts
+        if (this.gameOverCleanupTimeout) {
+            clearTimeout(this.gameOverCleanupTimeout);
+            this.gameOverCleanupTimeout = null;
+        }
+        
+        // Remove event listeners
+        window.removeEventListener('resize', this.handleResize);
+        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+        document.removeEventListener('keydown', this.handleKeyDown);
+        
+        // Clean up modules
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
+        }
+        
+        if (this.audio) {
+            this.audio.dispose();
+            this.audio = null;
+        }
+        
+        if (this.physics) {
+            this.physics.dispose();
+            this.physics = null;
+        }
+        
+        if (this.spaceship) {
+            this.spaceship.dispose();
+            this.spaceship = null;
+        }
+        
+        if (this.environment) {
+            this.environment.dispose();
+            this.environment = null;
+        }
+        
+        if (this.controls) {
+            this.controls.dispose();
+            this.controls = null;
+        }
+        
+        if (this.ui) {
+            this.ui.dispose();
+            this.ui = null;
+        }
+        
+        if (this.combat) {
+            this.combat.dispose();
+            this.combat = null;
+        }
+        
+        if (this.introSequence) {
+            this.introSequence.destroy();
+            this.introSequence = null;
+        }
+        
+        // Clean up ECS world
+        if (this.world) {
+            // Destroy all entities
+            if (this.world.entityManager) {
+                const entityIds = [...this.world.entityManager.entities.keys()];
+                for (const entityId of entityIds) {
+                    this.world.destroyEntity(entityId);
+                }
+            }
+            
+            // Destroy all systems
+            if (this.world.systemManager) {
+                for (const system of this.world.systemManager.systems) {
+                    if (system.onDestroyed && typeof system.onDestroyed === 'function') {
+                        system.onDestroyed();
+                    }
+                }
+            }
+            
+            this.world = null;
+        }
+        
+        // Unsubscribe from MessageBus
+        if (window.mainMessageBus) {
+            window.mainMessageBus.unsubscribe('game.over', this.gameOver.bind(this));
+        }
+        
+        // Clear global references
+        window.game = null;
+        
+        // Clear object pools
+        if (window.vectorPool) {
+            window.vectorPool.pool = [];
+        }
+        
+        if (window.objectPool) {
+            window.objectPool.clearAllPools();
+        }
+        
+        // Clear references
+        this.scene = null;
+        this.camera = null;
+        this.fpsBuffer = [];
+        
+        console.log("Game resources cleaned up successfully");
+    }
+    
+    /**
+     * Handle window resize event
+     * @private
+     */
+    handleResize = () => {
+        if (this.renderer) {
+            this.renderer.handleResize();
+        }
+    }
+    
+    /**
+     * Handle visibility change event
+     * @private
+     */
+    handleVisibilityChange = () => {
+        if (document.hidden) {
+            this.pause();
+        } else {
+            this.resume();
+        }
+    }
+    
+    /**
+     * Handle key down event
+     * @param {KeyboardEvent} e Key event
+     * @private
+     */
+    handleKeyDown = (e) => {
+        if (e.key === 'Escape' && document.pointerLockElement) {
+            document.exitPointerLock();
+        }
+        
+        // Add audio mute toggle (M key)
+        if (e.key.toLowerCase() === 'm' && this.audio) {
+            const isMuted = this.audio.toggleMute();
+            console.log(`Audio ${isMuted ? 'muted' : 'unmuted'}`);
+        }
+        
+        // Add debug mode toggle (D key + Shift)
+        if (e.key.toLowerCase() === 'd' && e.shiftKey) {
+            this.toggleDebugMode();
+        }
+    }
 }
 
 // Object pooling manager for frequently created objects
@@ -1118,6 +1275,25 @@ window.objectPool = {
             
             pool.objects.push(obj);
         }
+    },
+    
+    // Clear all pools
+    clearAllPools: function() {
+        for (const type in this.pools) {
+            this.clearPool(type);
+        }
+    },
+    
+    // Clear a specific pool
+    clearPool: function(type) {
+        const pool = this.pools[type];
+        if (!pool) {
+            console.warn(`No pool exists for type: ${type}`);
+            return;
+        }
+        
+        // Clear all objects in the pool
+        pool.objects = [];
     }
 };
 

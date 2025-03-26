@@ -255,4 +255,37 @@ export class ThrusterComponent extends Component {
         this.maxVelocity *= multiplier;
         return this;
     }
+    
+    /**
+     * Called when component is detached from an entity
+     */
+    onDetached() {
+        // Clean up particle systems to prevent memory leaks
+        Object.values(this.particleSystems).forEach(particles => {
+            if (particles) {
+                // Remove from scene
+                if (particles.parent) {
+                    particles.parent.remove(particles);
+                }
+                
+                // Dispose geometry
+                if (particles.geometry) {
+                    particles.geometry.dispose();
+                }
+                
+                // Dispose material
+                if (particles.material) {
+                    particles.material.dispose();
+                }
+            }
+        });
+        
+        // Clear references
+        this.particleSystems = {
+            main: null,
+            left: null,
+            right: null,
+            reverse: null
+        };
+    }
 }

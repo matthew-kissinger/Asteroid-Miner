@@ -56,6 +56,35 @@ export class MeshComponent extends Component {
         if (this.mesh.parent) {
             this.mesh.parent.remove(this.mesh);
         }
+        
+        // Dispose of geometry and material to prevent memory leaks
+        if (this.mesh.geometry) {
+            this.mesh.geometry.dispose();
+        }
+        
+        if (this.mesh.material) {
+            // Check if material is an array
+            if (Array.isArray(this.mesh.material)) {
+                this.mesh.material.forEach(material => {
+                    if (material.map) material.map.dispose();
+                    if (material.lightMap) material.lightMap.dispose();
+                    if (material.bumpMap) material.bumpMap.dispose();
+                    if (material.normalMap) material.normalMap.dispose();
+                    if (material.specularMap) material.specularMap.dispose();
+                    if (material.envMap) material.envMap.dispose();
+                    material.dispose();
+                });
+            } else {
+                // Single material case
+                if (this.mesh.material.map) this.mesh.material.map.dispose();
+                if (this.mesh.material.lightMap) this.mesh.material.lightMap.dispose();
+                if (this.mesh.material.bumpMap) this.mesh.material.bumpMap.dispose();
+                if (this.mesh.material.normalMap) this.mesh.material.normalMap.dispose();
+                if (this.mesh.material.specularMap) this.mesh.material.specularMap.dispose();
+                if (this.mesh.material.envMap) this.mesh.material.envMap.dispose();
+                this.mesh.material.dispose();
+            }
+        }
     }
     
     /**

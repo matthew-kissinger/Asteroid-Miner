@@ -374,9 +374,10 @@
     }
 }
 
-/* Mobile Touch UI Specific Styles */
+/* Touch Controls */
 .mobile-action-button {
     background-color: rgba(10, 20, 30, 0.7);
+    border: 2px solid rgba(120, 220, 232, 0.5);
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -385,22 +386,152 @@
     box-shadow: 0 0 10px rgba(120, 220, 232, 0.5);
     user-select: none;
     touch-action: manipulation;
-    width: 60px !important;
-    height: 60px !important;
+    width: 70px !important;
+    height: 70px !important;
     font-size: 16px !important;
+    transition: transform 0.1s ease-out, background-color 0.1s ease-out, border-color 0.1s ease-out;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.mobile-action-button:active {
+.mobile-action-button.pressed {
     transform: scale(0.95);
-    opacity: 0.9;
+    background-color: rgba(120, 220, 232, 0.2);
+    border-color: rgba(120, 220, 232, 0.8);
 }
 
-#leftJoystickZone, #rightJoystickZone {
+.mobile-action-button.active {
+    background-color: rgba(120, 220, 232, 0.3);
+    border-color: rgba(120, 220, 232, 1);
+    box-shadow: 0 0 15px rgba(120, 220, 232, 0.8);
+}
+
+/* Fire button specific styles */
+#fire-button {
+    border-color: rgba(255, 80, 80, 0.5);
+    box-shadow: 0 0 10px rgba(255, 80, 80, 0.5);
+}
+
+#fire-button.pressed,
+#fire-button.active {
+    background-color: rgba(255, 80, 80, 0.3);
+    border-color: rgba(255, 80, 80, 1);
+    box-shadow: 0 0 15px rgba(255, 80, 80, 0.8);
+}
+
+/* Joystick zones */
+#leftJoystickZone,
+#rightJoystickZone {
     background-color: rgba(10, 20, 30, 0.3);
+    border: 2px dashed rgba(120, 220, 232, 0.3);
     border-radius: 50%;
-    border: 1px dashed rgba(120, 220, 232, 0.3);
-    width: 110px !important;
-    height: 110px !important;
+    width: 120px !important;
+    height: 120px !important;
+    transition: border-color 0.2s ease-out;
+    touch-action: none;
+}
+
+#leftJoystickZone.active,
+#rightJoystickZone.active {
+    border-color: rgba(120, 220, 232, 0.8);
+}
+
+/* Nipple.js customization */
+.nipple {
+    opacity: 0.9 !important;
+}
+
+.nipple .front {
+    background: rgba(120, 220, 232, 0.8) !important;
+}
+
+.nipple .back {
+    background: rgba(10, 20, 30, 0.7) !important;
+    border: 2px solid rgba(120, 220, 232, 0.5) !important;
+}
+
+/* Crosshair */
+#mobile-crosshair {
+    pointer-events: none;
+    z-index: 1000;
+    mix-blend-mode: screen;
+}
+
+#mobile-crosshair div {
+    background-color: rgba(120, 220, 232, 0.8);
+    box-shadow: 0 0 5px rgba(120, 220, 232, 0.5);
+}
+
+/* Button container layout */
+#mobile-action-buttons-left,
+#mobile-action-buttons-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 10px;
+    z-index: 1000;
+}
+
+/* Prevent scrolling/zooming when using touch controls */
+body.touch-controls-active {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    -webkit-overflow-scrolling: none;
+}
+
+/* Optimize touch targets */
+.mobile-action-button,
+.nipple,
+#leftJoystickZone,
+#rightJoystickZone {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Improve visibility in different lighting conditions */
+@media (prefers-color-scheme: dark) {
+    .mobile-action-button {
+        background-color: rgba(20, 30, 40, 0.8);
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    .mobile-action-button {
+        background-color: rgba(5, 15, 25, 0.9);
+    }
+}
+
+/* Handle different screen sizes */
+@media (max-height: 600px) {
+    .mobile-action-button {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 14px !important;
+    }
+
+    #leftJoystickZone,
+    #rightJoystickZone {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    #mobile-action-buttons-left,
+    #mobile-action-buttons-right {
+        gap: 15px;
+    }
+}
+
+/* Improve touch area for buttons */
+@media (min-width: 600px) {
+    .mobile-action-button {
+        width: 80px !important;
+        height: 80px !important;
+        font-size: 18px !important;
+    }
 }
 
 /* General mobile scrolling improvements */
@@ -445,4 +576,35 @@
     body {
         overscroll-behavior-y: none;
     }
+}
+
+/* Undocking state styles */
+.undocking {
+    overflow: hidden !important;
+    touch-action: none !important;
+    -webkit-overflow-scrolling: none !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Loading indicator for undocking */
+.undocking-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    font-size: 1.2rem;
+    z-index: 10000;
+    pointer-events: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 } 

@@ -1183,4 +1183,39 @@ export class HUD {
             }, 5000);
         }
     }
+    
+    /**
+     * Clean up resources and event listeners
+     */
+    destroy() {
+        // Cancel any active animation frames
+        this.animationFrames.forEach(frameId => {
+            cancelAnimationFrame(frameId);
+        });
+        this.animationFrames = [];
+        
+        // Clear intervals
+        if (this.glitchInterval) {
+            clearInterval(this.glitchInterval);
+            this.glitchInterval = null;
+        }
+        
+        // Remove DOM event listeners
+        const controls = document.getElementById('show-controls');
+        if (controls) {
+            controls.removeEventListener('click', controls.clickHandler);
+            controls.removeEventListener('mouseover', controls.mouseoverHandler);
+            controls.removeEventListener('mouseout', controls.mouseoutHandler);
+        }
+        
+        // Remove DOM elements
+        const hudContainer = document.getElementById('hud-container');
+        if (hudContainer && hudContainer.parentNode) {
+            hudContainer.parentNode.removeChild(hudContainer);
+        }
+        
+        // Clear references
+        this.spaceship = null;
+        this.scanline = null;
+    }
 }

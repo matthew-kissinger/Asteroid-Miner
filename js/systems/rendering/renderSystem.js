@@ -388,4 +388,34 @@ export class RenderSystem extends System {
             console.log(`RenderSystem: Added ${missingCount} missing entities to tracking`);
         }
     }
+    
+    /**
+     * Clean up resources when system is destroyed
+     */
+    onDestroyed() {
+        // Dispose of THREE.js matrices
+        this.projScreenMatrix = null;
+        this.frustum = null;
+        
+        // Clean up all entities
+        for (const entity of this.meshEntities.values()) {
+            this.removeEntityFromScene(entity);
+        }
+        
+        // Clear entity map
+        this.meshEntities.clear();
+        
+        // Clear scene reference
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        
+        // Unsubscribe from all message bus events
+        if (this.world && this.world.messageBus) {
+            // Unsubscribe from entity events
+            this.world.messageBus.unsubscribe('entity.created', this.onEntityCreated.bind(this));
+            this.world.messageBus.unsubscribe('entity.destroyed', this.onEntityDestroyed.bind(this));
+            this.world.messageBus.unsubscribe('component.added', this.onComponentAdded.bind(this));
+        }
+    }
 }
