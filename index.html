@@ -17,6 +17,12 @@
             font-family: 'Courier New', monospace;
             color: #fff;
             touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         
         canvas {
@@ -24,6 +30,29 @@
             width: 100%;
             height: 100%;
             touch-action: none;
+        }
+        
+        /* Enhanced mobile touch handling */
+        button, .button, [role="button"] {
+            touch-action: manipulation;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Specifically target the undock button to ensure it works on mobile */
+        #undock-btn {
+            touch-action: manipulation !important;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        /* Improved modal handling for mobile */
+        .modal-container, #mothership-ui {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
         }
         
         /* UI Styles */
@@ -100,6 +129,8 @@
         /* Disable pull-to-refresh on mobile */
         html {
             overscroll-behavior-y: contain;
+            height: 100%;
+            overflow: hidden;
         }
         
         /* Disable long-press context menu on mobile */

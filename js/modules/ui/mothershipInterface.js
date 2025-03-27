@@ -100,6 +100,14 @@ export class MothershipInterface {
             mothershipUI.style.paddingBottom = '100px'; // Extra padding for mobile to ensure content isn't hidden behind touch controls
         }
         
+        // Add specific mobile styles for undock button
+        let undockButtonStyle = `width: 100%; padding: 15px; margin-top: 20px; background-color: #33aaff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px;`;
+        
+        // Enhanced styling for mobile users
+        if (this.isMobile) {
+            undockButtonStyle = `width: 100%; padding: 20px; margin-top: 30px; background-color: #33aaff; color: #000; border: 3px solid #fff; border-radius: 10px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 24px; text-transform: uppercase; box-shadow: 0 0 25px rgba(51, 170, 255, 0.8); position: relative; z-index: 1001; transform: translateZ(0);`;
+        }
+        
         mothershipUI.innerHTML = `
             <h2 style="text-align: center; color: #33aaff; margin-top: 0;">MOTHERSHIP TERMINAL</h2>
             <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
@@ -332,8 +340,8 @@ export class MothershipInterface {
                     </div>
                 </div>
             </div>
-            <button id="undock-btn" style="width: 100%; padding: 15px; margin-top: 20px; background-color: #33aaff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px;">
-                UNDOCK
+            <button id="undock-btn" style="${undockButtonStyle}">
+                ${this.isMobile ? 'LAUNCH SHIP' : 'UNDOCK'}
             </button>
         `;
         
@@ -674,6 +682,37 @@ export class MothershipInterface {
                     console.error('Custom system creator not available');
                 }
             });
+        }
+
+        // Add any specific handling for undock button on mobile
+        const undockBtn = document.getElementById('undock-btn');
+        if (undockBtn && this.isMobile) {
+            // Add touchstart event listener for more responsive touch handling
+            undockBtn.addEventListener('touchstart', (e) => {
+                // Add visual feedback for touch
+                undockBtn.style.transform = 'translateZ(0) scale(0.95)';
+                undockBtn.style.backgroundColor = '#4cb8ff';
+            });
+            
+            // Reset button style on touchend
+            undockBtn.addEventListener('touchend', (e) => {
+                undockBtn.style.transform = 'translateZ(0) scale(1)';
+                undockBtn.style.backgroundColor = '#33aaff';
+            });
+            
+            // Add pulsing animation for better visibility
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes undockPulse {
+                    0% { box-shadow: 0 0 25px rgba(51, 170, 255, 0.8); }
+                    50% { box-shadow: 0 0 35px rgba(51, 170, 255, 1); }
+                    100% { box-shadow: 0 0 25px rgba(51, 170, 255, 0.8); }
+                }
+                #undock-btn {
+                    animation: undockPulse 2s infinite;
+                }
+            `;
+            document.head.appendChild(style);
         }
     }
 }
