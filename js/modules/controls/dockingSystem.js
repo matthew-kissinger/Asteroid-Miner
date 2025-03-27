@@ -316,27 +316,13 @@ export class DockingSystem {
             this.preUndockShieldValue = this.spaceship.shield;
             console.log(`Storing pre-undock shield value: ${this.preUndockShieldValue}`);
 
-            // Step 1: Close all modals - this is a blocker on mobile
+            // Step 1: Close all modals
             await this.performStep(() => this.closeAllModals(), "Closing modals");
             await this.yieldToBrowser();
 
             // Step 2: Handle mobile-specific cleanup
-            const isMobile = this.isMobileDevice();
-            if (isMobile) {
-                console.log("Handling mobile-specific undocking cleanup");
+            if (this.isMobileDevice()) {
                 await this.performStep(() => this.resetMobileStyles(), "Resetting mobile styles");
-                await this.yieldToBrowser();
-                
-                // Fix for touch event issues - ensure touch events are properly reset
-                await this.performStep(() => {
-                    document.documentElement.style.touchAction = "none";
-                    const touchControls = this.getTouchControls();
-                    if (touchControls) {
-                        console.log("Preparing touch controls for undocking");
-                        // Ensure touch controls are properly initialized
-                        touchControls.show();
-                    }
-                }, "Preparing touch controls");
                 await this.yieldToBrowser();
             }
 
@@ -347,7 +333,7 @@ export class DockingSystem {
             await this.performStep(() => this.showGameUI(), "Showing game UI");
             await this.yieldToBrowser();
 
-            // Step 4: Perform core undock logic - THIS MUST HAPPEN AFTER UI CHANGES
+            // Step 4: Perform core undock logic
             console.log("Performing core undock...");
             const newPosition = this.spaceship.undock();
             
@@ -381,26 +367,9 @@ export class DockingSystem {
             // Reset docking status
             this.dockingAvailable = false;
 
-            // Step 6: Extra mobile-specific post-undock steps
-            if (isMobile) {
-                await this.performStep(() => {
-                    // Ensure the touch controls are visible and working
-                    const touchControls = this.getTouchControls();
-                    if (touchControls) {
-                        console.log("Showing touch controls post-undock");
-                        touchControls.show();
-                    }
-                    
-                    // Set this flag explicitly for mobile to prevent conflicts
-                    this.isDocked = false;
-                    this.spaceship.isDocked = false;
-                }, "Finalizing mobile undock");
-                await this.yieldToBrowser();
-            } else {
-                // Request pointer lock if needed (non-mobile only)
-                if (this.autoPointerLockOnUndock) {
-                    await this.performStep(() => this.requestPointerLock(), "Requesting pointer lock");
-                }
+            // Request pointer lock if needed (non-mobile only)
+            if (this.autoPointerLockOnUndock && !this.isMobileDevice()) {
+                await this.performStep(() => this.requestPointerLock(), "Requesting pointer lock");
             }
 
             console.log("Undock sequence complete");
@@ -411,20 +380,6 @@ export class DockingSystem {
             // Clean up loading indicator
             document.body.removeChild(loadingIndicator);
         }
-    }
-    
-    // Helper method to get touch controls instance
-    getTouchControls() {
-        // Try through various possible paths
-        if (window.game && window.game.controls && window.game.controls.touchControls) {
-            return window.game.controls.touchControls;
-        }
-        
-        if (this.ui && this.ui.controls && this.ui.controls.touchControls) {
-            return this.ui.controls.touchControls;
-        }
-        
-        return null;
     }
     
     // Method to detect mobile devices
