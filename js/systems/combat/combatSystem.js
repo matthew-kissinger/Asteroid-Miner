@@ -309,13 +309,18 @@ export class CombatSystem extends System {
         // Use our cached effect position
         this.effectPosition.copy(projectileTransform.position);
         
-        // Create hit effect
-        // Try to use an object from the pool if available
+        // Create hit effect using object pool
+        // Check for hit effect pool availability
         let hitEffect;
-        if (window.objectPool && window.objectPool.pools['hitEffect']) {
+        const objectPoolAvailable = window.objectPool && 
+                                    window.objectPool.pools && 
+                                    window.objectPool.pools['hitEffect'];
+                                    
+        if (objectPoolAvailable) {
+            // Get hit effect from pool
             hitEffect = window.objectPool.get('hitEffect', effectColor, effectSize);
         } else {
-            // Create new effect if no pool exists
+            // Fallback to creating a new effect if pool unavailable
             hitEffect = this.createNewHitEffect(effectColor, effectSize);
         }
         
@@ -323,16 +328,29 @@ export class CombatSystem extends System {
             // Position the effect
             hitEffect.mesh.position.copy(this.effectPosition);
             
+            // Add to scene if not already added
+            if (!hitEffect.mesh.parent) {
+                this.world.scene.add(hitEffect.mesh);
+            }
+            
             // Start the animation
-            this.animateHitEffect(hitEffect, hitEffect.mesh);
+            this.animateHitEffect(hitEffect, hitEffect.mesh, objectPoolAvailable);
         }
     }
     
-    // Helper method to create a new hit effect
+    // Helper method to create a new hit effect - only used as fallback when object pool is unavailable
     createNewHitEffect(effectColor, effectSize) {
-        // Create geometry only once and reuse
-        if (!this.hitEffectGeometry) {
+        // Use precomputed geometry if available
+        let geometry;
+        if (window.game && window.game.hitEffectGeometry) {
+            geometry = window.game.hitEffectGeometry;
+        } else if (!this.hitEffectGeometry) {
+            // Create and cache geometry if not available
             this.hitEffectGeometry = new THREE.SphereGeometry(1, 8, 8);
+            geometry = this.hitEffectGeometry;
+        } else {
+            // Use cached geometry
+            geometry = this.hitEffectGeometry;
         }
         
         // Create the hit effect mesh
@@ -342,11 +360,8 @@ export class CombatSystem extends System {
             opacity: 0.8
         });
         
-        const mesh = new THREE.Mesh(this.hitEffectGeometry, material);
+        const mesh = new THREE.Mesh(geometry, material);
         mesh.scale.set(effectSize, effectSize, effectSize);
-        
-        // Add to scene
-        this.world.scene.add(mesh);
         
         return { mesh, material };
     }
@@ -355,8 +370,9 @@ export class CombatSystem extends System {
      * Animate a hit effect
      * @param {object} hitEffect The hit effect object
      * @param {THREE.Mesh} effectMesh The effect mesh
+     * @param {boolean} useObjectPool Whether to return the object to pool after animation
      */
-    animateHitEffect(hitEffect, effectMesh) {
+    animateHitEffect(hitEffect, effectMesh, useObjectPool = true) {
         let scale = 1.0;
         let opacity = 0.8;
         
@@ -382,11 +398,11 @@ export class CombatSystem extends System {
                         effectMesh.parent.remove(effectMesh);
                     }
                     
-                    // Return to pool if available
-                    if (window.objectPool && window.objectPool.pools['hitEffect']) {
+                    // Return to pool if using object pooling
+                    if (useObjectPool && window.objectPool && window.objectPool.pools['hitEffect']) {
                         window.objectPool.release('hitEffect', hitEffect);
-                    } else {
-                        // Dispose of geometry and material if not using object pooling
+                    } else if (!useObjectPool) {
+                        // Dispose of material if not using object pooling
                         if (hitEffect.material) {
                             hitEffect.material.dispose();
                         }

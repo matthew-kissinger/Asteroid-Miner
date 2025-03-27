@@ -151,34 +151,6 @@ class Game {
             // Register event handlers
             this.setupEventHandlers();
             
-            // Initialize audio after everything else is set up
-            this.audio.initialize().then(() => {
-                console.log("Audio system initialized");
-                
-                // Check if intro has been played before
-                const introPlayed = localStorage.getItem('introPlayed') === 'true';
-                
-                if (introPlayed) {
-                    console.log("Intro already played, starting in docked state");
-                    // Only set initial camera position if we're not doing the intro
-                    this.camera.position.set(0, 1500, 0);
-                    // Only start docked if we've already seen the intro
-                    this.startDocked();
-                } else {
-                    console.log("First time playing, preparing for intro sequence");
-                    // Make sure ship is docked but DON'T show the UI
-                    if (this.spaceship && !this.spaceship.isDocked) {
-                        this.spaceship.dock();
-                    }
-                    // Start intro with a small delay to ensure everything is loaded
-                    setTimeout(() => {
-                        this.startIntroSequence();
-                    }, 500);
-                }
-            });
-            
-            console.log("Game initialization complete");
-            
             // Initialize common object pools
             this.initializeObjectPools();
             
@@ -197,12 +169,88 @@ class Game {
             this.fpsBuffer = [];
             this.fpsBufferSize = 15; // Smaller buffer for more responsive updates
             
-            // Start game loop
-            this.boundAnimate();
+            // Update UI to indicate loading is in progress
+            if (this.ui && this.ui.showLoadingScreen) {
+                this.ui.showLoadingScreen("Initializing Audio Systems...");
+            }
+            
+            // Start the initialization sequence
+            this.initializeGameSequence();
             
         } catch (error) {
             console.error("Error in game initialization:", error);
             throw error; // Re-throw to show in the UI
+        }
+    }
+    
+    // Initialize game in sequence, ensuring audio is loaded before proceeding
+    async initializeGameSequence() {
+        try {
+            console.log("Starting game initialization sequence...");
+            
+            // Update loading screen
+            if (this.ui && this.ui.updateLoadingProgress) {
+                this.ui.updateLoadingProgress(0, "Pre-decoding sound effects...");
+            }
+            
+            // Initialize audio - this includes pre-decoding all sound effects
+            console.log("Initializing audio system and pre-decoding sounds...");
+            await this.audio.initialize();
+            
+            // Update loading progress
+            if (this.ui && this.ui.updateLoadingProgress) {
+                this.ui.updateLoadingProgress(50, "Audio initialization complete");
+            }
+            
+            console.log("Audio system initialization complete");
+            
+            // Delay slightly before proceeding to ensure all audio is ready
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Update loading progress 
+            if (this.ui && this.ui.updateLoadingProgress) {
+                this.ui.updateLoadingProgress(100, "Starting game...");
+            }
+            
+            // Check if intro has been played before
+            const introPlayed = localStorage.getItem('introPlayed') === 'true';
+            
+            if (introPlayed) {
+                console.log("Intro already played, starting in docked state");
+                // Only set initial camera position if we're not doing the intro
+                this.camera.position.set(0, 1500, 0);
+                // Only start docked if we've already seen the intro
+                this.startDocked();
+            } else {
+                console.log("First time playing, preparing for intro sequence");
+                // Make sure ship is docked but DON'T show the UI
+                if (this.spaceship && !this.spaceship.isDocked) {
+                    this.spaceship.dock();
+                }
+                // Start intro with a small delay to ensure everything is loaded
+                setTimeout(() => {
+                    this.startIntroSequence();
+                }, 500);
+            }
+            
+            // Hide loading screen if it was shown
+            if (this.ui && this.ui.hideLoadingScreen) {
+                this.ui.hideLoadingScreen();
+            }
+            
+            // Start game loop
+            this.boundAnimate();
+            
+            console.log("Game initialization sequence completed successfully");
+        } catch (error) {
+            console.error("Error during game initialization sequence:", error);
+            
+            // Show error in UI if possible
+            if (this.ui && this.ui.showError) {
+                this.ui.showError("Failed to initialize game: " + error.message);
+            } else {
+                alert("Failed to initialize game: " + error.message);
+            }
         }
     }
     
@@ -1386,6 +1434,162 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("UnrealBloomPass:", typeof THREE.UnrealBloomPass !== 'undefined');
                             
                             window.game = new Game(); // Initialize the game
+                            
+                            // Preload projectile assets to prevent stutter
+                            console.log("Precomputing projectile assets and warming shaders...");
+                            
+                            // Create template projectile geometry and materials
+                            window.game.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
+                            window.game.projectileMaterial = new THREE.MeshStandardMaterial({
+                                color: 0x00ffff,
+                                emissive: 0x00ffff,
+                                emissiveIntensity: 5,
+                                metalness: 0.7,
+                                roughness: 0.3
+                            });
+                            
+                            // Create template glow geometry and material
+                            window.game.projectileGlowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
+                            window.game.projectileGlowMaterial = new THREE.MeshBasicMaterial({
+                                color: 0x00ffff,
+                                transparent: true,
+                                opacity: 0.4,
+                                blending: THREE.AdditiveBlending
+                            });
+                            
+                            // Precompute trail particle geometries for different sizes
+                            console.log("Precomputing trail particle geometries...");
+                            window.game.trailParticleGeometries = [];
+                            const numPoints = 20; // Match the number in addProjectileTrail
+                            
+                            for (let i = 0; i < numPoints; i++) {
+                                const ratio = i / numPoints;
+                                const size = 0.5 * (1 - ratio); // Match the size calculation in addProjectileTrail
+                                const particleGeometry = new THREE.SphereGeometry(size, 8, 8);
+                                window.game.trailParticleGeometries.push(particleGeometry);
+                            }
+                            
+                            // Force shader compilation before loading screen hides
+                            console.log("Warming shaders...");
+                            const dummyProjectile = new THREE.Mesh(window.game.projectileGeometry, window.game.projectileMaterial);
+                            const dummyGlow = new THREE.Mesh(window.game.projectileGlowGeometry, window.game.projectileGlowMaterial);
+                            dummyProjectile.add(dummyGlow);
+                            
+                            // Add to scene temporarily
+                            window.game.scene.add(dummyProjectile);
+                            
+                            // Precompute and warm shaders for explosion and hit effects
+                            console.log("Precomputing explosion effect assets...");
+                            
+                            // Create template explosion particle geometry and materials
+                            window.game.explosionGeometry = new THREE.SphereGeometry(1, 8, 8);
+                            window.game.explosionMaterial = new THREE.MeshBasicMaterial({
+                                color: 0xff5500,
+                                transparent: true,
+                                opacity: 0.8
+                            });
+                            
+                            // Create template hit effect geometry
+                            window.game.hitEffectGeometry = new THREE.SphereGeometry(1, 8, 8);
+                            
+                            // Create dummy explosion particles for shader warming
+                            const dummyExplosionContainer = new THREE.Group();
+                            window.game.scene.add(dummyExplosionContainer);
+                            
+                            // Create a sample of explosion particles with various sizes
+                            const explosionParticleCount = 20;
+                            const dummyExplosionParticles = [];
+                            
+                            for (let i = 0; i < explosionParticleCount; i++) {
+                                const size = Math.random() * 2 + 1;
+                                const particle = new THREE.Mesh(
+                                    window.game.explosionGeometry,
+                                    window.game.explosionMaterial.clone() // Clone material for individual control
+                                );
+                                
+                                // Position out of view but still rendered
+                                particle.position.set(
+                                    Math.random() * 10 - 5,
+                                    Math.random() * 10 - 5,
+                                    Math.random() * 10 - 5
+                                );
+                                particle.position.multiplyScalar(10).add(new THREE.Vector3(0, -10000, 0));
+                                
+                                // Add to container
+                                dummyExplosionContainer.add(particle);
+                                dummyExplosionParticles.push(particle);
+                            }
+                            
+                            // Create explosion particle effect pool
+                            window.objectPool.createPool('explosionParticle', () => {
+                                // Reuse the geometry and create a cloned material
+                                const material = window.game.explosionMaterial.clone();
+                                const mesh = new THREE.Mesh(window.game.explosionGeometry, material);
+                                
+                                return {
+                                    mesh: mesh,
+                                    material: material,
+                                    velocity: new THREE.Vector3(),
+                                    
+                                    // Reset function when retrieved from pool
+                                    reset: function(position, size = 1.0, color = 0xff5500) {
+                                        // Set position
+                                        this.mesh.position.copy(position);
+                                        
+                                        // Set size
+                                        this.mesh.scale.set(size, size, size);
+                                        
+                                        // Set color and opacity
+                                        this.material.color.set(color);
+                                        this.material.opacity = 0.8;
+                                        
+                                        // Make visible
+                                        this.mesh.visible = true;
+                                    },
+                                    
+                                    // Clear function when returned to pool
+                                    clear: function() {
+                                        if (this.mesh.parent) {
+                                            this.mesh.parent.remove(this.mesh);
+                                        }
+                                        this.mesh.visible = false;
+                                        this.velocity.set(0, 0, 0);
+                                    }
+                                };
+                            }, 50, 200); // Pre-create 50, max 200
+                            
+                            // Create variation of hit effects with different colors for shader warming
+                            const hitEffectColors = [0xff5500, 0x3399ff, 0xff0000, 0xffff00];
+                            const dummyHitEffects = [];
+                            
+                            for (const color of hitEffectColors) {
+                                const hitEffect = window.objectPool.get('hitEffect', color, 1.5);
+                                if (hitEffect && hitEffect.mesh) {
+                                    // Position far away but still rendered
+                                    hitEffect.mesh.position.set(0, -10100, 0);
+                                    window.game.scene.add(hitEffect.mesh);
+                                    dummyHitEffects.push(hitEffect);
+                                }
+                            }
+                            
+                            // Force shader compilation for all new objects
+                            window.game.renderer.renderer.compile(window.game.scene, window.game.camera);
+                            
+                            console.log("Cleaning up dummy objects after warming...");
+                            
+                            // Remove dummy explosion container after compilation
+                            window.game.scene.remove(dummyExplosionContainer);
+                            for (const particle of dummyExplosionParticles) {
+                                dummyExplosionContainer.remove(particle);
+                            }
+                            
+                            // Return hit effects to pool
+                            for (const hitEffect of dummyHitEffects) {
+                                window.objectPool.release('hitEffect', hitEffect);
+                            }
+                            
+                            console.log("Precomputed assets and shaders warmed successfully");
+                            
                             console.log("Game started successfully");
                         } catch (error) {
                             console.error("Error starting game:", error);

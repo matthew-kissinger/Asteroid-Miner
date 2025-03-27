@@ -101,12 +101,82 @@ export class Game {
             console.log("Game initialization complete with combat systems");
             // Make instance globally available to help with debugging
             window.gameInstance = this;
+            
+            // Ensure projectile assets are precomputed if not already done
+            this.ensureProjectileAssetsPrecomputed();
+            
             // Start game loop
             this.animate();
         } catch (error) {
             console.error("Error in game initialization:", error);
             throw error; // Re-throw to show in the UI
         }
+    }
+    /**
+     * Ensure projectile assets are precomputed to prevent stutter
+     * This is a backup in case the precomputation in main.js fails
+     */
+    ensureProjectileAssetsPrecomputed() {
+        if (!this.projectileGeometry) {
+            console.log("Projectile geometry not precomputed, doing it now...");
+            this.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
+        }
+        
+        if (!this.projectileMaterial) {
+            console.log("Projectile material not precomputed, doing it now...");
+            this.projectileMaterial = new THREE.MeshStandardMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 5,
+                metalness: 0.7,
+                roughness: 0.3
+            });
+        }
+        
+        if (!this.projectileGlowGeometry) {
+            console.log("Projectile glow geometry not precomputed, doing it now...");
+            this.projectileGlowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
+        }
+        
+        if (!this.projectileGlowMaterial) {
+            console.log("Projectile glow material not precomputed, doing it now...");
+            this.projectileGlowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.4,
+                blending: THREE.AdditiveBlending
+            });
+        }
+        
+        if (!this.trailParticleGeometries || this.trailParticleGeometries.length === 0) {
+            console.log("Trail particle geometries not precomputed, doing it now...");
+            this.trailParticleGeometries = [];
+            const numPoints = 20;
+            
+            for (let i = 0; i < numPoints; i++) {
+                const ratio = i / numPoints;
+                const size = 0.5 * (1 - ratio);
+                const particleGeometry = new THREE.SphereGeometry(size, 8, 8);
+                this.trailParticleGeometries.push(particleGeometry);
+            }
+        }
+        
+        // Warm shaders if not already done
+        console.log("Ensuring shaders are warmed...");
+        const dummyProjectile = new THREE.Mesh(this.projectileGeometry, this.projectileMaterial);
+        const dummyGlow = new THREE.Mesh(this.projectileGlowGeometry, this.projectileGlowMaterial);
+        dummyProjectile.add(dummyGlow);
+        
+        // Add to scene temporarily
+        this.scene.add(dummyProjectile);
+        
+        // Force shader compilation
+        this.renderer.renderer.compile(this.scene, this.camera);
+        
+        // Set position far away (out of view) but still rendered
+        dummyProjectile.position.set(0, -10000, 0);
+        
+        console.log("Projectile assets verified and shaders ensured to be warmed");
     }
     startDocked() {
         // Start the game docked with the mothership for tutorial/intro

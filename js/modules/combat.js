@@ -971,24 +971,42 @@ export class Combat {
      * @param {THREE.Vector3} direction Direction vector
      */
     createProjectile(position, direction) {
-        // Create projectile geometry and material with improved visuals
-        const geometry = new THREE.SphereGeometry(1.8, 12, 12); // Better quality sphere, 3x size
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x00ffff,
-            emissive: 0x00ffff,
-            emissiveIntensity: 5,
-            metalness: 0.7,
-            roughness: 0.3
-        });
+        // Use precomputed geometry and clone the precomputed material
+        let geometry, material, glowGeometry, glowMaterial;
         
-        // Add glow effect
-        const glowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
-        const glowMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            transparent: true,
-            opacity: 0.4,
-            blending: THREE.AdditiveBlending
-        });
+        // Use precomputed assets if available, fallback to creating new ones if not
+        if (window.game && window.game.projectileGeometry && window.game.projectileMaterial) {
+            // Use precomputed geometry (shared reference is fine for geometry)
+            geometry = window.game.projectileGeometry;
+            // Clone the material so each projectile can have its own properties
+            material = window.game.projectileMaterial.clone();
+            
+            // Use precomputed glow geometry and material
+            glowGeometry = window.game.projectileGlowGeometry;
+            glowMaterial = window.game.projectileGlowMaterial.clone();
+        } else {
+            // Fallback to creating new assets (should never happen if precomputation worked)
+            console.warn("Projectile assets not precomputed, creating new ones (may cause stutter)");
+            geometry = new THREE.SphereGeometry(1.8, 12, 12);
+            material = new THREE.MeshStandardMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 5,
+                metalness: 0.7,
+                roughness: 0.3
+            });
+            
+            // Create glow effect
+            glowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
+            glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.4,
+                blending: THREE.AdditiveBlending
+            });
+        }
+        
+        // Create glow mesh using the geometry and material
         const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
         
         // Create mesh
@@ -1199,8 +1217,13 @@ export class Combat {
             const ratio = i / numPoints;
             const size = 0.5 * (1 - ratio); // Smaller as we get further from projectile
             
-            // Create particle geometry
-            const particleGeometry = new THREE.SphereGeometry(size, 8, 8);
+            // Get precomputed geometry or create a new one if not available
+            let particleGeometry;
+            if (window.game && window.game.trailParticleGeometries && window.game.trailParticleGeometries[i]) {
+                particleGeometry = window.game.trailParticleGeometries[i];
+            } else {
+                particleGeometry = new THREE.SphereGeometry(size, 8, 8);
+            }
             
             // Create particle material with glow
             const particleMaterial = new THREE.MeshBasicMaterial({

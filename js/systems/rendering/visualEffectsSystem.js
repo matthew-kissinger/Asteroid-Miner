@@ -105,41 +105,90 @@ export class VisualEffectsSystem extends System {
         container.position.copy(position);
         container.scale.set(scale, scale, scale);
         
-        // Create particles for explosion
+        // Create particles for explosion - use object pool if available
         const particleCount = Math.floor(20 * scale);
         const particles = [];
         
+        // Check if pooling system is available
+        const usePooling = window.objectPool && 
+                          window.objectPool.pools && 
+                          window.objectPool.pools['explosionParticle'];
+        
         // Create particles with properties
         for (let i = 0; i < particleCount; i++) {
+            let particle;
             const size = Math.random() * 2 + 1;
-            const particle = new THREE.Mesh(
-                new THREE.SphereGeometry(size, 8, 8),
-                new THREE.MeshBasicMaterial({
-                    color: 0xff5500,
-                    transparent: true,
-                    opacity: 0.8
-                })
-            );
             
-            // Random position within explosion radius
-            const radius = Math.random() * 10;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.random() * Math.PI;
-            
-            particle.position.set(
-                radius * Math.sin(phi) * Math.cos(theta),
-                radius * Math.sin(phi) * Math.sin(theta),
-                radius * Math.cos(phi)
-            );
-            
-            // Random velocity
-            particle.userData.velocity = particle.position.clone().normalize().multiplyScalar(
-                Math.random() * 2 + 1
-            );
-            
-            // Add to container
-            container.add(particle);
-            particles.push(particle);
+            if (usePooling) {
+                // Get particle from pool
+                particle = window.objectPool.get('explosionParticle');
+                
+                if (particle) {
+                    // Position randomly within explosion radius
+                    const radius = Math.random() * 10;
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.random() * Math.PI;
+                    
+                    const particlePos = new THREE.Vector3(
+                        radius * Math.sin(phi) * Math.cos(theta),
+                        radius * Math.sin(phi) * Math.sin(theta),
+                        radius * Math.cos(phi)
+                    );
+                    
+                    // Reset the particle with position relative to container origin
+                    particle.reset(particlePos, size, 0xff5500);
+                    
+                    // Set velocity for animation
+                    particle.velocity.copy(particlePos).normalize().multiplyScalar(
+                        Math.random() * 2 + 1
+                    );
+                    
+                    // Add to container
+                    container.add(particle.mesh);
+                    particles.push(particle);
+                }
+            } else {
+                // Fallback to creating new particles if pool is not available
+                // Use precomputed geometry if available, otherwise create new
+                const geometry = window.game && window.game.explosionGeometry ? 
+                                window.game.explosionGeometry : 
+                                new THREE.SphereGeometry(size, 8, 8);
+                
+                // Use precomputed material as template if available
+                const material = window.game && window.game.explosionMaterial ? 
+                                window.game.explosionMaterial.clone() : 
+                                new THREE.MeshBasicMaterial({
+                                    color: 0xff5500,
+                                    transparent: true,
+                                    opacity: 0.8
+                                });
+                
+                const particleMesh = new THREE.Mesh(geometry, material);
+                
+                // Random position within explosion radius
+                const radius = Math.random() * 10;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
+                
+                particleMesh.position.set(
+                    radius * Math.sin(phi) * Math.cos(theta),
+                    radius * Math.sin(phi) * Math.sin(theta),
+                    radius * Math.cos(phi)
+                );
+                
+                // Store velocity in userData
+                particleMesh.userData.velocity = particleMesh.position.clone().normalize().multiplyScalar(
+                    Math.random() * 2 + 1
+                );
+                
+                // Add to container
+                container.add(particleMesh);
+                particles.push({
+                    mesh: particleMesh,
+                    material: material,
+                    velocity: particleMesh.userData.velocity
+                });
+            }
         }
         
         // Add container to scene
@@ -154,6 +203,7 @@ export class VisualEffectsSystem extends System {
             particles: particles,
             duration: duration,
             elapsed: 0,
+            usePooling: usePooling,
             update: (dt) => {
                 // Update elapsed time
                 effect.elapsed += dt;
@@ -161,6 +211,13 @@ export class VisualEffectsSystem extends System {
                 // Check if effect is complete
                 if (effect.elapsed >= effect.duration) {
                     // Clean up explosion particles
+                    if (effect.usePooling) {
+                        // Return particles to pool
+                        effect.particles.forEach(particle => {
+                            window.objectPool.release('explosionParticle', particle);
+                        });
+                    }
+                    // Remove container from scene
                     this.world.scene.remove(container);
                     return false;
                 }
@@ -170,16 +227,31 @@ export class VisualEffectsSystem extends System {
                 
                 // Update particle positions and opacity
                 effect.particles.forEach(particle => {
-                    // Move particle outward
-                    particle.position.add(
-                        particle.userData.velocity.clone().multiplyScalar(dt)
-                    );
-                    
-                    // Fade out gradually
-                    particle.material.opacity = 0.8 * (1 - progress);
-                    
-                    // Shrink slightly
-                    particle.scale.multiplyScalar(0.99);
+                    if (effect.usePooling) {
+                        // Using pooled particles
+                        // Move particle outward
+                        particle.mesh.position.add(
+                            particle.velocity.clone().multiplyScalar(dt)
+                        );
+                        
+                        // Fade out gradually
+                        particle.material.opacity = 0.8 * (1 - progress);
+                        
+                        // Shrink slightly
+                        particle.mesh.scale.multiplyScalar(0.99);
+                    } else {
+                        // Using direct mesh
+                        // Move particle outward
+                        particle.mesh.position.add(
+                            particle.velocity.clone().multiplyScalar(dt)
+                        );
+                        
+                        // Fade out gradually
+                        particle.material.opacity = 0.8 * (1 - progress);
+                        
+                        // Shrink slightly
+                        particle.mesh.scale.multiplyScalar(0.99);
+                    }
                 });
                 
                 return true;

@@ -4,8 +4,17 @@ import { getAbsolutePath } from '../utils/pathUtils.js';
 
 export class AudioManager {
     constructor() {
+        // Initialize Web Audio API context
         this.audioContext = null;
-        this.sounds = {};
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            console.log("Web Audio API context created successfully");
+        } catch (error) {
+            console.error("Failed to create Web Audio API context:", error);
+        }
+        
+        this.sounds = {}; // Stores decoded AudioBuffers
+        this.soundSources = {}; // Tracks currently playing sound sources
         this.backgroundMusic = [];
         this.currentMusicIndex = 0;
         this.currentMusic = null;
@@ -15,7 +24,7 @@ export class AudioManager {
         this.musicVolume = 0.21; // Reduced by 30% from 0.3
         this.sfxVolume = 0.5; // Default sound effects volume
         
-        // Store active audio elements
+        // Store active audio nodes
         this.activeNodes = new Set();
         
         // Track active continuous sounds
@@ -28,7 +37,7 @@ export class AudioManager {
         // Track if the user has interacted with the page (for autoplay policies)
         this.userHasInteracted = false;
         
-        console.log("Initializing audio manager with WAV-based sound effects...");
+        console.log("Initializing audio manager with Web Audio API...");
         
         // Set up compatibility layer for intro sequence
         this.initializeToneCompatibility();
@@ -90,14 +99,19 @@ export class AudioManager {
         try {
             console.log("Loading audio files...");
             
+            // Ensure audio context is resumed on first user interaction
+            if (this.audioContext && this.audioContext.state === 'suspended') {
+                this.resumeAudioContext();
+            }
+            
             // Check if the sound directories exist for music
             await this.checkSoundDirectories();
             
             // First, load the background music
             await this.loadBackgroundMusic();
             
-            // Then load the sound effects from WAV files
-            this.createSoundEffects();
+            // Then pre-decode all sound effects
+            await this.preDecodeAllSoundEffects();
             
             console.log("Audio initialization complete");
             
@@ -113,6 +127,87 @@ export class AudioManager {
         } catch (error) {
             console.error("Error initializing audio:", error);
             return false;
+        }
+    }
+    
+    // Pre-decode all sound effects using Web Audio API
+    async preDecodeAllSoundEffects() {
+        try {
+            console.log("Pre-decoding sound effects...");
+            
+            // List of sound effects to pre-decode
+            const soundEffects = [
+                { name: 'thrust', path: 'sounds/effects/thrust.wav' },
+                { name: 'laser', path: 'sounds/effects/laser.wav' },
+                { name: 'mining-laser', path: 'sounds/effects/mining-laser.wav' },
+                { name: 'explosion', path: 'sounds/effects/explosion.wav' },
+                { name: 'boink', path: 'sounds/effects/boink.wav' },
+                { name: 'phaserUp', path: 'sounds/effects/phaserUp.wav' },
+                { name: 'phaserDown', path: 'sounds/effects/phaserDown.wav' },
+                // Add more sounds as needed
+            ];
+            
+            // Create a promise for each sound to load
+            const loadPromises = soundEffects.map(sound => 
+                this.loadAndDecodeSound(sound.name, this.getPath(sound.path))
+            );
+            
+            // Wait for all sounds to be loaded and decoded
+            await Promise.all(loadPromises);
+            
+            // Explicitly set up projectile sound using the laser sound
+            // This is needed for weapon firing
+            if (this.sounds.laser && !this.sounds.projectile) {
+                console.log("Setting up projectile sound using laser sound buffer");
+                this.sounds.projectile = this.sounds.laser;
+            }
+            
+            console.log("All sound effects pre-decoded successfully");
+        } catch (error) {
+            console.error("Error pre-decoding sound effects:", error);
+            this.createDummySounds();
+        }
+    }
+    
+    // Load and decode a sound file using Web Audio API
+    async loadAndDecodeSound(name, url) {
+        try {
+            console.log(`Loading and decoding sound: ${name} from ${url}`);
+            
+            // Fetch the audio file
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch sound ${name}: ${response.status} ${response.statusText}`);
+            }
+            
+            // Get the audio data as an ArrayBuffer
+            const audioData = await response.arrayBuffer();
+            
+            // Decode the audio data
+            const audioBuffer = await this.audioContext.decodeAudioData(audioData);
+            
+            // Store the decoded buffer
+            this.sounds[name] = audioBuffer;
+            
+            console.log(`Sound ${name} loaded and decoded successfully`);
+            return audioBuffer;
+        } catch (error) {
+            console.error(`Error loading and decoding sound ${name}:`, error);
+            
+            // Create a dummy buffer for this sound to prevent errors
+            this.sounds[name] = null;
+            throw error;
+        }
+    }
+    
+    // Resume audio context on user interaction
+    resumeAudioContext() {
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume().then(() => {
+                console.log("AudioContext resumed successfully");
+            }).catch(error => {
+                console.error("Failed to resume AudioContext:", error);
+            });
         }
     }
     
@@ -204,6 +299,9 @@ export class AudioManager {
                 this.userHasInteracted = true;
                 console.log("User interaction detected, enabling audio playback");
                 
+                // Resume AudioContext if it's suspended
+                this.resumeAudioContext();
+                
                 // Start playing background music once the user interacts
                 this.playBackgroundMusic();
                 
@@ -226,6 +324,9 @@ export class AudioManager {
             // Force audio context resumption on specific UI interactions for mobile
             const forceAudioResume = () => {
                 this.userHasInteracted = true;
+                
+                // Resume AudioContext if it's suspended
+                this.resumeAudioContext();
                 
                 // Ensure background music is playing
                 if (this.music.length > 0 && !this.muted) {
@@ -354,6 +455,8 @@ export class AudioManager {
     
     // Helper method to load music files
     async loadMusicFiles(files) {
+        // Note: Currently keeping music as HTML5 Audio for compatibility
+        // Could be updated to Web Audio API in the future
         console.log(`Found ${files.length} music files:`, files);
         
         // Create a copy of the files array and shuffle it to randomize the order
@@ -418,214 +521,29 @@ export class AudioManager {
         }
     }
     
-    // Create sound effects using WAV files
-    createSoundEffects() {
-        try {
-            console.log("Loading WAV sound effects...");
-            
-            // Create individual sound effects
-            this.createThrustSound();
-            this.createLaserSound();
-            this.createExplosionSound();
-            this.createBoinkSound();
-            this.createPhaserUpSound();
-            this.createPhaserDownSound();
-            
-            console.log("WAV sound effects loaded successfully");
-        } catch (error) {
-            console.error("Error loading WAV sound effects:", error);
-            this.createDummySounds();
-        }
-    }
-    
-    // Create dummy sounds if WAV loading fails
+    // Create dummy sounds if loading fails
     createDummySounds() {
-        console.warn("Creating dummy silent audio elements as fallback");
+        console.warn("Creating dummy silent AudioBuffers as fallback");
         
-        const soundEffects = ['laser', 'thrust', 'explosion', 'boink', 'phaserUp', 'phaserDown', 'mining-laser'];
+        const soundEffects = ['laser', 'thrust', 'explosion', 'boink', 'phaserUp', 'phaserDown', 'mining-laser', 'projectile'];
         
         for (const name of soundEffects) {
-            const dummyAudio = new Audio();
-            dummyAudio.loop = name === 'laser' || name === 'thrust' || name === 'mining-laser';
-            this.sounds[name] = dummyAudio;
-        }
-    }
-    
-    // Load thruster sound WAV file
-    createThrustSound() {
-        try {
-            const thrustSound = new Audio(this.getPath('sounds/effects/thrust.wav'));
-            thrustSound.loop = true;
-            thrustSound.volume = this.sfxVolume * 0.5; // Default volume
-            
-            // Store the sound
-            this.sounds.thrust = thrustSound;
-            
-            console.log("Loaded thrust sound WAV file");
-        } catch (error) {
-            console.error("Error loading thrust sound WAV:", error);
-            // Create a silent dummy sound as fallback
-            this.sounds.thrust = new Audio();
-            this.sounds.thrust.loop = true;
-        }
-    }
-    
-    // Load laser sound WAV file
-    createLaserSound() {
-        try {
-            // Main laser sound (continuous firing)
-            const laserSound = new Audio(this.getPath('sounds/effects/laser.wav'));
-            laserSound.loop = true;
-            laserSound.volume = this.sfxVolume * 0.5;
-            
-            // Store the sound
-            this.sounds.laser = laserSound;
-            
-            // Load mining laser sound
-            const miningLaserSound = new Audio(this.getPath('sounds/effects/mining-laser.wav'));
-            miningLaserSound.loop = true;
-            miningLaserSound.volume = this.sfxVolume * 0.5;
-            
-            // Store mining laser sound
-            this.sounds['mining-laser'] = miningLaserSound;
-            
-            // Create projectile sound for single shots (uses laser.wav but plays it once)
-            this.sounds.projectile = {
-                play: () => {
-                    if (this.muted) return;
-                    
-                    // Create a new instance to allow overlapping sounds
-                    const projectileSound = new Audio(this.getPath('sounds/effects/laser.wav'));
-                    projectileSound.volume = this.sfxVolume * 0.6;
-                    projectileSound.loop = false;
-                    projectileSound.play().catch(err => {
-                        console.warn(`Error playing projectile sound:`, err);
-                    });
+            // Create a silent buffer (0.1 seconds of silence)
+            if (this.audioContext) {
+                try {
+                    const buffer = this.audioContext.createBuffer(
+                        2, // stereo
+                        this.audioContext.sampleRate * 0.1, // 0.1 seconds
+                        this.audioContext.sampleRate
+                    );
+                    this.sounds[name] = buffer;
+                } catch (error) {
+                    console.error(`Failed to create dummy buffer for ${name}:`, error);
+                    this.sounds[name] = null;
                 }
-            };
-            
-            console.log("Loaded laser sound WAV files");
-        } catch (error) {
-            console.error("Error loading laser sound WAV:", error);
-            // Create silent dummy sounds as fallback
-            this.sounds.laser = new Audio();
-            this.sounds.laser.loop = true;
-            this.sounds['mining-laser'] = new Audio();
-            this.sounds['mining-laser'].loop = true;
-            this.sounds.projectile = { play: () => {} };
-        }
-    }
-    
-    // Load explosion sound WAV file
-    createExplosionSound() {
-        try {
-            // Load the sound file
-            const explosionSound = new Audio(this.getPath('sounds/effects/explosion.wav'));
-            explosionSound.volume = this.sfxVolume;
-            
-            // Store the sound with a play method that creates a new instance
-            // This allows multiple explosions to play simultaneously
-            this.sounds.explosion = {
-                play: () => {
-                    if (this.muted) return;
-                    
-                    const sound = explosionSound.cloneNode();
-                    sound.volume = this.sfxVolume;
-                    sound.play().catch(err => {
-                        console.warn(`Error playing explosion sound:`, err);
-                    });
-                }
-            };
-            
-            console.log("Loaded explosion sound WAV file");
-        } catch (error) {
-            console.error("Error loading explosion sound WAV:", error);
-            // Create a dummy sound as fallback
-            this.sounds.explosion = { play: () => {} };
-        }
-    }
-    
-    // Load boink/UI feedback sound WAV file
-    createBoinkSound() {
-        try {
-            // Load the sound file
-            const boinkSound = new Audio(this.getPath('sounds/effects/boink.wav'));
-            boinkSound.volume = this.sfxVolume;
-            
-            // Store the sound with a play method that creates a new instance
-            this.sounds.boink = {
-                play: () => {
-                    if (this.muted) return;
-                    
-                    const sound = boinkSound.cloneNode();
-                    sound.volume = this.sfxVolume;
-                    sound.play().catch(err => {
-                        console.warn(`Error playing boink sound:`, err);
-                    });
-                }
-            };
-            
-            console.log("Loaded boink sound WAV file");
-        } catch (error) {
-            console.error("Error loading boink sound WAV:", error);
-            // Create a dummy sound as fallback
-            this.sounds.boink = { play: () => {} };
-        }
-    }
-    
-    // Load phaser up sound WAV file
-    createPhaserUpSound() {
-        try {
-            // Load the sound file
-            const phaserUpSound = new Audio(this.getPath('sounds/effects/phaserUp.wav'));
-            phaserUpSound.volume = this.sfxVolume;
-            
-            // Store the sound with a play method that creates a new instance
-            this.sounds.phaserUp = {
-                play: () => {
-                    if (this.muted) return;
-                    
-                    const sound = phaserUpSound.cloneNode();
-                    sound.volume = this.sfxVolume;
-                    sound.play().catch(err => {
-                        console.warn(`Error playing phaserUp sound:`, err);
-                    });
-                }
-            };
-            
-            console.log("Loaded phaserUp sound WAV file");
-        } catch (error) {
-            console.error("Error loading phaserUp sound WAV:", error);
-            // Create a dummy sound as fallback
-            this.sounds.phaserUp = { play: () => {} };
-        }
-    }
-    
-    // Load phaser down sound WAV file
-    createPhaserDownSound() {
-        try {
-            // Load the sound file
-            const phaserDownSound = new Audio(this.getPath('sounds/effects/phaserDown.wav'));
-            phaserDownSound.volume = this.sfxVolume;
-            
-            // Store the sound with a play method that creates a new instance
-            this.sounds.phaserDown = {
-                play: () => {
-                    if (this.muted) return;
-                    
-                    const sound = phaserDownSound.cloneNode();
-                    sound.volume = this.sfxVolume;
-                    sound.play().catch(err => {
-                        console.warn(`Error playing phaserDown sound:`, err);
-                    });
-                }
-            };
-            
-            console.log("Loaded phaserDown sound WAV file");
-        } catch (error) {
-            console.error("Error loading phaserDown sound WAV:", error);
-            // Create a dummy sound as fallback
-            this.sounds.phaserDown = { play: () => {} };
+            } else {
+                this.sounds[name] = null;
+            }
         }
     }
     
@@ -677,7 +595,7 @@ export class AudioManager {
         }
     }
     
-    // Play a sound effect
+    // Play a sound effect using Web Audio API
     playSound(name) {
         console.log(`Attempting to play sound: ${name}`);
         
@@ -691,9 +609,20 @@ export class AudioManager {
             return;
         }
         
+        // Make sure AudioContext is running
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.resumeAudioContext();
+        }
+        
         // Handle the case where the name is 'weapon' or similar, map to projectile sound
         if (name === 'weapon' || name === 'fire' || name === 'shoot') {
+            console.log(`Mapping ${name} sound to projectile sound`);
             name = 'projectile';
+            // Use 'laser' sound for projectile if projectile sound is not available
+            if (!this.sounds.projectile && this.sounds.laser) {
+                console.log("Using laser sound for projectile");
+                this.sounds.projectile = this.sounds.laser;
+            }
         }
         
         if (!this.sounds[name]) {
@@ -704,24 +633,65 @@ export class AudioManager {
         try {
             // Handle looped sounds vs one-shot sounds
             if (name === 'laser' || name === 'thrust' || name === 'mining-laser') {
-                // For continuous sounds, track the audio element
+                // For continuous sounds, create and track the sound source node
                 if (!this.activeSounds[name]) {
-                    this.sounds[name].currentTime = 0;
-                    this.sounds[name].play().catch(err => {
-                        console.warn(`Error playing ${name} sound:`, err);
-                    });
-                    this.activeSounds[name] = this.sounds[name];
+                    // Create source node for looping sound
+                    const sourceNode = this.audioContext.createBufferSource();
+                    sourceNode.buffer = this.sounds[name];
+                    sourceNode.loop = true;
+                    
+                    // Create gain node for volume control
+                    const gainNode = this.audioContext.createGain();
+                    gainNode.gain.value = this.sfxVolume * (name === 'thrust' ? 1.5 : 1.0);
+                    
+                    // Connect nodes: source -> gain -> destination
+                    sourceNode.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    // Start playing
+                    sourceNode.start(0);
+                    
+                    // Store references to these nodes for later control
+                    this.activeSounds[name] = {
+                        source: sourceNode,
+                        gain: gainNode
+                    };
+                    
+                    // Track nodes for garbage collection
+                    this.trackNode(sourceNode);
+                    this.trackNode(gainNode);
                 }
-            } else if (typeof this.sounds[name].play === 'function') {
-                // For one-shot sounds with custom play method
-                this.sounds[name].play();
             } else {
-                // For standard Audio elements (one-shot)
-                const sound = this.sounds[name].cloneNode();
-                sound.volume = this.sfxVolume;
-                sound.play().catch(err => {
-                    console.warn(`Error playing ${name} sound:`, err);
-                });
+                // For one-shot sounds
+                // Create source node
+                const sourceNode = this.audioContext.createBufferSource();
+                sourceNode.buffer = this.sounds[name];
+                
+                // Create gain node for volume control
+                const gainNode = this.audioContext.createGain();
+                // Increase volume slightly for projectile sounds to make them more noticeable
+                const volumeMultiplier = name === 'projectile' ? 0.7 : 0.5;
+                gainNode.gain.value = this.sfxVolume * volumeMultiplier;
+                
+                // Connect nodes: source -> gain -> destination
+                sourceNode.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                // Start playing (one-shot)
+                sourceNode.start(0);
+                
+                // Set ended callback for cleanup
+                sourceNode.onended = () => {
+                    sourceNode._inactive = true;
+                    gainNode._inactive = true;
+                };
+                
+                // Track nodes for garbage collection
+                this.trackNode(sourceNode);
+                this.trackNode(gainNode);
+                
+                // Log successful playback
+                console.log(`Started playback of one-shot sound: ${name}`);
             }
         } catch (err) {
             console.error(`Error playing sound ${name}:`, err);
@@ -730,14 +700,30 @@ export class AudioManager {
     
     // Stop a continuous sound effect
     stopSound(name) {
-        if (!this.sounds[name]) return;
+        if (!this.activeSounds[name]) return;
         
         try {
             if (name === 'laser' || name === 'thrust' || name === 'mining-laser') {
                 // For looping sounds
                 if (this.activeSounds[name]) {
-                    this.activeSounds[name].pause();
-                    this.activeSounds[name].currentTime = 0;
+                    const nodes = this.activeSounds[name];
+                    
+                    // Stop the source node
+                    if (nodes.source) {
+                        try {
+                            nodes.source.stop();
+                        } catch (e) {
+                            // Ignore errors if already stopped
+                        }
+                        nodes.source._inactive = true;
+                    }
+                    
+                    // Mark gain node as inactive
+                    if (nodes.gain) {
+                        nodes.gain._inactive = true;
+                    }
+                    
+                    // Clear reference
                     this.activeSounds[name] = null;
                 }
             }
@@ -748,80 +734,130 @@ export class AudioManager {
     
     // Set the volume for thrust sound based on thrust level
     setThrustVolume(thrustLevel) {
-        if (!this.sounds.thrust) return;
+        if (!this.activeSounds.thrust || !this.activeSounds.thrust.gain) return;
         
+        // Scale the volume based on thrust level
+        const volume = Math.min(1.0, Math.max(0.1, thrustLevel)) * this.sfxVolume * 1.5;
+        
+        // Apply volume to gain node
         try {
-            const volume = Math.min(1.0, Math.max(0, thrustLevel) * this.sfxVolume);
-            this.sounds.thrust.volume = volume;
+            this.activeSounds.thrust.gain.gain.value = volume;
         } catch (err) {
             console.error("Error setting thrust volume:", err);
         }
     }
     
-    // Toggle mute state
+    // Toggle mute for all audio
     toggleMute() {
         this.muted = !this.muted;
         
-        // Update all audio elements
+        // Adjust music volume
         for (const track of this.music) {
-            track.muted = this.muted;
+            track.volume = this.muted ? 0 : this.musicVolume;
         }
         
-        // Stop any active sounds if muting
+        // Stop any active sound effects
         if (this.muted) {
-            for (const [name, sound] of Object.entries(this.activeSounds)) {
-                if (sound) {
-                    this.stopSound(name);
-                }
-            }
+            this.stopSound('laser');
+            this.stopSound('thrust');
+            this.stopSound('mining-laser');
         }
         
-        // If unmuting and no music is playing, start playback
-        if (!this.muted && this.userHasInteracted && this.music.length > 0 && this.music[0].paused) {
-            this.playBackgroundMusic();
-        }
-        
+        console.log(`Audio ${this.muted ? 'muted' : 'unmuted'}`);
         return this.muted;
     }
     
-    /**
-     * Clean up all audio resources
-     */
+    // Clean up resources when destroying the audio manager
     cleanup() {
-        console.log("Cleaning up audio resources...");
+        console.log("Cleaning up AudioManager resources...");
         
-        // Stop all currently playing sounds
-        for (const key in this.activeSounds) {
-            if (this.activeSounds[key]) {
-                try {
-                    this.stopSound(key);
-                } catch (e) {
-                    console.warn(`Error stopping sound ${key}:`, e);
-                }
-            }
-        }
+        // Stop all active sounds
+        this.stopSound('laser');
+        this.stopSound('thrust');
+        this.stopSound('mining-laser');
         
-        // Stop and clean up background music
+        // Pause all music
         for (const track of this.music) {
-            try {
-                track.pause();
-                track.src = '';
-            } catch (e) {
-                console.warn("Error stopping background music:", e);
-            }
+            track.pause();
         }
         
-        // Clean up all tracked nodes
-        this.activeNodes.clear();
-        
-        // Clear all sound references
-        this.sounds = {};
-        
-        // Clear the GC interval
+        // Clear intervals
         if (this.gcInterval) {
             clearInterval(this.gcInterval);
+            this.gcInterval = null;
         }
         
-        console.log("Audio resources cleaned up");
+        // Close audio context
+        if (this.audioContext) {
+            this.audioContext.close().then(() => {
+                console.log("AudioContext closed successfully");
+            }).catch(error => {
+                console.error("Error closing AudioContext:", error);
+            });
+        }
+        
+        // Remove event listeners
+        document.removeEventListener('click', this.handleInteraction);
+        document.removeEventListener('keydown', this.handleInteraction);
+        document.removeEventListener('touchstart', this.handleInteraction);
+        
+        console.log("AudioManager cleanup complete");
+    }
+    
+    // Play weapon firing sound - dedicated method for weapon sounds
+    playWeaponSound() {
+        console.log("Playing weapon firing sound");
+        
+        // Check usual conditions
+        if (this.muted || !this.userHasInteracted) {
+            return;
+        }
+        
+        // Make sure AudioContext is running
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.resumeAudioContext();
+        }
+        
+        // Make sure we have a projectile sound (use laser as fallback)
+        if (!this.sounds.projectile && this.sounds.laser) {
+            console.log("Using laser sound for projectile in playWeaponSound");
+            this.sounds.projectile = this.sounds.laser;
+        }
+        
+        if (!this.sounds.projectile) {
+            console.warn("Projectile sound not found");
+            return;
+        }
+        
+        try {
+            // Create source node
+            const sourceNode = this.audioContext.createBufferSource();
+            sourceNode.buffer = this.sounds.projectile;
+            
+            // Create gain node with higher volume for weapon sound
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = this.sfxVolume * 0.8; // Higher volume for weapon sounds
+            
+            // Connect nodes: source -> gain -> destination
+            sourceNode.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+            
+            // Start playing
+            sourceNode.start(0);
+            
+            // Set ended callback for cleanup
+            sourceNode.onended = () => {
+                sourceNode._inactive = true;
+                gainNode._inactive = true;
+            };
+            
+            // Track nodes for garbage collection
+            this.trackNode(sourceNode);
+            this.trackNode(gainNode);
+            
+            console.log("Weapon sound started playing");
+        } catch (err) {
+            console.error("Error playing weapon sound:", err);
+        }
     }
 } 
