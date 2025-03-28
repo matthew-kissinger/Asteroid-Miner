@@ -332,7 +332,7 @@ export class MothershipInterface {
                     </div>
                 </div>
             </div>
-            <button id="undock-btn" style="width: 100%; padding: 15px; margin-top: 20px; background-color: #33aaff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px;">
+            <button id="undock-btn" style="width: 100%; padding: 15px; margin-top: 20px; background-color: #33aaff; color: #000; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px; position: relative; z-index: 9999; touch-action: manipulation; -webkit-tap-highlight-color: transparent;" data-no-touch-overlay="true">
                 UNDOCK
             </button>
         `;
@@ -374,7 +374,32 @@ export class MothershipInterface {
         // Show the mothership UI
         const mothershipUI = document.getElementById('mothership-ui');
         if (mothershipUI) {
+            console.log("Showing mothership UI on " + (this.isMobile ? "mobile" : "desktop"));
             mothershipUI.style.display = 'block';
+            
+            // Ensure background color is explicitly set
+            mothershipUI.style.backgroundColor = 'rgba(20, 30, 50, 0.9)';
+            
+            // Mobile-specific adjustments
+            if (this.isMobile) {
+                // Ensure proper mobile styling
+                mothershipUI.style.width = '92%';
+                mothershipUI.style.maxWidth = '92vw';
+                mothershipUI.style.maxHeight = '85vh';
+                mothershipUI.style.webkitOverflowScrolling = 'touch';
+                mothershipUI.style.touchAction = 'pan-y';
+                mothershipUI.style.overscrollBehavior = 'auto'; // Changed from 'contain' to 'auto'
+                
+                // Ensure proper positioning
+                mothershipUI.style.position = 'absolute';
+                mothershipUI.style.top = '50%';
+                mothershipUI.style.left = '50%';
+                mothershipUI.style.transform = 'translate(-50%, -50%)';
+                mothershipUI.style.zIndex = '1000';
+                
+                // Ensure body is in a state that allows the UI to be visible
+                document.body.classList.remove('undocking', 'modal-open');
+            }
         }
         
         // Hide the docking prompt
@@ -624,23 +649,51 @@ export class MothershipInterface {
         const mothershipUI = document.getElementById('mothership-ui');
         if (!mothershipUI) return;
         
+        console.log("Setting up touch events for mothership UI");
+        
+        // Make sure the undock button has proper touch handling
+        const undockBtn = document.getElementById('undock-btn');
+        if (undockBtn) {
+            undockBtn.style.touchAction = 'manipulation';
+            undockBtn.style.webkitTapHighlightColor = 'transparent';
+            undockBtn.style.position = 'relative';
+            undockBtn.style.zIndex = '9999';
+            
+            // Ensure proper touch handling
+            undockBtn.addEventListener('touchstart', (e) => {
+                console.log("Touch start on undock button");
+                // Change appearance to show it's being touched
+                undockBtn.style.backgroundColor = '#1b88db';
+                undockBtn.style.transform = 'scale(0.98)';
+                // Prevent any default behavior that might interfere
+                e.stopPropagation();
+            }, { passive: false });
+            
+            undockBtn.addEventListener('touchend', (e) => {
+                console.log("Touch end on undock button");
+                // Reset appearance
+                undockBtn.style.backgroundColor = '#33aaff';
+                undockBtn.style.transform = 'scale(1)';
+                // Prevent any default behavior that might interfere
+                e.stopPropagation();
+            }, { passive: false });
+        }
+        
         // Prevent default touchmove on body but allow scrolling within the mothership UI
         mothershipUI.addEventListener('touchmove', (e) => {
             // Allow the default scroll behavior within the mothership UI
             e.stopPropagation();
         }, { passive: true });
         
-        // Fix for iOS scrolling issues
+        // Fix for iOS scrolling issues - only prevent at the top, not at the bottom
         mothershipUI.addEventListener('touchstart', (e) => {
-            // If at the top of the content and trying to scroll down further, prevent pull-to-refresh
+            // Only prevent pull-to-refresh at the top, don't interfere with bottom scrolling
             const scrollTop = mothershipUI.scrollTop;
-            const scrollHeight = mothershipUI.scrollHeight;
-            const clientHeight = mothershipUI.clientHeight;
             
-            if ((scrollTop <= 0 && e.touches[0].screenY < e.touches[0].clientY) ||
-                (scrollTop + clientHeight >= scrollHeight && e.touches[0].screenY > e.touches[0].clientY)) {
+            if (scrollTop <= 0 && e.touches[0].screenY < e.touches[0].clientY) {
                 e.preventDefault();
             }
+            // Removed condition that was preventing scrolling at the bottom
         }, { passive: false });
         
         // Handle tabbed content for better touch experience
@@ -656,6 +709,24 @@ export class MothershipInterface {
                 });
             });
         }
+        
+        // Improve touch experience for all buttons in the mothership UI
+        const allButtons = mothershipUI.querySelectorAll('button');
+        allButtons.forEach(button => {
+            if (button !== undockBtn) { // We already handled the undock button specially
+                button.style.touchAction = 'manipulation';
+                button.style.webkitTapHighlightColor = 'transparent';
+                
+                // Provide visual feedback on touch
+                button.addEventListener('touchstart', () => {
+                    button.style.transform = 'scale(0.98)';
+                }, { passive: true });
+                
+                button.addEventListener('touchend', () => {
+                    button.style.transform = 'scale(1)';
+                }, { passive: true });
+            }
+        });
     }
     
     setupEventHandlers() {

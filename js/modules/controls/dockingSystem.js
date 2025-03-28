@@ -84,10 +84,37 @@ export class DockingSystem {
         // Set up undock button
         const undockBtn = document.getElementById('undock-btn');
         if (undockBtn) {
-            undockBtn.addEventListener('click', () => {
-                console.log("Undock button clicked");
-                this.undockFromMothership();
-            });
+            // Use both click and touchend events for better Android compatibility
+            const handleUndock = (e) => {
+                // Prevent any default action that might interfere
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Log which event triggered the undock
+                console.log(`Undock button ${e.type} event triggered`);
+
+                // Add a small delay to ensure the event completes on Android
+                if (this.isMobileDevice()) {
+                    // For Android, remove the overlay classes immediately
+                    document.body.classList.remove('undocking', 'modal-open');
+                    // Set a brief timeout to allow touch event to complete
+                    setTimeout(() => {
+                        this.undockFromMothership();
+                    }, 50);
+                } else {
+                    this.undockFromMothership();
+                }
+            };
+            
+            // Add both event listeners for better compatibility
+            undockBtn.addEventListener('click', handleUndock);
+            undockBtn.addEventListener('touchend', handleUndock);
+            
+            // Prevent any touch events from being captured or blocked
+            undockBtn.addEventListener('touchstart', (e) => {
+                console.log("Touch started on undock button");
+                e.stopPropagation();
+            }, { passive: false });
         }
         
         // Set up resource selling buttons
@@ -220,9 +247,33 @@ export class DockingSystem {
             console.log("Ship is already docked, just showing UI");
         }
         
+        // Mobile-specific preparation - ensure all classes that might block UI visibility are removed
+        if (this.isMobileDevice()) {
+            console.log("Mobile device detected - preparing for mothership UI");
+            document.body.classList.remove('undocking', 'modal-open');
+            
+            // Reset any problematic styles that might prevent UI from showing
+            document.body.style.position = 'static';
+            document.body.style.touchAction = 'auto';
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.overflow = 'auto';
+        }
+        
         // Show the mothership UI
         if (this.ui && this.ui.mothershipInterface) {
+            console.log("Showing mothership UI...");
             this.ui.mothershipInterface.showMothershipUI();
+            
+            // Double-check visibility on mobile with a small delay
+            if (this.isMobileDevice()) {
+                setTimeout(() => {
+                    const mothershipUI = document.getElementById('mothership-ui');
+                    if (mothershipUI && mothershipUI.style.display !== 'block') {
+                        console.log("Forcing mothership UI display");
+                        mothershipUI.style.display = 'block';
+                    }
+                }, 100);
+            }
         }
         
         // Hide game UI elements
@@ -282,15 +333,30 @@ export class DockingSystem {
 
     // Optimized method to reset mobile styles
     resetMobileStyles() {
+        // Immediately remove problematic classes for Android
+        if (this.isMobileDevice()) {
+            document.body.classList.remove('undocking', 'modal-open');
+        }
+        
         // Batch style changes to minimize reflows
         requestAnimationFrame(() => {
-            document.body.style.cssText = 'overflow: auto; position: static; height: auto; width: auto;';
-            document.body.classList.remove('modal-open');
+            // FIX: More aggressive style clearing for Android
+            document.body.style.cssText = '';
+            document.body.style.overflow = 'auto';
+            document.body.style.position = 'static';
+            document.body.style.height = 'auto';
+            document.body.style.width = 'auto';
+            document.body.style.touchAction = 'auto';
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.webkitOverflowScrolling = 'touch';
+            
+            // FIX: Ensure all restrictive classes are removed to prevent touch event issues
+            document.body.classList.remove('modal-open', 'undocking');
             
             // Reset scrollable containers in a single pass
-            document.querySelectorAll('.modal-content').forEach(container => {
-                if (container.style) {
-                    container.style.cssText = 'overflow: auto;';
+            document.querySelectorAll('.modal-content, #mothership-ui, #star-map').forEach(container => {
+                if (container && container.style) {
+                    container.style.cssText = 'overflow: auto; -webkit-overflow-scrolling: touch;';
                     container.scrollTop = 0;
                 }
             });
@@ -301,6 +367,12 @@ export class DockingSystem {
         if (!this.spaceship.isDocked) {
             console.log("Not docked, can't undock");
             return;
+        }
+
+        // FIX: For Android, immediately remove any classes that might block touch events
+        if (this.isMobileDevice()) {
+            document.body.classList.remove('undocking');
+            this.resetMobileStyles();
         }
 
         // Show loading indicator
@@ -378,7 +450,26 @@ export class DockingSystem {
             console.error("Error during undocking:", error);
         } finally {
             // Clean up loading indicator
-            document.body.removeChild(loadingIndicator);
+            if (document.body.contains(loadingIndicator)) {
+                document.body.removeChild(loadingIndicator);
+            }
+            
+            // FIX: More aggressive cleanup for Android devices
+            if (this.isMobileDevice()) {
+                // Clear all restrictive classes
+                document.body.classList.remove('undocking', 'modal-open');
+                
+                // Force resetMobileStyles again to ensure all touch restrictions are removed
+                this.resetMobileStyles();
+                
+                // Ensure specific problematic styles are cleared
+                document.body.style.pointerEvents = '';
+                document.body.style.touchAction = '';
+                document.body.style.overflowY = '';
+                document.body.style.position = '';
+            } else {
+                document.body.classList.remove('undocking');
+            }
         }
     }
     

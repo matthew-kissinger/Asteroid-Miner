@@ -214,6 +214,7 @@ export class TouchControls {
         this.dockButton.style.height = '100px'; // Make dock button larger
         this.dockButton.style.fontSize = '20px'; // Larger text
         this.dockButton.style.boxShadow = '0 0 25px rgba(51, 153, 255, 0.8)'; // Stronger glow
+        this.dockButton.style.zIndex = '10000'; 
         this.dockButton.style.display = 'none';
         this.addButtonEvents(this.dockButton, this.handleDocking.bind(this));
         document.body.appendChild(this.dockButton);
@@ -657,7 +658,15 @@ export class TouchControls {
     
     showDockButton() {
         if (this.dockButton) {
+            // FIX: Make sure display is set before other properties
             this.dockButton.style.display = 'flex';
+            
+            // FIX: Ensure critical styles are explicitly set
+            this.dockButton.style.zIndex = '10000'; // Very high z-index
+            this.dockButton.style.position = 'absolute';
+            this.dockButton.style.top = '50%';
+            this.dockButton.style.left = '50%';
+            
             console.log("Showing dock button - near mothership");
             
             // Add pulsing animation to make it more noticeable
@@ -678,6 +687,15 @@ export class TouchControls {
                     document.head.appendChild(style);
                 }
             }
+            
+            // FIX: Log dock button visibility for debugging
+            console.log("Dock button shown with styles:", {
+                display: this.dockButton.style.display,
+                zIndex: this.dockButton.style.zIndex,
+                position: this.dockButton.style.position,
+                width: this.dockButton.style.width,
+                height: this.dockButton.style.height
+            });
         }
     }
     
@@ -762,14 +780,12 @@ export class TouchControls {
             // Touch events with passive when possible for better performance
             button.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 button.style.transform = 'scale(0.95) translateZ(0)';
                 startHandler();
             }, { passive: false });
             
             button.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 button.style.transform = 'scale(1) translateZ(0)';
                 endHandler();
             }, { passive: false });
@@ -790,14 +806,23 @@ export class TouchControls {
             // Touch events
             button.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 button.style.transform = 'scale(0.95) translateZ(0)';
+                
+                // For dock button specifically, add debug logging
+                if (button === this.dockButton) {
+                    console.log("Dock button touchstart event fired");
+                }
             }, { passive: false });
             
             button.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 button.style.transform = 'scale(1) translateZ(0)';
+                
+                // For dock button specifically, add debug logging
+                if (button === this.dockButton) {
+                    console.log("Dock button touchend event fired, calling handler");
+                }
+                
                 startHandler();
             }, { passive: false });
             

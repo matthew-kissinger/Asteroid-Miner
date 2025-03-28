@@ -53,10 +53,9 @@
     /* Fix known iOS Safari bottom bar issue */
     html, body {
         height: -webkit-fill-available;
-        overflow: hidden;
-        position: fixed;
         width: 100%;
         height: 100%;
+        overflow-x: hidden;
     }
 }
 
@@ -473,12 +472,11 @@
 
 /* Prevent scrolling/zooming when using touch controls */
 body.touch-controls-active {
-    overflow: hidden;
-    position: fixed;
     width: 100%;
     height: 100%;
-    touch-action: none;
-    -webkit-overflow-scrolling: none;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: auto;
 }
 
 /* Optimize touch targets */
@@ -580,12 +578,17 @@ body.touch-controls-active {
 
 /* Undocking state styles */
 .undocking {
-    overflow: hidden !important;
-    touch-action: none !important;
-    -webkit-overflow-scrolling: none !important;
+    /* Fix for Android - make sure touch events pass through */
+    touch-action: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    /* Keep position fixed for loading indicator positioning */
     position: fixed !important;
     width: 100% !important;
     height: 100% !important;
+    /* Allow pointer events to pass through */
+    pointer-events: auto !important;
+    /* Allow scrolling */
+    overflow: auto !important;
 }
 
 /* Loading indicator for undocking */
@@ -600,8 +603,27 @@ body.touch-controls-active {
     border-radius: 0.5rem;
     font-size: 1.2rem;
     z-index: 10000;
+    /* Make sure indicator doesn't block touches */
     pointer-events: none;
     animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Android-specific undocking fix */
+@supports not (-webkit-touch-callout: none) {
+    /* Non-iOS devices (Android) */
+    .undocking {
+        /* Make sure Android touch events work properly */
+        touch-action: auto !important;
+        pointer-events: auto !important;
+    }
+    
+    /* Make sure the undock button specifically works on Android */
+    #undock-btn {
+        position: relative !important;
+        z-index: 10001 !important;
+        pointer-events: auto !important;
+        touch-action: auto !important;
+    }
 }
 
 @keyframes fadeIn {
