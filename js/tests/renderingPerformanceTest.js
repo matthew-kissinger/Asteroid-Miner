@@ -5,6 +5,7 @@
  * of using instanced rendering compared to traditional rendering approaches.
  */
 
+import * as THREE from 'three';
 import { runRenderingPerformanceTest, setupOptimizedRendering, setupGameLoop } from '../examples/optimizedRenderingUsage.js';
 
 // DOM Setup

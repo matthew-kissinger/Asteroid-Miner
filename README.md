@@ -1,104 +1,83 @@
+# README.md
+
 # Solar System Asteroid Miner
 
-A 3D space mining simulation game you can play directly in your browser.
+![Gameplay Screenshot](placeholder.png)  <!-- Add a screenshot later -->
 
-**[► Play Now](https://matthew-kissinger.github.io/Asteroid-Miner/)**
+A 3D space mining simulation game playable directly in your web browser. Navigate the cosmos, mine valuable resources, upgrade your ship, and defend yourself against dangers.
 
-## Overview
+**[► Play Now!](https://matthew-kissinger.github.io/Asteroid-Miner/)** *(Link from original README)*
 
-Navigate the cosmos in your mining vessel, extract valuable resources from asteroids, and trade them at the mothership to upgrade your ship. Explore multiple star systems, each with unique resources and challenges.
+## Key Features
 
-## How to Play
+*   **Explore Space:** Navigate a 3D environment with dynamic lighting and celestial bodies.
+*   **Mine Resources:** Target and extract Iron, Gold, and Platinum from asteroids using your mining laser.
+*   **Trade & Upgrade:** Dock with the stargate to sell resources, refuel, repair, and purchase upgrades for your ship's engine, hull, shields, mining laser, scanner, and cargo capacity.
+*   **Combat:** Engage with AI-controlled spectral drones (optional, based on difficulty progression).
+*   **Interstellar Travel:** Use the Star Map at the stargate to travel between different star systems.
+*   **Custom System Creation:** (Optional) Use an AI-powered tool to generate unique star systems with custom skyboxes and planets.
+*   **Cross-Platform:** Playable on both desktop (keyboard/mouse) and mobile (touch controls).
+*   **Mini-Game:** Try your luck at Stellar Blackjack aboard the stargate.
+*   **Adaptive Performance:** Automatically detects your monitor's refresh rate and optimizes frame rate limits accordingly for smooth gameplay.
+*   **Realistic Volumetric Lighting:** Experience realistic god rays emanating from the sun with distance-based attenuation and atmospheric scattering. Choose between standard realistic rays or the dramatic "Claude Rays" effect for a more stylized look.
 
-1. **Controls:**
-   - WASD: Ship movement
-   - Mouse: Ship rotation
-   - Click: Fire particle cannon
-   - SHIFT: Boost
-   - E: Target lock-on
-   - TAB: Cycle targets
-   - R: Toggle mining
-   - Q: Dock with mothership
+## Technologies Used
 
-3. **Mining Resources:**
-   - Approach asteroids and use your mining laser
-   - Different resources have different values and mining times
-   - Watch your cargo capacity as you mine
+*   **Frontend:** HTML5, CSS3, JavaScript (ES Modules)
+*   **3D Engine:** Three.js (r175+)
+*   **Architecture:** Custom Entity-Component-System (ECS) with Data-Oriented optimizations
+*   **Mobile Controls:** NippleJS
+*   **Audio:** Web Audio API, Tone.js (for intro sequence)
+*   **AI Generation API (Optional):** External API (likely FastAPI/Google Gemini) for custom system creation feature.
+*   **Shader Effects:** Custom GLSL shaders for advanced visual effects like volumetric lighting and sun surface
 
-4. **Upgrading Your Ship:**
-   - Return to the mothership and dock (press Space when near)
-   - Sell resources for credits
-   - Purchase upgrades to improve your ship's capabilities
+## Installation
 
-5. **Exploring the Universe:**
-   - Travel between star systems via the star map at the mothership
-   - Each system has different resource distributions
-   - Watch your fuel levels when planning longer journeys
+No complex installation is required!
 
-## Features
+1.  **Clone or Download:** Get the code from the repository.
+2.  **Serve Files:** Use a simple local web server to serve the project files. Due to browser security restrictions (CORS, ES Modules), you cannot simply open `index.html` directly from the file system.
+    *   If you have Python 3: `python -m http.server`
+    *   If you have Node.js: `npm install -g serve && serve .`
+    *   Or use an extension like "Live Server" for VS Code.
+3.  **Access:** Open your browser and navigate to the local server address (e.g., `http://localhost:8000`).
 
-### Mining & Resource Collection
-- Mine three resource types: Iron, Gold, and Platinum
-- Visual mining beam with progress indicator
-- Resource-specific extraction rates
-- Cargo management system
+## Usage
 
-### Ship Management
-- Fuel and shield monitoring
-- Hull integrity tracking
-- Cargo capacity limitations
-- Multiple upgrade paths
+*   **Start:** The game begins docked at the stargate (after an optional intro sequence on first play).
+*   **Undock:** Use the "UNDOCK" button in the stargate interface.
+*   **Controls (Desktop):**
+    *   `W/A/S/D`: Thrust Forward/Left/Backward/Right
+    *   `Q/E`: Thrust Up/Down (Check Controls Menu in-game for confirmation)
+    *   `Shift`: Boost
+    *   `Mouse`: Rotate Ship (Requires clicking in the game window to lock pointer)
+    *   `Left Click`: Fire Weapon
+    *   `R`: Toggle Mining Laser (must have an asteroid targeted)
+    *   `E`: Toggle Target Lock-On System
+    *   `Tab`: Cycle Locked Target
+    *   `Q`: Dock with Stargate (when nearby)
+    *   `M`: Toggle Mute
+    *   `Escape`: Exit Pointer Lock / Show Menu (TBD)
+*   **Controls (Mobile):**
+    *   **Left Joystick:** Ship Thrust (Forward/Backward/Strafe)
+    *   **Right Joystick:** Ship Rotation
+    *   **Buttons:** FIRE, MINE, TARGET (On-screen buttons)
+    *   **Dock Button:** Appears when near the stargate.
+*   **Goal:** Mine resources, sell them, upgrade your ship, and explore different systems. Survive encounters with hazards or enemies.
 
-### Cosmic Exploration
-- Multiple star systems to discover
-- Unique visual environment for each system
-- Different resource distributions across systems
-- Dynamic asteroid fields
+## Performance Optimization
 
-### Trading & Upgrades
-- Sell resources at the mothership
-- Upgrade your ship's capabilities:
-  - Mining laser efficiency
-  - Cargo capacity
-  - Engine power
-  - Shield strength
-  - Hull durability
-  - Scanner range
+The game includes several settings to optimize for different hardware capabilities:
 
-### Combat System
-- Defend yourself against space hazards
-- Shield management
-- Weapon system with defensive capabilities
+* **Post-Processing Effects:** Toggle bloom, anti-aliasing, and other visual effects
+* **Volumetric Lighting:** Choose between standard god rays, "Claude Rays" effect, or disable for performance
+* **Resolution Scaling:** Adjust rendering resolution for better performance
+* **Graphical Quality Presets:** Choose Performance, Balanced, or Quality presets
 
-### Mothership Features
-- Resource trading interface
-- Ship repair and refueling
-- Upgrade shop
-- Star map for navigation
-- Blackjack mini-game
+## Contributing
 
-## Technical Requirements
+This project was primarily a learning exercise. Contributions are not actively sought, but feel free to fork the repository and experiment.
 
-- Modern web browser with WebGL support
-- Keyboard and mouse
-- Recommended: Dedicated graphics card for optimal performance
+## License
 
-## Development
-
-This game was developed as a learning project using Three.js and modern JavaScript. For detailed technical documentation about the game's architecture, please see the [architecture.md](architecture.md) file.
-
-## Credits
-
-Created by [Matthew Kissinger](https://github.com/matthew-kissinger)
-
-# Skybox Generator
-
-A web application for generating space skyboxes and planet textures using Google's Gemini AI. The application consists of a FastAPI backend and a JavaScript frontend.
-
-## Architecture
-
-- **Backend**: FastAPI application deployed on Heroku
-- **Frontend**: Static HTML/JS/CSS application deployed on GitHub Pages
-- **Authentication**: JWT-based authentication
-- **Image Generation**: Google Gemini AI with prompt engineering
-
+*License information not provided in the codebase. Please add appropriate license details here (e.g., MIT License).*

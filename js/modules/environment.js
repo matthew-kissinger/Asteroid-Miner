@@ -4,7 +4,7 @@ import { Skybox } from './environment/skybox.js';
 import { Sun } from './environment/sun.js';
 import { Planets } from './environment/planets.js';
 import { AsteroidBelt } from './environment/asteroidBelt.js';
-import { Mothership } from './environment/mothership.js';
+import { Stargate } from './environment/stargate.js';
 import { StarSystemGenerator } from './environment/starSystemGenerator.js';
 import { SystemTransition } from './environment/systemTransition.js';
 import { CustomSystemCreator } from './ui/customSystemCreator.js';
@@ -28,7 +28,7 @@ export class Environment {
         this.planets = new Planets(scene, this.starSystemGenerator);
         
         this.asteroidBelt = new AsteroidBelt(scene);
-        this.mothership = new Mothership(scene);
+        this.stargate = new Stargate(scene);
         
         // Initialize system transition effects
         this.systemTransition = new SystemTransition(scene, scene.camera);
@@ -81,7 +81,7 @@ export class Environment {
             // Display welcome notification
             this.showSystemWelcomeNotification(systemId);
             
-            // If player is docked, make sure the mothership interface is correctly displayed
+            // If player is docked, make sure the stargate interface is correctly displayed
             if (window.game && window.game.spaceship && window.game.spaceship.isDocked) {
                 console.log("Player is docked after arriving in new system, showing interface");
                 
@@ -89,7 +89,7 @@ export class Environment {
                 if (window.game.controls && window.game.controls.dockingSystem) {
                     setTimeout(() => {
                         // Trigger the docking system's docking method directly
-                        window.game.controls.dockingSystem.dockWithMothership();
+                        window.game.controls.dockingSystem.dockWithStargate();
                     }, 500); // Small delay to ensure everything is ready
                 }
             }
@@ -256,11 +256,11 @@ export class Environment {
             maxRadius: asteroidBeltRegion.outerRadius
         };
         
-        // Add mothership region
-        const mothershipRegion = this.mothership.getRegionInfo();
-        this.planetRegions["Mothership"] = {
-            center: mothershipRegion.center,
-            radius: mothershipRegion.radius
+        // Add stargate region
+        const stargateRegion = this.stargate.getRegionInfo();
+        this.planetRegions["Stargate"] = {
+            center: stargateRegion.center,
+            radius: stargateRegion.radius
         };
     }
     
@@ -270,12 +270,12 @@ export class Environment {
             return "Unknown Location";
         }
         
-        // Check if near mothership
-        const mothershipRegion = this.planetRegions["Mothership"];
-        if (mothershipRegion) {
-            const distanceToMothership = playerPosition.distanceTo(mothershipRegion.center);
-            if (distanceToMothership <= mothershipRegion.radius) {
-                return "Mothership";
+        // Check if near stargate
+        const stargateRegion = this.planetRegions["Stargate"];
+        if (stargateRegion) {
+            const distanceToStargate = playerPosition.distanceTo(stargateRegion.center);
+            if (distanceToStargate <= stargateRegion.radius) {
+                return "Stargate";
             }
         }
         
@@ -297,7 +297,7 @@ export class Environment {
                     }
                     return "Asteroid Belt";
                 }
-            } else if (name !== "Sun" && name !== "Mothership" && region.center && region.radius) {
+            } else if (name !== "Sun" && name !== "Stargate" && region.center && region.radius) {
                 const distance = playerPosition.distanceTo(region.center);
                 if (distance <= region.radius) {
                     return `Near ${name}`;
@@ -344,8 +344,8 @@ export class Environment {
             this.asteroidBelt.update(deltaTime);
         }
         
-        if (this.mothership && this.mothership.update) {
-            this.mothership.update(deltaTime);
+        if (this.stargate && this.stargate.update) {
+            this.stargate.update(deltaTime);
         }
         
         // Update system transition effects if active

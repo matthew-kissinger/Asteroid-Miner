@@ -1,5 +1,7 @@
 // targetingSystem.js - Handles asteroid targeting and lock-on
 
+import * as THREE from 'three';
+
 export class TargetingSystem {
     constructor(spaceship, scene, environment) {
         this.spaceship = spaceship;

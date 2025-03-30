@@ -3,10 +3,10 @@
 import { MobileDetector } from '../../utils/mobileDetector.js';
 
 export class StarMap {
-    constructor(starSystemGenerator, dockingSystem, mothershipInterface) {
+    constructor(starSystemGenerator, dockingSystem, stargateInterface) {
         this.starSystemGenerator = starSystemGenerator;
         this.dockingSystem = dockingSystem;
-        this.mothershipInterface = mothershipInterface;
+        this.stargateInterface = stargateInterface;
         this.isVisible = false;
         this.selectedSystem = null;
         this.isTraveling = false;
@@ -160,7 +160,7 @@ export class StarMap {
         // Close button
         const closeButton = document.createElement('button');
         closeButton.id = 'close-star-map';
-        closeButton.textContent = 'RETURN TO MOTHERSHIP';
+        closeButton.textContent = 'RETURN TO STARGATE';
         closeButton.style.width = '100%';
         closeButton.style.padding = this.isMobile ? '15px' : '12px';
         closeButton.style.marginTop = '20px';
@@ -645,17 +645,17 @@ export class StarMap {
             starMap.style.display = 'none';
             this.isVisible = false;
             
-            // Show the mothership UI when returning from star map
-            if (this.mothershipInterface) {
-                this.mothershipInterface.showMothershipUI();
-            } else if (window.game && window.game.ui && window.game.ui.mothershipInterface) {
-                // Try to find mothership UI via game instance if direct reference fails
-                window.game.ui.mothershipInterface.showMothershipUI();
+            // Show the stargate UI when returning from star map
+            if (this.stargateInterface) {
+                this.stargateInterface.showStargateUI();
+            } else if (window.game && window.game.ui && window.game.ui.stargateInterface) {
+                // Try to find stargate UI via game instance if direct reference fails
+                window.game.ui.stargateInterface.showStargateUI();
             } else {
                 // Direct DOM access as last resort
-                const mothershipUI = document.getElementById('mothership-ui');
-                if (mothershipUI) {
-                    mothershipUI.style.display = 'block';
+                const stargateUI = document.getElementById('stargate-ui');
+                if (stargateUI) {
+                    stargateUI.style.display = 'block';
                 }
             }
         }

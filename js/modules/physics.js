@@ -1,5 +1,7 @@
 // physics.js - Handles physics calculations and movement
 
+import * as THREE from 'three';
+
 export class Physics {
     // Physics constants - significantly increased for super-fast movement
     static THRUST_FORCE = 0.5;      // 5x increase from previous 0.1

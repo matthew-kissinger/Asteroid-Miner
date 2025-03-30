@@ -1,7 +1,7 @@
 /**
- * DockingSystem - Handles docking operations between player and mothership
+ * DockingSystem - Handles docking operations between player and stargate
  * 
- * This system manages docking and undocking of the player with the mothership,
+ * This system manages docking and undocking of the player with the stargate,
  * and handles proximity detection and UI notifications.
  */
 
@@ -16,19 +16,19 @@ export class DockingSystem extends System {
         
         // References to entities
         this.player = null;
-        this.mothership = null;
+        this.stargate = null;
         
         // Reference to UI
         this.ui = null;
         
         // Docking parameters
-        this.dockingDistance = 300; // Distance at which player can dock with mothership
-        this.isNearMothership = false;
+        this.dockingDistance = 300; // Distance at which player can dock with stargate
+        this.isNearStargate = false;
         this.dockingKey = 'q'; // Key to press for docking
         
         // Subscribe to relevant events
         this.world.messageBus.subscribe('player.created', this.handlePlayerCreated.bind(this));
-        this.world.messageBus.subscribe('mothership.created', this.handleMothershipCreated.bind(this));
+        this.world.messageBus.subscribe('stargate.created', this.handleStargateCreated.bind(this));
         this.world.messageBus.subscribe('ui.created', this.handleUICreated.bind(this));
         this.world.messageBus.subscribe('player.requestDock', this.handleDockRequest.bind(this));
         this.world.messageBus.subscribe('player.requestUndock', this.handleUndockRequest.bind(this));
@@ -51,11 +51,11 @@ export class DockingSystem extends System {
     }
     
     /**
-     * Handle mothership entity creation
+     * Handle stargate entity creation
      * @param {Object} data Event data
      */
-    handleMothershipCreated(data) {
-        this.mothership = data.entity;
+    handleStargateCreated(data) {
+        this.stargate = data.entity;
     }
     
     /**
@@ -70,14 +70,14 @@ export class DockingSystem extends System {
      * Handle request to dock
      */
     handleDockRequest() {
-        if (!this.player || !this.mothership) return;
+        if (!this.player || !this.stargate) return;
         
         // Check if player is in docking range
-        if (this.isPlayerNearMothership()) {
+        if (this.isPlayerNearStargate()) {
             this.dockPlayer();
         } else {
             if (this.ui) {
-                this.ui.showMessage('Too far from mothership to dock');
+                this.ui.showMessage('Too far from stargate to dock');
             }
         }
     }
@@ -109,33 +109,33 @@ export class DockingSystem extends System {
             
             if (shipState.isDocked) {
                 this.world.messageBus.publish('player.requestUndock', {});
-            } else if (this.isNearMothership) {
+            } else if (this.isNearStargate) {
                 this.world.messageBus.publish('player.requestDock', {});
             }
         }
     }
     
     /**
-     * Check if player is near mothership
+     * Check if player is near stargate
      * @returns {boolean} True if player is within docking range
      */
-    isPlayerNearMothership() {
-        if (!this.player || !this.mothership) return false;
+    isPlayerNearStargate() {
+        if (!this.player || !this.stargate) return false;
         
         const playerTransform = this.player.getComponent('Transform');
-        const mothershipTransform = this.mothership.getComponent('Transform');
+        const stargateTransform = this.stargate.getComponent('Transform');
         
-        if (!playerTransform || !mothershipTransform) return false;
+        if (!playerTransform || !stargateTransform) return false;
         
-        const distance = playerTransform.position.distanceTo(mothershipTransform.position);
+        const distance = playerTransform.position.distanceTo(stargateTransform.position);
         return distance <= this.dockingDistance;
     }
     
     /**
-     * Dock the player with the mothership
+     * Dock the player with the stargate
      */
     dockPlayer() {
-        if (!this.player || !this.mothership) return;
+        if (!this.player || !this.stargate) return;
         
         const shipState = this.player.getComponent('ShipStateComponent');
         const physics = this.player.getComponent('PhysicsComponent');
@@ -158,8 +158,8 @@ export class DockingSystem extends System {
         }
         
         // Move player to docking position
-        const mothershipTransform = this.mothership.getComponent('Transform');
-        if (mothershipTransform) {
+        const stargateTransform = this.stargate.getComponent('Transform');
+        if (stargateTransform) {
             // Hide player ship when docked
             const modelComponent = this.player.getComponent('ModelComponent');
             if (modelComponent && modelComponent.model) {
@@ -170,20 +170,20 @@ export class DockingSystem extends System {
         // Disable player controls
         this.world.messageBus.publish('controls.disable', {});
         
-        // Show mothership UI
+        // Show stargate UI
         this.world.messageBus.publish('player.docked', {
             entity: this.player
         });
         
         if (this.ui) {
-            this.ui.showMessage('Docked with mothership');
+            this.ui.showMessage('Docked with stargate');
         }
         
-        console.log('Player docked with mothership');
+        console.log('Player docked with stargate');
     }
     
     /**
-     * Undock the player from the mothership
+     * Undock the player from the stargate
      */
     undockPlayer() {
         if (!this.player) return;
@@ -215,35 +215,35 @@ export class DockingSystem extends System {
         // Enable player controls
         this.world.messageBus.publish('controls.enable', {});
         
-        // Hide mothership UI
+        // Hide stargate UI
         this.world.messageBus.publish('player.undocked', {
             entity: this.player
         });
         
         if (this.ui) {
-            this.ui.showMessage('Undocked from mothership');
+            this.ui.showMessage('Undocked from stargate');
         }
         
-        console.log('Player undocked from mothership');
+        console.log('Player undocked from stargate');
     }
     
     /**
      * Update proximity status
      */
     updateProximityStatus() {
-        if (!this.player || !this.mothership) return;
+        if (!this.player || !this.stargate) return;
         
         const shipState = this.player.getComponent('ShipStateComponent');
         if (!shipState || shipState.isDocked) return;
         
-        const wasNear = this.isNearMothership;
-        this.isNearMothership = this.isPlayerNearMothership();
+        const wasNear = this.isNearStargate;
+        this.isNearStargate = this.isPlayerNearStargate();
         
         // If proximity status changed
-        if (wasNear !== this.isNearMothership) {
+        if (wasNear !== this.isNearStargate) {
             // Notify UI
             if (this.ui) {
-                if (this.isNearMothership) {
+                if (this.isNearStargate) {
                     this.ui.showDockPrompt(this.dockingKey);
                 } else {
                     this.ui.hideDockPrompt();
@@ -251,8 +251,8 @@ export class DockingSystem extends System {
             }
             
             // Publish event
-            this.world.messageBus.publish('player.mothershipProximity', {
-                isNear: this.isNearMothership,
+            this.world.messageBus.publish('player.stargateProximity', {
+                isNear: this.isNearStargate,
                 entity: this.player
             });
         }

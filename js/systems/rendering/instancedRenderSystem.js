@@ -6,6 +6,7 @@
  * by batching them into a single draw call using THREE.InstancedMesh.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 import { InstancedMeshComponent } from '../../components/rendering/instancedMeshComponent.js';
 import { OptimizedTransformComponent } from '../../components/optimizedTransformComponent.js';

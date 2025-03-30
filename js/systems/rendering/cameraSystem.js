@@ -4,6 +4,7 @@
  * Manages camera following for entities and camera effects.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 
 export class CameraSystem extends System {

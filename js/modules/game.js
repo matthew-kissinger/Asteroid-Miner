@@ -179,7 +179,7 @@ export class Game {
         console.log("Projectile assets verified and shaders ensured to be warmed");
     }
     startDocked() {
-        // Start the game docked with the mothership for tutorial/intro
+        // Start the game docked with the stargate for tutorial/intro
         // Make sure the ship is already docked
         if (this.spaceship) {
             // Ensure the ship is docked
@@ -187,12 +187,12 @@ export class Game {
                 this.spaceship.dock();
             }
         }
-        // Show mothership UI after a short delay
+        // Show stargate UI after a short delay
         setTimeout(() => {
             if (this.controls && this.controls.dockingSystem) {
-                // Just show mothership UI without changing state
-                this.controls.dockingSystem.dockWithMothership();
-                console.log("Mothership UI shown");
+                // Just show stargate UI without changing state
+                this.controls.dockingSystem.dockWithStargate();
+                console.log("Stargate UI shown");
             } else {
                 console.error("Controls or dockingSystem not available");
             }
@@ -408,10 +408,10 @@ export class Game {
             });
             return;
         }
-        // Check if out of fuel and not near mothership
+        // Check if out of fuel and not near stargate
         if (this.spaceship.fuel <= 0 && 
             this.controls.dockingSystem && 
-            !this.controls.dockingSystem.nearMothership) {
+            !this.controls.dockingSystem.nearStargate) {
             // Use message bus to publish game over event rather than direct call
             this.messageBus.publish('game.over', {
                 reason: "Your ship ran out of fuel",

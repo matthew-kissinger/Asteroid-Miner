@@ -16,6 +16,7 @@ import { RenderSystem } from '../systems/rendering/renderSystem.js';
 import { CollisionSystem } from '../systems/physics/collisionSystem.js'; // Import CollisionSystem
 import { VisualEffectsSystem } from '../systems/rendering/visualEffectsSystem.js'; // Import VisualEffectsSystem
 import { TrailSystem } from '../systems/rendering/trailSystem.js';
+import * as THREE from 'three';
 
 export class Combat {
     constructor(scene, spaceship) {
@@ -180,7 +181,7 @@ export class Combat {
             // Configure enemy system 
             if (this.enemySystem) {
                 // Force enemy verification after world is set up
-                this.enemySystem.validateEnemyReferences();
+                this.enemySystem.lifecycle.validateEnemyReferences(this.enemySystem.enemies);
                 
                 // IMPORTANT: Ensure any lingering enemies over the limit are cleaned up
                 if (this.enemySystem.enemies.size > this.enemySystem.maxEnemies) {
@@ -189,7 +190,7 @@ export class Combat {
                 }
                 
                 // Force enemy system to generate spawn points based on player position
-                this.enemySystem.generateSpawnPoints();
+                this.enemySystem.spawner.generateSpawnPoints();
                 
                 console.log(`[COMBAT] Configured enemy system: Max enemies ${this.enemySystem.maxEnemies}`);
             }
@@ -844,7 +845,7 @@ export class Combat {
                 if (!enemy) continue;
                 
                 try {
-                    // Get enemy position
+                    // Get enemy position for debugging
                     let enemyPosition = null;
                     const enemyTransform = enemy.getComponent('TransformComponent');
                     if (enemyTransform) {
@@ -854,24 +855,48 @@ export class Combat {
                         continue;
                     }
                     
-                    // Get enemy collision radius
-                    let enemyRadius = 20; // Default radius
-                    const enemyRigidbody = enemy.getComponent('RigidbodyComponent');
-                    if (enemyRigidbody && enemyRigidbody.collisionRadius) {
-                        enemyRadius = enemyRigidbody.collisionRadius;
+                    // Get enemy mesh component for collision detection
+                    const enemyMeshComponent = enemy.getComponent('MeshComponent');
+                    if (!enemyMeshComponent || !enemyMeshComponent.mesh) {
+                        console.log(`Enemy ${enemy.id} has no mesh component or mesh`);
+                        continue;
                     }
                     
-                    // Calculate distance from ship to enemy
+                    // Debug mesh properties
+                    console.log(`Testing ray intersection with enemy ${enemy.id}:`);
+                    console.log(`- Position: (${enemyPosition.x.toFixed(1)}, ${enemyPosition.y.toFixed(1)}, ${enemyPosition.z.toFixed(1)})`);
+                    console.log(`- Mesh visible: ${enemyMeshComponent.mesh.visible}`);
+                    console.log(`- Mesh children: ${enemyMeshComponent.mesh.children ? enemyMeshComponent.mesh.children.length : 0}`);
+                    
+                    // Calculate distance from ship to enemy (for debugging)
                     const distanceToEnemy = shipPosition.distanceTo(enemyPosition);
-                    console.log(`Enemy ${enemy.id} at distance: ${distanceToEnemy.toFixed(0)}`);
+                    console.log(`- Distance to enemy: ${distanceToEnemy.toFixed(1)}`);
                     
-                    // IMPROVED HIT DETECTION: Check if ray intersects enemy sphere
-                    // Calculate distance from ray to enemy center
-                    const rayToEnemyDistance = raycaster.ray.distanceToPoint(enemyPosition);
+                    // Skip if mesh is not visible
+                    if (!enemyMeshComponent.mesh.visible) {
+                        console.log(`Mesh for enemy ${enemy.id} is not visible, skipping`);
+                        continue;
+                    }
                     
-                    // If distance is less than enemy radius, we have a hit
-                    if (rayToEnemyDistance < enemyRadius) {
-                        console.log(`*** RAY HIT on enemy ${enemy.id}! Ray distance: ${rayToEnemyDistance.toFixed(2)}, Enemy radius: ${enemyRadius.toFixed(2)} ***`);
+                    // Perform the precise mesh intersection test
+                    const intersections = raycaster.intersectObject(enemyMeshComponent.mesh, true);
+                    
+                    if (intersections.length > 0) {
+                        // We have a mesh intersection!
+                        const intersection = intersections[0]; // closest intersection
+                        
+                        // Debug the hit
+                        console.log(`*** MESH HIT on enemy ${enemy.id}! ***`);
+                        console.log(`- Hit distance: ${intersection.distance.toFixed(2)}`);
+                        console.log(`- Hit point: (${intersection.point.x.toFixed(1)}, ${intersection.point.y.toFixed(1)}, ${intersection.point.z.toFixed(1)})`);
+                        
+                        if (intersection.object) {
+                            console.log(`- Hit specific object: ${intersection.object.name || 'unnamed'}`);
+                        }
+                        
+                        if (intersection.face) {
+                            console.log(`- Hit face normal: (${intersection.face.normal.x.toFixed(2)}, ${intersection.face.normal.y.toFixed(2)}, ${intersection.face.normal.z.toFixed(2)})`);
+                        }
                         
                         // Force destroy enemy via all possible methods
                         // Method 1: Apply damage via health component
@@ -887,7 +912,6 @@ export class Combat {
                                 health.isDestroyed = true;
                                 
                                 // Create explosion effect for destroyed enemy
-                                const enemyTransform = enemy.getComponent('TransformComponent');
                                 if (enemyTransform) {
                                     this.createExplosionEffect(enemyTransform.position.clone());
                                     
@@ -951,6 +975,23 @@ export class Combat {
                                 console.log(`Enemy hit but survived with ${health.health}/${health.maxHealth} health remaining`);
                                 // Non-lethal hit - no visual effect
                             }
+                        }
+                    } else {
+                        // Debug the miss
+                        console.log(`Ray missed enemy ${enemy.id} - no mesh intersection`);
+                        
+                        // Check if any debug visuals are needed
+                        if (window.debugMode) {
+                            // Debug visualization - create a temporary red line showing the ray
+                            const rayLine = new THREE.Line(
+                                new THREE.BufferGeometry().setFromPoints([
+                                    raycaster.ray.origin.clone(),
+                                    raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(1000))
+                                ]),
+                                new THREE.LineBasicMaterial({ color: 0xff0000 })
+                            );
+                            this.scene.add(rayLine);
+                            setTimeout(() => this.scene.remove(rayLine), 1000); // Remove after 1 second
                         }
                     }
                 } catch (error) {
@@ -1429,7 +1470,7 @@ export class Combat {
         this.scene.add(cone);
         
         // Create a small point light at the firing position
-        const flashLight = new THREE.PointLight(0x00ffff, 2, 10);
+        const flashLight = new THREE.PointLight(0x00ffff, 200, 10, 2);
         flashLight.position.copy(position);
         this.scene.add(flashLight);
         
@@ -1455,7 +1496,7 @@ export class Combat {
                 
                 // Fade out as it travels
                 cone.material.opacity = 0.7 * (1 - progress);
-                flashLight.intensity = 2 * (1 - progress * 3); // Light fades very quickly
+                flashLight.intensity = 200 * (1 - progress * 3); // Light fades very quickly
                 
                 // Stretch the cone as it travels
                 const stretchFactor = 1 + progress * 1.5; // More stretching for higher speed sensation

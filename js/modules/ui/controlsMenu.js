@@ -67,7 +67,7 @@ export class ControlsMenu {
         controlsMenu.appendChild(createControlRow('E', 'Target Lock-On'));
         controlsMenu.appendChild(createControlRow('TAB', 'Cycle Targets'));
         controlsMenu.appendChild(createControlRow('R', 'Toggle Mining'));
-        controlsMenu.appendChild(createControlRow('Q', 'Dock with Mothership'));
+        controlsMenu.appendChild(createControlRow('Q', 'Dock with Stargate'));
         
         // Set up event listeners for the controls menu
         document.getElementById('close-controls').addEventListener('click', () => {

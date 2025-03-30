@@ -1,5 +1,5 @@
 /**
- * Blackjack Minigame - A futuristic card game for the mothership terminal
+ * Blackjack Minigame - A futuristic card game for the stargate terminal
  * 
  * Features:
  * - Space-themed card designs with futuristic symbols
@@ -670,16 +670,16 @@ export class BlackjackGame {
     }
     
     /**
-     * Hide the game UI and return to the mothership interface
+     * Hide the game UI and return to the stargate interface
      */
     hide() {
         if (this.gameUI) {
             this.gameUI.style.display = 'none';
             this.audio.playSound('boink');
-            // Show the mothership interface when exiting blackjack
-            const mothershipUI = document.getElementById('mothership-ui');
-            if (mothershipUI) {
-                mothershipUI.style.display = 'block';
+            // Show the stargate interface when exiting blackjack
+            const stargateUI = document.getElementById('stargate-ui');
+            if (stargateUI) {
+                stargateUI.style.display = 'block';
             }
         }
     }

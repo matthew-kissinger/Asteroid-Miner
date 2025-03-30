@@ -3,6 +3,8 @@
  * Provides tools for optimizing memory usage and reducing garbage collection
  */
 
+import * as THREE from 'three';
+
 // Typed Array Pools
 const typedArrayPools = {
     float32: [],

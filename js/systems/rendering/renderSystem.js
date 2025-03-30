@@ -4,6 +4,7 @@
  * Syncs entity transforms with Three.js meshes and handles rendering.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 
 export class RenderSystem extends System {

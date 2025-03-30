@@ -1,14 +1,14 @@
-// mothershipInterface.js - Handles the mothership docking and trading UI
+// stargateInterface.js - Handles the stargate docking and trading UI
 
 import { MobileDetector } from '../../utils/mobileDetector.js';
 
-export class MothershipInterface {
+export class StargateInterface {
     constructor() {
         this.starMap = null;
         this.blackjackGame = null;
         this.settings = null;
         this.isMobile = MobileDetector.isMobile();
-        this.setupMothershipUI();
+        this.setupStargateUI();
         this.setupEventHandlers();
     }
     
@@ -23,16 +23,16 @@ export class MothershipInterface {
     setSettings(settings) {
         this.settings = settings;
         
-        // Pass the mothership interface reference to settings
+        // Pass the stargate interface reference to settings
         if (this.settings) {
-            this.settings.setMothershipInterface(this);
+            this.settings.setStargateInterface(this);
         }
         
         // Setup settings button handler now that we have settings
         this.setupSettingsButton();
     }
     
-    setupMothershipUI() {
+    setupStargateUI() {
         // Add docking prompt
         const dockingPrompt = document.createElement('div');
         dockingPrompt.id = 'docking-prompt';
@@ -59,53 +59,53 @@ export class MothershipInterface {
             dockingPrompt.style.display = 'none';
             dockingPrompt.dataset.alwaysHide = 'true'; // Mark to keep it hidden
         } else {
-            dockingPrompt.textContent = 'Press Q to dock with Mothership';
+            dockingPrompt.textContent = 'Press Q to dock with Stargate';
         }
         
         document.body.appendChild(dockingPrompt);
         
-        // Create mothership interface (hidden by default)
-        const mothershipUI = document.createElement('div');
-        mothershipUI.id = 'mothership-ui';
-        mothershipUI.style.position = 'absolute';
-        mothershipUI.style.top = '50%';
-        mothershipUI.style.left = '50%';
-        mothershipUI.style.transform = 'translate(-50%, -50%)';
+        // Create stargate interface (hidden by default)
+        const stargateUI = document.createElement('div');
+        stargateUI.id = 'stargate-ui';
+        stargateUI.style.position = 'absolute';
+        stargateUI.style.top = '50%';
+        stargateUI.style.left = '50%';
+        stargateUI.style.transform = 'translate(-50%, -50%)';
         
         // Use responsive width based on device type
         if (this.isMobile) {
-            mothershipUI.style.width = '95%';
-            mothershipUI.style.maxWidth = '600px'; // Cap width on larger tablets
+            stargateUI.style.width = '95%';
+            stargateUI.style.maxWidth = '600px'; // Cap width on larger tablets
         } else {
-            mothershipUI.style.width = '700px';
+            stargateUI.style.width = '700px';
         }
         
-        mothershipUI.style.maxHeight = '90vh';
-        mothershipUI.style.overflowY = 'auto';
-        mothershipUI.style.backgroundColor = 'rgba(20, 30, 50, 0.9)';
-        mothershipUI.style.color = '#fff';
-        mothershipUI.style.padding = this.isMobile ? '20px' : '30px';
-        mothershipUI.style.borderRadius = '15px';
-        mothershipUI.style.border = '2px solid #33aaff';
-        mothershipUI.style.boxShadow = '0 0 30px #33aaff';
-        mothershipUI.style.fontFamily = 'Courier New, monospace';
-        mothershipUI.style.zIndex = '1000';
-        mothershipUI.style.display = 'none';
+        stargateUI.style.maxHeight = '90vh';
+        stargateUI.style.overflowY = 'auto';
+        stargateUI.style.backgroundColor = 'rgba(20, 30, 50, 0.9)';
+        stargateUI.style.color = '#fff';
+        stargateUI.style.padding = this.isMobile ? '20px' : '30px';
+        stargateUI.style.borderRadius = '15px';
+        stargateUI.style.border = '2px solid #33aaff';
+        stargateUI.style.boxShadow = '0 0 30px #33aaff';
+        stargateUI.style.fontFamily = 'Courier New, monospace';
+        stargateUI.style.zIndex = '1000';
+        stargateUI.style.display = 'none';
         
         // Add touch scrolling properties for mobile
         if (this.isMobile) {
-            mothershipUI.style.webkitOverflowScrolling = 'touch';
-            mothershipUI.style.touchAction = 'pan-y';
-            mothershipUI.style.overscrollBehavior = 'contain';
-            mothershipUI.style.paddingBottom = '100px'; // Extra padding for mobile to ensure content isn't hidden behind touch controls
+            stargateUI.style.webkitOverflowScrolling = 'touch';
+            stargateUI.style.touchAction = 'pan-y';
+            stargateUI.style.overscrollBehavior = 'contain';
+            stargateUI.style.paddingBottom = '100px'; // Extra padding for mobile to ensure content isn't hidden behind touch controls
         }
         
-        mothershipUI.innerHTML = `
-            <h2 style="text-align: center; color: #33aaff; margin-top: 0;">MOTHERSHIP TERMINAL</h2>
+        stargateUI.innerHTML = `
+            <h2 style="text-align: center; color: #33aaff; margin-top: 0;">STARGATE TERMINAL</h2>
             <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
                 <div style="flex: 1; padding: 15px; border-right: 1px solid #33aaff;">
                     <h3 style="color: #33aaff;">RESOURCES</h3>
-                    <div id="mothership-resources" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div id="stargate-resources" style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <div class="resource-display" style="flex: 1; padding: 8px; background-color: rgba(15, 40, 55, 0.8); border: 1px solid #cc6633; border-radius: 5px; text-align: center; box-shadow: 0 0 10px rgba(204, 102, 51, 0.3);">
                             <div style="font-weight: bold; font-size: 14px;">IRON</div>
                             <div id="ms-iron" style="font-size: 18px; margin-top: 5px;">0</div>
@@ -337,7 +337,7 @@ export class MothershipInterface {
             </button>
         `;
         
-        document.body.appendChild(mothershipUI);
+        document.body.appendChild(stargateUI);
     }
     
     setupSettingsButton() {
@@ -347,7 +347,7 @@ export class MothershipInterface {
         if (settingsButton) {
             settingsButton.addEventListener('click', () => {
                 console.log("Opening settings");
-                this.hideMothershipUI();
+                this.hideStargateUI();
                 this.settings.show();
             });
         }
@@ -370,32 +370,32 @@ export class MothershipInterface {
         }
     }
     
-    showMothershipUI() {
-        // Show the mothership UI
-        const mothershipUI = document.getElementById('mothership-ui');
-        if (mothershipUI) {
-            console.log("Showing mothership UI on " + (this.isMobile ? "mobile" : "desktop"));
-            mothershipUI.style.display = 'block';
+    showStargateUI() {
+        // Show the stargate UI
+        const stargateUI = document.getElementById('stargate-ui');
+        if (stargateUI) {
+            console.log("Showing stargate UI on " + (this.isMobile ? "mobile" : "desktop"));
+            stargateUI.style.display = 'block';
             
             // Ensure background color is explicitly set
-            mothershipUI.style.backgroundColor = 'rgba(20, 30, 50, 0.9)';
+            stargateUI.style.backgroundColor = 'rgba(20, 30, 50, 0.9)';
             
             // Mobile-specific adjustments
             if (this.isMobile) {
                 // Ensure proper mobile styling
-                mothershipUI.style.width = '92%';
-                mothershipUI.style.maxWidth = '92vw';
-                mothershipUI.style.maxHeight = '85vh';
-                mothershipUI.style.webkitOverflowScrolling = 'touch';
-                mothershipUI.style.touchAction = 'pan-y';
-                mothershipUI.style.overscrollBehavior = 'auto'; // Changed from 'contain' to 'auto'
+                stargateUI.style.width = '92%';
+                stargateUI.style.maxWidth = '92vw';
+                stargateUI.style.maxHeight = '85vh';
+                stargateUI.style.webkitOverflowScrolling = 'touch';
+                stargateUI.style.touchAction = 'pan-y';
+                stargateUI.style.overscrollBehavior = 'auto'; // Changed from 'contain' to 'auto'
                 
                 // Ensure proper positioning
-                mothershipUI.style.position = 'absolute';
-                mothershipUI.style.top = '50%';
-                mothershipUI.style.left = '50%';
-                mothershipUI.style.transform = 'translate(-50%, -50%)';
-                mothershipUI.style.zIndex = '1000';
+                stargateUI.style.position = 'absolute';
+                stargateUI.style.top = '50%';
+                stargateUI.style.left = '50%';
+                stargateUI.style.transform = 'translate(-50%, -50%)';
+                stargateUI.style.zIndex = '1000';
                 
                 // Ensure body is in a state that allows the UI to be visible
                 document.body.classList.remove('undocking', 'modal-open');
@@ -428,10 +428,10 @@ export class MothershipInterface {
             const spaceship = window.game.spaceship;
             const resources = window.game.controls.resources;
             
-            // Update the mothership UI with current values
+            // Update the stargate UI with current values
             if (spaceship && resources) {
-                console.log("Syncing mothership UI with game resources:", resources);
-                this.updateMothershipUI(spaceship, resources);
+                console.log("Syncing stargate UI with game resources:", resources);
+                this.updateStargateUI(spaceship, resources);
             }
         }
     }
@@ -441,7 +441,7 @@ export class MothershipInterface {
         if (starMapButton && this.starMap) {
             starMapButton.addEventListener('click', () => {
                 console.log("Opening star map");
-                this.hideMothershipUI();
+                this.hideStargateUI();
                 this.starMap.show();
             });
         } else if (starMapButton) {
@@ -458,7 +458,7 @@ export class MothershipInterface {
         if (blackjackButton && this.blackjackGame) {
             blackjackButton.addEventListener('click', () => {
                 console.log("Opening blackjack game");
-                this.hideMothershipUI();
+                this.hideStargateUI();
                 this.blackjackGame.show();
             });
         } else if (blackjackButton) {
@@ -470,19 +470,19 @@ export class MothershipInterface {
         }
     }
     
-    hideMothershipUI() {
-        const mothershipUI = document.getElementById('mothership-ui');
-        if (mothershipUI) {
-            mothershipUI.style.display = 'none';
+    hideStargateUI() {
+        const stargateUI = document.getElementById('stargate-ui');
+        if (stargateUI) {
+            stargateUI.style.display = 'none';
         }
     }
 
     // Add alias for compatibility
     hide() {
-        this.hideMothershipUI();
+        this.hideStargateUI();
     }
     
-    updateMothershipUI(spaceship, resources) {
+    updateStargateUI(spaceship, resources) {
         // Update resource display with visual elements
         document.getElementById('ms-iron').textContent = resources.iron;
         document.getElementById('ms-gold').textContent = resources.gold;
@@ -646,10 +646,10 @@ export class MothershipInterface {
     setupTouchEvents() {
         if (!this.isMobile) return;
         
-        const mothershipUI = document.getElementById('mothership-ui');
-        if (!mothershipUI) return;
+        const stargateUI = document.getElementById('stargate-ui');
+        if (!stargateUI) return;
         
-        console.log("Setting up touch events for mothership UI");
+        console.log("Setting up touch events for stargate UI");
         
         // Make sure the undock button has proper touch handling
         const undockBtn = document.getElementById('undock-btn');
@@ -679,16 +679,16 @@ export class MothershipInterface {
             }, { passive: false });
         }
         
-        // Prevent default touchmove on body but allow scrolling within the mothership UI
-        mothershipUI.addEventListener('touchmove', (e) => {
-            // Allow the default scroll behavior within the mothership UI
+        // Prevent default touchmove on body but allow scrolling within the stargate UI
+        stargateUI.addEventListener('touchmove', (e) => {
+            // Allow the default scroll behavior within the stargate UI
             e.stopPropagation();
         }, { passive: true });
         
         // Fix for iOS scrolling issues - only prevent at the top, not at the bottom
-        mothershipUI.addEventListener('touchstart', (e) => {
+        stargateUI.addEventListener('touchstart', (e) => {
             // Only prevent pull-to-refresh at the top, don't interfere with bottom scrolling
-            const scrollTop = mothershipUI.scrollTop;
+            const scrollTop = stargateUI.scrollTop;
             
             if (scrollTop <= 0 && e.touches[0].screenY < e.touches[0].clientY) {
                 e.preventDefault();
@@ -697,7 +697,7 @@ export class MothershipInterface {
         }, { passive: false });
         
         // Handle tabbed content for better touch experience
-        const tabButtons = mothershipUI.querySelectorAll('.tablinks');
+        const tabButtons = stargateUI.querySelectorAll('.tablinks');
         if (tabButtons.length > 0) {
             tabButtons.forEach(button => {
                 button.addEventListener('touchend', (e) => {
@@ -710,8 +710,8 @@ export class MothershipInterface {
             });
         }
         
-        // Improve touch experience for all buttons in the mothership UI
-        const allButtons = mothershipUI.querySelectorAll('button');
+        // Improve touch experience for all buttons in the stargate UI
+        const allButtons = stargateUI.querySelectorAll('button');
         allButtons.forEach(button => {
             if (button !== undockBtn) { // We already handled the undock button specially
                 button.style.touchAction = 'manipulation';
@@ -736,7 +736,7 @@ export class MothershipInterface {
             customSystemBtn.addEventListener('click', () => {
                 // Check if custom system creator is available on environment
                 if (window.game && window.game.environment && window.game.environment.customSystemCreator) {
-                    // Close mothership interface
+                    // Close stargate interface
                     this.hide();
                     
                     // Show custom system creator

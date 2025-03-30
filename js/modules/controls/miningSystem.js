@@ -1,5 +1,7 @@
 // miningSystem.js - Handles asteroid mining functionality
 
+import * as THREE from 'three';
+
 export class MiningSystem {
     constructor(spaceship, scene) {
         this.spaceship = spaceship;

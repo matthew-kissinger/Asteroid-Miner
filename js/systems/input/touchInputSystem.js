@@ -46,7 +46,7 @@ export class TouchInputSystem extends System {
         // Environment state
         this.playerIsDocked = false;
         this.introActive = false;
-        this.nearMothership = false;
+        this.nearStargate = false;
         
         // Joystick thresholds
         this.threshold = 0.1;
@@ -59,8 +59,8 @@ export class TouchInputSystem extends System {
         this.world.messageBus.subscribe('player.undocked', this.handlePlayerUndocked.bind(this));
         this.world.messageBus.subscribe('game.introStart', this.handleIntroStart.bind(this));
         this.world.messageBus.subscribe('game.introEnd', this.handleIntroEnd.bind(this));
-        this.world.messageBus.subscribe('player.nearMothership', this.handleNearMothership.bind(this));
-        this.world.messageBus.subscribe('player.leftMothership', this.handleLeftMothership.bind(this));
+        this.world.messageBus.subscribe('player.nearStargate', this.handleNearStargate.bind(this));
+        this.world.messageBus.subscribe('player.leftStargate', this.handleLeftStargate.bind(this));
     }
     
     /**
@@ -128,18 +128,18 @@ export class TouchInputSystem extends System {
     }
     
     /**
-     * Handle player near mothership
+     * Handle player near stargate
      */
-    handleNearMothership() {
-        this.nearMothership = true;
+    handleNearStargate() {
+        this.nearStargate = true;
         this.showDockButton();
     }
     
     /**
-     * Handle player left mothership
+     * Handle player left stargate
      */
-    handleLeftMothership() {
-        this.nearMothership = false;
+    handleLeftStargate() {
+        this.nearStargate = false;
         this.hideDockButton();
     }
     
@@ -263,7 +263,7 @@ export class TouchInputSystem extends System {
         this.targetButton = this.createActionButton(rightActionButtonsContainer, 'TARGET', 'rgba(255, 215, 0, 0.8)');
         this.addButtonEvents(this.targetButton, this.handleTargeting.bind(this));
         
-        // Create dock button (only shown when near mothership)
+        // Create dock button (only shown when near stargate)
         this.dockButton = this.createActionButton(null, 'DOCK', 'rgba(51, 153, 255, 0.8)');
         this.dockButton.style.position = 'absolute';
         this.dockButton.style.top = '50%';
@@ -680,8 +680,8 @@ export class TouchInputSystem extends System {
         if (leftActionButtons) leftActionButtons.style.display = 'flex';
         if (rightActionButtons) rightActionButtons.style.display = 'flex';
         
-        // Show dock button if near mothership
-        if (this.nearMothership) {
+        // Show dock button if near stargate
+        if (this.nearStargate) {
             this.showDockButton();
         }
     }

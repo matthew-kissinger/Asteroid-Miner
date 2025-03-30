@@ -1,5 +1,7 @@
 // skybox.js - Creates and manages advanced procedural skybox with volumetric effects
 
+import * as THREE from 'three';
+
 export class Skybox {
     constructor(scene) {
         this.scene = scene;
@@ -11,7 +13,7 @@ export class Skybox {
         
         // Load the Milky Way texture
         this.milkyWayTexture = this.textureLoader.load('./assets/2k_stars_milky_way.jpg');
-        this.milkyWayTexture.encoding = THREE.sRGBEncoding;
+        this.milkyWayTexture.colorSpace = THREE.SRGBColorSpace;
         
         // Store additional skybox textures
         this.skyboxTextures = {};
@@ -85,7 +87,7 @@ export class Skybox {
         if (!this.skyboxTextures[texturePath]) {
             console.log(`Loading new skybox texture: ${adjustedTexturePath}`);
             this.skyboxTextures[texturePath] = this.textureLoader.load(adjustedTexturePath);
-            this.skyboxTextures[texturePath].encoding = THREE.sRGBEncoding;
+            this.skyboxTextures[texturePath].colorSpace = THREE.SRGBColorSpace;
         }
         
         return this.skyboxTextures[texturePath];

@@ -86,10 +86,10 @@
     }
 }
 
-/* Responsive Mothership Terminal */
+/* Responsive Stargate Terminal */
 @media (max-width: 900px) {
-    /* Main mothership UI container */
-    #mothership-ui {
+    /* Main stargate UI container */
+    #stargate-ui {
         width: 92% !important;
         max-width: 92vw !important;
         max-height: 85vh !important;
@@ -102,12 +102,12 @@
     }
     
     /* Convert horizontal layout to vertical for small screens */
-    #mothership-ui > div {
+    #stargate-ui > div {
         flex-direction: column !important;
     }
     
     /* Remove border-right from resources section when stacked vertically */
-    #mothership-ui > div > div:first-child {
+    #stargate-ui > div > div:first-child {
         border-right: none !important;
         border-bottom: 1px solid #33aaff !important;
         padding-bottom: 15px !important;
@@ -115,21 +115,21 @@
     }
     
     /* Ensure buttons are tappable */
-    #mothership-ui button {
+    #stargate-ui button {
         margin-bottom: 15px !important;
         padding: 12px !important;
         min-height: 44px !important;
     }
     
     /* Add more space between elements for easier touch interactions */
-    #mothership-ui h3 {
+    #stargate-ui h3 {
         margin-top: 20px !important;
         margin-bottom: 10px !important;
         font-size: 18px !important;
     }
     
-    /* Improve mothership content scrolling */
-    #mothership-content {
+    /* Improve stargate content scrolling */
+    #stargate-content {
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
         padding-bottom: 30px !important;
@@ -536,7 +536,7 @@ body.touch-controls-active {
 @media (max-width: 900px) {
     /* Add extra padding to the bottom of all scrollable elements to ensure content isn't hidden behind controls */
     [style*="overflow-y: auto"], [style*="overflow: auto"], 
-    #mothership-ui, #star-map, #blackjack-container, #blackjack-game, 
+    #stargate-ui, #star-map, #blackjack-container, #blackjack-game, 
     #settings-container, #game-over-container, .tabcontent {
         padding-bottom: 100px !important; /* Extra padding to account for touch controls */
     }

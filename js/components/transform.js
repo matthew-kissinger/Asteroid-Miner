@@ -5,7 +5,7 @@
  */
 
 import { Component } from '../core/component.js';
-// THREE is loaded globally via CDN
+import * as THREE from 'three';
 
 export class TransformComponent extends Component {
     constructor(position = new THREE.Vector3(), rotation = new THREE.Euler(), scale = new THREE.Vector3(1, 1, 1)) {

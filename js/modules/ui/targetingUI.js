@@ -1,6 +1,6 @@
-// targetingSystem.js - Handles the targeting UI components
+// targetingUI.js - Handles the targeting UI components
 
-export class TargetingSystem {
+export class TargetingUI {
     constructor() {
         this.setupTargetingUI();
     }

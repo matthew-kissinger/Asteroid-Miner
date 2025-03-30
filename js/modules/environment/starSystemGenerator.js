@@ -1,5 +1,7 @@
 // starSystemGenerator.js - Procedural generation of star systems
 
+import * as THREE from 'three';
+
 export class StarSystemGenerator {
     constructor(scene) {
         this.scene = scene;
@@ -572,7 +574,7 @@ export class StarSystemGenerator {
     }
 
     /**
-     * Returns player to mothership after interstellar travel
+     * Returns player to stargate after interstellar travel
      * Should be called after travel to ensure proper docking state
      */
     returnFromTravel() {
@@ -590,24 +592,24 @@ export class StarSystemGenerator {
             window.game.spaceship.dock();
         }
         
-        // Reposition ship near mothership
+        // Reposition ship near stargate
         const dockingSystem = window.game.controls?.dockingSystem;
         if (dockingSystem) {
-            console.log("StarSystemGenerator: Repositioning ship near mothership");
-            dockingSystem.positionNearMothership();
+            console.log("StarSystemGenerator: Repositioning ship near stargate");
+            dockingSystem.positionNearStargate();
             
-            // Show mothership UI
-            if (typeof dockingSystem.showMothershipUI === 'function') {
-                console.log("StarSystemGenerator: Showing mothership UI via docking system");
-                dockingSystem.showMothershipUI();
+            // Show stargate UI
+            if (typeof dockingSystem.showStargateUI === 'function') {
+                console.log("StarSystemGenerator: Showing stargate UI via docking system");
+                dockingSystem.showStargateUI();
                 return true;
             }
         }
         
-        // Fallback - try to find UI or mothership interface directly
-        if (window.game.ui?.mothershipInterface?.showMothershipUI) {
-            console.log("StarSystemGenerator: Showing mothership UI via game.ui.mothershipInterface");
-            window.game.ui.mothershipInterface.showMothershipUI();
+        // Fallback - try to find UI or stargate interface directly
+        if (window.game.ui?.stargateInterface?.showStargateUI) {
+            console.log("StarSystemGenerator: Showing stargate UI via game.ui.stargateInterface");
+            window.game.ui.stargateInterface.showStargateUI();
             return true;
         }
         

@@ -153,6 +153,12 @@ export class TouchControls {
         leftJoystickZone.style.width = '100px';
         leftJoystickZone.style.height = '100px';
         leftJoystickZone.style.zIndex = '1000';
+        
+        // Prevent default browser behavior to avoid scrolling when using joysticks
+        leftJoystickZone.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+        leftJoystickZone.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        leftJoystickZone.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
+        
         document.body.appendChild(leftJoystickZone);
         
         // Create right joystick zone (rotation control)
@@ -164,6 +170,12 @@ export class TouchControls {
         rightJoystickZone.style.width = '100px';
         rightJoystickZone.style.height = '100px';
         rightJoystickZone.style.zIndex = '1000';
+        
+        // Prevent default browser behavior to avoid scrolling when using joysticks
+        rightJoystickZone.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+        rightJoystickZone.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        rightJoystickZone.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
+        
         document.body.appendChild(rightJoystickZone);
     }
     
@@ -204,7 +216,7 @@ export class TouchControls {
         this.targetButton = this.createActionButton(rightActionButtonsContainer, 'TARGET', 'rgba(255, 215, 0, 0.8)');
         this.addButtonEvents(this.targetButton, this.handleTargeting.bind(this));
         
-        // Create dock button (only shown when near mothership)
+        // Create dock button (only shown when near stargate)
         this.dockButton = this.createActionButton(null, 'DOCK', 'rgba(51, 153, 255, 0.8)');
         this.dockButton.style.position = 'absolute';
         this.dockButton.style.top = '50%';
@@ -268,7 +280,9 @@ export class TouchControls {
             size: 100,
             threshold: this.threshold,
             dynamicPage: true, // Better performance for scrolling
-            fadeTime: 100 // Faster fade for better performance
+            fadeTime: 100, // Faster fade for better performance
+            lockX: false, // Allow X-axis movement
+            lockY: false  // Allow Y-axis movement
         });
         
         // Initialize right joystick (rotation control)
@@ -280,7 +294,9 @@ export class TouchControls {
             size: 100,
             threshold: this.threshold,
             dynamicPage: true, // Better performance for scrolling
-            fadeTime: 100 // Faster fade for better performance
+            fadeTime: 100, // Faster fade for better performance
+            lockX: false, // Allow X-axis movement
+            lockY: false  // Allow Y-axis movement
         });
         
         // Set up event handlers for joysticks
@@ -637,10 +653,10 @@ export class TouchControls {
             return;
         }
         
-        console.log("TouchControls: Dock button pressed, attempting to dock with mothership");
+        console.log("TouchControls: Dock button pressed, attempting to dock with stargate");
         
         // Call docking method
-        this.dockingSystem.dockWithMothership();
+        this.dockingSystem.dockWithStargate();
         
         // Hide the dock button after pressing it
         this.hideDockButton();
@@ -667,7 +683,7 @@ export class TouchControls {
             this.dockButton.style.top = '50%';
             this.dockButton.style.left = '50%';
             
-            console.log("Showing dock button - near mothership");
+            console.log("Showing dock button - near stargate");
             
             // Add pulsing animation to make it more noticeable
             if (!this.dockButton.style.animation) {
@@ -746,9 +762,9 @@ export class TouchControls {
     }
     
     update() {
-        // Update dock button visibility based on proximity to mothership
+        // Update dock button visibility based on proximity to stargate
         if (this.dockingSystem && this.spaceship) {
-            if (this.dockingSystem.nearMothership && !this.spaceship.isDocked) {
+            if (this.dockingSystem.nearStargate && !this.spaceship.isDocked) {
                 this.showDockButton();
             } else {
                 this.hideDockButton();
@@ -759,7 +775,7 @@ export class TouchControls {
             if (game && game.controls && game.controls.dockingSystem) {
                 const dockingSystem = game.controls.dockingSystem;
                 
-                if (dockingSystem.nearMothership && !this.spaceship.isDocked) {
+                if (dockingSystem.nearStargate && !this.spaceship.isDocked) {
                     this.showDockButton();
                 } else {
                     this.hideDockButton();
@@ -777,7 +793,7 @@ export class TouchControls {
         
         // For continuous actions (like firing and mining)
         if (endHandler) {
-            // Touch events with passive when possible for better performance
+            // Touch events with passive: false to allow preventDefault
             button.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 button.style.transform = 'scale(0.95) translateZ(0)';
@@ -790,13 +806,28 @@ export class TouchControls {
                 endHandler();
             }, { passive: false });
             
-            // Mouse events
-            button.addEventListener('mousedown', () => {
+            // Add pointer events
+            button.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
                 button.style.transform = 'scale(0.95) translateZ(0)';
                 startHandler();
             });
             
-            button.addEventListener('mouseup', () => {
+            button.addEventListener('pointerup', (e) => {
+                e.preventDefault();
+                if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
+                button.style.transform = 'scale(1) translateZ(0)';
+                endHandler();
+            });
+            
+            // Keep mouse events for backward compatibility
+            button.addEventListener('mousedown', (e) => {
+                button.style.transform = 'scale(0.95) translateZ(0)';
+                startHandler();
+            });
+            
+            button.addEventListener('mouseup', (e) => {
                 button.style.transform = 'scale(1) translateZ(0)';
                 endHandler();
             });
@@ -826,12 +857,37 @@ export class TouchControls {
                 startHandler();
             }, { passive: false });
             
-            // Mouse events
-            button.addEventListener('mousedown', () => {
+            // Add pointer events
+            button.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
+                button.style.transform = 'scale(0.95) translateZ(0)';
+                
+                // For dock button specifically, add debug logging
+                if (button === this.dockButton) {
+                    console.log("Dock button pointerdown event fired");
+                }
+            });
+            
+            button.addEventListener('pointerup', (e) => {
+                e.preventDefault();
+                if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
+                button.style.transform = 'scale(1) translateZ(0)';
+                
+                // For dock button specifically, add debug logging
+                if (button === this.dockButton) {
+                    console.log("Dock button pointerup event fired, calling handler");
+                }
+                
+                startHandler();
+            });
+            
+            // Keep mouse events for backward compatibility
+            button.addEventListener('mousedown', (e) => {
                 button.style.transform = 'scale(0.95) translateZ(0)';
             });
             
-            button.addEventListener('mouseup', () => {
+            button.addEventListener('mouseup', (e) => {
                 button.style.transform = 'scale(1) translateZ(0)';
                 startHandler();
             });

@@ -5,6 +5,7 @@
  */
 
 import { Component } from '../../core/component.js';
+import * as THREE from 'three';
 
 export class MeshComponent extends Component {
     constructor(geometry, material) {

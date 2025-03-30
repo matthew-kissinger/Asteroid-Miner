@@ -1142,6 +1142,23 @@ export class HUD {
                 fpsElement.textContent = `FPS: ${Math.round(fps)}`;
                 fpsElement.style.color = "rgba(120, 220, 232, 0.8)";
             }
+            
+            // Add auto indicator if using monitor refresh rate
+            if (window.game && 
+                window.game.ui && 
+                window.game.ui.settings && 
+                window.game.ui.settings.settings.frameRateCap === 'auto') {
+                
+                const refreshRate = window.game.ui.settings.monitorRefreshRate || 60;
+                
+                if (cap > 0) {
+                    // Show it's using auto mode with the detected refresh rate
+                    fpsElement.textContent = `FPS: ${Math.round(fps)}/${cap} (Auto)`;
+                } else {
+                    // Using unlimited because refresh rate is high
+                    fpsElement.textContent = `FPS: ${Math.round(fps)} (Auto: Unlimited)`;
+                }
+            }
         }
     }
     

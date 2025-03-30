@@ -2,12 +2,14 @@
  * Enemy Spawner - Handles the generation of spawn points and enemy spawning
  */
 
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { EnemyAIComponent } from '../../components/combat/enemyAI.js';
 import { TransformComponent } from '../../components/transform.js';
 import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
 import { MeshComponent } from '../../components/rendering/mesh.js';
-import { TrailComponent } from '../../components/rendering/trail.js';
+// import { TrailComponent } from '../../components/rendering/trail.js';
 
 export class EnemySpawner {
     constructor(world) {
@@ -41,7 +43,7 @@ export class EnemySpawner {
      * Pre-load all enemy models
      */
     loadModels() {
-        const loader = new THREE.GLTFLoader();
+        const loader = new GLTFLoader();
         
         // Load enemy model
         loader.load(
@@ -450,7 +452,8 @@ export class EnemySpawner {
         
         // Add trail effect if not already present - thrusting effect
         if (!entity.getComponent('TrailComponent')) {
-            this.addSpectralTrail(entity, transform);
+            // Temporarily disabled trail effect
+            // this.addSpectralTrail(entity, transform);
         }
         
         // SYNCHRONIZATION FIX: Remove any existing references to this entity ID before adding

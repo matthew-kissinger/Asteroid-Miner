@@ -4,6 +4,7 @@
  * Handles velocity, forces, and other physics-related properties.
  */
 
+import * as THREE from 'three';
 import { Component } from '../../core/component.js';
 
 export class RigidbodyComponent extends Component {

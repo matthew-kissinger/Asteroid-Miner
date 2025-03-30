@@ -63,7 +63,8 @@ export class InputHandler {
         const canvas = document.querySelector('canvas');
         
         // Request pointer lock when clicking on the canvas
-        canvas.addEventListener('click', () => {
+        canvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault(); // Prevent default to avoid unwanted behavior
             if (!this.isPointerLocked && !this.spaceship.isDocked) {
                 canvas.requestPointerLock();
             }
@@ -74,11 +75,11 @@ export class InputHandler {
             if (document.pointerLockElement === canvas) {
                 // Pointer is locked
                 this.isPointerLocked = true;
-                document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+                document.addEventListener('pointermove', this.handlePointerMove.bind(this));
             } else {
                 // Pointer is unlocked
                 this.isPointerLocked = false;
-                document.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+                document.removeEventListener('pointermove', this.handlePointerMove.bind(this));
             }
         });
         
@@ -109,7 +110,7 @@ export class InputHandler {
         });
     }
     
-    handleMouseMove(e) {
+    handlePointerMove(e) {
         // Skip mouse movement handling during intro sequence
         if (window.game && window.game.introSequenceActive) return;
         

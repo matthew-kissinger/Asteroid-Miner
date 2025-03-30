@@ -1,5 +1,7 @@
 // asteroidBelt.js - Creates and manages the asteroid belt
 
+import * as THREE from 'three';
+
 export class AsteroidBelt {
     constructor(scene) {
         this.scene = scene;

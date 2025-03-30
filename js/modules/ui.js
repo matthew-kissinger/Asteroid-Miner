@@ -3,8 +3,8 @@
 import { HUD } from './ui/hud.js';
 import { MobileHUD } from './ui/mobileHUD.js';
 import { MiningDisplay } from './ui/miningDisplay.js';
-import { TargetingSystem } from './ui/targetingSystem.js';
-import { MothershipInterface } from './ui/mothershipInterface.js';
+import { TargetingUI } from './ui/targetingUI.js';
+import { StargateInterface } from './ui/stargateInterface.js';
 import { GameOverScreen } from './ui/gameOverScreen.js';
 import { ControlsMenu } from './ui/controlsMenu.js';
 import { StarMap } from './ui/starMap.js';
@@ -36,13 +36,13 @@ export class UI {
         }
         
         this.miningDisplay = new MiningDisplay();
-        this.targetingSystem = new TargetingSystem();
-        this.mothershipInterface = new MothershipInterface();
+        this.targetingUI = new TargetingUI();
+        this.stargateInterface = new StargateInterface();
         this.gameOverScreen = new GameOverScreen();
         this.controlsMenu = new ControlsMenu();
         
-        // Initialize star map (requires environment, docking system, and mothership interface)
-        this.starMap = new StarMap(this.environment.starSystemGenerator, null, this.mothershipInterface);
+        // Initialize star map (requires environment, docking system, and stargate interface)
+        this.starMap = new StarMap(this.environment.starSystemGenerator, null, this.stargateInterface);
         
         // Initialize Blackjack game (will be fully initialized after audio is set)
         this.blackjackGame = null;
@@ -50,8 +50,8 @@ export class UI {
         // Initialize settings (requires game instance)
         this.settings = null;
         
-        // Link starMap to mothershipInterface
-        this.mothershipInterface.setStarMap(this.starMap);
+        // Link starMap to stargateInterface
+        this.stargateInterface.setStarMap(this.starMap);
         
         // Initialize performance monitoring if in debug mode
         if (window.DEBUG_MODE) {
@@ -89,8 +89,8 @@ export class UI {
             this.blackjackGame = new BlackjackGame(null, this.spaceship, this.audio);
             console.log("UI: Created BlackjackGame with spaceship:", this.spaceship);
             
-            // Link blackjackGame to mothershipInterface
-            this.mothershipInterface.setBlackjackGame(this.blackjackGame);
+            // Link blackjackGame to stargateInterface
+            this.stargateInterface.setBlackjackGame(this.blackjackGame);
         }
     }
     
@@ -127,8 +127,8 @@ export class UI {
         // Create settings
         this.settings = new Settings(game);
         
-        // Link settings to mothershipInterface
-        this.mothershipInterface.setSettings(this.settings);
+        // Link settings to stargateInterface
+        this.stargateInterface.setSettings(this.settings);
         
         console.log("Settings initialized with game instance");
     }
@@ -141,9 +141,9 @@ export class UI {
             this.controlsMenu.setupButtonHandler();
         }
         
-        // Set up mothership UI control handlers if controls are available
-        if (this.controls && this.controls.setupMothershipUIControls) {
-            this.controls.setupMothershipUIControls();
+        // Set up stargate UI control handlers if controls are available
+        if (this.controls && this.controls.setupStargateUIControls) {
+            this.controls.setupStargateUIControls();
         }
         
         // Add resize handler to update mobile detection
@@ -337,16 +337,16 @@ export class UI {
             this.miningDisplay.hide();
         }
         
-        if (this.targetingSystem && this.targetingSystem.hideLockOn) {
-            this.targetingSystem.hideLockOn();
+        if (this.targetingUI && this.targetingUI.hideLockOn) {
+            this.targetingUI.hideLockOn();
         }
         
-        if (this.targetingSystem && this.targetingSystem.hideTargetInfo) {
-            this.targetingSystem.hideTargetInfo();
+        if (this.targetingUI && this.targetingUI.hideTargetInfo) {
+            this.targetingUI.hideTargetInfo();
         }
         
-        if (this.mothershipInterface && this.mothershipInterface.hideDockingPrompt) {
-            this.mothershipInterface.hideDockingPrompt();
+        if (this.stargateInterface && this.stargateInterface.hideDockingPrompt) {
+            this.stargateInterface.hideDockingPrompt();
         }
         
         // Hide touch controls if on mobile

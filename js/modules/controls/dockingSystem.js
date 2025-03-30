@@ -1,17 +1,17 @@
-// dockingSystem.js - Handles mothership docking and trading
+// dockingSystem.js - Handles stargate docking and trading
 
 export class DockingSystem {
-    constructor(spaceship, mothership, ui) {
+    constructor(spaceship, stargate, ui) {
         this.spaceship = spaceship;
-        this.mothership = mothership;
+        this.stargate = stargate;
         this.ui = ui;
         
-        this.nearMothership = false;
+        this.nearStargate = false;
         this.isDocked = this.spaceship.isDocked; // Initialize with spaceship's docked state
         
         // Preemptively set a safe undocking position
-        if (this.spaceship && this.spaceship.undockLocation && this.mothership) {
-            // Position in the middle of the mothership
+        if (this.spaceship && this.spaceship.undockLocation && this.stargate) {
+            // Position in the middle of the stargate
             this.spaceship.undockLocation.set(0, 10000, 0);
         }
         
@@ -22,7 +22,7 @@ export class DockingSystem {
         if (this.isDocked && this.spaceship.world && this.spaceship.world.messageBus) {
             this.spaceship.world.messageBus.publish('player.docked', {
                 playerPosition: this.spaceship.mesh ? this.spaceship.mesh.position.clone() : null,
-                mothership: this.mothership
+                stargate: this.stargate
             });
             console.log("Published initial player.docked event");
         }
@@ -32,29 +32,29 @@ export class DockingSystem {
         // Add docking key handler (Q key)
         document.addEventListener('keydown', e => {
             if (e.key.toLowerCase() === 'q') {
-                if (this.nearMothership && !this.spaceship.isDocked) {
-                    console.log("Q key pressed: Docking with mothership");
-                    this.dockWithMothership();
+                if (this.nearStargate && !this.spaceship.isDocked) {
+                    console.log("Q key pressed: Docking with stargate");
+                    this.dockWithStargate();
                 } else if (this.spaceship.isDocked) {
                     console.log("Q key pressed while docked: No action (use Undock button)");
-                } else if (!this.nearMothership) {
-                    console.log("Q key pressed but not near mothership");
+                } else if (!this.nearStargate) {
+                    console.log("Q key pressed but not near stargate");
                 }
             }
         });
         
-        // Set up mothership UI button handlers
-        this.setupMothershipUIControls();
+        // Set up stargate UI button handlers
+        this.setupStargateUIControls();
     }
     
-    setupMothershipUIControls() {
+    setupStargateUIControls() {
         // Set up refuel button
         const refuelBtn = document.getElementById('refuel-btn');
         if (refuelBtn) {
             refuelBtn.addEventListener('click', () => {
                 if (this.spaceship.credits >= 100) {
                     this.spaceship.credits -= this.spaceship.refuel();
-                    this.updateMothershipUI();
+                    this.updateStargateUI();
                 }
             });
         }
@@ -65,7 +65,7 @@ export class DockingSystem {
             repairShieldBtn.addEventListener('click', () => {
                 if (this.spaceship.credits >= 150) {
                     this.spaceship.credits -= this.spaceship.repairShield();
-                    this.updateMothershipUI();
+                    this.updateStargateUI();
                 }
             });
         }
@@ -76,7 +76,7 @@ export class DockingSystem {
             repairHullBtn.addEventListener('click', () => {
                 if (this.spaceship.credits >= 200) {
                     this.spaceship.credits -= this.spaceship.repairHull();
-                    this.updateMothershipUI();
+                    this.updateStargateUI();
                 }
             });
         }
@@ -99,10 +99,10 @@ export class DockingSystem {
                     document.body.classList.remove('undocking', 'modal-open');
                     // Set a brief timeout to allow touch event to complete
                     setTimeout(() => {
-                        this.undockFromMothership();
+                        this.undockFromStargate();
                     }, 50);
                 } else {
-                    this.undockFromMothership();
+                    this.undockFromStargate();
                 }
             };
             
@@ -131,7 +131,7 @@ export class DockingSystem {
                 if (this.resources.iron > 0) {
                     this.spaceship.credits += this.resources.iron * 10;
                     this.resources.iron = 0;
-                    this.updateMothershipUI();
+                    this.updateStargateUI();
                 }
             });
         }
@@ -142,7 +142,7 @@ export class DockingSystem {
                 if (this.resources.gold > 0) {
                     this.spaceship.credits += this.resources.gold * 50;
                     this.resources.gold = 0;
-                    this.updateMothershipUI();
+                    this.updateStargateUI();
                 }
             });
         }
@@ -153,7 +153,7 @@ export class DockingSystem {
                 if (this.resources.platinum > 0) {
                     this.spaceship.credits += this.resources.platinum * 200;
                     this.resources.platinum = 0;
-                    this.updateMothershipUI();
+                    this.updateStargateUI();
                 }
             });
         }
@@ -202,7 +202,7 @@ export class DockingSystem {
                     }
                     
                     // Update UI
-                    this.updateMothershipUI();
+                    this.updateStargateUI();
                 }
             });
         }
@@ -226,8 +226,8 @@ export class DockingSystem {
         }
     }
     
-    dockWithMothership() {
-        console.log("Docking with mothership");
+    dockWithStargate() {
+        console.log("Docking with stargate");
         
         // Only update ship state if it's not already docked
         if (!this.spaceship.isDocked) {
@@ -239,7 +239,7 @@ export class DockingSystem {
             if (this.spaceship.world && this.spaceship.world.messageBus) {
                 this.spaceship.world.messageBus.publish('player.docked', {
                     playerPosition: this.spaceship.mesh.position.clone(),
-                    mothership: this.mothership
+                    stargate: this.stargate
                 });
                 console.log("Published player.docked event");
             }
@@ -249,7 +249,7 @@ export class DockingSystem {
         
         // Mobile-specific preparation - ensure all classes that might block UI visibility are removed
         if (this.isMobileDevice()) {
-            console.log("Mobile device detected - preparing for mothership UI");
+            console.log("Mobile device detected - preparing for stargate UI");
             document.body.classList.remove('undocking', 'modal-open');
             
             // Reset any problematic styles that might prevent UI from showing
@@ -259,18 +259,18 @@ export class DockingSystem {
             document.body.style.overflow = 'auto';
         }
         
-        // Show the mothership UI
-        if (this.ui && this.ui.mothershipInterface) {
-            console.log("Showing mothership UI...");
-            this.ui.mothershipInterface.showMothershipUI();
+        // Show the stargate UI
+        if (this.ui && this.ui.stargateInterface) {
+            console.log("Showing stargate UI...");
+            this.ui.stargateInterface.showStargateUI();
             
             // Double-check visibility on mobile with a small delay
             if (this.isMobileDevice()) {
                 setTimeout(() => {
-                    const mothershipUI = document.getElementById('mothership-ui');
-                    if (mothershipUI && mothershipUI.style.display !== 'block') {
-                        console.log("Forcing mothership UI display");
-                        mothershipUI.style.display = 'block';
+                    const stargateUI = document.getElementById('stargate-ui');
+                    if (stargateUI && stargateUI.style.display !== 'block') {
+                        console.log("Forcing stargate UI display");
+                        stargateUI.style.display = 'block';
                     }
                 }, 100);
             }
@@ -287,8 +287,8 @@ export class DockingSystem {
             console.log("Exited pointer lock for UI interaction");
         }
         
-        // Update the mothership UI with current values
-        this.updateMothershipUI();
+        // Update the stargate UI with current values
+        this.updateStargateUI();
     }
     
     // Helper to wrap steps in requestAnimationFrame for smoother UI updates
@@ -312,12 +312,12 @@ export class DockingSystem {
     }
 
     // Optimized method to hide UI elements using a single reflow
-    hideMothershipUI() {
-        if (this.ui && this.ui.mothershipInterface) {
+    hideStargateUI() {
+        if (this.ui && this.ui.stargateInterface) {
             // Use CSS class for better performance
             document.body.classList.add('undocking');
-            this.ui.mothershipInterface.hideMothershipUI();
-            console.log("Hiding mothership interface");
+            this.ui.stargateInterface.hideStargateUI();
+            console.log("Hiding stargate interface");
         }
     }
 
@@ -354,7 +354,7 @@ export class DockingSystem {
             document.body.classList.remove('modal-open', 'undocking');
             
             // Reset scrollable containers in a single pass
-            document.querySelectorAll('.modal-content, #mothership-ui, #star-map').forEach(container => {
+            document.querySelectorAll('.modal-content, #stargate-ui, #star-map').forEach(container => {
                 if (container && container.style) {
                     container.style.cssText = 'overflow: auto; -webkit-overflow-scrolling: touch;';
                     container.scrollTop = 0;
@@ -363,7 +363,7 @@ export class DockingSystem {
         });
     }
 
-    async undockFromMothership() {
+    async undockFromStargate() {
         if (!this.spaceship.isDocked) {
             console.log("Not docked, can't undock");
             return;
@@ -398,8 +398,8 @@ export class DockingSystem {
                 await this.yieldToBrowser();
             }
 
-            // Step 3: Hide mothership UI and show game UI
-            await this.performStep(() => this.hideMothershipUI(), "Hiding mothership UI");
+            // Step 3: Hide stargate UI and show game UI
+            await this.performStep(() => this.hideStargateUI(), "Hiding stargate UI");
             await this.yieldToBrowser();
             
             await this.performStep(() => this.showGameUI(), "Showing game UI");
@@ -552,26 +552,26 @@ export class DockingSystem {
         }
     }
     
-    updateMothershipUI() {
-        if (this.ui && this.ui.mothershipInterface) {
-            this.ui.mothershipInterface.updateMothershipUI(this.spaceship, this.resources);
+    updateStargateUI() {
+        if (this.ui && this.ui.stargateInterface) {
+            this.ui.stargateInterface.updateStargateUI(this.spaceship, this.resources);
         }
     }
     
-    checkMothershipProximity() {
+    checkStargateProximity() {
         if (this.spaceship.isDocked) return;
         
-        if (!this.mothership || !this.spaceship || !this.spaceship.mesh) return;
+        if (!this.stargate || !this.spaceship || !this.spaceship.mesh) return;
         
-        const mothershipPosition = this.mothership.getPosition();
-        if (!mothershipPosition) return;
+        const stargatePosition = this.stargate.getPosition();
+        if (!stargatePosition) return;
         
-        const distance = this.spaceship.mesh.position.distanceTo(mothershipPosition);
+        const distance = this.spaceship.mesh.position.distanceTo(stargatePosition);
         
         if (distance < 2000) { // Within docking range (4x the original 500)
-            this.nearMothership = true;
-            if (this.ui && this.ui.mothershipInterface) {
-                this.ui.mothershipInterface.showDockingPrompt();
+            this.nearStargate = true;
+            if (this.ui && this.ui.stargateInterface) {
+                this.ui.stargateInterface.showDockingPrompt();
             }
             // Also show the dock button in touch controls for mobile
             if (this.ui && this.ui.controls && this.ui.controls.isMobile && 
@@ -579,9 +579,9 @@ export class DockingSystem {
                 this.ui.controls.touchControls.showDockButton();
             }
         } else {
-            this.nearMothership = false;
-            if (this.ui && this.ui.mothershipInterface) {
-                this.ui.mothershipInterface.hideDockingPrompt();
+            this.nearStargate = false;
+            if (this.ui && this.ui.stargateInterface) {
+                this.ui.stargateInterface.hideDockingPrompt();
             }
             // Also hide the dock button in touch controls for mobile
             if (this.ui && this.ui.controls && this.ui.controls.isMobile && 
@@ -592,8 +592,8 @@ export class DockingSystem {
     }
     
     update() {
-        // Check if near mothership for docking
-        this.checkMothershipProximity();
+        // Check if near stargate for docking
+        this.checkStargateProximity();
     }
     
     // Setter for resources to allow dependency injection

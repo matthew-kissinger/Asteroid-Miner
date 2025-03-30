@@ -3,6 +3,7 @@
 // Global debug flag - set to true for development
 window.DEBUG_MODE = false;
 
+import * as THREE from 'three';
 import { Renderer } from './modules/renderer.js';
 import { Spaceship } from './modules/spaceship.js';
 import { Physics } from './modules/physics.js';
@@ -126,12 +127,26 @@ class Game {
             this.introSequenceActive = false; // Flag to prevent player control during intro
             this.gameTime = 0; // Track total game time in seconds
             
-            // Frame rate cap (can be overridden by settings)
-            this.frameRateCap = 0; // 0 means unlimited
+            // Frame rate cap (defaults to auto/monitor refresh rate)
+            this.frameRateCap = 0; // Will be updated by settings or refresh rate detection
             
             // Apply settings if available
             if (this.ui.settings) {
-                this.frameRateCap = this.ui.settings.settings.frameRateCap;
+                // If using 'auto' setting, apply refresh rate detection
+                if (this.ui.settings.settings.frameRateCap === 'auto') {
+                    const refreshRate = this.ui.settings.monitorRefreshRate || 60;
+                    // If refresh rate is over 65Hz, default to unlimited
+                    if (refreshRate > 65) {
+                        this.frameRateCap = 0; // Unlimited
+                        console.log(`Defaulting to unlimited frame rate (refresh rate ${refreshRate}Hz > 65Hz)`);
+                    } else {
+                        this.frameRateCap = refreshRate;
+                        console.log(`Defaulting to monitor refresh rate: ${refreshRate}Hz`);
+                    }
+                } else {
+                    // Otherwise use the specific setting value
+                    this.frameRateCap = parseInt(this.ui.settings.settings.frameRateCap) || 0;
+                }
                 console.log(`Applied frame rate cap from settings: ${this.frameRateCap}`);
             }
             
@@ -510,7 +525,7 @@ class Game {
     }
     
     startDocked() {
-        // Start the game docked with the mothership for tutorial/intro
+        // Start the game docked with the stargate for tutorial/intro
         // Make sure the ship is already docked
         if (this.spaceship) {
             // Ensure the ship is docked
@@ -519,12 +534,12 @@ class Game {
             }
         }
         
-        // Show mothership UI after a short delay
+        // Show stargate UI after a short delay
         setTimeout(() => {
             if (this.controls && this.controls.dockingSystem) {
-                // Just show mothership UI without changing state
-                this.controls.dockingSystem.dockWithMothership();
-                console.log("Mothership UI shown");
+                // Just show stargate UI without changing state
+                this.controls.dockingSystem.dockWithStargate();
+                console.log("Stargate UI shown");
             } else {
                 console.error("Controls or dockingSystem not available");
             }
@@ -582,10 +597,10 @@ class Game {
             this.controls.inputHandler.enabled = false;
         }
         
-        // Explicitly hide mothership UI
-        if (this.ui && this.ui.mothershipInterface) {
-            console.log("Explicitly hiding mothership UI before intro sequence");
-            this.ui.mothershipInterface.hideMothershipUI();
+        // Explicitly hide stargate UI
+        if (this.ui && this.ui.stargateInterface) {
+            console.log("Explicitly hiding stargate UI before intro sequence");
+            this.ui.stargateInterface.hideStargateUI();
         }
         
         // Hide all UI elements
@@ -619,10 +634,10 @@ class Game {
             window.game.ecsWorld.enemySystem.unfreezeAllEnemies();
         }
         
-        // Explicitly hide mothership UI if it's visible
-        if (this.ui && this.ui.mothershipInterface) {
-            console.log("Explicitly hiding mothership UI after intro sequence");
-            this.ui.mothershipInterface.hideMothershipUI();
+        // Explicitly hide stargate UI if it's visible
+        if (this.ui && this.ui.stargateInterface) {
+            console.log("Explicitly hiding stargate UI after intro sequence");
+            this.ui.stargateInterface.hideStargateUI();
         }
         
         // Mark intro as complete - now the player can control the ship/camera
@@ -844,10 +859,10 @@ class Game {
         // Don't check for game over conditions if the ship is docked
         if (this.spaceship.isDocked) return;
         
-        // Check if out of fuel and not near mothership
+        // Check if out of fuel and not near stargate
         if (this.spaceship.fuel <= 0 && 
             this.controls.dockingSystem && 
-            !this.controls.dockingSystem.nearMothership) {
+            !this.controls.dockingSystem.nearStargate) {
             this.gameOver("Your ship ran out of fuel");
             return;
         }
@@ -1424,14 +1439,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         // Initialize the game with error handling
                         try {
-                            console.log("Checking for shader availability...");
-                            // Log shader availability for debugging
-                            console.log("LuminosityHighPassShader:", typeof THREE.LuminosityHighPassShader !== 'undefined');
-                            console.log("FXAAShader:", typeof THREE.FXAAShader !== 'undefined');
-                            console.log("FilmShader:", typeof THREE.FilmShader !== 'undefined');
-                            console.log("ColorCorrectionShader:", typeof THREE.ColorCorrectionShader !== 'undefined');
-                            console.log("VignetteShader:", typeof THREE.VignetteShader !== 'undefined');
-                            console.log("UnrealBloomPass:", typeof THREE.UnrealBloomPass !== 'undefined');
+                            console.log("Checking for THREE module availability...");
+                            // Log THREE availability for debugging
+                            console.log("THREE available:", typeof THREE !== 'undefined');
+                            
+                            // Note: Shader modules will need to be imported separately in the modules that use them
+                            // in Task 2 we'll update the imports for these addons                            
                             
                             window.game = new Game(); // Initialize the game
                             
@@ -1533,6 +1546,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                     
                                     // Reset function when retrieved from pool
                                     reset: function(position, size = 1.0, color = 0xff5500) {
+                                        // Check if position is defined, use default if not
+                                        if (!position) {
+                                            position = new THREE.Vector3(0, 0, 0);
+                                        }
+                                        
                                         // Set position
                                         this.mesh.position.copy(position);
                                         

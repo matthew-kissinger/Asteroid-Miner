@@ -1,5 +1,7 @@
 // spaceship.js - Handles spaceship creation and management
 
+import * as THREE from 'three';
+
 export class Spaceship {
     constructor(scene) {
         this.scene = scene;
@@ -66,7 +68,7 @@ export class Spaceship {
         this.scanRange = 1000; // Base scanner range
         
         // Position where ship should undock to - moved further away from the sun
-        this.undockLocation = new THREE.Vector3(0, 10000, 0); // Middle of the mothership
+        this.undockLocation = new THREE.Vector3(0, 10000, 0); // Middle of the stargate
         
         console.log("Creating spaceship...");
         this.createSpaceship();
@@ -96,7 +98,7 @@ export class Spaceship {
         this.mesh.scale.set(this.shipScale, this.shipScale, this.shipScale);
         
         // Set initial position to a safe location far from the sun
-        this.mesh.position.set(0, 2000, 0); // Position near mothership initially
+        this.mesh.position.set(0, 2000, 0); // Position near stargate initially
         
         // Create the main body of the ship - sleek aerodynamic design using basic geometries
         // Use a cylinder with a cone at the front instead of CapsuleGeometry
@@ -336,7 +338,7 @@ export class Spaceship {
     
     createThrusterParticles() {
         // Main thruster particles
-        const particleCount = 200; // Increased particle count for better visibility
+        const particleCount = 150; // Reduced from 200
         
         // Function to create a particle system
         const createParticleSystem = (position, rotation, size, type, color = 0xff5500) => {
@@ -344,9 +346,9 @@ export class Spaceship {
             
             for (let i = 0; i < particleCount; i++) {
                 const i3 = i * 3;
-                positions[i3] = (Math.random() - 0.5) * size.x;
-                positions[i3 + 1] = (Math.random() - 0.5) * size.y;
-                positions[i3 + 2] = Math.random() * size.z;
+                positions[i3] = (Math.random() - 0.5) * size.x * 0.7; // Reduced spread by 30%
+                positions[i3 + 1] = (Math.random() - 0.5) * size.y * 0.7; // Reduced spread by 30%
+                positions[i3 + 2] = Math.random() * size.z * 0.7; // Reduced length by 30%
             }
             
             const geometry = new THREE.BufferGeometry();
@@ -354,9 +356,9 @@ export class Spaceship {
             
             const material = new THREE.PointsMaterial({
                 color: color,
-                size: 0.06, // Slightly larger particles
+                size: 0.04, // Reduced from 0.06
                 transparent: true,
-                opacity: 0.9, // More opaque
+                opacity: 0.6, // Reduced from 0.9
                 blending: THREE.AdditiveBlending
             });
             
@@ -380,9 +382,9 @@ export class Spaceship {
             createParticleSystem(
                 new THREE.Vector3(0, 0, 1.1), // Position
                 new THREE.Euler(Math.PI, 0, 0), // Rotation
-                new THREE.Vector3(0.2, 0.2, 3), // Size - increased length for more visible effect
+                new THREE.Vector3(0.15, 0.15, 2), // Size - reduced from 0.2x0.2x3
                 'main',
-                0xff6600 // Slightly more orange color
+                0xff4400 // Darker color than before
             )
         );
         
@@ -391,8 +393,9 @@ export class Spaceship {
             createParticleSystem(
                 new THREE.Vector3(0.5, 0, 0.5), // Position
                 new THREE.Euler(0, 0, Math.PI / 2), // Rotation
-                new THREE.Vector3(0.1, 0.1, 1.2), // Size
-                'left'
+                new THREE.Vector3(0.08, 0.08, 0.8), // Size - reduced from 0.1x0.1x1.2
+                'left',
+                0xff3300 // Darker color
             )
         );
         
@@ -401,8 +404,9 @@ export class Spaceship {
             createParticleSystem(
                 new THREE.Vector3(-0.5, 0, 0.5), // Position
                 new THREE.Euler(0, 0, -Math.PI / 2), // Rotation
-                new THREE.Vector3(0.1, 0.1, 1.2), // Size
-                'right'
+                new THREE.Vector3(0.08, 0.08, 0.8), // Size - reduced from 0.1x0.1x1.2
+                'right',
+                0xff3300 // Darker color
             )
         );
         
@@ -411,16 +415,16 @@ export class Spaceship {
             createParticleSystem(
                 new THREE.Vector3(0, 0, -1.1), // Position
                 new THREE.Euler(0, 0, 0), // Rotation
-                new THREE.Vector3(0.2, 0.2, 2), // Size - increased for more visibility
+                new THREE.Vector3(0.15, 0.15, 1.4), // Size - reduced from 0.2x0.2x2
                 'reverse',
-                0x66ffff // Blue-cyan color to differentiate from main thruster
+                0x44ccff // Darker blue-cyan color
             )
         );
     }
     
     createTrailEffect() {
-        // Create particle system for the ship's trail
-        const particleCount = 3000; // Increased for more consistent trail
+        // Create particle system for the ship's trail - cypherpunk style
+        const particleCount = 1800; // Reduced slightly
         const particles = new THREE.BufferGeometry();
         
         // Create positions for particles
@@ -429,38 +433,55 @@ export class Spaceship {
         const colors = new Float32Array(particleCount * 3);
         const sizes = new Float32Array(particleCount);
         
-        // Initial positions - all at the back of the ship
+        // Initial positions - cypherpunk style with more angular distribution
         for (let i = 0; i < particleCount; i++) {
             const i3 = i * 3;
             
-            // Scale particle position for larger ship
-            positions[i3] = (Math.random() - 0.5) * 0.8;
-            positions[i3 + 1] = (Math.random() - 0.5) * 0.8;
-            positions[i3 + 2] = 1.8 + Math.random() * 0.5; // Adjusted for scale
+            // Angular, grid-like positioning for cypherpunk aesthetic
+            positions[i3] = (Math.floor((Math.random() - 0.5) * 10) / 10) * 0.4; // Grid-like X distribution
+            positions[i3 + 1] = (Math.floor((Math.random() - 0.5) * 10) / 10) * 0.4; // Grid-like Y distribution
+            positions[i3 + 2] = 1.8 + (Math.random() * 0.4); // Z position with less randomness
             
-            // Increase velocities and randomize less for more consistent trail
-            velocities[i3] = (Math.random() - 0.5) * 0.015;
-            velocities[i3 + 1] = (Math.random() - 0.5) * 0.015;
-            velocities[i3 + 2] = Math.random() * 0.2 + 0.15; // More consistent backward velocity
+            // More consistent velocities for straight, digital-looking trails
+            velocities[i3] = (Math.random() - 0.5) * 0.008; // Reduced randomness
+            velocities[i3 + 1] = (Math.random() - 0.5) * 0.008;
+            velocities[i3 + 2] = 0.12 + (Math.random() * 0.05); // More consistent speed
             
-            // Make colors more consistent
-            colors[i3] = 0.2;
-            colors[i3 + 1] = 0.6 + Math.random() * 0.3;
-            colors[i3 + 2] = 0.85 + Math.random() * 0.15;
+            // Cypherpunk colors - neon blues, purples, and teals
+            // Assign one of three color schemes randomly for variety
+            const colorScheme = Math.floor(Math.random() * 3);
+            if (colorScheme === 0) {
+                // Neon blue/cyan
+                colors[i3] = 0.0;
+                colors[i3 + 1] = 0.7 + Math.random() * 0.3;
+                colors[i3 + 2] = 0.8 + Math.random() * 0.2;
+            } else if (colorScheme === 1) {
+                // Neon purple/magenta
+                colors[i3] = 0.7 + Math.random() * 0.3;
+                colors[i3 + 1] = 0.0;
+                colors[i3 + 2] = 0.8 + Math.random() * 0.2;
+            } else {
+                // Electric green
+                colors[i3] = 0.0;
+                colors[i3 + 1] = 0.9 + Math.random() * 0.1;
+                colors[i3 + 2] = 0.4 + Math.random() * 0.2;
+            }
             
-            // Larger, more consistent particle sizes
-            sizes[i] = Math.random() * 3 + 2;
+            // Random variation between small angular particles and larger ones
+            sizes[i] = Math.random() < 0.7 ? 
+                0.8 + Math.random() * 0.4 : // Small particles
+                1.5 + Math.random() * 0.5;  // Occasional larger particles
         }
         
         particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         particles.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
         particles.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
         
-        // Trail particle shader material - improved for better visibility
+        // Trail particle shader material - cypherpunk style with angular particles
         const trailMaterial = new THREE.ShaderMaterial({
             uniforms: {
-                color: { value: new THREE.Color(0x30cfd0) },
-                pointTexture: { value: new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/disc.png') }
+                color: { value: new THREE.Color(0x00ffff) }, // Base cyan color
+                pointTexture: { value: new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png') } // Using spark texture instead of disc
             },
             vertexShader: `
                 attribute float size;
@@ -469,7 +490,13 @@ export class Spaceship {
                 void main() {
                     vColor = customColor;
                     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                    gl_PointSize = size * (300.0 / -mvPosition.z);
+                    
+                    // Add slight "digital jitter" to the position for glitch effect
+                    if (mod(mvPosition.y * 10.0, 4.0) < 0.1) {
+                        mvPosition.x += sin(mvPosition.z) * 0.05;
+                    }
+                    
+                    gl_PointSize = size * (180.0 / -mvPosition.z); // Adjusted size calculation
                     gl_Position = projectionMatrix * mvPosition;
                 }
             `,
@@ -478,8 +505,24 @@ export class Spaceship {
                 uniform sampler2D pointTexture;
                 varying vec3 vColor;
                 void main() {
-                    gl_FragColor = vec4(color * vColor, 1.0);
-                    gl_FragColor = gl_FragColor * texture2D(pointTexture, gl_PointCoord);
+                    // Create more angular particles by manipulating texture coordinates
+                    vec2 uv = gl_PointCoord;
+                    
+                    // Digital distortion effect - occasional "glitch" lines
+                    if (mod(gl_FragCoord.y, 16.0) < 0.5) {
+                        uv.x = mod(uv.x + sin(uv.y * 10.0) * 0.1, 1.0);
+                    }
+                    
+                    // Apply texture with the modified coordinates
+                    vec4 texColor = texture2D(pointTexture, uv);
+                    
+                    // Sharper edges for angular look
+                    texColor.a = step(0.2, texColor.r);
+                    
+                    // Combine with color
+                    gl_FragColor = vec4(color * vColor, 0.75) * texColor;
+                    
+                    // Hard cutoff for sharper particle edges
                     if (gl_FragColor.a < 0.2) discard;
                 }
             `,
@@ -487,6 +530,9 @@ export class Spaceship {
             depthTest: false,
             transparent: true
         });
+        
+        // Add after creating the material
+        trailMaterial.uniforms.pointTexture.value.colorSpace = THREE.SRGBColorSpace;
         
         this.trailParticles = new THREE.Points(particles, trailMaterial);
         this.trailParticles.visible = false; // Only visible when moving
@@ -531,25 +577,41 @@ export class Spaceship {
             }
         });
         
-        // Update trail particles
+        // Update trail particles with cypherpunk effects
         if (this.trailParticles && this.trailParticles.visible) {
             const positions = this.trailParticles.userData.positions;
             const velocities = this.trailParticles.userData.velocities;
             const colors = this.trailParticles.userData.colors;
             
             // Calculate a trail speed factor based on current velocity
-            const speedFactor = this.velocity.length() / 10;
+            const speedFactor = this.velocity.length() / 8;
             
             for (let i = 0; i < positions.length; i += 3) {
-                // Move particles based on velocity - increased for longer trails
-                positions[i] += velocities[i] * speedFactor;
-                positions[i + 1] += velocities[i + 1] * speedFactor;
-                positions[i + 2] += velocities[i + 2] * speedFactor;
+                // Add digital "glitch" effect occasionally
+                if (Math.random() < 0.01) {
+                    // Sudden position jump to simulate digital glitch
+                    positions[i] += (Math.random() - 0.5) * 0.2;
+                    positions[i + 1] += (Math.random() - 0.5) * 0.2;
+                }
                 
-                // Slower fade for longer visible trails
-                colors[i] *= 0.995;
-                colors[i + 1] *= 0.995;
-                colors[i + 2] *= 0.995;
+                // Move particles based on velocity, with occasional "stutter" for digital effect
+                const stutter = Math.random() < 0.05 ? 0 : 1; // Occasionally freeze particle
+                positions[i] += velocities[i] * speedFactor * stutter;
+                positions[i + 1] += velocities[i + 1] * speedFactor * stutter;
+                positions[i + 2] += velocities[i + 2] * speedFactor * stutter;
+                
+                // Digital color shift - occasional color changes for glitch effect
+                if (Math.random() < 0.005) {
+                    // Sudden color swap
+                    const temp = colors[i];
+                    colors[i] = colors[i + 2];
+                    colors[i + 2] = temp;
+                }
+                
+                // Slower fade for digital persistence effect
+                colors[i] *= 0.99;
+                colors[i + 1] *= 0.99;
+                colors[i + 2] *= 0.99;
                 
                 // Reset particles that go too far or fade out
                 // Increased distance threshold for longer trails
@@ -559,21 +621,35 @@ export class Spaceship {
                     positions[i + 2] * positions[i + 2]
                 );
                 
-                if (distance > 50 || colors[i + 2] < 0.1) { // Increased from 20 to 50
-                    // Reset position to back of ship with slight randomness
-                    positions[i] = (Math.random() - 0.5) * 0.5;
-                    positions[i + 1] = (Math.random() - 0.5) * 0.5;
-                    positions[i + 2] = 1.5 + Math.random() * 0.5;
+                if (distance > 45 || colors[i] + colors[i+1] + colors[i+2] < 0.3) {
+                    // Reset position with grid-like distribution for cypherpunk aesthetic
+                    positions[i] = (Math.floor((Math.random() - 0.5) * 10) / 10) * 0.4;
+                    positions[i + 1] = (Math.floor((Math.random() - 0.5) * 10) / 10) * 0.4;
+                    positions[i + 2] = 1.8 + (Math.random() * 0.4);
                     
-                    // Reset velocity - scaled by current speed
-                    velocities[i] = (Math.random() - 0.5) * 0.02;
-                    velocities[i + 1] = (Math.random() - 0.5) * 0.02;
-                    velocities[i + 2] = (Math.random() * 0.2 + 0.1);
+                    // Reset velocity - digital precision
+                    velocities[i] = (Math.random() - 0.5) * 0.008;
+                    velocities[i + 1] = (Math.random() - 0.5) * 0.008;
+                    velocities[i + 2] = 0.12 + (Math.random() * 0.05);
                     
-                    // Reset color
-                    colors[i] = 0.2;
-                    colors[i + 1] = 0.5 + Math.random() * 0.5;
-                    colors[i + 2] = 0.8 + Math.random() * 0.2;
+                    // Reset with cypherpunk colors - rotating between schemes
+                    const colorScheme = Math.floor(Math.random() * 3);
+                    if (colorScheme === 0) {
+                        // Neon blue/cyan
+                        colors[i] = 0.0;
+                        colors[i + 1] = 0.7 + Math.random() * 0.3;
+                        colors[i + 2] = 0.8 + Math.random() * 0.2;
+                    } else if (colorScheme === 1) {
+                        // Neon purple/magenta
+                        colors[i] = 0.7 + Math.random() * 0.3;
+                        colors[i + 1] = 0.0;
+                        colors[i + 2] = 0.8 + Math.random() * 0.2;
+                    } else {
+                        // Electric green
+                        colors[i] = 0.0;
+                        colors[i + 1] = 0.9 + Math.random() * 0.1;
+                        colors[i + 2] = 0.4 + Math.random() * 0.2;
+                    }
                 }
             }
             
@@ -644,15 +720,15 @@ export class Spaceship {
         if (this.undockLocation) {
             this.mesh.position.copy(this.undockLocation);
             
-            // Point away from the mothership (down toward sun)
+            // Point away from the stargate (down toward sun)
             this.mesh.rotation.set(Math.PI/2, 0, 0);
         } else {
             // Original behavior - position just outside the docking bay
-            const mothershipPosition = this.scene.getObjectByName('mothership').position.clone();
-            mothershipPosition.z += 550; // Move in front of the docking bay
-            this.mesh.position.copy(mothershipPosition);
+            const stargatePosition = this.scene.getObjectByName('stargate').position.clone();
+            stargatePosition.z += 550; // Move in front of the docking bay
+            this.mesh.position.copy(stargatePosition);
             
-            // Reset rotation to face away from the mothership
+            // Reset rotation to face away from the stargate
             this.mesh.rotation.set(0, Math.PI, 0);
         }
         

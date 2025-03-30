@@ -4,6 +4,7 @@
  * Processes input events and controls the player's ship.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 
 export class ShipControlSystem extends System {

@@ -1102,20 +1102,20 @@ export class CustomSystemCreator {
             // Play sound if available
             this.playUISound();
             
-            // Show the mothership UI when closing the custom system creator
+            // Show the stargate UI when closing the custom system creator
             // Similar to how StarMap does it
             setTimeout(() => {
-                if (window.game && window.game.ui && window.game.ui.mothershipInterface) {
-                    console.log("CustomSystemCreator: Returning to mothership UI");
-                    window.game.ui.mothershipInterface.showMothershipUI();
+                if (window.game && window.game.ui && window.game.ui.stargateInterface) {
+                    console.log("CustomSystemCreator: Returning to stargate UI");
+                    window.game.ui.stargateInterface.showStargateUI();
                 } else {
                     // Direct DOM access as last resort
-                    const mothershipUI = document.getElementById('mothership-ui');
-                    if (mothershipUI) {
-                        mothershipUI.style.display = 'block';
-                        console.log("CustomSystemCreator: Showed mothership UI via direct DOM access");
+                    const stargateUI = document.getElementById('stargate-ui');
+                    if (stargateUI) {
+                        stargateUI.style.display = 'block';
+                        console.log("CustomSystemCreator: Showed stargate UI via direct DOM access");
                     } else {
-                        console.warn("CustomSystemCreator: Could not find mothership UI to return to");
+                        console.warn("CustomSystemCreator: Could not find stargate UI to return to");
                     }
                 }
             }, 100); // Short delay to ensure state is settled

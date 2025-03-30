@@ -4,6 +4,7 @@
  * Handles velocity, forces, and position updates.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 
 export class MovementSystem extends System {

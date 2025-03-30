@@ -5,6 +5,7 @@
  * keeping them separate from game logic.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 
 export class VisualEffectsSystem extends System {

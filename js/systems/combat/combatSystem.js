@@ -9,6 +9,7 @@ import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { TransformComponent } from '../../components/transform.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
 import { FixedArray } from '../../utils/memoryManager.js';
+import * as THREE from 'three';
 
 export class CombatSystem extends System {
     constructor(world) {
@@ -142,14 +143,10 @@ export class CombatSystem extends System {
                 
                 if (!projectileTransform || !projectileRigidbody) {
                     console.log(`Projectile ${projectile.id} missing transform or rigidbody component`);
-                    
-                    // Skip this iteration but don't destroy the projectile yet,
-                    // as components might be added asynchronously
                     continue;
                 }
                 
                 // Determine if this is a player projectile or enemy projectile
-                // Use direct flag checking for better performance if available
                 const isPlayerProjectile = projectile._isPlayerProjectile || 
                                           projectile.hasTag('projectile') || 
                                           projectile.hasTag('playerProjectile');
@@ -164,9 +161,28 @@ export class CombatSystem extends System {
                 const targets = isPlayerProjectile ? this.cachedEnemies : 
                                (isEnemyProjectile ? this.cachedPlayers : entities);
                 
-                // Check for collisions with targets
+                // Set up raycaster for mesh-based collision detection
+                const raycaster = new THREE.Raycaster();
+                
+                // Use current projectile position and velocity direction
+                const projectilePosition = projectileTransform.position.clone();
+                const projectileDirection = projectileRigidbody.velocity.clone().normalize();
+                
+                // Set origin point for ray slightly behind projectile to catch collisions even at high speeds
+                const rayOffset = projectileDirection.clone().multiplyScalar(-10);
+                const rayOrigin = projectilePosition.clone().add(rayOffset);
+                
+                // Configure raycaster with proper near and far clipping
+                raycaster.set(rayOrigin, projectileDirection);
+                raycaster.near = 0;
+                raycaster.far = 50; // Detect collisions up to 50 units ahead
+                
+                // Debug info
+                console.log(`Raycaster for projectile ${projectile.id} - Origin: (${rayOrigin.x.toFixed(1)}, ${rayOrigin.y.toFixed(1)}, ${rayOrigin.z.toFixed(1)}), Direction: (${projectileDirection.x.toFixed(2)}, ${projectileDirection.y.toFixed(2)}, ${projectileDirection.z.toFixed(2)})`);
+                
                 let targetHit = false;
                 
+                // Check for collisions with all potential targets
                 for (let j = 0; j < targets.length; j++) {
                     const target = targets.get ? targets.get(j) : targets[j];
                     
@@ -176,29 +192,43 @@ export class CombatSystem extends System {
                     // Skip self-collision
                     if (target.id === projectile.id) continue;
                     
-                    // Get target transform
-                    const targetTransform = target.getComponent('TransformComponent');
-                    if (!targetTransform) continue;
+                    // Get the mesh component for collision testing
+                    const meshComponent = target.getComponent('MeshComponent');
                     
-                    // Get target rigidbody for collision radius
-                    let collisionRadius = 5; // Default radius
-                    const targetRigidbody = target.getComponent('RigidbodyComponent');
-                    if (targetRigidbody && targetRigidbody.collisionRadius) {
-                        collisionRadius = targetRigidbody.collisionRadius;
+                    // Skip if no mesh component or mesh
+                    if (!meshComponent || !meshComponent.mesh) {
+                        console.log(`Target ${target.id} has no mesh component or mesh`);
+                        continue;
                     }
                     
-                    // Calculate distance using squared distance for better performance
-                    const dx = targetTransform.position.x - projectileTransform.position.x;
-                    const dy = targetTransform.position.y - projectileTransform.position.y;
-                    const dz = targetTransform.position.z - projectileTransform.position.z;
-                    const distanceSquared = dx * dx + dy * dy + dz * dz;
+                    // Debug the mesh properties
+                    console.log(`Testing collision with target ${target.id}, mesh visible: ${meshComponent.mesh.visible}, mesh children: ${meshComponent.mesh.children ? meshComponent.mesh.children.length : 0}`);
                     
-                    // Sum of collision radii
-                    const radiusSum = collisionRadius + projectileRigidbody.collisionRadius;
+                    // Ensure mesh is visible and has geometry
+                    if (!meshComponent.mesh.visible) {
+                        console.log(`Mesh for ${target.id} is not visible, skipping`);
+                        continue;
+                    }
                     
-                    // If distance is less than sum of collision radii, we have a hit
-                    if (distanceSquared < (radiusSum * radiusSum)) {
-                        console.log(`Projectile hit! Distance: ${Math.sqrt(distanceSquared).toFixed(2)}`);
+                    // Perform the intersection test with entire mesh hierarchy (true for recursive)
+                    const intersections = raycaster.intersectObject(meshComponent.mesh, true);
+                    
+                    if (intersections.length > 0) {
+                        // We have a mesh intersection!
+                        const intersection = intersections[0]; // closest intersection
+                        
+                        // Debug information
+                        console.log(`MESH HIT! Projectile ${projectile.id} hit ${target.id} at distance ${intersection.distance.toFixed(2)}`);
+                        console.log(`Hit point: (${intersection.point.x.toFixed(1)}, ${intersection.point.y.toFixed(1)}, ${intersection.point.z.toFixed(1)})`);
+                        
+                        if (intersection.object) {
+                            console.log(`Hit specific mesh: ${intersection.object.name || 'unnamed'}`);
+                        }
+                        
+                        // Use the hit point for effects
+                        this.hitPosition.copy(intersection.point);
+                        
+                        // Handle the collision
                         this.handleProjectileCollision(projectile, target);
                         
                         // Destroy projectile after hit
@@ -212,6 +242,13 @@ export class CombatSystem extends System {
                         
                         // Break out of target loop - projectile hits only one target
                         break;
+                    } else {
+                        // Debug when no intersection is found
+                        const targetTransform = target.getComponent('TransformComponent');
+                        if (targetTransform) {
+                            const distance = projectilePosition.distanceTo(targetTransform.position);
+                            console.log(`No intersection with ${target.id} at distance ${distance.toFixed(1)}`);
+                        }
                     }
                 }
                 

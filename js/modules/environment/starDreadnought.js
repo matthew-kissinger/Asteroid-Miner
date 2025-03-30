@@ -1,5 +1,7 @@
 // starDreadnought.js - Creates and manages the massive Star Dreadnought ship
 
+import * as THREE from 'three';
+
 export class StarDreadnought {
     constructor(scene) {
         this.scene = scene;

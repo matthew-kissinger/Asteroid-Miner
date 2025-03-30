@@ -1,8 +1,8 @@
 /**
- * TradingSystem - Handles trading operations between player and mothership
+ * TradingSystem - Handles trading operations between player and stargate
  * 
  * This system manages selling resources, buying upgrades, and other trading operations
- * that occur when docked with the mothership.
+ * that occur when docked with the stargate.
  */
 
 import { System } from '../../core/system.js';
@@ -83,8 +83,8 @@ export class TradingSystem extends System {
         // Setup refuel and repair buttons
         this.setupServiceButtons();
         
-        // Show mothership UI
-        this.ui.showMothershipUI();
+        // Show stargate UI
+        this.ui.showStargateUI();
     }
     
     /**
@@ -92,7 +92,7 @@ export class TradingSystem extends System {
      */
     hideTradingInterface() {
         if (this.ui) {
-            this.ui.hideMothershipUI();
+            this.ui.hideStargateUI();
         }
     }
     

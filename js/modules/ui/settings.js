@@ -1,15 +1,19 @@
 // settings.js - Handles game settings and performance options
 
 import { MobileDetector } from '../../utils/mobileDetector.js';
+import * as THREE from 'three';
 
 export class Settings {
     constructor(game) {
         this.game = game;
-        this.mothershipInterface = null;
+        this.stargateInterface = null;
         this.isVisible = false;
         this.isMobile = MobileDetector.isMobile();
         
         console.log("Settings constructor - isMobile:", this.isMobile);
+        
+        // Detect monitor refresh rate
+        this.detectMonitorRefreshRate();
         
         // Default settings
         this.settings = {
@@ -19,10 +23,12 @@ export class Settings {
             lightingQuality: 'medium',     // low, medium, high
             particleEffects: 'medium',     // low, medium, high
             resolutionScale: 'medium',     // low, medium, high
-            frameRateCap: 60,              // 30, 60, 0 (unlimited)
+            frameRateCap: 'auto',          // 30, 60, auto (monitor refresh rate), 0 (unlimited)
             showFPS: false,                // Show FPS counter
             spatialAudio: true,            // Enable spatial audio
-            autoQuality: true              // Automatically adjust quality based on performance
+            autoQuality: true,             // Automatically adjust quality based on performance
+            godRaysEnabled: true,          // Enable/disable volumetric lighting effects
+            godRaysType: 'standard'        // 'standard' (new god rays) or 'claude' (Claude Rays)
         };
         
         // Load settings from localStorage if available
@@ -38,8 +44,8 @@ export class Settings {
         setTimeout(() => this.applyUISettings(), 100);
     }
     
-    setMothershipInterface(mothershipInterface) {
-        this.mothershipInterface = mothershipInterface;
+    setStargateInterface(stargateInterface) {
+        this.stargateInterface = stargateInterface;
     }
     
     loadSettings() {
@@ -138,6 +144,34 @@ export class Settings {
                     </div>
                 </div>
                 
+                <!-- Volumetric Light Rays (God Rays) Setting -->
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Volumetric Light Rays</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Enable sunlight rays effect</p>
+                    </div>
+                    <div style="${this.isMobile ? 'width: 100%; display: flex; justify-content: flex-end;' : ''}">
+                        <label class="toggle" style="display: inline-block; position: relative; width: ${this.isMobile ? '70px' : '60px'}; height: ${this.isMobile ? '34px' : '30px'};">
+                            <input type="checkbox" id="god-rays-enabled" style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: ${this.isMobile ? '17px' : '15px'}; transition: .4s;"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- God Ray Type Setting -->
+                <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
+                    <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
+                        <label style="font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};">Light Ray Type</label>
+                        <p style="margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;">Choose light ray effect style</p>
+                    </div>
+                    <div style="${this.isMobile ? 'width: 100%' : ''}">
+                        <select id="god-rays-type" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};">
+                            <option value="standard">Standard God Rays</option>
+                            <option value="claude">Claude Rays</option>
+                        </select>
+                    </div>
+                </div>
+                
                 <!-- Asteroid Detail Setting -->
                 <div class="settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};">
                     <div style="margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}">
@@ -212,6 +246,7 @@ export class Settings {
                         <select id="frame-rate-cap" style="background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};">
                             <option value="30">30 FPS</option>
                             <option value="60">60 FPS</option>
+                            <option value="auto">Monitor Refresh Rate (${this.monitorRefreshRate}Hz)</option>
                             <option value="0">Unlimited</option>
                         </select>
                     </div>
@@ -420,73 +455,87 @@ export class Settings {
         this.settings.lightingQuality = document.getElementById('lighting-quality').value;
         this.settings.particleEffects = document.getElementById('particle-effects').value;
         this.settings.resolutionScale = document.getElementById('resolution-scale').value;
-        this.settings.frameRateCap = parseInt(document.getElementById('frame-rate-cap').value);
+        this.settings.frameRateCap = document.getElementById('frame-rate-cap').value;
         this.settings.showFPS = document.getElementById('show-fps').checked;
         this.settings.spatialAudio = document.getElementById('spatial-audio').checked;
         this.settings.autoQuality = document.getElementById('auto-quality').checked;
+        this.settings.godRaysEnabled = document.getElementById('god-rays-enabled').checked;
+        this.settings.godRaysType = document.getElementById('god-rays-type').value;
     }
     
     updateUI() {
-        // Update UI elements from settings
+        // Set form values from current settings
         document.getElementById('graphical-quality').value = this.settings.graphicalQuality;
         document.getElementById('post-processing').checked = this.settings.postProcessing;
         document.getElementById('asteroid-detail').value = this.settings.asteroidDetail;
         document.getElementById('lighting-quality').value = this.settings.lightingQuality;
         document.getElementById('particle-effects').value = this.settings.particleEffects;
         document.getElementById('resolution-scale').value = this.settings.resolutionScale;
-        document.getElementById('frame-rate-cap').value = this.settings.frameRateCap.toString();
+        document.getElementById('frame-rate-cap').value = this.settings.frameRateCap;
         document.getElementById('show-fps').checked = this.settings.showFPS;
         document.getElementById('spatial-audio').checked = this.settings.spatialAudio;
         document.getElementById('auto-quality').checked = this.settings.autoQuality;
+        document.getElementById('god-rays-enabled').checked = this.settings.godRaysEnabled;
+        document.getElementById('god-rays-type').value = this.settings.godRaysType;
     }
     
     applyPreset(preset) {
+        console.log(`Applying ${preset} preset`);
+        
         switch (preset) {
             case 'performance':
-                this.settings = {
-                    ...this.settings,
-                    graphicalQuality: 'low',
-                    postProcessing: false,
-                    asteroidDetail: 'low',
-                    lightingQuality: 'low',
-                    particleEffects: 'low',
-                    resolutionScale: 'low',
-                    frameRateCap: 30,
-                    autoQuality: false
-                };
+                // Performance preset - prioritizes frame rate
+                this.settings.graphicalQuality = 'low';
+                this.settings.postProcessing = false;
+                this.settings.asteroidDetail = 'low';
+                this.settings.lightingQuality = 'low';
+                this.settings.particleEffects = 'low';
+                this.settings.resolutionScale = 'low';
+                this.settings.frameRateCap = 60; // Cap at 60 FPS for better consistency
+                this.settings.spatialAudio = false;
+                this.settings.godRaysEnabled = false; // Disable god rays for performance
                 break;
                 
             case 'balanced':
-                this.settings = {
-                    ...this.settings,
-                    graphicalQuality: 'medium',
-                    postProcessing: true,
-                    asteroidDetail: 'medium',
-                    lightingQuality: 'medium',
-                    particleEffects: 'medium',
-                    resolutionScale: 'medium',
-                    frameRateCap: 60,
-                    autoQuality: true
-                };
+                // Balanced preset - moderate settings
+                this.settings.graphicalQuality = 'medium';
+                this.settings.postProcessing = true;
+                this.settings.asteroidDetail = 'medium';
+                this.settings.lightingQuality = 'medium';
+                this.settings.particleEffects = 'medium';
+                this.settings.resolutionScale = 'medium';
+                this.settings.frameRateCap = 'auto'; // Use monitor refresh rate
+                this.settings.spatialAudio = true;
+                this.settings.godRaysEnabled = true; // Enable god rays
+                this.settings.godRaysType = 'standard'; // Use standard rays
                 break;
                 
             case 'quality':
-                this.settings = {
-                    ...this.settings,
-                    graphicalQuality: 'high',
-                    postProcessing: true,
-                    asteroidDetail: 'high',
-                    lightingQuality: 'high',
-                    particleEffects: 'high',
-                    resolutionScale: 'high',
-                    frameRateCap: 0,
-                    autoQuality: false
-                };
+                // Quality preset - prioritizes visuals
+                this.settings.graphicalQuality = 'high';
+                this.settings.postProcessing = true;
+                this.settings.asteroidDetail = 'high';
+                this.settings.lightingQuality = 'high';
+                this.settings.particleEffects = 'high';
+                this.settings.resolutionScale = 'high';
+                this.settings.frameRateCap = 0; // Unlimited
+                this.settings.spatialAudio = true;
+                this.settings.godRaysEnabled = true; // Enable god rays
+                this.settings.godRaysType = 'claude'; // Use Claude rays for dramatic effect
                 break;
+                
+            default:
+                console.error(`Unknown preset: ${preset}`);
+                return;
         }
         
-        // Update UI with new settings
+        // Don't change auto quality and FPS display settings
+        
+        // Update the UI to reflect new settings
         this.updateUI();
+        
+        // Show confirmation message
+        this.showSettingsApplied();
     }
     
     applyAllSettings() {
@@ -559,6 +608,41 @@ export class Settings {
         // Apply post-processing setting
         if (renderer.composer) {
             renderer.useBasicRendering = !this.settings.postProcessing;
+        }
+        
+        // Apply god ray type setting first (this affects ambient light)
+        if (renderer.setRayType) {
+            const useClaudeRays = this.settings.godRaysType === 'claude';
+            renderer.setRayType(useClaudeRays);
+        }
+        
+        // Apply volumetric lighting (god rays) settings
+        if (renderer.setVolumetricLightEnabled) {
+            renderer.setVolumetricLightEnabled(this.settings.godRaysEnabled);
+            
+            // Ensure lighting is adjusted even when disabling god rays
+            if (renderer.adjustLightingForRayType) {
+                renderer.adjustLightingForRayType();
+            }
+        }
+        
+        // Apply volumetric light intensity based on quality setting
+        if (renderer.setVolumetricLightIntensity) {
+            let intensity;
+            switch (this.settings.graphicalQuality) {
+                case 'low':
+                    intensity = 0.4; // Increased from 0.3
+                    break;
+                case 'medium':
+                    intensity = 0.65; // Increased from 0.5
+                    break;
+                case 'high':
+                    intensity = 0.85; // Increased from 0.7
+                    break;
+                default:
+                    intensity = 0.65;
+            }
+            renderer.setVolumetricLightIntensity(intensity);
         }
         
         // Apply bloom settings based on quality
@@ -674,7 +758,21 @@ export class Settings {
         // Update frame rate cap in game
         if (this.game) {
             const oldCap = this.game.frameRateCap;
-            this.game.frameRateCap = this.settings.frameRateCap;
+            
+            // Handle auto (monitor refresh rate) setting
+            if (this.settings.frameRateCap === 'auto') {
+                // If refresh rate is over 65Hz, set to unlimited (0)
+                if (this.monitorRefreshRate > 65) {
+                    this.game.frameRateCap = 0;
+                    console.log(`Using unlimited frame rate (refresh rate ${this.monitorRefreshRate}Hz > 65Hz)`);
+                } else {
+                    this.game.frameRateCap = this.monitorRefreshRate;
+                    console.log(`Setting frame rate cap to monitor refresh rate: ${this.monitorRefreshRate}Hz`);
+                }
+            } else {
+                // Use the selected numeric value
+                this.game.frameRateCap = parseInt(this.settings.frameRateCap) || 0;
+            }
             
             // Only reset timing when changing from unlimited to limited or vice versa
             // This prevents disrupting the animation loop when just changing cap values
@@ -735,9 +833,9 @@ export class Settings {
             settingsContainer.style.display = 'none';
             this.isVisible = false;
             
-            // Show the mothership UI when returning from settings
-            if (this.mothershipInterface) {
-                this.mothershipInterface.showMothershipUI();
+            // Show the stargate UI when returning from settings
+            if (this.stargateInterface) {
+                this.stargateInterface.showStargateUI();
             }
         }
     }
@@ -783,6 +881,69 @@ export class Settings {
             return 'medium';
         } else {
             return 'low';
+        }
+    }
+    
+    detectMonitorRefreshRate() {
+        this.monitorRefreshRate = 60; // Default fallback value
+        
+        try {
+            // Method 1: requestAnimationFrame timing
+            let rafCount = 0;
+            let startTime = performance.now();
+            let prevTimestamp = 0;
+            const refreshRates = []; // Store intervals between frames
+            
+            const detectFrame = (timestamp) => {
+                if (prevTimestamp) {
+                    // Calculate time between frames
+                    const interval = timestamp - prevTimestamp;
+                    if (interval > 0) { // Avoid division by zero
+                        refreshRates.push(1000 / interval);
+                    }
+                }
+                
+                prevTimestamp = timestamp;
+                rafCount++;
+                
+                // Collect samples for about 500ms
+                if (timestamp - startTime < 500 && rafCount < 60) { 
+                    requestAnimationFrame(detectFrame);
+                } else {
+                    // Calculate average refresh rate from samples
+                    if (refreshRates.length > 0) {
+                        // Remove outliers (values more than 20% from median)
+                        refreshRates.sort((a, b) => a - b);
+                        const median = refreshRates[Math.floor(refreshRates.length / 2)];
+                        const validRates = refreshRates.filter(rate => 
+                            rate >= median * 0.8 && rate <= median * 1.2
+                        );
+                        
+                        // Calculate average from valid rates
+                        if (validRates.length > 0) {
+                            const sum = validRates.reduce((a, b) => a + b, 0);
+                            const avg = Math.round(sum / validRates.length);
+                            this.monitorRefreshRate = avg;
+                            console.log(`Detected monitor refresh rate: ${this.monitorRefreshRate}Hz`);
+                        }
+                    }
+                    
+                    // Method 2: Try screen.refresh if available in some browsers
+                    if (window.screen && 'refresh' in window.screen) {
+                        try {
+                            this.monitorRefreshRate = window.screen.refresh;
+                            console.log(`Using screen.refresh value: ${this.monitorRefreshRate}Hz`);
+                        } catch (error) {
+                            console.warn("Error accessing screen.refresh:", error);
+                        }
+                    }
+                }
+            };
+            
+            requestAnimationFrame(detectFrame);
+        } catch (error) {
+            console.warn("Error detecting refresh rate:", error);
+            // Keep the default value (60)
         }
     }
 } 

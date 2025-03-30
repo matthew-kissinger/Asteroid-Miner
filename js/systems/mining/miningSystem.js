@@ -4,6 +4,7 @@
  * Manages mining operations between ships and asteroids.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 
 export class MiningSystem extends System {

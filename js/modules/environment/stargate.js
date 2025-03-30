@@ -1,18 +1,20 @@
-// mothership.js - Creates and manages the mothership
+// stargate.js - Creates and manages the stargate
 
-export class Mothership {
+import * as THREE from 'three';
+
+export class Stargate {
     constructor(scene) {
         this.scene = scene;
-        this.mothership = null;
+        this.stargate = null;
         this.navLights = [];
         this.portalParticles = [];
-        this.createMothership();
+        this.createStargate();
     }
     
-    createMothership() {
-        // Create a mothership group
-        const mothershipGroup = new THREE.Group();
-        mothershipGroup.name = 'mothership';
+    createStargate() {
+        // Create a stargate group
+        const stargateGroup = new THREE.Group();
+        stargateGroup.name = 'stargate';
         
         // Main ring - matte black
         const ringGeometry = new THREE.TorusGeometry(1000, 200, 32, 100);
@@ -23,7 +25,7 @@ export class Mothership {
           emissive: 0x000000
         });
         const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        mothershipGroup.add(ring);
+        stargateGroup.add(ring);
         
         // Neon turquoise accent rings
         const createAccentRing = (radius, tubeRadius, position = {x: 0, y: 0, z: 0}, rotation = {x: 0, y: 0, z: 0}) => {
@@ -46,34 +48,34 @@ export class Mothership {
         const outerRing2 = createAccentRing(940, 10);
         // Add an inner ring to enhance portal effect
         const innerRing = createAccentRing(850, 5);
-        mothershipGroup.add(outerRing1);
-        mothershipGroup.add(outerRing2);
-        mothershipGroup.add(innerRing);
+        stargateGroup.add(outerRing1);
+        stargateGroup.add(outerRing2);
+        stargateGroup.add(innerRing);
         
         // Create enhanced turquoise portal in the center
-        this.createPortalEffect(mothershipGroup);
+        this.createPortalEffect(stargateGroup);
         
         // Add neon accent details
         const detailsGroup = this.createNeonDetails();
-        mothershipGroup.add(detailsGroup);
+        stargateGroup.add(detailsGroup);
         
-        // Position the mothership at 2x height from the original position
-        mothershipGroup.position.set(0, 10000, 0);
-        mothershipGroup.rotation.x = Math.PI / 2; // Horizontal orientation
+        // Position the stargate at 2x height from the original position
+        stargateGroup.position.set(0, 10000, 0);
+        stargateGroup.rotation.x = Math.PI / 2; // Horizontal orientation
         
         // Add to scene
-        this.scene.add(mothershipGroup);
-        this.mothership = mothershipGroup;
+        this.scene.add(stargateGroup);
+        this.stargate = stargateGroup;
         
         // Create a counter-rotating inner ring for additional portal effect
-        this.createCounterRotatingRing(mothershipGroup);
+        this.createCounterRotatingRing(stargateGroup);
     }
     
     createCounterRotatingRing(parentGroup) {
         // Create a separate rotating group for the inner portal structure
         const innerStructure = new THREE.Group();
         
-        // Add a thin ring that rotates opposite to the main mothership
+        // Add a thin ring that rotates opposite to the main stargate
         const thinRingGeometry = new THREE.TorusGeometry(820, 3, 16, 100);
         const thinRingMaterial = new THREE.MeshStandardMaterial({
             color: 0x00ffff,
@@ -210,7 +212,7 @@ export class Mothership {
         parentGroup.add(portal);
         
         // Enhanced portal glow light
-        const portalLight = new THREE.PointLight(0x00ffff, 4, 2000);
+        const portalLight = new THREE.PointLight(0x00ffff, 400, 2000, 2);
         portalLight.position.set(0, 0, 0);
         parentGroup.add(portalLight);
         
@@ -274,7 +276,7 @@ export class Mothership {
           beam.rotation.x = Math.PI / 2; // Align with ring
           
           // Light source for glow
-          const light = new THREE.PointLight(0x00ffff, 1, 400);
+          const light = new THREE.PointLight(0x00ffff, 100, 400, 2);
           light.position.set(0, 0, 0);
           
           accentGroup.add(beam);
@@ -342,7 +344,7 @@ export class Mothership {
           // Make portal light pulse with time
           if (this.portalLight) {
             const time = Date.now() * 0.001;
-            this.portalLight.intensity = 4 + Math.sin(time * 2.0) * 1.5;
+            this.portalLight.intensity = 400 + Math.sin(time * 2.0) * 150;
           }
         }
         
@@ -373,11 +375,11 @@ export class Mothership {
           this.counterRotatingRing.rotation.z -= 0.003;
         }
         
-        // Rotate the mothership on all three axes for a more dynamic spinning effect (30x faster)
-        if (this.mothership) {
-          this.mothership.rotation.x += 0.003;   // 30x faster rotation on X axis (was 0.0001)
-          this.mothership.rotation.y += 0.0045;  // 30x faster rotation on Y axis (was 0.00015)
-          this.mothership.rotation.z += 0.006;   // 30x faster rotation on Z axis (was 0.0002)
+        // Rotate the stargate on all three axes for a more dynamic spinning effect (30x faster)
+        if (this.stargate) {
+          this.stargate.rotation.x += 0.003;   // 30x faster rotation on X axis (was 0.0001)
+          this.stargate.rotation.y += 0.0045;  // 30x faster rotation on Y axis (was 0.00015)
+          this.stargate.rotation.z += 0.006;   // 30x faster rotation on Z axis (was 0.0002)
         }
     }
 } 

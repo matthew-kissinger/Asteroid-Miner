@@ -1,5 +1,7 @@
 // systemTransition.js - Handles the visual transition between star systems
 
+import * as THREE from 'three';
+
 export class SystemTransition {
     constructor(scene, camera) {
         this.scene = scene;

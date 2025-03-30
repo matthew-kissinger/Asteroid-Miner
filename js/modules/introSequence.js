@@ -1,5 +1,6 @@
 // introSequence.js - Manages the cinematic Star Dreadnought intro sequence
 
+import * as THREE from 'three';
 import { StarDreadnought } from './environment/starDreadnought.js';
 import { getAbsolutePath } from '../utils/pathUtils.js';
 
@@ -1047,21 +1048,21 @@ export class IntroSequence {
             
             // Set ship to proper docking position if necessary
             if (this.spaceship.mesh) {
-                // Position near mothership (these values should match your mothership position)
+                // Position near stargate (these values should match your stargate position)
                 this.spaceship.mesh.position.set(22000, 5000, 0);
             }
         }
         
-        // Show the mothership UI terminal
+        // Show the stargate UI terminal
         // Access the game instance to use its docking functionality
         if (window.gameInstance && 
             window.gameInstance.controls && 
             window.gameInstance.controls.dockingSystem) {
             
-            // Explicitly show mothership UI
+            // Explicitly show stargate UI
             setTimeout(() => {
-                window.gameInstance.controls.dockingSystem.dockWithMothership();
-                console.log("Mothership UI shown after skip");
+                window.gameInstance.controls.dockingSystem.dockWithStargate();
+                console.log("Stargate UI shown after skip");
             }, 100);
         }
     }

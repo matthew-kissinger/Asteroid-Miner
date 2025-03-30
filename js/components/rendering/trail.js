@@ -5,7 +5,7 @@
  */
 
 import { Component } from '../../core/component.js';
-// THREE is available globally, no need to import
+import * as THREE from 'three';
 
 export class TrailComponent extends Component {
     /**

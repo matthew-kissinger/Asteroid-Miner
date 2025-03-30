@@ -4,6 +4,7 @@
  * Controls enemy behavior with simplified kamikaze attack pattern
  */
 
+import * as THREE from 'three';
 import { Component } from '../../core/component.js';
 
 export class EnemyAIComponent extends Component {

@@ -1,5 +1,7 @@
 // planets.js - Creates and manages the planets in the solar system
 
+import * as THREE from 'three';
+
 // Import TextureLoader if not already imported at the top
 const textureLoader = new THREE.TextureLoader();
 
@@ -21,10 +23,24 @@ const planetTextures = {
     neptune: textureLoader.load('./assets/2k_neptune.jpg')
 };
 
+// Set the correct color space for all planet textures
+planetTextures.mercury.colorSpace = THREE.SRGBColorSpace;
+planetTextures.venus.surface.colorSpace = THREE.SRGBColorSpace;
+planetTextures.venus.atmosphere.colorSpace = THREE.SRGBColorSpace;
+planetTextures.earth.colorSpace = THREE.SRGBColorSpace;
+planetTextures.mars.colorSpace = THREE.SRGBColorSpace;
+planetTextures.jupiter.colorSpace = THREE.SRGBColorSpace;
+planetTextures.saturn.surface.colorSpace = THREE.SRGBColorSpace;
+planetTextures.saturn.rings.colorSpace = THREE.SRGBColorSpace;
+planetTextures.uranus.colorSpace = THREE.SRGBColorSpace;
+planetTextures.neptune.colorSpace = THREE.SRGBColorSpace;
+
 // Load the custom procedural textures (p1-p22)
 const proceduralTextures = [];
 for (let i = 1; i <= 22; i++) {
-    proceduralTextures.push(textureLoader.load(`./assets/p${i}.jpeg`));
+    const texture = textureLoader.load(`./assets/p${i}.jpeg`);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    proceduralTextures.push(texture);
 }
 
 export class Planets {
@@ -252,78 +268,87 @@ export class Planets {
                 
                 // Load the custom texture
                 const customTexture = textureLoader.load(adjustedTextureUrl);
-                customTexture.encoding = THREE.sRGBEncoding;
+                customTexture.colorSpace = THREE.SRGBColorSpace;
                 
                 // Create material with custom texture
-                planetMaterial = new THREE.MeshPhongMaterial({
+                planetMaterial = new THREE.MeshStandardMaterial({
                     map: customTexture,
-                    shininess: 10,
+                    roughness: 0.7,
+                    metalness: 0.2,
                     flatShading: false
                 });
             } else {
                 // Use standard planet textures based on planet name
                 switch(planet.name) {
                     case "Mercury":
-                        planetMaterial = new THREE.MeshPhongMaterial({
+                        planetMaterial = new THREE.MeshStandardMaterial({
                             map: planetTextures.mercury,
-                            shininess: 5,
+                            roughness: 0.7,
+                            metalness: 0.2,
                             flatShading: false
                         });
                         break;
                         
                     case "Venus":
                         // Create Venus with surface and atmosphere
-                        planetMaterial = new THREE.MeshPhongMaterial({
+                        planetMaterial = new THREE.MeshStandardMaterial({
                             map: planetTextures.venus.surface,
-                            shininess: 10,
+                            roughness: 0.6,
+                            metalness: 0.1,
                             flatShading: false
                         });
                         break;
                         
                     case "Earth":
-                        planetMaterial = new THREE.MeshPhongMaterial({
+                        planetMaterial = new THREE.MeshStandardMaterial({
                             map: planetTextures.earth,
-                            shininess: 10,
+                            roughness: 0.5,
+                            metalness: 0.1,
                             flatShading: false
                         });
                         break;
                         
                     case "Mars":
-                        planetMaterial = new THREE.MeshPhongMaterial({
+                        planetMaterial = new THREE.MeshStandardMaterial({
                             map: planetTextures.mars,
-                            shininess: 5,
+                            roughness: 0.7,
+                            metalness: 0.1,
                             flatShading: false
                         });
                         break;
                         
                     case "Jupiter":
-                        planetMaterial = new THREE.MeshPhongMaterial({
+                        planetMaterial = new THREE.MeshStandardMaterial({
                             map: planetTextures.jupiter,
-                            shininess: 5,
+                            roughness: 0.5,
+                            metalness: 0.0,
                             flatShading: false
                         });
                         break;
                         
                     case "Saturn":
-                        planetMaterial = new THREE.MeshPhongMaterial({
+                        planetMaterial = new THREE.MeshStandardMaterial({
                             map: planetTextures.saturn.surface,
-                            shininess: 5,
+                            roughness: 0.6,
+                            metalness: 0.1,
                             flatShading: false
                         });
                         break;
                         
                     case "Uranus":
-                        planetMaterial = new THREE.MeshPhongMaterial({
+                        planetMaterial = new THREE.MeshStandardMaterial({
                             map: planetTextures.uranus,
-                            shininess: 5,
+                            roughness: 0.5,
+                            metalness: 0.0,
                             flatShading: false
                         });
                         break;
                         
                     case "Neptune":
-                        planetMaterial = new THREE.MeshPhongMaterial({
+                        planetMaterial = new THREE.MeshStandardMaterial({
                             map: planetTextures.neptune,
-                            shininess: 5,
+                            roughness: 0.5,
+                            metalness: 0.0,
                             flatShading: false
                         });
                         break;
@@ -331,9 +356,10 @@ export class Planets {
                     default:
                         // For other planets, use a procedural texture from the collection
                         const textureIndex = Math.floor(Math.random() * proceduralTextures.length);
-                        planetMaterial = new THREE.MeshPhongMaterial({
+                        planetMaterial = new THREE.MeshStandardMaterial({
                             map: proceduralTextures[textureIndex],
-                            shininess: 5,
+                            roughness: 0.6,
+                            metalness: 0.2,
                             color: new THREE.Color(planet.color),
                             flatShading: false
                         });
@@ -359,6 +385,10 @@ export class Planets {
             // Apply axial tilt to planet rotation
             planetMesh.rotation.x = axialTilt;
             
+            // Enable shadows for eclipse effects
+            planetMesh.castShadow = true;
+            planetMesh.receiveShadow = true;
+            
             // Add the planet to the scene
             this.scene.add(planetMesh);
             
@@ -372,20 +402,24 @@ export class Planets {
                     ringGeometry = new THREE.RingGeometry(planet.size * 1.4, planet.size * 2.0, 32);
                     
                     // Create custom material for Saturn with transparency
-                    ringMaterial = new THREE.MeshBasicMaterial({
+                    ringMaterial = new THREE.MeshStandardMaterial({
                         map: planetTextures.saturn.rings,
                         side: THREE.DoubleSide,
                         transparent: true,
-                        opacity: 0.8
+                        opacity: 0.8,
+                        roughness: 0.8,
+                        metalness: 0.1
                     });
                 } else {
                     // Generic rings for other planets
                     ringGeometry = new THREE.RingGeometry(planet.size * 1.3, planet.size * 1.8, 32);
-                    ringMaterial = new THREE.MeshBasicMaterial({
+                    ringMaterial = new THREE.MeshStandardMaterial({
                         color: planet.color,
                         side: THREE.DoubleSide,
                         transparent: true,
-                        opacity: 0.4
+                        opacity: 0.4,
+                        roughness: 0.7,
+                        metalness: 0.2
                     });
                 }
                 
@@ -393,6 +427,10 @@ export class Planets {
                 
                 // Rotate rings to be flat (perpendicular to y-axis)
                 ringMesh.rotation.x = Math.PI / 2;
+                
+                // Enable shadows for rings
+                ringMesh.castShadow = true;
+                ringMesh.receiveShadow = true;
                 
                 // Add rings to planet
                 planetMesh.add(ringMesh);

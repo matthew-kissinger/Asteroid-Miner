@@ -41,7 +41,7 @@ export class Controls {
         this.targetingSystem = new TargetingSystem(spaceship, this.scene, environment);
         
         // Initialize docking system with all needed references
-        this.dockingSystem = new DockingSystem(spaceship, environment.mothership, ui);
+        this.dockingSystem = new DockingSystem(spaceship, environment.stargate, ui);
         
         // Share the resources reference between components
         this.resources = this.miningSystem.resources;
@@ -153,16 +153,16 @@ export class Controls {
         });
     }
     
-    setupMothershipUIControls() {
+    setupStargateUIControls() {
         if (this.dockingSystem) {
-            this.dockingSystem.setupMothershipUIControls();
+            this.dockingSystem.setupStargateUIControls();
         }
     }
     
-    // Method to dock with mothership (called from main.js on game start)
-    dockWithMothership() {
+    // Method to dock with stargate (called from main.js on game start)
+    dockWithStargate() {
         if (this.dockingSystem) {
-            this.dockingSystem.dockWithMothership();
+            this.dockingSystem.dockWithStargate();
             
             // Hide touch controls when docked
             if (this.isMobile && this.touchControls) {

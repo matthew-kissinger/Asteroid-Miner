@@ -4,6 +4,7 @@
  * Manages spatial partitioning and collision responses.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 import { FixedArray } from '../../utils/memoryManager.js';
 

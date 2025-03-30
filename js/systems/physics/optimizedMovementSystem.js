@@ -5,6 +5,7 @@
  * using a data-oriented approach for better performance.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 import { OptimizedTransformComponent } from '../../components/optimized/transformComponent.js';
 import { OptimizedRigidbodyComponent } from '../../components/optimized/rigidbodyComponent.js';
