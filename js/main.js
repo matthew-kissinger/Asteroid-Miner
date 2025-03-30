@@ -81,6 +81,9 @@ class Game {
             // Set spaceship reference in physics
             this.physics.setSpaceship(this.spaceship);
             
+            // Set spaceship reference in environment (for VibeVerse portals)
+            this.environment.setSpaceship(this.spaceship);
+            
             // Initialize combat systems
             console.log("Creating combat module...");
             this.combat = new Combat(this.scene, this.spaceship);

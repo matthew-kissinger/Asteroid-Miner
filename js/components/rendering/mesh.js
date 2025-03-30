@@ -22,12 +22,18 @@ export class MeshComponent extends Component {
                 geometry.computeBoundingSphere();
             }
         } else {
-            // Fallback to simple cube if no valid geometry
-            console.warn('MeshComponent created with invalid geometry, using default cube');
+            // Fallback to simple cube if no valid geometry, but make it invisible
+            console.warn('MeshComponent created with invalid geometry, using invisible default cube');
             const defaultGeom = new THREE.BoxGeometry(10, 10, 10);
             defaultGeom.computeBoundingSphere();
-            const defaultMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const defaultMat = new THREE.MeshBasicMaterial({ 
+                color: 0xff0000, 
+                transparent: true, 
+                opacity: 0.0,
+                visible: false 
+            });
             this.mesh = new THREE.Mesh(defaultGeom, defaultMat);
+            this.mesh.visible = false; // Ensure the mesh is invisible
         }
         
         this.visible = true;

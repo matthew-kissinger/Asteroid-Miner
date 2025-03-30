@@ -8,6 +8,7 @@ import { Stargate } from './environment/stargate.js';
 import { StarSystemGenerator } from './environment/starSystemGenerator.js';
 import { SystemTransition } from './environment/systemTransition.js';
 import { CustomSystemCreator } from './ui/customSystemCreator.js';
+import { VibeVersePortals } from './environment/vibeVersePortals.js';
 
 export class Environment {
     constructor(scene) {
@@ -47,6 +48,15 @@ export class Environment {
         this.setupSystemTransitionHandlers();
         
         console.log("Environment components initialized");
+    }
+    
+    // Called after spaceship is created - we need this to initialize portals
+    setSpaceship(spaceship) {
+        this.spaceship = spaceship;
+        
+        // Initialize VibeVerse portals
+        this.vibeVersePortals = new VibeVersePortals(this.scene, spaceship);
+        console.log("VibeVerse portals initialized");
     }
     
     // Set up handlers for star system transitions
@@ -351,6 +361,38 @@ export class Environment {
         // Update system transition effects if active
         if (this.systemTransition && this.systemTransition.update) {
             this.systemTransition.update(deltaTime);
+        }
+        
+        // Update VibeVerse portals
+        if (this.vibeVersePortals && this.vibeVersePortals.update) {
+            this.vibeVersePortals.update(deltaTime);
+        }
+    }
+    
+    dispose() {
+        // Dispose all environment components
+        if (this.skybox) {
+            this.skybox.dispose();
+        }
+        
+        if (this.sun) {
+            this.sun.dispose();
+        }
+        
+        if (this.planets) {
+            this.planets.dispose();
+        }
+        
+        if (this.asteroidBelt) {
+            this.asteroidBelt.dispose();
+        }
+        
+        if (this.stargate) {
+            this.stargate.dispose();
+        }
+        
+        if (this.vibeVersePortals) {
+            this.vibeVersePortals.dispose();
         }
     }
 } 

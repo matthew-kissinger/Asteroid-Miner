@@ -39,6 +39,10 @@ export class Game {
             this.spaceship = new Spaceship(this.scene);
             // Set spaceship reference in physics
             this.physics.setSpaceship(this.spaceship);
+            
+            // Set spaceship reference in environment (for VibeVerse portals)
+            this.environment.setSpaceship(this.spaceship);
+            
             // Initialize UI
             this.ui = new UI(this.spaceship, this.environment);
             // Initialize combat systems
