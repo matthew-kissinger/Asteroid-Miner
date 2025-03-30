@@ -27,7 +27,7 @@ export class Settings {
             showFPS: false,                // Show FPS counter
             spatialAudio: true,            // Enable spatial audio
             autoQuality: true,             // Automatically adjust quality based on performance
-            godRaysEnabled: true,          // Enable/disable volumetric lighting effects
+            godRaysEnabled: false,          // Enable/disable volumetric lighting effects
             godRaysType: 'standard'        // 'standard' (new god rays) or 'claude' (Claude Rays)
         };
         
