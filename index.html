@@ -129,9 +129,6 @@
     </script>
 </head>
 <body>
-    <!-- Star background for loading screen -->
-    <div class="star-bg" id="star-bg"></div>
-    
     <!-- Three.js will create its own canvas -->
     
     <!-- Credits -->
@@ -147,31 +144,7 @@
     <script type="module" src="js/main.js"></script>
     
     <script>
-        // Generate stars for the loading background
         document.addEventListener('DOMContentLoaded', function() {
-            const starBg = document.getElementById('star-bg');
-            
-            // Create 100 stars
-            for (let i = 0; i < 100; i++) {
-                const star = document.createElement('div');
-                star.style.position = 'absolute';
-                star.style.width = `${Math.random() * 2 + 1}px`;
-                star.style.height = star.style.width;
-                star.style.backgroundColor = 'white';
-                star.style.borderRadius = '50%';
-                star.style.left = `${Math.random() * 100}%`;
-                star.style.top = `${Math.random() * 100}%`;
-                star.style.opacity = Math.random() * 0.7 + 0.3;
-                star.classList.add('loading-element');
-                
-                // Randomize the animation delay
-                star.style.animationDelay = `${Math.random() * 2}s`;
-                
-                starBg.appendChild(star);
-            }
-            
-            console.log("Stars generated for loading screen");
-            
             // Prevent default touchmove behavior to avoid page scrolling while playing
             document.addEventListener('touchmove', function(e) {
                 e.preventDefault();
