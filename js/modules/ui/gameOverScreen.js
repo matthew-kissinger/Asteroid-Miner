@@ -143,6 +143,17 @@ export class GameOverScreen {
             }
         }
         
+        // Check if game was in horde mode
+        let wasHordeMode = false;
+        let hordeSurvivalTime = "00:00";
+        let rawSurvivalTime = 0;
+        
+        if (resources && resources.hordeMode) {
+            wasHordeMode = resources.hordeMode.active;
+            hordeSurvivalTime = resources.hordeMode.survivalTime || "00:00";
+            rawSurvivalTime = resources.hordeMode.rawSurvivalTime || 0;
+        }
+        
         // Handle different resource data formats
         // It might be wrapped in a gameStats structure or come directly
         let resourceData = resources;
@@ -161,10 +172,36 @@ export class GameOverScreen {
         // Update resources summary with guaranteed safe values
         const resourcesSummary = document.getElementById('resources-summary');
         if (resourcesSummary) {
-            resourcesSummary.innerHTML = `
-                <p>Resources collected:</p>
-                <p>IRON: ${iron} | GOLD: ${gold} | PLATINUM: ${platinum}</p>
-            `;
+            // Create horde mode section if applicable
+            if (wasHordeMode) {
+                // Get minutes for special messages
+                const minutes = Math.floor(rawSurvivalTime / 1000 / 60);
+                
+                // Determine message based on survival time
+                let hordeMessage = "You fought valiantly against overwhelming odds.";
+                if (minutes >= 10) {
+                    hordeMessage = "LEGENDARY! Few have survived the horde this long!";
+                } else if (minutes >= 5) {
+                    hordeMessage = "IMPRESSIVE! You showed exceptional combat skills!";
+                } else if (minutes >= 3) {
+                    hordeMessage = "Well done! You held back the horde longer than most!";
+                }
+                
+                resourcesSummary.innerHTML = `
+                    <div style="margin-bottom:20px; padding:15px; background-color:rgba(255,48,48,0.2); border:1px solid #ff3030; border-radius:5px;">
+                        <h3 style="color:#ff3030; margin-top:0; text-shadow:0 0 5px rgba(255,48,48,0.5);">HORDE MODE</h3>
+                        <p style="font-size:18px; font-weight:bold;">SURVIVED: <span style="color:#ff9999; text-shadow:0 0 5px rgba(255,48,48,0.3);">${hordeSurvivalTime}</span></p>
+                        <p>${hordeMessage}</p>
+                    </div>
+                    <p>Resources collected:</p>
+                    <p>IRON: ${iron} | GOLD: ${gold} | PLATINUM: ${platinum}</p>
+                `;
+            } else {
+                resourcesSummary.innerHTML = `
+                    <p>Resources collected:</p>
+                    <p>IRON: ${iron} | GOLD: ${gold} | PLATINUM: ${platinum}</p>
+                `;
+            }
         }
         
         // Simpler approach to play explosion sound as a backup

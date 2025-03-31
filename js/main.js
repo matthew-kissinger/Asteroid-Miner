@@ -674,6 +674,11 @@ class Game {
     update(deltaTime) {
         if (this.isGameOver) return;
         
+        // Update horde mode survival time if active
+        if (this.isHordeActive) {
+            this.hordeSurvivalTime = performance.now() - this.hordeStartTime;
+        }
+        
         // Update physics
         this.physics.update(deltaTime);
         
@@ -875,7 +880,17 @@ class Game {
         
         // Show game over screen with resources collected
         if (this.ui.showGameOver && this.controls.resources) {
-            this.ui.showGameOver(this.controls.resources, message);
+            // Add horde mode information to the game stats
+            const gameStats = {
+                resources: this.controls.resources,
+                hordeMode: {
+                    active: this.isHordeActive,
+                    survivalTime: this.isHordeActive ? this.getFormattedHordeSurvivalTime() : "00:00",
+                    rawSurvivalTime: this.hordeSurvivalTime || 0
+                }
+            };
+            
+            this.ui.showGameOver(gameStats, message);
         }
         
         // Stop spaceship movement if it exists
@@ -1066,37 +1081,109 @@ class Game {
      * Initialize difficulty manager when combat system is ready
      */
     initializeDifficultyManager() {
-        // Get reference to enemy system directly if available
-        let enemySystem = null;
-        
-        if (this.combat && this.combat.world && this.combat.enemySystem) {
-            enemySystem = this.combat.enemySystem;
-        } else if (this.ecsWorld && this.ecsWorld.enemySystem) {
-            enemySystem = this.ecsWorld.enemySystem;
-        }
-        
-        // Create difficulty manager
-        this.difficultyManager = new DifficultyManager(this, enemySystem);
-        
-        // If enemy system isn't available yet, set up a callback to attach it later
-        if (!enemySystem) {
-            console.log("Enemy system not available yet, will connect later");
+        // Initialize difficulty manager for dynamic difficulty scaling
+        this.difficultyManager = {
+            params: {
+                maxEnemies: 10,
+                spawnInterval: 3,
+                enemyHealth: 20,
+                enemyDamage: 15,
+                enemySpeed: 700
+            },
+            gameTime: 0,
+            currentLevel: 1,
             
-            // Check for combat system initialization
-            const checkForCombat = setInterval(() => {
-                if (this.combat && this.combat.enemySystem) {
-                    console.log("Combat system now available, connecting to difficulty manager");
-                    this.difficultyManager.enemySystem = this.combat.enemySystem;
-                    clearInterval(checkForCombat);
-                } else if (this.ecsWorld && this.ecsWorld.enemySystem) {
-                    console.log("ECS world now available, connecting to difficulty manager");
-                    this.difficultyManager.enemySystem = this.ecsWorld.enemySystem;
-                    clearInterval(checkForCombat);
+            update: function(deltaTime) {
+                // Update game time in minutes
+                this.gameTime += deltaTime;
+                const minutes = this.gameTime / 60;
+                
+                // Calculate level based on minutes played
+                // Level increases every 3 minutes
+                const newLevel = Math.floor(minutes / 3) + 1;
+                
+                // Only update if level changed
+                if (newLevel !== this.currentLevel) {
+                    this.currentLevel = newLevel;
+                    
+                    // Get difficulty multiplier: 1x at level 1, 1.5x at level 2, 2x at level 3, etc.
+                    // Cap at level 5 (3x difficulty) for fairness
+                    const difficultyMultiplier = 1 + (Math.min(this.currentLevel - 1, 4) * 0.5);
+                    
+                    // Update parameters
+                    this.params.maxEnemies = Math.min(10 * difficultyMultiplier, 30);
+                    this.params.spawnInterval = Math.max(3 / difficultyMultiplier, 1);
+                    this.params.enemyHealth = Math.floor(20 * difficultyMultiplier);
+                    this.params.enemyDamage = Math.floor(15 * difficultyMultiplier);
+                    this.params.enemySpeed = Math.min(700 * (1 + (0.2 * (this.currentLevel - 1))), 1400);
+                    
+                    console.log(`Difficulty increased to level ${this.currentLevel} (${difficultyMultiplier}x)`);
+                    console.log(`Parameters: maxEnemies=${this.params.maxEnemies}, spawnInterval=${this.params.spawnInterval}`);
+                    console.log(`Health=${this.params.enemyHealth}, Damage=${this.params.enemyDamage}, Speed=${this.params.enemySpeed}`);
                 }
-            }, 1000);
-        } else {
-            console.log("Difficulty manager connected to enemy system");
+            }
+        };
+    }
+    
+    /**
+     * Activate horde mode (extreme survival challenge)
+     */
+    activateHordeMode() {
+        if (this.isHordeActive) return; // Already active
+        
+        console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
+        this.isHordeActive = true;
+        this.hordeStartTime = performance.now();
+        this.hordeSurvivalTime = 0;
+        
+        // Play an intense sound to signal the start of horde mode
+        if (this.audio) {
+            this.audio.playSound('boink');
         }
+        
+        // Notify UI to update
+        window.mainMessageBus.publish('horde.activated', {
+            startTime: this.hordeStartTime
+        });
+        
+        // Notify the player
+        if (this.ui && this.ui.showNotification) {
+            this.ui.showNotification("HORDE MODE ACTIVATED - SURVIVE!", 5000);
+        }
+        
+        // Force player to undock if currently docked
+        if (this.spaceship && this.spaceship.isDocked) {
+            console.log("Horde mode forcing undock from stargate");
+            
+            // Undock the ship
+            this.spaceship.undock();
+            
+            // Notify the docking system
+            window.mainMessageBus.publish('player.requestUndock', {
+                forced: true,
+                reason: "horde_mode_activation"
+            });
+            
+            // CRITICAL FIX: Explicitly show the HUD after forcing undock
+            // Use a short delay to ensure undocking process is complete
+            setTimeout(() => {
+                console.log("Horde mode ensuring HUD is visible");
+                if (this.ui && this.ui.showUI) {
+                    this.ui.showUI();
+                }
+            }, 200);
+        }
+    }
+    
+    /**
+     * Format horde survival time as MM:SS
+     * @returns {string} Formatted time string
+     */
+    getFormattedHordeSurvivalTime() {
+        const totalSeconds = Math.floor(this.hordeSurvivalTime / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
     
     /**

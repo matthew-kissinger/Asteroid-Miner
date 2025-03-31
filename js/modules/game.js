@@ -68,6 +68,12 @@ export class Game {
             this.enemiesDestroyed = 0;
             this.damageDealt = 0;
             this.damageReceived = 0;
+            
+            // Horde mode properties
+            this.isHordeActive = false;
+            this.hordeStartTime = 0;
+            this.hordeSurvivalTime = 0;
+            
             // Start with docked state for initial tutorial/intro
             this.startDocked();
             // Register event handlers
@@ -272,6 +278,12 @@ export class Game {
     }
     update(deltaTime) {
         if (this.isGameOver) return;
+        
+        // Update horde survival time if active
+        if (this.isHordeActive) {
+            this.hordeSurvivalTime = performance.now() - this.hordeStartTime;
+        }
+        
         // Update physics
         this.physics.update(deltaTime);
         // Update spaceship
@@ -486,6 +498,11 @@ export class Game {
                 enemiesDestroyed: this.combatManager && this.combatManager.stats ? this.combatManager.stats.enemiesDestroyed : 0,
                 damageDealt: this.damageDealt || 0,
                 damageReceived: this.damageReceived || 0
+            },
+            hordeMode: {
+                active: this.isHordeActive,
+                survivalTime: this.getFormattedHordeSurvivalTime(),
+                rawSurvivalTime: this.hordeSurvivalTime
             }
         };
         // Show game over UI
@@ -608,5 +625,54 @@ export class Game {
                 track.muted = false;
             }
         }
+    }
+    /**
+     * Activate horde mode (extreme survival challenge)
+     */
+    activateHordeMode() {
+        if (this.isHordeActive) return; // Already active
+        
+        console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
+        this.isHordeActive = true;
+        this.hordeStartTime = performance.now();
+        this.hordeSurvivalTime = 0;
+        
+        // Play an intense sound to signal the start of horde mode
+        if (this.audio) {
+            this.audio.playSound('boink');
+        }
+        
+        // Notify UI to update
+        this.messageBus.publish('horde.activated', {
+            startTime: this.hordeStartTime
+        });
+        
+        // Notify the player
+        if (this.ui && this.ui.showNotification) {
+            this.ui.showNotification("HORDE MODE ACTIVATED - SURVIVE!", 5000);
+        }
+        
+        // Force player to undock if currently docked
+        if (this.spaceship && this.spaceship.isDocked) {
+            // Undock the ship
+            this.spaceship.undock();
+            
+            // Notify the docking system
+            this.messageBus.publish('player.requestUndock', {
+                forced: true,
+                reason: "horde_mode_activation"
+            });
+        }
+    }
+    
+    /**
+     * Format horde survival time as MM:SS
+     * @returns {string} Formatted time string
+     */
+    getFormattedHordeSurvivalTime() {
+        const totalSeconds = Math.floor(this.hordeSurvivalTime / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 }

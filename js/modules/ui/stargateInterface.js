@@ -33,6 +33,80 @@ export class StargateInterface {
     }
     
     setupStargateUI() {
+        // Add CSS for animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse-warning {
+                0% { box-shadow: 0 0 15px rgba(255, 48, 48, 0.5); }
+                50% { box-shadow: 0 0 25px rgba(255, 48, 48, 0.8); }
+                100% { box-shadow: 0 0 15px rgba(255, 48, 48, 0.5); }
+            }
+            
+            #horde-confirm-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+            }
+            
+            #horde-confirm-content {
+                background-color: rgba(30, 30, 35, 0.95);
+                border: 2px solid #ff3030;
+                border-radius: 10px;
+                padding: 30px;
+                max-width: 500px;
+                width: 80%;
+                color: #fff;
+                box-shadow: 0 0 30px rgba(255, 48, 48, 0.7);
+                text-align: center;
+            }
+            
+            .horde-confirm-title {
+                color: #ff3030;
+                font-size: 24px;
+                margin-bottom: 20px;
+                font-weight: bold;
+                text-shadow: 0 0 10px rgba(255, 48, 48, 0.5);
+            }
+            
+            .horde-confirm-text {
+                margin-bottom: 25px;
+                line-height: 1.5;
+            }
+            
+            .horde-confirm-buttons {
+                display: flex;
+                justify-content: space-between;
+            }
+            
+            .horde-confirm-btn {
+                padding: 12px 25px;
+                border-radius: 5px;
+                border: none;
+                font-family: 'Courier New', monospace;
+                font-weight: bold;
+                cursor: pointer;
+                width: 45%;
+            }
+            
+            .horde-confirm-yes {
+                background-color: #ff3030;
+                color: #fff;
+            }
+            
+            .horde-confirm-no {
+                background-color: #333;
+                color: #fff;
+            }
+        `;
+        document.head.appendChild(style);
+        
         // Add docking prompt
         const dockingPrompt = document.createElement('div');
         dockingPrompt.id = 'docking-prompt';
@@ -204,6 +278,16 @@ export class StargateInterface {
                 </button>
                 <p style="font-size: 12px; color: #aaa; margin: 0;">Adjust graphics, performance, and audio settings</p>
             </div>
+            
+            <!-- HORDE MODE SECTION -->
+            <div style="border-top: 1px solid #ff3030; padding-top: 20px; margin-bottom: 20px;">
+                <h3 style="color: #ff3030; text-shadow: 0 0 5px rgba(255, 48, 48, 0.7);">EXTREME CHALLENGE</h3>
+                <button id="unleash-horde" style="width: 100%; padding: 15px; margin-bottom: 10px; background: linear-gradient(135deg, #990000 0%, #ff3030 100%); color: #fff; border: 2px solid #ff3030; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px; box-shadow: 0 0 15px rgba(255, 48, 48, 0.5); animation: pulse-warning 2s infinite;">
+                    UNLEASH THE HORDE
+                </button>
+                <p style="font-size: 12px; color: #ff9999; margin: 0;">WARNING: Activate extreme survival mode with infinitely scaling difficulty</p>
+            </div>
+            
             <div style="border-top: 1px solid #33aaff; padding-top: 20px; margin-bottom: 20px;">
                 <h3 style="color: #33aaff;">UPGRADES</h3>
                 
@@ -746,5 +830,96 @@ export class StargateInterface {
                 }
             });
         }
+        
+        // Add event handler for UNLEASH THE HORDE button
+        const hordeButton = document.getElementById('unleash-horde');
+        if (hordeButton) {
+            hordeButton.addEventListener('click', () => {
+                console.log("HORDE MODE: Button clicked, showing confirmation");
+                this.showHordeConfirmation();
+            });
+        }
+    }
+    
+    /**
+     * Show confirmation dialog for activating horde mode
+     */
+    showHordeConfirmation() {
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.id = 'horde-confirm-modal';
+        
+        // Create content container
+        const content = document.createElement('div');
+        content.id = 'horde-confirm-content';
+        
+        // Add title
+        const title = document.createElement('div');
+        title.className = 'horde-confirm-title';
+        title.textContent = 'UNLEASH THE HORDE?';
+        content.appendChild(title);
+        
+        // Add warning text
+        const text = document.createElement('div');
+        text.className = 'horde-confirm-text';
+        text.innerHTML = `
+            <p>You are about to activate EXTREME SURVIVAL MODE.</p>
+            <p>Enemies will continuously spawn with increasing:</p>
+            <ul style="text-align: left; padding-left: 30px; margin: 15px 0;">
+                <li>Numbers (starting at 50, scaling upward)</li>
+                <li>Speed (progressively faster movement)</li>
+                <li>Health (gradually becoming tougher)</li>
+                <li>Damage (increasingly lethal hits)</li>
+            </ul>
+            <p>Difficulty will scale <strong>infinitely</strong> until you are overwhelmed.</p>
+            <p style="color: #ff9999;">This is a test of survival. How long can you last?</p>
+        `;
+        content.appendChild(text);
+        
+        // Add buttons container
+        const buttons = document.createElement('div');
+        buttons.className = 'horde-confirm-buttons';
+        
+        // Add YES button
+        const yesBtn = document.createElement('button');
+        yesBtn.className = 'horde-confirm-btn horde-confirm-yes';
+        yesBtn.textContent = 'UNLEASH THEM';
+        yesBtn.addEventListener('click', () => {
+            // Remove the confirmation dialog
+            document.body.removeChild(modal);
+            
+            // Hide the stargate UI
+            this.hideStargateUI();
+            
+            // Activate horde mode in the game
+            if (window.game && typeof window.game.activateHordeMode === 'function') {
+                window.game.activateHordeMode();
+                console.log("HORDE MODE: Activated via stargateInterface");
+            } else {
+                console.error("HORDE MODE: Failed to activate - game.activateHordeMode not available");
+            }
+        });
+        
+        // Add NO button
+        const noBtn = document.createElement('button');
+        noBtn.className = 'horde-confirm-btn horde-confirm-no';
+        noBtn.textContent = 'CANCEL';
+        noBtn.addEventListener('click', () => {
+            // Just remove the confirmation dialog
+            document.body.removeChild(modal);
+        });
+        
+        // Add buttons to container
+        buttons.appendChild(noBtn);  // Cancel on left
+        buttons.appendChild(yesBtn); // Confirm on right
+        
+        // Add buttons to content
+        content.appendChild(buttons);
+        
+        // Add content to modal
+        modal.appendChild(content);
+        
+        // Add modal to body
+        document.body.appendChild(modal);
     }
 }

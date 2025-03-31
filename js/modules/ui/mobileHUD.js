@@ -8,6 +8,17 @@ export class MobileHUD {
     }
     
     setupMobileHUD() {
+        // Add CSS for animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse-horde-mobile {
+                0% { box-shadow: 0 0 5px rgba(255, 30, 30, 0.5); }
+                50% { box-shadow: 0 0 10px rgba(255, 30, 30, 0.8); }
+                100% { box-shadow: 0 0 5px rgba(255, 30, 30, 0.5); }
+            }
+        `;
+        document.head.appendChild(style);
+        
         // Create main container for mobile HUD
         const hudContainer = document.createElement('div');
         hudContainer.id = 'mobile-hud-container';
@@ -58,6 +69,28 @@ export class MobileHUD {
         cargoContainer.appendChild(cargoLabel);
         cargoContainer.appendChild(cargoValue);
         hudContainer.appendChild(cargoContainer);
+        
+        // Add horde mode indicator (hidden by default)
+        const hordeContainer = document.createElement('div');
+        hordeContainer.id = 'mobile-horde-indicator';
+        hordeContainer.style.display = 'none';
+        hordeContainer.style.marginTop = '10px';
+        hordeContainer.style.padding = '5px';
+        hordeContainer.style.backgroundColor = 'rgba(255, 30, 30, 0.2)';
+        hordeContainer.style.borderRadius = '4px';
+        hordeContainer.style.border = '1px solid #ff3030';
+        hordeContainer.style.animation = 'pulse-horde-mobile 2s infinite';
+        hordeContainer.style.fontSize = '12px';
+        
+        const hordeTimer = document.createElement('div');
+        hordeTimer.id = 'mobile-horde-timer';
+        hordeTimer.textContent = '00:00';
+        hordeTimer.style.textAlign = 'center';
+        hordeTimer.style.fontWeight = 'bold';
+        hordeTimer.style.color = '#ff3030';
+        
+        hordeContainer.appendChild(hordeTimer);
+        hudContainer.appendChild(hordeContainer);
         
         // Add decorative corner elements
         this.addCornerElements(hudContainer);
@@ -154,6 +187,9 @@ export class MobileHUD {
         
         // Update cargo display
         this.updateCargoDisplay();
+        
+        // Update horde mode display
+        this.updateHordeModeDisplay();
     }
     
     updateShieldDisplay() {
@@ -261,6 +297,57 @@ export class MobileHUD {
             cargoValue.style.color = 'rgba(255, 204, 0, 0.9)';
         } else {
             cargoValue.style.color = 'rgba(120, 220, 232, 0.9)';
+        }
+    }
+    
+    /**
+     * Update the horde mode indicator and timer in the mobile HUD
+     */
+    updateHordeModeDisplay() {
+        const hordeIndicator = document.getElementById('mobile-horde-indicator');
+        const hordeTimer = document.getElementById('mobile-horde-timer');
+        
+        if (!hordeIndicator || !hordeTimer) return;
+        
+        // Check if horde mode is active
+        if (window.game && window.game.isHordeActive) {
+            // Show the indicator if not already visible
+            if (hordeIndicator.style.display === 'none') {
+                hordeIndicator.style.display = 'block';
+                hordeIndicator.innerHTML = '<div style="text-align:center; color:#ff3030; font-weight:bold; margin-bottom:2px;">HORDE MODE</div>';
+                hordeIndicator.appendChild(hordeTimer);
+            }
+            
+            // Update the timer
+            if (window.game.getFormattedHordeSurvivalTime) {
+                hordeTimer.textContent = window.game.getFormattedHordeSurvivalTime();
+            } else {
+                // Fallback calculation
+                const totalSeconds = Math.floor(window.game.hordeSurvivalTime / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                hordeTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            // Increase pulsing intensity after 3 minutes
+            if (window.game.hordeSurvivalTime > 3 * 60 * 1000) {
+                const styleEl = document.createElement('style');
+                styleEl.textContent = `
+                    @keyframes pulse-horde-mobile {
+                        0% { box-shadow: 0 0 5px rgba(255, 30, 30, 0.7); }
+                        50% { box-shadow: 0 0 10px rgba(255, 30, 30, 1); }
+                        100% { box-shadow: 0 0 5px rgba(255, 30, 30, 0.7); }
+                    }
+                `;
+                document.head.appendChild(styleEl);
+                
+                // Make animation faster
+                hordeIndicator.style.animation = 'pulse-horde-mobile 0.8s infinite';
+                hordeIndicator.style.backgroundColor = 'rgba(255, 30, 30, 0.3)';
+            }
+        } else {
+            // Hide the indicator
+            hordeIndicator.style.display = 'none';
         }
     }
     

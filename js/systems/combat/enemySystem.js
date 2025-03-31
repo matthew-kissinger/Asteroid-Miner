@@ -193,7 +193,13 @@ export class EnemySystem extends System {
      * Update enemy parameters based on difficulty scaling from game object
      */
     updateDifficultyScaling() {
-        // Check if there's a global difficulty manager
+        // Check for horde mode first - it overrides normal difficulty scaling
+        if (window.game && window.game.isHordeActive) {
+            this.applyHordeModeScaling();
+            return; // Skip normal difficulty scaling
+        }
+        
+        // Default difficulty scaling
         if (window.game && window.game.difficultyManager && window.game.difficultyManager.params) {
             const diffParams = window.game.difficultyManager.params;
             
@@ -206,6 +212,78 @@ export class EnemySystem extends System {
             if (diffParams.spawnInterval !== undefined && this.spawnInterval !== diffParams.spawnInterval) {
                 console.log(`Updating spawn interval from ${this.spawnInterval} to ${diffParams.spawnInterval}`);
                 this.spawnInterval = diffParams.spawnInterval;
+            }
+        }
+    }
+    
+    /**
+     * Apply horde mode scaling based on survival time
+     * Dramatically increases difficulty over time to infinity
+     */
+    applyHordeModeScaling() {
+        if (!window.game || window.game.hordeSurvivalTime === undefined) return;
+        
+        // Get survival time in seconds
+        const survivalTime = window.game.hordeSurvivalTime / 1000;
+        
+        // Log scaling every 10 seconds
+        if (Math.floor(survivalTime) % 10 === 0 && Math.floor(survivalTime) !== this.lastLoggedHordeTime) {
+            this.lastLoggedHordeTime = Math.floor(survivalTime);
+            console.log(`HORDE MODE: Scaling at ${survivalTime.toFixed(1)}s survival time`);
+        }
+        
+        // Calculate scaling factors based on survival time
+        const minutesPassed = survivalTime / 60;
+        
+        // 1. Max enemies: Start at 50, add 10 per minute, exponential scaling after 5 minutes
+        const baseMaxEnemies = 50;
+        let maxEnemiesScale;
+        
+        if (minutesPassed < 5) {
+            // Linear scaling for first 5 minutes
+            maxEnemiesScale = baseMaxEnemies + (minutesPassed * 10);
+        } else {
+            // Exponential scaling after 5 minutes: 100 * (1.2^(minutes-5))
+            maxEnemiesScale = (baseMaxEnemies + 50) * Math.pow(1.2, minutesPassed - 5);
+        }
+        
+        // Cap at a reasonable maximum to prevent performance issues
+        this.maxEnemies = Math.min(Math.floor(maxEnemiesScale), 300);
+        
+        // 2. Spawn interval: Start at 1s, decrease to minimum of 0.2s
+        const minSpawnInterval = 0.2;
+        const baseSpawnInterval = 1.0;
+        this.spawnInterval = Math.max(
+            baseSpawnInterval * Math.pow(0.95, minutesPassed * 2),
+            minSpawnInterval
+        );
+        
+        // 3. Update enemy config in spawner if available
+        if (this.spawner) {
+            // Base values
+            const baseHealth = 20;
+            const baseDamage = 15;
+            const baseSpeed = 700;
+            
+            // Calculate scaling multipliers
+            const healthMultiplier = 1 + (minutesPassed * 0.5); // +50% per minute
+            const damageMultiplier = 1 + (minutesPassed * 0.3); // +30% per minute
+            const speedMultiplier = 1 + (minutesPassed * 0.2); // +20% per minute
+            
+            // Apply multipliers
+            this.spawner.enemyConfig.health = Math.floor(baseHealth * healthMultiplier);
+            this.spawner.enemyConfig.damage = Math.floor(baseDamage * damageMultiplier);
+            this.spawner.enemyConfig.speed = baseSpeed * speedMultiplier;
+            
+            // Log scaling on 30-second intervals for debugging
+            if (Math.floor(survivalTime) % 30 === 0 && Math.floor(survivalTime) !== this.lastFullLoggedHordeTime) {
+                this.lastFullLoggedHordeTime = Math.floor(survivalTime);
+                console.log(`HORDE MODE SCALING at ${Math.floor(survivalTime)}s:`);
+                console.log(`  Max Enemies: ${this.maxEnemies}`);
+                console.log(`  Spawn Interval: ${this.spawnInterval.toFixed(2)}s`);
+                console.log(`  Enemy Health: ${this.spawner.enemyConfig.health}`);
+                console.log(`  Enemy Damage: ${this.spawner.enemyConfig.damage}`);
+                console.log(`  Enemy Speed: ${this.spawner.enemyConfig.speed.toFixed(1)}`);
             }
         }
     }

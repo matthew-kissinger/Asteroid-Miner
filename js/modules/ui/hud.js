@@ -596,50 +596,77 @@ export class HUD {
     // Radar panel removed as per user request
     
     createNotificationsArea(parent) {
-        // Notifications area at top center - leaving this empty since we don't want notifications
-        // We'll keep the div but won't add anything to it
+        // Create notifications area in the top middle of the screen
         const notificationsArea = document.createElement('div');
         notificationsArea.id = 'notifications-area';
         notificationsArea.style.position = 'absolute';
         notificationsArea.style.top = '20px';
         notificationsArea.style.left = '50%';
         notificationsArea.style.transform = 'translateX(-50%)';
-        notificationsArea.style.width = '400px';
-        notificationsArea.style.minHeight = '30px';
         notificationsArea.style.display = 'flex';
         notificationsArea.style.flexDirection = 'column';
         notificationsArea.style.alignItems = 'center';
         notificationsArea.style.gap = '10px';
         parent.appendChild(notificationsArea);
         
-        // Add survival timer display
-        const timerDisplay = document.createElement('div');
-        timerDisplay.id = 'survival-timer';
-        timerDisplay.className = 'hud-panel';
-        timerDisplay.style.backgroundColor = 'rgba(6, 22, 31, 0.7)';
-        timerDisplay.style.backdropFilter = 'blur(5px)';
-        timerDisplay.style.borderRadius = '8px';
-        timerDisplay.style.border = '1px solid rgba(120, 220, 232, 0.3)';
-        timerDisplay.style.boxShadow = '0 0 15px rgba(120, 220, 232, 0.2)';
-        timerDisplay.style.padding = '8px 12px 8px 12px';
-        timerDisplay.style.marginBottom = '10px';
-        timerDisplay.style.fontSize = '18px';
-        timerDisplay.style.fontWeight = '600';
-        timerDisplay.style.letterSpacing = '1px';
-        timerDisplay.style.display = 'flex';
-        timerDisplay.style.alignItems = 'center';
-        timerDisplay.style.justifyContent = 'center';
-        timerDisplay.style.gap = '6px';
-        timerDisplay.innerHTML = `
-            <span style="opacity: 0.7; font-size: 14px;">SURVIVAL TIME:</span>
-            <span id="timer-value">00:00</span>
-            <span id="difficulty-indicator" style="font-size: 12px; margin-left: 3px; padding: 2px 5px; background-color: rgba(120, 220, 232, 0.2); border-radius: 4px;">LEVEL 1</span>
-        `;
+        // Note: Survival timer has been removed - only horde mode timer will be used
+        
+        // Add horde mode indicator (hidden by default)
+        const hordeIndicator = document.createElement('div');
+        hordeIndicator.id = 'horde-mode-indicator';
+        hordeIndicator.className = 'hud-panel';
+        hordeIndicator.style.display = 'none'; // Hidden by default, will be changed to 'flex' when active
+        hordeIndicator.style.padding = '8px 12px';
+        hordeIndicator.style.backgroundColor = 'rgba(51, 10, 10, 0.8)';
+        hordeIndicator.style.backdropFilter = 'blur(5px)';
+        hordeIndicator.style.borderRadius = '8px';
+        hordeIndicator.style.border = '1px solid #ff3030';
+        hordeIndicator.style.boxShadow = '0 0 15px rgba(255, 48, 48, 0.5)';
+        hordeIndicator.style.animation = 'pulse-horde 2s infinite';
+        hordeIndicator.style.marginBottom = '10px';
+        hordeIndicator.style.fontSize = '18px';
+        hordeIndicator.style.fontWeight = '600';
+        hordeIndicator.style.letterSpacing = '1px';
+        
+        // Create a flex container for the horde mode indicator content
+        const hordeContent = document.createElement('div');
+        hordeContent.style.display = 'flex';
+        hordeContent.style.alignItems = 'center';
+        hordeContent.style.justifyContent = 'center';
+        hordeContent.style.gap = '10px';
+        
+        // Add the text and timer elements
+        const hordeLabel = document.createElement('span');
+        hordeLabel.style.color = '#ff3030';
+        hordeLabel.style.textShadow = '0 0 5px rgba(255,48,48,0.5)';
+        hordeLabel.textContent = 'HORDE MODE';
+        
+        const survivalTime = document.createElement('span');
+        survivalTime.id = 'horde-survival-time';
+        survivalTime.style.color = '#ff9999';
+        survivalTime.style.fontWeight = 'bold';
+        survivalTime.textContent = '00:00';
+        
+        // Add the elements to the container
+        hordeContent.appendChild(hordeLabel);
+        hordeContent.appendChild(survivalTime);
+        hordeIndicator.appendChild(hordeContent);
         
         // Add decorative corner elements
-        this.addCornerElements(timerDisplay);
+        this.addCornerElements(hordeIndicator);
         
-        notificationsArea.appendChild(timerDisplay);
+        notificationsArea.appendChild(hordeIndicator);
+        
+        // Add CSS for horde mode pulsing
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse-horde {
+                0% { box-shadow: 0 0 5px rgba(255, 30, 30, 0.5); }
+                50% { box-shadow: 0 0 10px rgba(255, 30, 30, 0.8); }
+                100% { box-shadow: 0 0 5px rgba(255, 30, 30, 0.5); }
+            }
+        `;
+        document.head.appendChild(style);
     }
     
     // Helper methods for UI elements
@@ -893,40 +920,24 @@ export class HUD {
     }
     
     update() {
-        // Update thrust and velocity display
-        if (this.spaceship) {
-            const thrustElement = document.getElementById('thrust');
-            const velocityElement = document.getElementById('velocity');
-            const boostElement = document.getElementById('boost');
-            
-            if (thrustElement) {
-                let thrustValue = 0;
-                if (this.spaceship.thrust && this.spaceship.thrust.forward) thrustValue += 1;
-                if (this.spaceship.thrust && this.spaceship.thrust.backward) thrustValue -= 1;
-                thrustElement.textContent = thrustValue;
-            }
-            
-            if (velocityElement && this.spaceship.velocity) {
-                const velocityLength = this.spaceship.velocity.length().toFixed(2);
-                velocityElement.textContent = velocityLength;
-            }
-            
-            if (boostElement && this.spaceship.thrust) {
-                const boostActive = this.spaceship.thrust.boost;
-                boostElement.textContent = boostActive ? 'ON' : 'OFF';
-                boostElement.style.color = boostActive ? 'rgba(80, 255, 140, 0.9)' : 'rgba(255, 80, 80, 0.9)';
-            }
-        }
+        if (!this.spaceship) return;
+        
+        // Update shield display
+        this.updateShieldDisplay();
+        
+        // Update hull display
+        this.updateHullDisplay();
         
         // Update fuel display
         const fuelBar = document.getElementById('fuel-bar');
-        if (fuelBar && this.spaceship) {
-            fuelBar.style.width = `${this.spaceship.fuel}%`;
+        if (fuelBar) {
+            const fuelPercent = (this.spaceship.fuel / 100) * 100;
+            fuelBar.style.width = `${fuelPercent}%`;
             
-            // Change color when low
-            if (this.spaceship.fuel < 20) {
+            // Change color based on fuel level
+            if (fuelPercent < 20) {
                 fuelBar.style.backgroundColor = 'rgba(255, 80, 80, 0.8)';
-            } else if (this.spaceship.fuel < 40) {
+            } else if (fuelPercent < 40) {
                 fuelBar.style.backgroundColor = 'rgba(255, 204, 0, 0.8)';
             } else {
                 fuelBar.style.backgroundColor = 'rgba(120, 220, 232, 0.8)';
@@ -934,48 +945,116 @@ export class HUD {
         }
         
         // Update credits display
-        const creditsElement = document.getElementById('credits');
-        if (creditsElement && this.spaceship) {
-            creditsElement.textContent = `${this.spaceship.credits} CR`;
+        const creditsDisplay = document.getElementById('credits-value');
+        if (creditsDisplay) {
+            creditsDisplay.textContent = `${this.spaceship.credits} CR`;
         }
         
-        // Update shield display - important for value sync
-        this.updateShieldDisplay();
-        
-        // Update hull integrity - important for value sync 
-        this.updateHullDisplay();
-        
-        // Update survival timer
-        if (window.game && window.game.gameTime !== undefined) {
-            const timerValue = document.getElementById('timer-value');
-            const difficultyIndicator = document.getElementById('difficulty-indicator');
+        // Update thrust display
+        const thrustDisplay = document.getElementById('thrust-value');
+        if (thrustDisplay) {
+            let thrustValue = 0;
             
-            if (timerValue) {
-                // Format time as mm:ss
-                const totalSeconds = Math.floor(window.game.gameTime);
+            if (this.spaceship.thrust.forward) thrustValue += 1;
+            if (this.spaceship.thrust.backward) thrustValue += 0.5;
+            if (this.spaceship.thrust.left || this.spaceship.thrust.right) thrustValue += 0.5;
+            
+            thrustDisplay.textContent = thrustValue.toFixed(1);
+            
+            // Change color if thrusting
+            if (thrustValue > 0) {
+                thrustDisplay.style.color = 'rgba(120, 220, 232, 1)';
+            } else {
+                thrustDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
+            }
+        }
+        
+        // Update velocity display
+        const velocityDisplay = document.getElementById('velocity-value');
+        if (velocityDisplay) {
+            // Get velocity from physics or spaceship
+            let velocity = 0;
+            if (this.spaceship.velocity) {
+                velocity = this.spaceship.velocity.length();
+            } else if (window.game && window.game.physics) {
+                // Alternative: get from physics if available
+                velocity = window.game.physics.velocity ? window.game.physics.velocity.length() : 0;
+            }
+            
+            velocityDisplay.textContent = velocity.toFixed(2);
+            
+            // Change color based on velocity
+            if (velocity > this.spaceship.maxVelocity * 0.8) {
+                velocityDisplay.style.color = 'rgba(255, 204, 0, 0.9)';
+            } else if (velocity > 0.5) {
+                velocityDisplay.style.color = 'rgba(120, 220, 232, 1)';
+            } else {
+                velocityDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
+            }
+        }
+        
+        // Update boost display
+        const boostDisplay = document.getElementById('boost-value');
+        if (boostDisplay) {
+            if (this.spaceship.thrust.boost) {
+                boostDisplay.textContent = 'ON';
+                boostDisplay.style.color = 'rgba(255, 204, 0, 0.9)';
+            } else {
+                boostDisplay.textContent = 'OFF';
+                boostDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
+            }
+        }
+        
+        // Update horde mode indicator and timer
+        this.updateHordeModeDisplay();
+    }
+    
+    /**
+     * Update the horde mode indicator and survival timer
+     */
+    updateHordeModeDisplay() {
+        const hordeIndicator = document.getElementById('horde-mode-indicator');
+        const survivalTime = document.getElementById('horde-survival-time');
+        
+        if (!hordeIndicator || !survivalTime) return;
+        
+        // Check if horde mode is active in the game
+        if (window.game && window.game.isHordeActive) {
+            // Show the indicator if not already visible
+            if (hordeIndicator.style.display === 'none') {
+                hordeIndicator.style.display = 'flex';
+            }
+            
+            // Update the survival time display
+            if (window.game.getFormattedHordeSurvivalTime) {
+                survivalTime.textContent = window.game.getFormattedHordeSurvivalTime();
+            } else {
+                // Fallback calculation if method not available
+                const totalSeconds = Math.floor(window.game.hordeSurvivalTime / 1000);
                 const minutes = Math.floor(totalSeconds / 60);
                 const seconds = totalSeconds % 60;
-                timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                survivalTime.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
             
-            if (difficultyIndicator && window.game.difficultyManager) {
-                difficultyIndicator.textContent = `LEVEL ${window.game.difficultyManager.currentLevel}`;
+            // Increase pulsing intensity based on survival time
+            // After 3 minutes, make the pulsing more urgent
+            if (window.game.hordeSurvivalTime > 3 * 60 * 1000) {
+                const styleEl = document.createElement('style');
+                styleEl.textContent = `
+                    @keyframes pulse-horde {
+                        0% { box-shadow: 0 0 8px rgba(255, 30, 30, 0.7); }
+                        50% { box-shadow: 0 0 15px rgba(255, 30, 30, 1); }
+                        100% { box-shadow: 0 0 8px rgba(255, 30, 30, 0.7); }
+                    }
+                `;
+                document.head.appendChild(styleEl);
                 
-                // Change color based on difficulty level
-                const levelColors = [
-                    'rgba(120, 220, 232, 0.8)', // Level 1
-                    'rgba(120, 232, 120, 0.8)', // Level 2
-                    'rgba(232, 232, 120, 0.8)', // Level 3
-                    'rgba(232, 160, 120, 0.8)', // Level 4
-                    'rgba(232, 120, 120, 0.8)'  // Level 5+
-                ];
-                
-                const colorIndex = Math.min(window.game.difficultyManager.currentLevel - 1, levelColors.length - 1);
-                difficultyIndicator.style.backgroundColor = `rgba(6, 22, 31, 0.7)`;
-                difficultyIndicator.style.color = levelColors[colorIndex];
-                difficultyIndicator.style.borderColor = levelColors[colorIndex];
-                difficultyIndicator.style.boxShadow = `0 0 8px ${levelColors[colorIndex]}`;
+                // Make animation faster
+                hordeIndicator.style.animation = 'pulse-horde 1s infinite';
             }
+        } else {
+            // Hide the indicator if horde mode is not active
+            hordeIndicator.style.display = 'none';
         }
     }
     
