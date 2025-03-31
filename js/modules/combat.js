@@ -16,6 +16,7 @@ import { RenderSystem } from '../systems/rendering/renderSystem.js';
 import { CollisionSystem } from '../systems/physics/collisionSystem.js'; // Import CollisionSystem
 import { VisualEffectsSystem } from '../systems/rendering/visualEffectsSystem.js'; // Import VisualEffectsSystem
 import { TrailSystem } from '../systems/rendering/trailSystem.js';
+import { ProjectilePoolManager } from './pooling/ProjectilePoolManager.js'; // Import our new pooling system
 import * as THREE from 'three';
 
 export class Combat {
@@ -43,12 +44,243 @@ export class Combat {
         // Combat properties
         this.projectileDamage = 20; // Standard damage per projectile hit
         
+        // Initialize object pooling system
+        this.poolManager = new ProjectilePoolManager(scene);
+        console.log("Initialized ProjectilePoolManager for object pooling");
+        
+        // Initialize template materials to prevent shader compilation stutter
+        this.initializeTemplateMaterials();
+        
+        // Pre-create and cache geometries
+        this.precreateGeometries();
+        
         // Initialize ECS world for advanced combat systems
         // This needs to be initialized asynchronously, but constructors can't be async
         // So we'll just kick off the initialization and let it complete in the background
         this.initializeECSWorld();
         
         console.log("Combat systems initialized");
+    }
+    
+    /**
+     * Initialize template materials to prevent shader compilation stutter during first fire
+     */
+    initializeTemplateMaterials() {
+        console.log("Initializing template materials for combat effects");
+        
+        // Template for projectile material (MeshStandardMaterial)
+        this.projectileMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 5,
+            metalness: 0.7,
+            roughness: 0.3
+        });
+        
+        // Template for projectile glow material (MeshBasicMaterial)
+        this.projectileGlowMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.4,
+            blending: THREE.AdditiveBlending
+        });
+        
+        // Template for trail particle material (MeshBasicMaterial)
+        this.trailParticleMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending
+        });
+        
+        // Template for muzzle flash material (MeshBasicMaterial)
+        this.muzzleFlashMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.7,
+            blending: THREE.AdditiveBlending,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+            wireframe: false
+        });
+        
+        // Template for tracer line material (LineBasicMaterial)
+        this.tracerLineMaterial = new THREE.LineBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+        
+        // Template for point light used in muzzle flash and explosions
+        this.pointLightMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 1.0
+        });
+        
+        // Template for explosion particles
+        this.explosionParticleMaterial = new THREE.PointsMaterial({
+            color: 0xff9900,
+            size: 10,
+            transparent: true,
+            opacity: 1,
+            blending: THREE.AdditiveBlending
+        });
+        
+        // Force material compilation by creating a small invisible mesh
+        // This ensures shaders are compiled immediately rather than at first fire
+        const dummyGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        const sphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const cylinderGeometry = new THREE.CylinderGeometry(0.1, 0.2, 1, 8, 1);
+        const pointsPositions = new Float32Array(30); // 10 points x 3 coordinates
+        for (let i = 0; i < 30; i++) {
+            pointsPositions[i] = Math.random() - 0.5;
+        }
+        const pointsGeometry = new THREE.BufferGeometry();
+        pointsGeometry.setAttribute('position', new THREE.BufferAttribute(pointsPositions, 3));
+        
+        // Create dummy objects using all materials that will be used in projectiles
+        const dummyProjectile = new THREE.Mesh(sphereGeometry, this.projectileMaterial.clone());
+        const dummyGlow = new THREE.Mesh(sphereGeometry, this.projectileGlowMaterial.clone());
+        const dummyTrail = new THREE.Mesh(sphereGeometry, this.trailParticleMaterial.clone());
+        const dummyFlash = new THREE.Mesh(cylinderGeometry, this.muzzleFlashMaterial.clone());
+        const dummyTracer = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0, 1)
+            ]),
+            this.tracerLineMaterial.clone()
+        );
+        const dummyExplosion = new THREE.Points(pointsGeometry, this.explosionParticleMaterial.clone());
+        
+        // Create a dummy trail system with multiple particles
+        const dummyTrailContainer = new THREE.Object3D();
+        for (let i = 0; i < 5; i++) {
+            const trailParticle = new THREE.Mesh(sphereGeometry, this.trailParticleMaterial.clone());
+            trailParticle.position.z = -i * 0.2;
+            dummyTrailContainer.add(trailParticle);
+        }
+        
+        // Create a temporary scene for shader compilation
+        const tempScene = new THREE.Scene();
+        
+        // Add all dummy objects to the temporary scene
+        tempScene.add(dummyProjectile);
+        tempScene.add(dummyGlow);
+        tempScene.add(dummyTrail);
+        tempScene.add(dummyFlash);
+        tempScene.add(dummyTracer);
+        tempScene.add(dummyTrailContainer);
+        tempScene.add(dummyExplosion);
+        
+        // Add to main scene temporarily for visibility checking
+        this.scene.add(dummyProjectile);
+        this.scene.add(dummyGlow);
+        this.scene.add(dummyTrail);
+        this.scene.add(dummyFlash);
+        this.scene.add(dummyTracer);
+        this.scene.add(dummyTrailContainer);
+        this.scene.add(dummyExplosion);
+        
+        // Force shader compilation using renderer.compile if available
+        if (window.renderer) {
+            console.log("Forcing shader compilation with renderer.compile()");
+            window.renderer.compile(tempScene, this.scene.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
+            window.renderer.compile(this.scene, this.scene.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
+        } else if (window.game && window.game.renderer && window.game.renderer.renderer) {
+            console.log("Forcing shader compilation with game.renderer.renderer.compile()");
+            window.game.renderer.renderer.compile(tempScene, this.scene.camera || window.game.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
+            window.game.renderer.renderer.compile(this.scene, this.scene.camera || window.game.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
+        } else {
+            console.warn("No renderer available for shader pre-compilation");
+        }
+        
+        // Keep dummy objects in scene longer to ensure compilation completes
+        setTimeout(() => {
+            // Remove from scene after shader compilation is complete
+            this.scene.remove(dummyProjectile);
+            this.scene.remove(dummyGlow);
+            this.scene.remove(dummyTrail);
+            this.scene.remove(dummyFlash);
+            this.scene.remove(dummyTracer);
+            this.scene.remove(dummyTrailContainer);
+            this.scene.remove(dummyExplosion);
+            
+            // Clean up temporary objects
+            dummyGeometry.dispose();
+            sphereGeometry.dispose();
+            cylinderGeometry.dispose();
+            pointsGeometry.dispose();
+            
+            // Clean up trail particles
+            dummyTrailContainer.children.forEach(child => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) child.material.dispose();
+            });
+            
+            // Store precomputed geometries in window.game for reuse
+            if (window.game) {
+                window.game.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
+                window.game.projectileGlowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
+                
+                // Precompute trail particle geometries
+                window.game.trailParticleGeometries = [];
+                const numPoints = 20; // Same as in addProjectileTrail
+                for (let i = 0; i < numPoints; i++) {
+                    const ratio = i / numPoints;
+                    const size = 0.5 * (1 - ratio);
+                    window.game.trailParticleGeometries[i] = new THREE.SphereGeometry(size, 8, 8);
+                }
+                
+                console.log("Stored precomputed geometries in window.game");
+            }
+            
+            console.log("Template materials initialized and dummy objects removed");
+        }, 500); // Increased timeout to 500ms to ensure shader compilation completes
+    }
+    
+    /**
+     * Pre-create geometries that will be reused across projectiles and effects
+     * This prevents geometry creation during combat which can cause stutters
+     */
+    precreateGeometries() {
+        console.log("Pre-creating geometries for combat effects");
+        
+        // Create geometries and store them on window.game for global access
+        if (!window.game) window.game = {};
+        
+        // Projectile geometries
+        window.game.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
+        window.game.projectileGlowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
+        
+        // Pre-create standard muzzle flash geometry
+        window.game.muzzleFlashGeometry = new THREE.CylinderGeometry(0.5, 2, 15, 12, 1, true);
+        window.game.muzzleFlashGeometry.rotateX(Math.PI / 2);
+        window.game.muzzleFlashGeometry.translate(0, 0, 15 / 2);
+        
+        // Pre-create trail particle geometries with different sizes
+        window.game.trailParticleGeometries = [];
+        const numPoints = 20; // Same as in addProjectileTrail
+        for (let i = 0; i < numPoints; i++) {
+            const ratio = i / numPoints;
+            const size = 0.5 * (1 - ratio);
+            window.game.trailParticleGeometries[i] = new THREE.SphereGeometry(size, 8, 8);
+        }
+        
+        // Pre-create line geometry for tracers
+        window.game.tracerGeometry = new THREE.BufferGeometry();
+        const points = [0, 0, 0, 0, 0, 1]; // Will be updated at runtime
+        window.game.tracerGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+        
+        // Store references to template materials
+        window.game.projectileMaterial = this.projectileMaterial;
+        window.game.projectileGlowMaterial = this.projectileGlowMaterial;
+        window.game.trailParticleMaterial = this.trailParticleMaterial;
+        window.game.muzzleFlashMaterial = this.muzzleFlashMaterial;
+        window.game.tracerLineMaterial = this.tracerLineMaterial;
+        
+        console.log("Combat geometries pre-created successfully");
     }
     
     /**
@@ -373,6 +605,11 @@ export class Combat {
         // Update all active projectiles
         this.updateProjectiles(deltaTime);
         
+        // Update pooled visual effects (muzzle flashes, tracers, etc.)
+        if (this.poolManager) {
+            this.poolManager.update(deltaTime);
+        }
+        
         // Handle firing weapons
         if (this.isFiring && !this.spaceship.isDocked) {
             this.fireParticleCannon();
@@ -546,45 +783,7 @@ export class Combat {
             }
             
             // Check if projectile has expired
-            if (performance.now() - projectile.creationTime > this.projectileLifetime) {
-                // Proper cleanup for our new trail system
-                if (projectile.userData.trail) {
-                    // Remove all trail particles to prevent memory leaks
-                    if (projectile.userData.trailParticles) {
-                        for (const particle of projectile.userData.trailParticles) {
-                            if (particle.material) {
-                                particle.material.dispose();
-                            }
-                            if (particle.geometry) {
-                                particle.geometry.dispose();
-                            }
-                            projectile.userData.trail.remove(particle);
-                        }
-                    }
-                    projectile.remove(projectile.userData.trail);
-                }
-                
-                // Dispose of projectile resources
-                if (projectile.material) {
-                    projectile.material.dispose();
-                }
-                if (projectile.geometry) {
-                    projectile.geometry.dispose();
-                }
-                
-                // Clean up glow effect if it exists
-                if (projectile.children.length > 0) {
-                    for (const child of projectile.children) {
-                        if (child.material) {
-                            child.material.dispose();
-                        }
-                        if (child.geometry) {
-                            child.geometry.dispose();
-                        }
-                        projectile.remove(child);
-                    }
-                }
-                
+            if (performance.now() - projectile.userData.creationTime > this.projectileLifetime) {
                 // Remove associated entity from ECS world
                 if (projectile.userData && projectile.userData.entityId && this.world) {
                     try {
@@ -595,8 +794,11 @@ export class Combat {
                     }
                 }
                 
-                // Remove from scene and list
-                this.scene.remove(projectile);
+                // Use pool manager to release the projectile back to the pool
+                // This handles all the cleanup of materials, geometries, and trails
+                this.poolManager.releaseProjectile(projectile);
+                
+                // Remove from tracking array
                 this.projectiles.splice(i, 1);
             }
         }
@@ -619,84 +821,20 @@ export class Combat {
      */
     createExplosionEffect(position, duration = 1000, isVisible = true) {
         try {
-            // Create particle geometry for explosion
-            const particleCount = 200;
-            const geometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            
-            // Randomize particle positions in a sphere
-            for (let i = 0; i < particleCount; i++) {
-                const i3 = i * 3;
-                positions[i3] = (Math.random() - 0.5) * 100;
-                positions[i3 + 1] = (Math.random() - 0.5) * 100;
-                positions[i3 + 2] = (Math.random() - 0.5) * 100;
-            }
-            
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            
-            // Create bright material with additive blending for glow effect
-            const material = new THREE.PointsMaterial({
-                color: 0xff9900,
-                size: 10,
-                transparent: true,
-                opacity: 1,
-                blending: THREE.AdditiveBlending
-            });
-            
-            // Create particle system
-            const explosion = new THREE.Points(geometry, material);
-            explosion.position.copy(position);
-            this.scene.add(explosion);
-            
-            console.log("Created explosion effect at:", position.x.toFixed(0), position.y.toFixed(0), position.z.toFixed(0));
-            
-            // Automatically remove after animation
-            const startTime = Date.now();
-            
-            // Animation function
-            const animateExplosion = () => {
-                const elapsed = Date.now() - startTime;
-                const progress = elapsed / duration;
-                
-                if (elapsed < duration) {
-                    // Calculate animation progress (0-1)
-                    const progress = elapsed / duration;
-                    
-                    // Expand particles outward
-                    for (let i = 0; i < particleCount; i++) {
-                        const i3 = i * 3;
-                        const x = positions[i3] * (1 + progress * 5);
-                        const y = positions[i3 + 1] * (1 + progress * 5);
-                        const z = positions[i3 + 2] * (1 + progress * 5);
-                        
-                        explosion.geometry.attributes.position.array[i3] = x;
-                        explosion.geometry.attributes.position.array[i3 + 1] = y;
-                        explosion.geometry.attributes.position.array[i3 + 2] = z;
-                    }
-                    
-                    explosion.geometry.attributes.position.needsUpdate = true;
-                    
-                    // Fade out
-                    material.opacity = 1 - progress;
-                    
-                    // Continue animation
-                    requestAnimationFrame(animateExplosion);
-                } else {
-                    // Remove from scene when done
-                    this.scene.remove(explosion);
-                    console.log("Explosion animation complete");
-                }
-            };
-            
-            // Start animation
-            animateExplosion();
+            // Get explosion from pool
+            const explosion = this.poolManager.getExplosion(position, duration);
             
             // Play explosion sound
             if (window.game && window.game.audio) {
                 window.game.audio.playSound('boink');
             }
+            
+            console.log("Created explosion effect at:", position.x.toFixed(0), position.y.toFixed(0), position.z.toFixed(0));
+            
+            return explosion;
         } catch (error) {
             console.error("Error creating explosion effect:", error);
+            return null;
         }
     }
     
@@ -1012,48 +1150,12 @@ export class Combat {
      * @param {THREE.Vector3} direction Direction vector
      */
     createProjectile(position, direction) {
-        // Use precomputed geometry and clone the precomputed material
-        let geometry, material, glowGeometry, glowMaterial;
+        // Get a projectile from the pool
+        const projectile = this.poolManager.getProjectile();
         
-        // Use precomputed assets if available, fallback to creating new ones if not
-        if (window.game && window.game.projectileGeometry && window.game.projectileMaterial) {
-            // Use precomputed geometry (shared reference is fine for geometry)
-            geometry = window.game.projectileGeometry;
-            // Clone the material so each projectile can have its own properties
-            material = window.game.projectileMaterial.clone();
-            
-            // Use precomputed glow geometry and material
-            glowGeometry = window.game.projectileGlowGeometry;
-            glowMaterial = window.game.projectileGlowMaterial.clone();
-        } else {
-            // Fallback to creating new assets (should never happen if precomputation worked)
-            console.warn("Projectile assets not precomputed, creating new ones (may cause stutter)");
-            geometry = new THREE.SphereGeometry(1.8, 12, 12);
-            material = new THREE.MeshStandardMaterial({
-                color: 0x00ffff,
-                emissive: 0x00ffff,
-                emissiveIntensity: 5,
-                metalness: 0.7,
-                roughness: 0.3
-            });
-            
-            // Create glow effect
-            glowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
-            glowMaterial = new THREE.MeshBasicMaterial({
-                color: 0x00ffff,
-                transparent: true,
-                opacity: 0.4,
-                blending: THREE.AdditiveBlending
-            });
-        }
-        
-        // Create glow mesh using the geometry and material
-        const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
-        
-        // Create mesh
-        const projectile = new THREE.Mesh(geometry, material);
+        // Set position and make visible
         projectile.position.copy(position);
-        projectile.add(glowMesh); // Add glow as child
+        projectile.visible = true;
         
         // Set velocity based on direction and speed
         projectile.velocity = direction.clone().multiplyScalar(this.projectileSpeed);
@@ -1066,137 +1168,16 @@ export class Combat {
         // Add a dynamic trail
         this.addProjectileTrail(projectile, direction);
         
-        // Add to scene
-        this.scene.add(projectile);
+        // Add to scene if not already there
+        if (!projectile.parent) {
+            this.scene.add(projectile);
+        }
         
         // Store creation time for lifespan tracking
-        projectile.creationTime = performance.now();
+        projectile.userData.creationTime = performance.now();
         
-        // Add to projectiles array
+        // Add to projectiles array to track active projectiles
         this.projectiles.push(projectile);
-        
-        // IMPORTANT: Register the projectile in the ECS world
-        // This is critical for collision detection
-        if (this.world) {
-            try {
-                // Create projectile entity
-                const projectileEntity = this.world.createEntity('projectile_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
-                
-                // Add tags for identification
-                projectileEntity.addTag('projectile');
-                projectileEntity.addTag('playerProjectile');
-                projectileEntity.addTag('particleProjectile');
-                
-                // Store damage information
-                projectileEntity.userData = { 
-                    mesh: projectile,
-                    damage: this.projectileDamage,
-                    source: 'player',
-                    attackType: 'particle'
-                };
-                
-                // Link mesh to entity for reference
-                projectile.userData.entityId = projectileEntity.id;
-                
-                // Add required components directly with proper imports
-                try {
-                    // First option: Use component registry
-                    if (this.world.componentRegistry) {
-                        const TransformComponent = this.world.componentRegistry.getComponentClass('TransformComponent');
-                        const RigidbodyComponent = this.world.componentRegistry.getComponentClass('RigidbodyComponent');
-                        
-                        // Add transform component
-                        if (TransformComponent) {
-                            const transform = new TransformComponent(position.clone());
-                            transform.needsUpdate = true;
-                            projectileEntity.addComponent(transform);
-                            console.log(`Added TransformComponent to projectile ${projectileEntity.id}`);
-                        } else {
-                            console.error("TransformComponent class not available in registry");
-                        }
-                        
-                        // Add rigidbody component
-                        if (RigidbodyComponent) {
-                            const rigidbody = new RigidbodyComponent(1); // 1 = mass
-                            rigidbody.velocity = direction.clone().multiplyScalar(this.projectileSpeed);
-                            rigidbody.collisionRadius = 5; // Increased collision radius
-                            rigidbody.useGravity = false;
-                            rigidbody.drag = 0;
-                            projectileEntity.addComponent(rigidbody);
-                            console.log(`Added RigidbodyComponent to projectile ${projectileEntity.id}`);
-                        } else {
-                            console.error("RigidbodyComponent class not available in registry");
-                        }
-                    } 
-                    // Second option: Direct dynamic imports
-                    else {
-                        console.log("Attempting direct component imports for projectile");
-                        
-                        // Dynamic imports as fallback
-                        Promise.all([
-                            import('../components/transform.js'),
-                            import('../components/physics/rigidbody.js')
-                        ]).then(([transformModule, rigidbodyModule]) => {
-                            // Add transform
-                            const transform = new transformModule.TransformComponent(position.clone());
-                            transform.needsUpdate = true;
-                            projectileEntity.addComponent(transform);
-                            
-                            // Add rigidbody
-                            const rigidbody = new rigidbodyModule.RigidbodyComponent(1);
-                            rigidbody.velocity = direction.clone().multiplyScalar(this.projectileSpeed);
-                            rigidbody.collisionRadius = 5;
-                            rigidbody.useGravity = false;
-                            rigidbody.drag = 0;
-                            projectileEntity.addComponent(rigidbody);
-                            
-                            console.log(`Added components to projectile ${projectileEntity.id} via dynamic imports`);
-                        }).catch(error => {
-                            console.error("Failed to import component modules:", error);
-                        });
-                    }
-                    
-                    // Verify components were added
-                    setTimeout(() => {
-                        const hasTransform = projectileEntity.hasComponent('TransformComponent');
-                        const hasRigidbody = projectileEntity.hasComponent('RigidbodyComponent');
-                        console.log(`Projectile component verification: Transform=${hasTransform}, Rigidbody=${hasRigidbody}`);
-                    }, 50);
-                    
-                } catch (componentError) {
-                    console.error("Error adding components to projectile:", componentError);
-                }
-                
-                // Custom update function for this entity to sync with mesh
-                projectileEntity.update = (deltaTime) => {
-                    // Update transform to match mesh position
-                    const transform = projectileEntity.getComponent('TransformComponent');
-                    if (transform && projectile) {
-                        transform.position.copy(projectile.position);
-                        transform.needsUpdate = true;
-                    }
-                    
-                    // Update rigidbody to match mesh velocity
-                    const rigidbody = projectileEntity.getComponent('RigidbodyComponent');
-                    if (rigidbody && projectile && projectile.velocity) {
-                        rigidbody.velocity.copy(projectile.velocity);
-                    }
-                };
-                
-                console.log(`Created projectile entity ${projectileEntity.id} with proper components`);
-                
-                // Signal projectile creation to combat system
-                this.world.messageBus.publish('combat.projectileCreated', {
-                    projectile: projectileEntity,
-                    position: position.clone(),
-                    direction: direction.clone(),
-                    speed: this.projectileSpeed
-                });
-                
-            } catch (error) {
-                console.error("Error creating projectile entity:", error);
-            }
-        }
         
         return projectile;
     }
@@ -1240,42 +1221,27 @@ export class Combat {
      * @param {THREE.Vector3} direction Direction of travel
      */
     addProjectileTrail(projectile, direction) {
-        // Create a more dynamic and visually appealing trail
+        // Create a more dynamic and visually appealing trail using object pooling
         
-        // Create trail points
+        // Parameters
         const numPoints = 20; // Number of particles in the trail
         const trailLength = 6.0; // Total length of the trail
         
-        // Create trail container
-        const trailContainer = new THREE.Object3D();
+        // Get a trail container from the pool
+        const trailContainer = this.poolManager.getTrailContainer();
         projectile.add(trailContainer);
         
-        // Create individual trail particles
+        // Array to store particles for this trail
         const trailParticles = [];
+        trailContainer.userData.particles = trailParticles;
         
+        // Create individual trail particles from pool
         for (let i = 0; i < numPoints; i++) {
             // Calculate size and position
             const ratio = i / numPoints;
-            const size = 0.5 * (1 - ratio); // Smaller as we get further from projectile
             
-            // Get precomputed geometry or create a new one if not available
-            let particleGeometry;
-            if (window.game && window.game.trailParticleGeometries && window.game.trailParticleGeometries[i]) {
-                particleGeometry = window.game.trailParticleGeometries[i];
-            } else {
-                particleGeometry = new THREE.SphereGeometry(size, 8, 8);
-            }
-            
-            // Create particle material with glow
-            const particleMaterial = new THREE.MeshBasicMaterial({
-                color: 0x00ffff,
-                transparent: true,
-                opacity: 0.9 * (1 - ratio), // More transparent further from projectile
-                blending: THREE.AdditiveBlending
-            });
-            
-            // Create particle mesh
-            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+            // Get a trail particle from the pool with the appropriate size
+            const particle = this.poolManager.getTrailParticle(i);
             
             // Position particle along trail
             const offset = direction.clone().multiplyScalar(-ratio * trailLength);
@@ -1283,10 +1249,9 @@ export class Combat {
             
             // Store initial values for animation
             particle.userData.initialOffset = offset.clone();
-            particle.userData.initialSize = size;
-            particle.userData.initialOpacity = particleMaterial.opacity;
+            particle.userData.initialOpacity = particle.material.opacity;
             
-            // Add to trail
+            // Add to trail container
             trailContainer.add(particle);
             trailParticles.push(particle);
         }
@@ -1332,103 +1297,50 @@ export class Combat {
      * Clear all active projectiles
      */
     clearAllProjectiles() {
+        // Release all projectiles back to the pool
         for (const projectile of this.projectiles) {
-            // Clean up all resources for each projectile
-            if (projectile.userData.trail) {
-                // Remove all trail particles
-                if (projectile.userData.trailParticles) {
-                    for (const particle of projectile.userData.trailParticles) {
-                        if (particle.material) {
-                            particle.material.dispose();
-                        }
-                        if (particle.geometry) {
-                            particle.geometry.dispose();
-                        }
-                        projectile.userData.trail.remove(particle);
-                    }
-                }
-                projectile.remove(projectile.userData.trail);
-            }
-            
-            // Dispose of projectile resources
-            if (projectile.material) {
-                projectile.material.dispose();
-            }
-            if (projectile.geometry) {
-                projectile.geometry.dispose();
-            }
-            
-            // Clean up any child objects (like glow effect)
-            if (projectile.children.length > 0) {
-                for (const child of projectile.children) {
-                    if (child.material) {
-                        child.material.dispose();
-                    }
-                    if (child.geometry) {
-                        child.geometry.dispose();
-                    }
-                    projectile.remove(child);
+            // Remove associated entity from ECS world
+            if (projectile.userData && projectile.userData.entityId && this.world) {
+                try {
+                    this.world.destroyEntity(projectile.userData.entityId);
+                } catch (error) {
+                    console.error("Error removing projectile entity:", error);
                 }
             }
             
-            this.scene.remove(projectile);
+            // Return projectile to the pool
+            this.poolManager.releaseProjectile(projectile);
         }
+        
+        // Clear the tracking array
         this.projectiles = [];
+        
+        console.log("All projectiles cleared and returned to the pool");
     }
     
     // New method to visualize projectile trajectory
     createAimingTracer(startPosition, direction, distance = 3000) {
-        // Create a line geometry for the tracer
-        const lineGeometry = new THREE.BufferGeometry();
+        // Get a tracer from the pool
+        const tracer = this.poolManager.getTracer();
+        
+        // Calculate end position
         const endPosition = startPosition.clone().add(direction.clone().multiplyScalar(distance));
         
-        // Create points array to define the line
-        const points = [
-            startPosition.x, startPosition.y, startPosition.z,
-            endPosition.x, endPosition.y, endPosition.z
-        ];
+        // Update the positions in the geometry
+        const positions = tracer.geometry.attributes.position.array;
+        positions[0] = startPosition.x;
+        positions[1] = startPosition.y;
+        positions[2] = startPosition.z;
+        positions[3] = endPosition.x;
+        positions[4] = endPosition.y;
+        positions[5] = endPosition.z;
         
-        // Set the line vertices
-        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+        // Mark the position attribute as needing update
+        tracer.geometry.attributes.position.needsUpdate = true;
         
-        // Create a bright, pulsing material for the tracer
-        const tracerMaterial = new THREE.LineBasicMaterial({
-            color: 0x00ffff,
-            transparent: true,
-            opacity: 0.6,
-            blending: THREE.AdditiveBlending
-        });
+        // The pool manager will automatically handle animation and cleanup
         
-        // Create the line
-        const tracerLine = new THREE.Line(lineGeometry, tracerMaterial);
-        
-        // Add tracer to scene
-        this.scene.add(tracerLine);
-        
-        // Animate tracer fade-out
-        let opacity = 0.6;
-        const fadeSpeed = 1.5; // Faster fade-out
-        
-        const animateTracer = () => {
-            opacity -= fadeSpeed * 0.016; // Assume 60fps
-            
-            if (opacity <= 0) {
-                // Remove tracer when fully faded
-                this.scene.remove(tracerLine);
-                return;
-            }
-            
-            // Update opacity
-            tracerMaterial.opacity = opacity;
-            
-            // Continue animation
-            requestAnimationFrame(animateTracer);
-        };
-        
-        // Start animation
-        animateTracer();
-        
-        return tracerLine;
+        return tracer;
     }
     
     /**
@@ -1437,85 +1349,49 @@ export class Combat {
      * @param {THREE.Vector3} direction Direction the effect should travel
      */
     createMuzzleFlash(position, direction) {
-        // Create conical beam that travels forward
-        const segments = 12;
-        const coneLength = 15; // Slightly longer cone
+        // Get a muzzle flash from the pool
+        const muzzleFlash = this.poolManager.getMuzzleFlash();
         
-        // Create a custom geometry for the energy cone
-        const coneGeometry = new THREE.CylinderGeometry(0.5, 2, coneLength, 12, 1, true);
-        // Rotate it to point forward (cylinder's default axis is Y)
-        coneGeometry.rotateX(Math.PI / 2);
-        // Shift it forward so the starting point is at position
-        coneGeometry.translate(0, 0, coneLength / 2);
+        // Position and orient the flash
+        muzzleFlash.position.copy(position);
+        muzzleFlash.lookAt(position.clone().add(direction));
         
-        // Create material with additive blending for energy-like effect
-        const coneMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff, // Cyan color to match projectiles
-            transparent: true,
-            opacity: 0.7,
-            blending: THREE.AdditiveBlending,
-            side: THREE.DoubleSide,
-            depthWrite: false,
-            wireframe: false
-        });
+        // Store reference to initial position and direction for animation
+        muzzleFlash.userData.initialPosition = position.clone();
+        muzzleFlash.userData.direction = direction.clone();
         
-        // Create the cone mesh
-        const cone = new THREE.Mesh(coneGeometry, coneMaterial);
-        cone.position.copy(position);
+        // Set up the flash light
+        const flashLight = muzzleFlash.userData.flashLight;
+        if (flashLight) {
+            flashLight.position.copy(position);
+            flashLight.intensity = 200;
+        }
         
-        // Orient the cone along the firing direction
-        cone.lookAt(position.clone().add(direction));
+        // The pool manager will automatically handle animation and cleanup via its update method
+        // which checks the progress and releases back to the pool when complete
         
-        // Add to scene
-        this.scene.add(cone);
+        return muzzleFlash;
+    }
+    
+    /**
+     * Dispose Combat module resources
+     * Clean up all pools, geometries, and other resources
+     */
+    dispose() {
+        console.log("Disposing Combat module resources...");
         
-        // Create a small point light at the firing position
-        const flashLight = new THREE.PointLight(0x00ffff, 200, 10, 2);
-        flashLight.position.copy(position);
-        this.scene.add(flashLight);
+        // Clear all active projectiles
+        this.clearAllProjectiles();
         
-        // Animate the laser burst - travel forward and fade out MUCH faster
-        const startTime = performance.now();
-        const burstDuration = 70; // Much shorter duration (was 200ms)
-        const travelDistance = 300; // Much greater distance (was 30)
+        // Dispose pool manager if it exists
+        if (this.poolManager) {
+            this.poolManager.dispose();
+            this.poolManager = null;
+        }
         
-        // Store initial position to calculate travel
-        const initialPosition = position.clone();
+        // Mark as disposed
+        this.disposed = true;
         
-        const animateBurst = () => {
-            const elapsed = performance.now() - startTime;
-            const progress = elapsed / burstDuration;
-            
-            if (progress < 1) {
-                // Move forward along direction vector at high speed
-                const travelProgress = Math.min(progress * 2.5, 1); // Even faster travel speed
-                const newPosition = initialPosition.clone().add(
-                    direction.clone().multiplyScalar(travelDistance * travelProgress)
-                );
-                cone.position.copy(newPosition);
-                
-                // Fade out as it travels
-                cone.material.opacity = 0.7 * (1 - progress);
-                flashLight.intensity = 200 * (1 - progress * 3); // Light fades very quickly
-                
-                // Stretch the cone as it travels
-                const stretchFactor = 1 + progress * 1.5; // More stretching for higher speed sensation
-                cone.scale.set(1, 1, stretchFactor);
-                
-                // Continue animation
-                requestAnimationFrame(animateBurst);
-            } else {
-                // Remove effects when animation is complete
-                this.scene.remove(cone);
-                this.scene.remove(flashLight);
-                
-                // Dispose resources
-                cone.geometry.dispose();
-                cone.material.dispose();
-            }
-        };
-        
-        // Start animation
-        animateBurst();
+        console.log("Combat module resources disposed");
     }
 }
