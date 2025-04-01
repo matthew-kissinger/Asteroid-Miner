@@ -1,8 +1,19 @@
 /**
- * OptimizedMovementSystem - Physics movement system using data-oriented design
+ * OptimizedMovementSystem
  * 
- * Handles physics integration for velocity, position, angular velocity, and rotation
- * using a data-oriented approach for better performance.
+ * [PRESERVED FOR FUTURE SCALING]
+ * This optimized system is currently not used in the main game, but is preserved for
+ * future performance optimization when scaling to many entities. This system works with
+ * the optimized components to provide faster physics updates by:
+ * 
+ * 1. Operating directly on TypedArrays instead of individual component objects
+ * 2. Better cache usage through contiguous memory access patterns
+ * 3. Reduced garbage collection overhead
+ * 
+ * Would be valuable for implementing:
+ * - Large asteroid fields
+ * - Space battles with many ships
+ * - Particle effects
  */
 
 import * as THREE from 'three';

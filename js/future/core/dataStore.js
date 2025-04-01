@@ -1,8 +1,16 @@
 /**
  * DataStore - Data-oriented component storage for ECS architecture
  * 
- * Provides high-performance typed array storage for component data,
- * improving cache coherency and reducing garbage collection.
+ * [PRESERVED FOR FUTURE SCALING]
+ * This file is currently not used in the main game, but is preserved for future performance 
+ * optimization needs. If the game needs to support thousands of entities simultaneously,
+ * this Data-Oriented Design approach using TypedArrays can provide significant performance
+ * benefits through better memory layout, cache coherency, and reduced garbage collection.
+ * 
+ * Consider re-implementing this for:
+ * 1. Massive asteroid fields (1000+ asteroids)
+ * 2. Large-scale space battles
+ * 3. Particle-heavy effects
  */
 
 // Maximum number of entities to support in the system

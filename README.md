@@ -74,6 +74,19 @@ The game includes several settings to optimize for different hardware capabiliti
 * **Resolution Scaling:** Adjust rendering resolution for better performance
 * **Graphical Quality Presets:** Choose Performance, Balanced, or Quality presets
 
+## Future Scaling Capabilities
+
+The codebase includes preserved advanced optimization systems that are not currently in use but maintained for future scaling needs:
+
+* **Data-Oriented Design Components:** TypedArray-based component storage in `js/core/dataStore.js` and related optimized components provide highly efficient memory layouts for handling thousands of entities.
+* **Instanced Rendering:** The `InstancedRenderSystem` leverages THREE.InstancedMesh for efficiently rendering many similar objects with minimal draw calls.
+* **Optimized Physics:** Specialized systems for high-performance physics simulation when dealing with large numbers of entities.
+
+These optimized systems could be re-implemented to support:
+1. Massive asteroid fields (1000+ asteroids)
+2. Large-scale space battles with many ships and projectiles
+3. Advanced particle effects and debris systems
+
 ## Contributing
 
 This project was primarily a learning exercise. Contributions are not actively sought, but feel free to fork the repository and experiment.

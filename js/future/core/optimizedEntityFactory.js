@@ -1,8 +1,16 @@
 /**
- * OptimizedEntityFactory - Factory for creating entities with optimized components
+ * OptimizedEntityFactory
  * 
- * Provides utility functions for creating common entity types with
- * optimized data-oriented components.
+ * [PRESERVED FOR FUTURE SCALING]
+ * This factory is currently not used in the main game, but is preserved for future
+ * performance optimization when scaling to many entities. It creates entities with
+ * optimized components that use TypedArrays for better memory layout and performance.
+ * 
+ * If re-implementing the optimized ECS system:
+ * 1. Use this factory instead of creating entities manually
+ * 2. Ensure optimized components are registered with the world
+ * 3. Register the optimizedMovementSystem in the world
+ * 4. Consider using instancedRenderSystem for rendering
  */
 
 import { OptimizedTransformComponent } from '../components/optimized/transformComponent.js';

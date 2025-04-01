@@ -1,11 +1,15 @@
 /**
  * InstancedMeshComponent - Optimized visual representation using instanced rendering
  * 
+ * [PRESERVED FOR FUTURE SCALING]
+ * This optimized component is currently not used in the main game, but is preserved for
+ * future performance optimization when rendering many similar objects with InstancedMesh.
+ * 
  * Handles THREE.InstancedMesh for efficient rendering of many similar objects,
  * significantly reducing draw calls for better performance.
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../../core/component.js';
 
 // Template meshes for different object types
 const templateGeometries = new Map();

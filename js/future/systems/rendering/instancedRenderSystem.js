@@ -1,16 +1,23 @@
 /**
- * InstancedRenderSystem - Optimized rendering system using instanced meshes
+ * InstancedRenderSystem
  * 
- * This system manages the rendering of entities that use InstancedMeshComponent.
- * It provides significant performance improvements for rendering many similar entities
- * by batching them into a single draw call using THREE.InstancedMesh.
+ * [PRESERVED FOR FUTURE SCALING]
+ * This optimized rendering system is currently not used in the main game, but is preserved
+ * for future performance optimization when rendering many similar entities. Using THREE.InstancedMesh
+ * can significantly improve rendering performance for:
+ * 
+ * 1. Large asteroid fields (1000+ asteroids)
+ * 2. Large numbers of projectiles or particles
+ * 3. Swarms of smaller ships or debris
+ * 
+ * Would be valuable to re-implement when adding features requiring many similar objects.
  */
 
 import * as THREE from 'three';
-import { System } from '../../core/system.js';
+import { System } from '../../../core/system.js';
 import { InstancedMeshComponent } from '../../components/rendering/instancedMeshComponent.js';
-import { OptimizedTransformComponent } from '../../components/optimizedTransformComponent.js';
-import { TransformComponent } from '../../components/transformComponent.js';
+import { OptimizedTransformComponent } from '../../components/optimized/transformComponent.js';
+import { TransformComponent } from '../../../components/transform.js';
 
 export class InstancedRenderSystem extends System {
     constructor(scene, camera, frustumCulling = true, renderDistance = 2000) {

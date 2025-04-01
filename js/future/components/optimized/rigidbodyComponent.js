@@ -1,12 +1,19 @@
 /**
- * OptimizedRigidbodyComponent - Physics properties for entities using data-oriented design
+ * OptimizedRigidbodyComponent
  * 
- * Optimized version of RigidbodyComponent that uses a data-oriented approach
- * with typed arrays for better performance.
+ * [PRESERVED FOR FUTURE SCALING]
+ * This optimized component is currently not used in the main game, but is preserved for
+ * future performance needs. Using TypedArrays for physics data provides better memory
+ * layout and reduced GC pressure when simulating physics for many entities simultaneously.
+ * 
+ * If re-implementing this system:
+ * 1. Import and use DataStore from core/dataStore.js
+ * 2. Register optimizedMovementSystem instead of standard movementSystem
+ * 3. Consider for large-scale simulations (asteroid fields, space battles)
  */
 
-import { Component } from '../../core/component.js';
-import { RigidbodyDataStore } from '../../core/dataStore.js';
+import { Component } from '../../../core/component.js';
+import { RigidbodyDataStore } from '../../../future/core/dataStore.js';
 
 // Singleton data store instance
 let dataStore = null;

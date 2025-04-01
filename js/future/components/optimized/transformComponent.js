@@ -1,12 +1,19 @@
 /**
- * OptimizedTransformComponent - Position, rotation, scale component using data-oriented design
+ * OptimizedTransformComponent
  * 
- * Optimized version of TransformComponent that uses a data-oriented approach
- * with typed arrays for better performance.
+ * [PRESERVED FOR FUTURE SCALING]
+ * This optimized component is currently not used in the main game, but is preserved for
+ * future performance needs. Using TypedArrays for position, rotation, and scale data
+ * provides better memory layout and cache performance when dealing with thousands of entities.
+ * 
+ * If re-implementing this system:
+ * 1. Import and use DataStore from core/dataStore.js
+ * 2. Register optimizedMovementSystem instead of standard movementSystem
+ * 3. Consider using instancedRenderSystem for rendering many similar objects
  */
 
-import { Component } from '../../core/component.js';
-import { TransformDataStore } from '../../core/dataStore.js';
+import { Component } from '../../../core/component.js';
+import { TransformDataStore } from '../../../future/core/dataStore.js';
 
 // Singleton data store instance
 let dataStore = null;

@@ -1016,7 +1016,15 @@ class Game {
     
     // Create a fallback for the initOptimizedECS method that is causing errors
     initOptimizedECS() {
-        // This is a placeholder to prevent errors when this method is called
+        // [PRESERVED FOR FUTURE SCALING]
+        // This method is a placeholder for a potential future implementation
+        // of the optimized ECS system using TypedArrays and Data-Oriented Design.
+        // 
+        // The optimized components, systems and DataStore code are preserved 
+        // in the codebase for future performance scaling needs, such as:
+        // - Massive asteroid fields (1000+ asteroids)
+        // - Large-scale space battles
+        // - Advanced particle systems
         console.log("initOptimizedECS called - This is a placeholder implementation");
         
         // Check if we need to initialize optimized systems
