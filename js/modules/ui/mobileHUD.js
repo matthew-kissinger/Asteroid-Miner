@@ -343,8 +343,20 @@ export class MobileHUD {
         // If no resources found, exit
         if (!resources) return;
         
-        // Calculate total cargo
-        const totalCargo = Object.values(resources).reduce((sum, amount) => sum + amount, 0);
+        // Calculate total cargo - ensure we're dealing with numbers
+        let totalCargo = 0;
+        
+        // Properly iterate through the resources object and sum numeric values
+        for (const key in resources) {
+            if (resources.hasOwnProperty(key)) {
+                // Get the resource amount, ensure it's a number
+                const amount = parseFloat(resources[key]) || 0;
+                totalCargo += amount;
+            }
+        }
+        
+        // Format to integer for display
+        totalCargo = Math.round(totalCargo);
         
         cargoValue.textContent = `${totalCargo} / ${maxCargo}`;
         
