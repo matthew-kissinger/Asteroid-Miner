@@ -204,8 +204,27 @@ export function createAsteroid(world, position, resourceType, size, scene) {
     mesh.setReceiveShadow(true);
     asteroid.addComponent(mesh);
     
-    // Add mineable component
-    const resourceAmount = Math.floor(size * 20 + Math.random() * 10);
+    // Add mineable component with balanced resource amounts for single-action mining
+    let resourceAmount;
+    switch (resourceType) {
+        case 'iron':
+            resourceAmount = Math.floor(size * 5 + Math.random() * 5); // 5-10 iron for small asteroids
+            break;
+        case 'gold':
+            resourceAmount = Math.floor(size * 3 + Math.random() * 2); // 3-5 gold for small asteroids
+            break;
+        case 'platinum':
+            resourceAmount = Math.floor(size * 1 + Math.random() * 2); // 1-3 platinum for small asteroids
+            break;
+        default:
+            resourceAmount = Math.floor(size * 5);
+    }
+    
+    // Scale up resources for larger asteroids
+    if (size > 2) {
+        resourceAmount *= 1.5;
+    }
+    
     const mineable = new MineableComponent(resourceType, resourceAmount);
     mineable.setStartingScale(size);
     asteroid.addComponent(mineable);

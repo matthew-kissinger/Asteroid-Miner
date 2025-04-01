@@ -135,12 +135,58 @@ export class GameOverScreen {
         const gameOverContainer = document.getElementById('game-over-container');
         gameOverContainer.style.display = 'flex';
         
-        // Set custom message if provided
-        if (message) {
-            const gameOverMessage = document.getElementById('game-over-message');
-            if (gameOverMessage) {
-                gameOverMessage.textContent = message;
+        // Set message based on reason
+        const gameOverMessage = document.getElementById('game-over-message');
+        if (gameOverMessage) {
+            // Default message
+            let displayMessage = 'Your journey has ended.';
+            
+            // Check if we received a reason type or just a string message
+            if (typeof message === 'object' && message.data && message.data.type) {
+                // Use the type field for more reliable message categorization
+                const reasonType = message.data.type;
+                
+                switch (reasonType) {
+                    case 'FUEL_DEPLETED':
+                        displayMessage = 'Your ship drifted into the void after running out of fuel.';
+                        break;
+                    case 'COLLISION_ASTEROID':
+                        displayMessage = 'Your ship was destroyed by an asteroid collision.';
+                        break;
+                    case 'COLLISION_PLANET':
+                        displayMessage = 'Your ship crashed into a planet!';
+                        break;
+                    case 'COMBAT_DEATH':
+                        displayMessage = 'Your ship was destroyed in combat.';
+                        break;
+                    case 'SUN_DEATH':
+                        displayMessage = "Your ship was incinerated by the sun's heat!";
+                        break;
+                    default:
+                        // If we have a reason string but don't recognize the type
+                        if (message.data.reason) {
+                            displayMessage = message.data.reason;
+                        }
+                }
+            } else if (message) {
+                // Fallback to string content checking for backward compatibility
+                if (message.includes("fuel")) {
+                    displayMessage = 'Your ship drifted into the void after running out of fuel.';
+                } else if (message.includes("asteroid")) {
+                    displayMessage = 'Your ship was destroyed by an asteroid collision.';
+                } else if (message.includes("combat")) {
+                    displayMessage = 'Your ship was destroyed in combat.';
+                } else if (message.includes("sun")) {
+                    displayMessage = "Your ship was incinerated by the sun's heat!";
+                } else if (message.includes("planet")) {
+                    displayMessage = "Your ship crashed into a planet!";
+                } else {
+                    // Use the provided message if none of our standardized reasons match
+                    displayMessage = message;
+                }
             }
+            
+            gameOverMessage.textContent = displayMessage;
         }
         
         // Check if game was in horde mode

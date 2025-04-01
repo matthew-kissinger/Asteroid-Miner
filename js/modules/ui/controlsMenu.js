@@ -67,6 +67,7 @@ export class ControlsMenu {
         controlsMenu.appendChild(createControlRow('E', 'Target Lock-On'));
         controlsMenu.appendChild(createControlRow('TAB', 'Cycle Targets'));
         controlsMenu.appendChild(createControlRow('R', 'Toggle Mining'));
+        controlsMenu.appendChild(createControlRow('T', 'Deploy Laser Turret'));
         controlsMenu.appendChild(createControlRow('Q', 'Dock with Stargate'));
         
         // Set up event listeners for the controls menu

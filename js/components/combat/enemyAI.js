@@ -39,7 +39,20 @@ export class EnemyAIComponent extends Component {
         // New flag for drone-like movement
         this.isDroneLike = config.isDroneLike || false;
         
+        // Separation force response
+        this.separationInfluence = config.separationInfluence || 0.3; // How much separation affects movement (0-1)
+        this.separationForce = new THREE.Vector3(); // Store the last calculated separation force
+        
         console.log(`Created ${this.faction} ${this.type} enemy AI with detection range ${this.detectionRange}`);
+    }
+    
+    /**
+     * Sets the separation force to influence movement behavior
+     * @param {THREE.Vector3} force The separation force vector
+     */
+    setSeparationForce(force) {
+        // Store the separation force for use in movement calculations
+        this.separationForce.copy(force);
     }
     
     /**
@@ -358,6 +371,23 @@ export class EnemyAIComponent extends Component {
                 .add(properUp.clone().multiplyScalar(verticalEvasion));
         }
         
+        // Apply separation force influence to final direction
+        if (this.separationForce && this.separationForce.lengthSq() > 0) {
+            // Scale the separation force by influence factor
+            const separationDirection = this.separationForce.clone().normalize();
+            const separationStrength = this.separationForce.length();
+            
+            // Add scaled separation force to final direction
+            // Use higher influence when separation force is stronger
+            const dynamicInfluence = this.separationInfluence * 
+                (0.5 + 0.5 * Math.min(1.0, separationStrength / 100));
+                
+            finalDirection.lerp(
+                separationDirection.multiplyScalar(this.speed), 
+                dynamicInfluence
+            );
+        }
+        
         // Apply the final movement
         transform.position.add(finalDirection.multiplyScalar(deltaTime));
         
@@ -432,6 +462,23 @@ export class EnemyAIComponent extends Component {
             .multiplyScalar(this.speed) // Base forward speed
             .add(right.multiplyScalar(offsetX)) // Add right/left offset
             .add(properUp.multiplyScalar(offsetY)); // Add up/down offset
+        
+        // Apply separation force influence to final direction
+        if (this.separationForce && this.separationForce.lengthSq() > 0) {
+            // Scale the separation force by influence factor
+            const separationDirection = this.separationForce.clone().normalize();
+            const separationStrength = this.separationForce.length();
+            
+            // Calculate dynamic influence - more influence when separation force is stronger
+            const dynamicInfluence = this.separationInfluence * 
+                (0.5 + 0.5 * Math.min(1.0, separationStrength / 100));
+            
+            // Blend the final direction with the separation direction
+            finalDirection.lerp(
+                separationDirection.multiplyScalar(this.speed),
+                dynamicInfluence
+            );
+        }
         
         // Apply the final movement
         transform.position.add(finalDirection.multiplyScalar(deltaTime));

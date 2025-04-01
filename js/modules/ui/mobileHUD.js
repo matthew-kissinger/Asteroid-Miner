@@ -47,6 +47,9 @@ export class MobileHUD {
         this.createStatusBar(hudContainer, 'H', 'hull-bar-mobile', 'rgba(120, 220, 232, 0.8)');
         this.createStatusBar(hudContainer, 'F', 'fuel-bar-mobile', 'rgba(120, 220, 232, 0.8)');
         
+        // Add thrust and velocity displays
+        this.createThrustVelocityDisplay(hudContainer);
+        
         // Create cargo display
         const cargoContainer = document.createElement('div');
         cargoContainer.style.display = 'flex';
@@ -118,6 +121,20 @@ export class MobileHUD {
         barContainer.style.backgroundColor = 'rgba(10, 30, 40, 0.5)';
         barContainer.style.borderRadius = '4px';
         barContainer.style.overflow = 'hidden';
+        barContainer.style.position = 'relative';
+        
+        // Add fuel value text if this is the fuel bar
+        if (id === 'fuel-bar-mobile') {
+            const fuelValue = document.createElement('div');
+            fuelValue.id = 'fuel-value-mobile';
+            fuelValue.style.position = 'absolute';
+            fuelValue.style.right = '0';
+            fuelValue.style.top = '-14px';
+            fuelValue.style.fontSize = '10px';
+            fuelValue.style.color = 'rgba(120, 220, 232, 0.9)';
+            fuelValue.textContent = '100 / 100';
+            barContainer.appendChild(fuelValue);
+        }
         
         const bar = document.createElement('div');
         bar.id = id;
@@ -196,7 +213,7 @@ export class MobileHUD {
         
         // Add system name and coordinates
         locationInfo.innerHTML = `
-            <div id="mobile-current-system" style="font-weight:600;">DEEP SPACE</div>
+            <div id="mobile-current-system" style="font-weight:600;">SOLAR SYSTEM</div>
             <div id="mobile-coordinates" style="font-size:10px; opacity:0.8;">X: 0 Y: 0 Z: 0</div>
             <div style="display: flex; align-items: center; gap: 5px; font-size:10px; opacity:0.8; margin-top: 2px;">
                 <span>ANOMALIES: <span id="anomaly-count" style="font-weight:600;">0</span></span>
@@ -215,6 +232,10 @@ export class MobileHUD {
         
         // Update fuel display
         this.updateFuelDisplay();
+        
+        // Update thrust and velocity displays
+        this.updateThrustDisplay();
+        this.updateVelocityDisplay();
         
         // Update cargo display
         this.updateCargoDisplay();
@@ -273,17 +294,27 @@ export class MobileHUD {
     
     updateFuelDisplay() {
         const fuelBar = document.getElementById('fuel-bar-mobile');
+        const fuelValue = document.getElementById('fuel-value-mobile');
         if (!fuelBar || !this.spaceship) return;
         
-        fuelBar.style.width = `${this.spaceship.fuel}%`;
+        // Correctly calculate fuel percentage based on maxFuel
+        const fuelPercent = this.spaceship.maxFuel > 0 ? 
+            (this.spaceship.fuel / this.spaceship.maxFuel) * 100 : 0;
         
-        // Change color when low
-        if (this.spaceship.fuel < 20) {
+        fuelBar.style.width = `${fuelPercent}%`;
+        
+        // Change color when low based on percentage, not absolute value
+        if (fuelPercent < 20) {
             fuelBar.style.backgroundColor = 'rgba(255, 80, 80, 0.8)';
-        } else if (this.spaceship.fuel < 40) {
+        } else if (fuelPercent < 40) {
             fuelBar.style.backgroundColor = 'rgba(255, 204, 0, 0.8)';
         } else {
             fuelBar.style.backgroundColor = 'rgba(120, 220, 232, 0.8)';
+        }
+        
+        // Update the fuel value text display
+        if (fuelValue) {
+            fuelValue.textContent = `${Math.round(this.spaceship.fuel)} / ${Math.round(this.spaceship.maxFuel)}`;
         }
     }
     
@@ -406,5 +437,160 @@ export class MobileHUD {
     setControls(controls) {
         console.log("MobileHUD: Setting controls reference");
         this.controls = controls;
+    }
+    
+    // Add thrust and velocity display for mobile HUD
+    createThrustVelocityDisplay(parent) {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.justifyContent = 'space-between';
+        container.style.marginTop = '10px';
+        container.style.marginBottom = '10px';
+        container.style.fontSize = '12px';
+        
+        // Thrust display
+        const thrustContainer = document.createElement('div');
+        thrustContainer.style.display = 'flex';
+        thrustContainer.style.flexDirection = 'column';
+        thrustContainer.style.alignItems = 'center';
+        
+        const thrustLabel = document.createElement('div');
+        thrustLabel.textContent = 'THR';
+        thrustLabel.style.fontSize = '10px';
+        thrustLabel.style.opacity = '0.8';
+        
+        const thrustValue = document.createElement('div');
+        thrustValue.id = 'thrust-value-mobile';
+        thrustValue.textContent = '0.0';
+        thrustValue.style.fontWeight = 'bold';
+        
+        thrustContainer.appendChild(thrustLabel);
+        thrustContainer.appendChild(thrustValue);
+        
+        // Velocity display
+        const velocityContainer = document.createElement('div');
+        velocityContainer.style.display = 'flex';
+        velocityContainer.style.flexDirection = 'column';
+        velocityContainer.style.alignItems = 'center';
+        
+        const velocityLabel = document.createElement('div');
+        velocityLabel.textContent = 'VEL';
+        velocityLabel.style.fontSize = '10px';
+        velocityLabel.style.opacity = '0.8';
+        
+        const velocityValue = document.createElement('div');
+        velocityValue.id = 'velocity-value-mobile';
+        velocityValue.textContent = '0.00';
+        velocityValue.style.fontWeight = 'bold';
+        
+        velocityContainer.appendChild(velocityLabel);
+        velocityContainer.appendChild(velocityValue);
+        
+        // Add containers to parent
+        container.appendChild(thrustContainer);
+        container.appendChild(velocityContainer);
+        parent.appendChild(container);
+    }
+    
+    // New methods to update thrust and velocity displays
+    updateThrustDisplay() {
+        const thrustDisplay = document.getElementById('thrust-value-mobile');
+        if (!thrustDisplay) return;
+        
+        let thrustValue = 0;
+        let thrusterComponent = null;
+        
+        // Try to get thrust state from player entity first
+        if (window.game && window.game.world) {
+            const players = window.game.world.getEntitiesByTag('player');
+            if (players && players.length > 0) {
+                thrusterComponent = players[0].getComponent('ThrusterComponent');
+                
+                if (thrusterComponent) {
+                    // Get thrust values from the ThrusterComponent
+                    if (thrusterComponent.thrusting.forward) thrustValue += 1;
+                    if (thrusterComponent.thrusting.backward) thrustValue += 0.5;
+                    if (thrusterComponent.thrusting.left || thrusterComponent.thrusting.right) thrustValue += 0.5;
+                }
+            }
+        }
+        
+        // Fallback to spaceship object if ThrusterComponent not found
+        if (!thrusterComponent && this.spaceship && this.spaceship.thrust) {
+            if (this.spaceship.thrust.forward) thrustValue += 1;
+            if (this.spaceship.thrust.backward) thrustValue += 0.5;
+            if (this.spaceship.thrust.left || this.spaceship.thrust.right) thrustValue += 0.5;
+        }
+        
+        thrustDisplay.textContent = thrustValue.toFixed(1);
+        
+        // Change color if thrusting
+        if (thrustValue > 0) {
+            thrustDisplay.style.color = 'rgba(120, 220, 232, 1)';
+        } else {
+            thrustDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
+        }
+    }
+    
+    updateVelocityDisplay() {
+        const velocityDisplay = document.getElementById('velocity-value-mobile');
+        if (!velocityDisplay) return;
+        
+        // Get velocity from RigidbodyComponent, fallback to spaceship or physics
+        let velocity = 0;
+        let maxVelocity = 25.0; // Default fallback value
+        
+        // Try to get velocity from player entity's RigidbodyComponent first
+        if (window.game && window.game.world) {
+            const players = window.game.world.getEntitiesByTag('player');
+            if (players && players.length > 0) {
+                const rigidbody = players[0].getComponent('RigidbodyComponent');
+                const thruster = players[0].getComponent('ThrusterComponent');
+                
+                if (rigidbody && rigidbody.velocity) {
+                    velocity = rigidbody.velocity.length();
+                }
+                
+                if (thruster) {
+                    maxVelocity = thruster.maxVelocity;
+                    if (thruster.thrusting.boost) {
+                        maxVelocity *= thruster.boostMultiplier;
+                    }
+                }
+            }
+        }
+        
+        // Fallback to spaceship object if not found in component
+        if (velocity === 0 && this.spaceship && this.spaceship.velocity) {
+            velocity = this.spaceship.velocity.length();
+            
+            if (this.spaceship.maxVelocity) {
+                maxVelocity = this.spaceship.maxVelocity;
+            }
+        } 
+        // Last resort fallback to game physics
+        else if (velocity === 0 && window.game && window.game.physics && window.game.physics.velocity) {
+            velocity = window.game.physics.velocity.length();
+        }
+        
+        velocityDisplay.textContent = velocity.toFixed(2);
+        
+        // Change color based on velocity
+        if (velocity > maxVelocity * 0.8) {
+            velocityDisplay.style.color = 'rgba(255, 204, 0, 0.9)';
+        } else if (velocity > 0.5) {
+            velocityDisplay.style.color = 'rgba(120, 220, 232, 1)';
+        } else {
+            velocityDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
+        }
+    }
+
+    // Update updateLocation method to only update system name
+    updateLocation(locationName, systemName = 'Unknown System') {
+        const currentSystem = document.getElementById('mobile-current-system');
+        
+        if (currentSystem) {
+            currentSystem.textContent = systemName.toUpperCase();
+        }
     }
 } 

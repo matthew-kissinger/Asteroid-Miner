@@ -16,42 +16,84 @@ export class Environment {
         this.scene = scene;
         this.planetRegions = {};
         this.currentSystemId = 'Solar System'; // Default starting system
+        this.componentsLoaded = false;
         
-        console.log("Initializing environment components...");
+        console.log("Initializing essential environment components...");
         
-        // Initialize environment components
+        // Initialize only essential components first
         this.skybox = new Skybox(scene);
         this.sun = new Sun(scene);
         
-        // Initialize star system generator first
+        // Initialize star system generator
         this.starSystemGenerator = new StarSystemGenerator(scene);
         
-        // Initialize planets with reference to starSystemGenerator
+        // Initialize planets with reference to starSystemGenerator - needed for basic gameplay
         this.planets = new Planets(scene, this.starSystemGenerator);
         
-        this.asteroidBelt = new AsteroidBelt(scene);
+        // Initialize stargate - needed for docking UI
         this.stargate = new Stargate(scene);
         
+        // Store references for easier access
+        this.asteroids = [];
+        
+        // Setup initial regions for location tracking (minimal setup)
+        this.setupInitialRegions();
+        
+        console.log("Essential environment components initialized");
+        
+        // Schedule loading of remaining components after a short delay to not block startup
+        setTimeout(() => {
+            this.loadRemainingComponents();
+        }, 500);
+    }
+    
+    // Load remaining non-essential components asynchronously
+    loadRemainingComponents() {
+        console.log("Loading remaining environment components...");
+        
+        // Initialize asteroid belt - slightly defer to prioritize UI loading
+        this.asteroidBelt = new AsteroidBelt(this.scene);
+        this.asteroids = this.asteroidBelt.getAsteroids();
+        
         // Initialize space anomalies
-        this.spaceAnomalies = new SpaceAnomalies(scene);
+        this.spaceAnomalies = new SpaceAnomalies(this.scene);
         
         // Initialize system transition effects
-        this.systemTransition = new SystemTransition(scene, scene.camera);
+        this.systemTransition = new SystemTransition(this.scene, this.scene.camera);
         
         // Initialize the custom system creator
         this.customSystemCreator = new CustomSystemCreator(this.starSystemGenerator, this);
         console.log("Custom system creator initialized:", this.customSystemCreator);
         
-        // Store references for easier access
-        this.asteroids = this.asteroidBelt.getAsteroids();
-        
-        // Compile all planet regions for location tracking
+        // Setup complete regions now that all components are loaded
         this.setupRegions();
         
         // Setup event handlers for star system transitions
         this.setupSystemTransitionHandlers();
         
-        console.log("Environment components initialized");
+        this.componentsLoaded = true;
+        console.log("All environment components initialized");
+    }
+    
+    // Basic region setup for essential components only
+    setupInitialRegions() {
+        console.log("Setting up essential environment regions");
+        
+        // Get planet regions from planets component
+        this.planetRegions = this.planets.getPlanetRegions();
+        
+        // Add sun region
+        this.planetRegions["Sun"] = {
+            center: this.sun.getPosition(),
+            radius: this.sun.getRadius()
+        };
+        
+        // Add stargate region
+        const stargateRegion = this.stargate.getRegionInfo();
+        this.planetRegions["Stargate"] = {
+            center: stargateRegion.center,
+            radius: stargateRegion.radius
+        };
     }
     
     // Called after spaceship is created - we need this to initialize portals
@@ -309,8 +351,8 @@ export class Environment {
             }
         }
         
-        // Check if near an anomaly
-        if (this.spaceAnomalies) {
+        // Check if near an anomaly - only if spaceAnomalies is loaded
+        if (this.componentsLoaded && this.spaceAnomalies) {
             const closestAnomaly = this.spaceAnomalies.findClosestAnomaly(playerPosition, 2000);
             if (closestAnomaly) {
                 const distance = playerPosition.distanceTo(closestAnomaly.position);
@@ -343,8 +385,8 @@ export class Environment {
         
         // Check planets
         for (const [name, region] of Object.entries(this.planetRegions)) {
-            if (name === "Asteroid Belt") {
-                // Special case for asteroid belt
+            if (name === "Asteroid Belt" && this.componentsLoaded && this.asteroidBelt) {
+                // Special case for asteroid belt - only if loaded
                 const distance = playerPosition.distanceTo(region.center);
                 if (region.minRadius && region.maxRadius && 
                     distance >= region.minRadius && 
@@ -359,8 +401,8 @@ export class Environment {
                     }
                     return "Asteroid Belt";
                 }
-            } else if (name === "Space Anomalies") {
-                // Special case for space anomalies region
+            } else if (name === "Space Anomalies" && this.componentsLoaded) {
+                // Special case for space anomalies region - only if loaded
                 const distance = playerPosition.distanceTo(region.center);
                 if (region.minRadius && region.maxRadius && 
                     distance >= region.minRadius && 
@@ -390,7 +432,7 @@ export class Environment {
     
     // Find the closest asteroid to a position
     findClosestAsteroid(position, maxDistance) {
-        if (this.asteroidBelt && this.asteroidBelt.findClosestAsteroid) {
+        if (this.componentsLoaded && this.asteroidBelt && this.asteroidBelt.findClosestAsteroid) {
             return this.asteroidBelt.findClosestAsteroid(position, maxDistance);
         }
         return null;
@@ -398,15 +440,15 @@ export class Environment {
     
     // Find the closest space anomaly
     findClosestAnomaly(position, maxDistance) {
-        if (this.spaceAnomalies && this.spaceAnomalies.findClosestAnomaly) {
+        if (this.componentsLoaded && this.spaceAnomalies && this.spaceAnomalies.findClosestAnomaly) {
             return this.spaceAnomalies.findClosestAnomaly(position, maxDistance);
         }
         return null;
     }
     
-    // Check if player is inside an anomaly orb's collection radius
+    // Check if position collides with any anomaly
     checkAnomalyCollision(position) {
-        if (!this.spaceAnomalies) return null;
+        if (!this.componentsLoaded || !this.spaceAnomalies) return null;
         
         const closestAnomaly = this.spaceAnomalies.findClosestAnomaly(position, 8000);
         if (closestAnomaly && this.spaceAnomalies.checkCollision(position, closestAnomaly)) {
@@ -416,47 +458,55 @@ export class Environment {
         return null;
     }
     
-    // Collect an energy orb from an anomaly
+    // Collect energy orb from anomaly
     collectAnomalyOrb(anomaly) {
-        if (!this.spaceAnomalies || !anomaly) return null;
-        return this.spaceAnomalies.collectOrb(anomaly);
+        if (this.componentsLoaded && this.spaceAnomalies && this.spaceAnomalies.collectOrb) {
+            return this.spaceAnomalies.collectOrb(anomaly);
+        }
     }
     
     update(deltaTime = 0.016, camera) {
-        // Update all environment components with deltaTime and camera
-        if (this.skybox && this.skybox.update) {
-            this.skybox.update(deltaTime, camera);
+        // Update skybox if it has an update method
+        if (this.skybox && typeof this.skybox.update === 'function') {
+            this.skybox.update(deltaTime);
         }
         
-        if (this.sun && this.sun.update) {
+        // Update sun if it has an update method
+        if (this.sun && typeof this.sun.update === 'function') {
             this.sun.update(deltaTime);
         }
         
-        if (this.planets && this.planets.update) {
+        // Update planets if they have an update method
+        if (this.planets && typeof this.planets.update === 'function') {
             this.planets.update(deltaTime);
         }
         
-        if (this.asteroidBelt && this.asteroidBelt.update) {
-            this.asteroidBelt.update(deltaTime);
-        }
-        
-        if (this.stargate && this.stargate.update) {
-            this.stargate.update(deltaTime);
-        }
-        
-        // Update space anomalies
-        if (this.spaceAnomalies && this.spaceAnomalies.update) {
-            this.spaceAnomalies.update(deltaTime);
-        }
-        
-        // Update system transition effects if active
-        if (this.systemTransition && this.systemTransition.update) {
+        // Update system transition effects if active - this needs to run regardless of componentsLoaded
+        if (this.systemTransition && typeof this.systemTransition.update === 'function') {
             this.systemTransition.update(deltaTime);
         }
         
-        // Update VibeVerse portals
-        if (this.vibeVersePortals && this.vibeVersePortals.update) {
-            this.vibeVersePortals.update(deltaTime);
+        // Only update non-essential components if they're loaded
+        if (this.componentsLoaded) {
+            // Update asteroids
+            if (this.asteroidBelt && typeof this.asteroidBelt.update === 'function') {
+                this.asteroidBelt.update(deltaTime);
+            }
+            
+            // Update stargate
+            if (this.stargate && typeof this.stargate.update === 'function') {
+                this.stargate.update(deltaTime);
+            }
+            
+            // Update space anomalies
+            if (this.spaceAnomalies && typeof this.spaceAnomalies.update === 'function') {
+                this.spaceAnomalies.update(deltaTime, camera);
+            }
+            
+            // Update vibe verse portals
+            if (this.vibeVersePortals && typeof this.vibeVersePortals.update === 'function') {
+                this.vibeVersePortals.update(deltaTime);
+            }
         }
     }
     

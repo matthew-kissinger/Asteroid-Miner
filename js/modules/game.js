@@ -306,7 +306,7 @@ export class Game {
         
         // Update controls
         if (this.controls.update) {
-            this.controls.update();
+            this.controls.update(deltaTime);
         }
         // Update environment
         if (this.environment.update) {
@@ -420,7 +420,8 @@ export class Game {
             // Use message bus to publish game over event rather than direct call
             this.messageBus.publish('game.over', {
                 reason: "Your ship was destroyed in combat",
-                source: "game.checkGameOver"
+                source: "game.checkGameOver",
+                type: "COMBAT_DEATH"
             });
             return;
         }
@@ -431,7 +432,8 @@ export class Game {
             // Use message bus to publish game over event rather than direct call
             this.messageBus.publish('game.over', {
                 reason: "Your ship ran out of fuel",
-                source: "game.checkGameOver"
+                source: "game.checkGameOver",
+                type: "FUEL_DEPLETED"
             });
             return;
         }
@@ -442,7 +444,8 @@ export class Game {
             // Use message bus to publish game over event rather than direct call
             this.messageBus.publish('game.over', {
                 reason: "Your ship was destroyed by the sun's heat",
-                source: "game.checkGameOver"
+                source: "game.checkGameOver",
+                type: "SUN_DEATH"
             });
             return;
         }
@@ -477,7 +480,7 @@ export class Game {
     }
     /**
      * Trigger game over state and show UI
-     * @param {string} message The reason for game over
+     * @param {string|Object} message The reason for game over
      */
     gameOver(message) {
         if (this.isGameOver) {
@@ -508,10 +511,14 @@ export class Game {
         // Show game over UI
         console.log("Game: Showing game over UI");
         if (this.ui && this.ui.showGameOver) {
-            this.ui.showGameOver(gameStats, message);
+            // Pass the entire message object to the UI so it can access both reason and type
+            this.ui.showGameOver(gameStats, typeof message === 'string' ? message : message);
         } else {
             console.log("Game: UI not available, using fallback");
-            this.showFallbackGameOver(message);
+            // For fallback, extract the reason string if message is an object
+            const reasonText = typeof message === 'string' ? message : 
+                              (message && message.reason ? message.reason : "Unknown reason");
+            this.showFallbackGameOver(reasonText);
         }
         // Stop spaceship movement
         if (this.spaceship && this.spaceship.thrust) {

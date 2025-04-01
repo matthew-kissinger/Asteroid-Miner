@@ -504,23 +504,26 @@ export class Physics {
         this.spaceship.velocity.set(0, 0, 0);
         
         // Different explosion effects based on collision type
-        let explosionColor, explosionSize, explosionMessage;
+        let explosionColor, explosionSize, explosionMessage, collisionType;
         
         if (type === "sun") {
             // Solar collision - big, bright yellow explosion
             explosionColor = 0xffff00;
             explosionSize = 60; // 4x original size (was 15)
             explosionMessage = "Your ship was incinerated by the sun!";
+            collisionType = "SUN_DEATH";
         } else if (type === "planet") {
             // Planet collision - large blue-tinted explosion
             explosionColor = 0x33ccff;
             explosionSize = 40; // 4x original size (was 10)
             explosionMessage = "Your ship crashed into a planet!";
+            collisionType = "COLLISION_PLANET";
         } else {
             // Default asteroid collision - smaller orange explosion
             explosionColor = 0xff6600;
             explosionSize = 20; // 4x original size (was 5)
             explosionMessage = "Your ship was destroyed by an asteroid!";
+            collisionType = "COLLISION_ASTEROID";
         }
         
         // Create visual effect for the collision
@@ -551,7 +554,8 @@ export class Physics {
             window.mainMessageBus.publish('game.over', {
                 reason: explosionMessage,
                 source: "physics",
-                collisionType: type
+                collisionType: type,
+                type: collisionType
             });
         } else if (window.game && window.game.messageBus) {
             // Use game message bus if main message bus not available
@@ -559,7 +563,8 @@ export class Physics {
             window.game.messageBus.publish('game.over', {
                 reason: explosionMessage,
                 source: "physics",
-                collisionType: type
+                collisionType: type,
+                type: collisionType
             });
         } else {
             // Only use MessageBus.triggerGameOver if no direct access

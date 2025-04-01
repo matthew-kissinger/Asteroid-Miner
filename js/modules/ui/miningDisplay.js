@@ -33,11 +33,18 @@ export class MiningDisplay {
         targetName.textContent = 'Asteroid';
         targetInfo.appendChild(targetName);
         
-        // Target resources
-        const targetResources = document.createElement('div');
-        targetResources.id = 'target-resources';
-        targetResources.textContent = 'Resources: Iron, Gold';
-        targetInfo.appendChild(targetResources);
+        // Target distance
+        const targetDistance = document.createElement('div');
+        targetDistance.id = 'target-distance';
+        targetDistance.textContent = 'Distance: 0 units';
+        targetInfo.appendChild(targetDistance);
+        
+        // Add estimated mining time display
+        const miningTime = document.createElement('div');
+        miningTime.id = 'mining-time';
+        miningTime.textContent = 'Mining time: calculating...';
+        miningTime.style.color = '#ffcc00';
+        targetInfo.appendChild(miningTime);
     }
     
     update() {
@@ -74,6 +81,38 @@ export class MiningDisplay {
                     capacityBar.style.backgroundColor = 'rgba(120, 220, 232, 0.8)';
                 }
             }
+            
+            // Update mining time estimate if targeting an asteroid
+            this.updateMiningTimeEstimate();
+        }
+    }
+    
+    /**
+     * Update the mining time estimate based on the targeted asteroid type and mining efficiency
+     */
+    updateMiningTimeEstimate() {
+        const miningTimeElement = document.getElementById('mining-time');
+        if (!miningTimeElement || !this.controls || !this.controls.miningSystem) return;
+        
+        const miningSystem = this.controls.miningSystem;
+        if (miningSystem.targetAsteroid && miningSystem.targetAsteroid.resourceType) {
+            const resourceType = miningSystem.targetAsteroid.resourceType.toLowerCase();
+            const efficiency = miningSystem.getMiningEfficiency();
+            const secondsRequired = Math.round(1 / (miningSystem.miningSpeedByType[resourceType] * efficiency));
+            
+            miningTimeElement.textContent = `Mining time: ${secondsRequired} seconds`;
+            miningTimeElement.style.display = 'block';
+            
+            // Color based on resource value
+            if (resourceType === 'platinum') {
+                miningTimeElement.style.color = '#66ffff';
+            } else if (resourceType === 'gold') {
+                miningTimeElement.style.color = '#ffcc00';
+            } else {
+                miningTimeElement.style.color = '#a0a0a0';
+            }
+        } else {
+            miningTimeElement.style.display = 'none';
         }
     }
     

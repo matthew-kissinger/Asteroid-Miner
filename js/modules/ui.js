@@ -10,6 +10,7 @@ import { ControlsMenu } from './ui/controlsMenu.js';
 import { StarMap } from './ui/starMap.js';
 import { BlackjackGame } from './ui/blackjackGame.js';
 import { Settings } from './ui/settings.js';
+import { StartScreen } from './ui/startScreen.js';
 import { MemoryStats } from '../utils/memoryManager.js';
 import { MobileDetector } from '../utils/mobileDetector.js';
 
@@ -52,6 +53,9 @@ export class UI {
         
         // Link starMap to stargateInterface
         this.stargateInterface.setStarMap(this.starMap);
+        
+        // StartScreen will be initialized after game instance is available
+        this.startScreen = null;
         
         // Initialize performance monitoring if in debug mode
         if (window.DEBUG_MODE) {
@@ -130,7 +134,10 @@ export class UI {
         // Link settings to stargateInterface
         this.stargateInterface.setSettings(this.settings);
         
-        console.log("Settings initialized with game instance");
+        // Initialize start screen now that we have game instance
+        this.startScreen = new StartScreen(game, this);
+        
+        console.log("Settings and StartScreen initialized with game instance");
     }
     
     /**
@@ -202,8 +209,16 @@ export class UI {
     }
     
     updateLocation(locationName) {
+        // Get the current star system name from the environment
+        let systemName = 'Unknown System';
+        if (this.environment && this.environment.starSystemGenerator) {
+            const systemData = this.environment.starSystemGenerator.getCurrentSystemData();
+            systemName = systemData ? systemData.name : 'Unknown System';
+        }
+        
         if (this.hud && this.hud.updateLocation) {
-            this.hud.updateLocation(locationName);
+            // Only pass the system name since we removed the location display
+            this.hud.updateLocation(null, systemName);
         }
     }
     
@@ -282,6 +297,12 @@ export class UI {
                 this.gameOverScreen.setupGameOverScreen();
             }
             
+            // Pass the audio reference to the game over screen
+            if (this.audio) {
+                this.gameOverScreen.audio = this.audio;
+            }
+            
+            // Pass the message object through directly - gameOverScreen will handle the parsing
             this.gameOverScreen.show(resources, message);
             
             // Remove all direct sound playback from here
@@ -302,10 +323,15 @@ export class UI {
             fallbackOverlay.style.alignItems = 'center';
             fallbackOverlay.style.zIndex = '9999';
             
+            // Extract message text if it's an object
+            const messageText = typeof message === 'string' ? message : 
+                               (message && message.data && message.data.reason ? message.data.reason : 
+                                'Your ship was destroyed!');
+            
             const content = document.createElement('div');
             content.innerHTML = `
                 <h1 style="color: #ff3030; font-size: 48px; margin-bottom: 20px;">GAME OVER</h1>
-                <p style="color: #fff; font-size: 24px; margin-bottom: 30px;">${message || 'Your ship was destroyed!'}</p>
+                <p style="color: #fff; font-size: 24px; margin-bottom: 30px;">${messageText}</p>
                 <button id="restart-btn" style="padding: 15px 30px; background-color: #ff3030; color: #fff; border: none; 
                     font-size: 24px; cursor: pointer; border-radius: 5px;">RESTART GAME</button>
             `;
@@ -388,6 +414,12 @@ export class UI {
         if (window.game && window.game.introSequenceActive) {
             console.warn("showUI called while intro is still active - not showing UI elements");
             return; // Exit early - don't show any UI during intro
+        }
+        
+        // Don't show UI if start screen is visible
+        if (this.startScreen && this.startScreen.isVisible) {
+            console.warn("showUI called while start screen is visible - not showing UI elements");
+            return;
         }
         
         // First, show UI components through their interfaces

@@ -275,7 +275,10 @@ export class Planets {
                     map: customTexture,
                     roughness: 0.7,
                     metalness: 0.2,
-                    flatShading: false
+                    flatShading: false,
+                    emissive: new THREE.Color(planet.color || 0xffffff),
+                    emissiveIntensity: 0.2,
+                    emissiveMap: customTexture
                 });
             } else {
                 // Use standard planet textures based on planet name
@@ -285,7 +288,10 @@ export class Planets {
                             map: planetTextures.mercury,
                             roughness: 0.7,
                             metalness: 0.2,
-                            flatShading: false
+                            flatShading: false,
+                            emissive: new THREE.Color(0x555555),
+                            emissiveIntensity: 0.2,
+                            emissiveMap: planetTextures.mercury
                         });
                         break;
                         
@@ -295,7 +301,10 @@ export class Planets {
                             map: planetTextures.venus.surface,
                             roughness: 0.6,
                             metalness: 0.1,
-                            flatShading: false
+                            flatShading: false,
+                            emissive: new THREE.Color(0xe6cc9c),
+                            emissiveIntensity: 0.25,
+                            emissiveMap: planetTextures.venus.surface
                         });
                         break;
                         
@@ -304,7 +313,10 @@ export class Planets {
                             map: planetTextures.earth,
                             roughness: 0.5,
                             metalness: 0.1,
-                            flatShading: false
+                            flatShading: false,
+                            emissive: new THREE.Color(0x4169e1),
+                            emissiveIntensity: 0.2,
+                            emissiveMap: planetTextures.earth
                         });
                         break;
                         
@@ -313,7 +325,10 @@ export class Planets {
                             map: planetTextures.mars,
                             roughness: 0.7,
                             metalness: 0.1,
-                            flatShading: false
+                            flatShading: false,
+                            emissive: new THREE.Color(0xc65d45),
+                            emissiveIntensity: 0.25,
+                            emissiveMap: planetTextures.mars
                         });
                         break;
                         
@@ -322,7 +337,10 @@ export class Planets {
                             map: planetTextures.jupiter,
                             roughness: 0.5,
                             metalness: 0.0,
-                            flatShading: false
+                            flatShading: false,
+                            emissive: new THREE.Color(0xd6b27e),
+                            emissiveIntensity: 0.2,
+                            emissiveMap: planetTextures.jupiter
                         });
                         break;
                         
@@ -331,7 +349,10 @@ export class Planets {
                             map: planetTextures.saturn.surface,
                             roughness: 0.6,
                             metalness: 0.1,
-                            flatShading: false
+                            flatShading: false,
+                            emissive: new THREE.Color(0xf0e5c9),
+                            emissiveIntensity: 0.2,
+                            emissiveMap: planetTextures.saturn.surface
                         });
                         break;
                         
@@ -340,7 +361,10 @@ export class Planets {
                             map: planetTextures.uranus,
                             roughness: 0.5,
                             metalness: 0.0,
-                            flatShading: false
+                            flatShading: false,
+                            emissive: new THREE.Color(0x88bbcc),
+                            emissiveIntensity: 0.25,
+                            emissiveMap: planetTextures.uranus
                         });
                         break;
                         
@@ -349,7 +373,10 @@ export class Planets {
                             map: planetTextures.neptune,
                             roughness: 0.5,
                             metalness: 0.0,
-                            flatShading: false
+                            flatShading: false,
+                            emissive: new THREE.Color(0x5fa3db),
+                            emissiveIntensity: 0.25,
+                            emissiveMap: planetTextures.neptune
                         });
                         break;
                         
@@ -361,7 +388,10 @@ export class Planets {
                             roughness: 0.6,
                             metalness: 0.2,
                             color: new THREE.Color(planet.color),
-                            flatShading: false
+                            flatShading: false,
+                            emissive: new THREE.Color(planet.color),
+                            emissiveIntensity: 0.3,
+                            emissiveMap: proceduralTextures[textureIndex]
                         });
                         break;
                 }
@@ -408,7 +438,10 @@ export class Planets {
                         transparent: true,
                         opacity: 0.8,
                         roughness: 0.8,
-                        metalness: 0.1
+                        metalness: 0.1,
+                        emissive: new THREE.Color(0xf0e5c9),
+                        emissiveIntensity: 0.2,
+                        emissiveMap: planetTextures.saturn.rings
                     });
                 } else {
                     // Generic rings for other planets
@@ -419,7 +452,9 @@ export class Planets {
                         transparent: true,
                         opacity: 0.4,
                         roughness: 0.7,
-                        metalness: 0.2
+                        metalness: 0.2,
+                        emissive: new THREE.Color(planet.color),
+                        emissiveIntensity: 0.3
                     });
                 }
                 

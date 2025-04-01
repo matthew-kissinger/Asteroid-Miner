@@ -133,8 +133,8 @@ export class MineableComponent extends Component {
     
     /**
      * Mine resources from the entity
-     * @param {number} amount Amount to mine
-     * @returns {object} Mining result
+     * @param {number} amount Amount to mine (ignored in single-action mining)
+     * @returns {object} Mining result with total resources
      */
     mine(amount) {
         // Check if the entity exists and is visible
@@ -145,18 +145,20 @@ export class MineableComponent extends Component {
         // Record mine time for effects
         this.lastMineTime = Date.now();
         
-        // Calculate how much can actually be mined
-        const actualAmount = Math.min(amount, this.remainingAmount);
-        this.remainingAmount -= actualAmount;
+        // Get total amount of resources
+        const totalAmount = this.remainingAmount;
         
-        // Update visual scale
+        // Deplete the asteroid completely
+        this.remainingAmount = 0;
+        
+        // Update visual scale to show depletion
         this._updateScale();
         
-        // Return mining result
+        // Return all resources at once
         return {
             type: this.resourceType,
-            amount: actualAmount,
-            depleted: this.isDepleted()
+            amount: totalAmount,
+            depleted: true
         };
     }
     

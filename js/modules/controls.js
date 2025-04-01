@@ -354,7 +354,11 @@ export class Controls {
         }, 3000);
     }
     
-    update() {
+    /**
+     * Update control systems
+     * @param {number} deltaTime Time since last update in seconds
+     */
+    update(deltaTime = 1/60) {
         // Skip ALL updates if intro sequence is active
         if (window.game && window.game.introSequenceActive) {
             return;
@@ -391,7 +395,8 @@ export class Controls {
         }
         
         if (this.miningSystem) {
-            this.miningSystem.update();
+            // Pass deltaTime to ensure frame-rate independent mining
+            this.miningSystem.update(deltaTime);
             
             // Check if mining has destroyed an asteroid
             const destroyedAsteroid = this.miningSystem.getLastDestroyedAsteroid();
@@ -408,6 +413,10 @@ export class Controls {
         // Update touch controls if on mobile
         if (this.isMobile && this.touchControls) {
             this.touchControls.update();
+        }
+        
+        if (this.deploymentSystem) {
+            this.deploymentSystem.update();
         }
         
         // Check for and automatically collect anomaly orbs

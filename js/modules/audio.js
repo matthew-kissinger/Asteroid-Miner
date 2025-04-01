@@ -107,13 +107,15 @@ export class AudioManager {
             // Check if the sound directories exist for music
             await this.checkSoundDirectories();
             
-            // First, load the background music
-            await this.loadBackgroundMusic();
+            // Load only the essential UI sounds first for faster startup
+            await this.preDecodeEssentialSounds();
             
-            // Then pre-decode all sound effects
-            await this.preDecodeAllSoundEffects();
+            // Load music in the background (non-blocking)
+            this.loadBackgroundMusic().catch(error => {
+                console.error("Error loading background music:", error);
+            });
             
-            console.log("Audio initialization complete");
+            console.log("Essential audio initialization complete");
             
             // Music will play automatically once the user interacts with the page
             // If the user has already interacted, we can play immediately
@@ -130,30 +132,61 @@ export class AudioManager {
         }
     }
     
-    // Pre-decode all sound effects using Web Audio API
-    async preDecodeAllSoundEffects() {
+    // Pre-decode only essential UI sounds for quick startup
+    async preDecodeEssentialSounds() {
         try {
-            console.log("Pre-decoding sound effects...");
+            console.log("Pre-decoding essential UI sounds...");
             
-            // List of sound effects to pre-decode
-            const soundEffects = [
+            // List of essential sounds needed for UI interaction
+            const essentialSounds = [
+                { name: 'boink', path: 'sounds/effects/boink.wav' },
+                { name: 'phaserUp', path: 'sounds/effects/phaserUp.wav' },
+                { name: 'phaserDown', path: 'sounds/effects/phaserDown.wav' },
+            ];
+            
+            // Create a promise for each sound to load
+            const loadPromises = essentialSounds.map(sound => 
+                this.loadAndDecodeSound(sound.name, this.getPath(sound.path))
+            );
+            
+            // Wait for all essential sounds to be loaded and decoded
+            await Promise.all(loadPromises);
+            
+            console.log("Essential UI sounds pre-decoded successfully");
+            
+            // Schedule loading of remaining gameplay sounds in the background 
+            // after a short delay to let the UI fully initialize
+            setTimeout(() => {
+                this.loadGameplaySounds();
+            }, 1000);
+            
+        } catch (error) {
+            console.error("Error pre-decoding essential sounds:", error);
+            this.createDummySounds();
+        }
+    }
+    
+    // Load remaining gameplay sounds in the background
+    async loadGameplaySounds() {
+        try {
+            console.log("Loading gameplay sounds in background...");
+            
+            // List of gameplay sounds to load
+            const gameplaySounds = [
                 { name: 'thrust', path: 'sounds/effects/thrust.wav' },
                 { name: 'laser', path: 'sounds/effects/laser.wav' },
                 { name: 'mining-laser', path: 'sounds/effects/mining-laser.wav' },
                 { name: 'explosion', path: 'sounds/effects/explosion.wav' },
-                { name: 'boink', path: 'sounds/effects/boink.wav' },
-                { name: 'phaserUp', path: 'sounds/effects/phaserUp.wav' },
-                { name: 'phaserDown', path: 'sounds/effects/phaserDown.wav' },
-                // Add more sounds as needed
             ];
             
-            // Create a promise for each sound to load
-            const loadPromises = soundEffects.map(sound => 
-                this.loadAndDecodeSound(sound.name, this.getPath(sound.path))
-            );
-            
-            // Wait for all sounds to be loaded and decoded
-            await Promise.all(loadPromises);
+            // Load sounds sequentially to avoid overwhelming the audio decoder
+            for (const sound of gameplaySounds) {
+                try {
+                    await this.loadAndDecodeSound(sound.name, this.getPath(sound.path));
+                } catch (err) {
+                    console.warn(`Could not load gameplay sound ${sound.name}:`, err);
+                }
+            }
             
             // Explicitly set up projectile sound using the laser sound
             // This is needed for weapon firing
@@ -162,7 +195,20 @@ export class AudioManager {
                 this.sounds.projectile = this.sounds.laser;
             }
             
-            console.log("All sound effects pre-decoded successfully");
+            console.log("All gameplay sounds loaded successfully");
+        } catch (error) {
+            console.error("Error loading gameplay sounds:", error);
+        }
+    }
+    
+    // Pre-decode all sound effects using Web Audio API (legacy method, kept for compatibility)
+    async preDecodeAllSoundEffects() {
+        try {
+            console.log("Using optimized sound loading path instead of preDecodeAllSoundEffects");
+            // Load essential sounds first
+            await this.preDecodeEssentialSounds();
+            // Then load gameplay sounds
+            await this.loadGameplaySounds();
         } catch (error) {
             console.error("Error pre-decoding sound effects:", error);
             this.createDummySounds();

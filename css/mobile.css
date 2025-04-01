@@ -90,95 +90,176 @@
 @media (max-width: 900px) {
     /* Main stargate UI container */
     #stargate-ui {
-        width: 92% !important;
-        max-width: 92vw !important;
+        width: 95% !important;
+        max-width: 95vw !important;
         max-height: 85vh !important;
-        padding: 20px !important;
+        padding: 0 !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important; /* Enable smooth scrolling on iOS */
         touch-action: pan-y !important; /* Enable vertical touch scrolling */
         overscroll-behavior: contain !important; /* Prevent overscroll effects */
         margin: 0 auto !important; /* Center on screen */
+        border-radius: 10px !important;
     }
     
-    /* Convert horizontal layout to vertical for small screens */
-    #stargate-ui > div {
-        flex-direction: column !important;
+    /* Sticky header */
+    #stargate-header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        background-color: rgba(30, 40, 60, 0.95) !important;
     }
     
-    /* Remove border-right from resources section when stacked vertically */
-    #stargate-ui > div > div:first-child {
-        border-right: none !important;
-        border-bottom: 1px solid #33aaff !important;
-        padding-bottom: 15px !important;
-        margin-bottom: 15px !important;
-    }
-    
-    /* Ensure buttons are tappable */
-    #stargate-ui button {
-        margin-bottom: 15px !important;
-        padding: 12px !important;
-        min-height: 44px !important;
-    }
-    
-    /* Add more space between elements for easier touch interactions */
-    #stargate-ui h3 {
-        margin-top: 20px !important;
-        margin-bottom: 10px !important;
-        font-size: 18px !important;
-    }
-    
-    /* Improve stargate content scrolling */
+    /* Convert grid layout to single column for mobile */
     #stargate-content {
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        padding-bottom: 30px !important;
-    }
-    
-    /* Adjust upgrade section for vertical layout */
-    #upgrades-container {
-        flex-direction: column !important;
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
         padding: 15px !important;
     }
     
-    /* Make upgrade columns stack properly */
-    #upgrades-container > div {
+    /* Ensure all sections span full width and appear in logical order */
+    #ship-status-section,
+    #market-section,
+    #upgrades-section,
+    #features-section,
+    #challenge-section {
+        grid-column: 1 !important;
+        grid-row: auto !important;
         width: 100% !important;
-        margin-bottom: 20px !important;
     }
     
-    /* Adjust star map button */
-    #show-star-map, #show-blackjack {
-        margin-top: 10px !important;
+    /* Fix the display order on mobile */
+    #stargate-content {
+        display: grid !important;
+        grid-template-areas: 
+            "status"
+            "market"
+            "upgrades"
+            "features"
+            "challenge" !important;
+    }
+    
+    #ship-status-section { grid-area: status !important; }
+    #market-section { grid-area: market !important; }
+    #upgrades-section { grid-area: upgrades !important; }
+    #features-section { grid-area: features !important; }
+    #challenge-section { grid-area: challenge !important; }
+    
+    /* Make section backgrounds slightly more opaque for better readability */
+    .stargate-section {
+        background-color: rgba(10, 20, 35, 0.9) !important;
+        padding: 15px !important;
         margin-bottom: 10px !important;
-        width: 100% !important;
-        padding: 14px !important;
-        font-size: 16px !important;
     }
     
-    /* Make sure scrollable areas have enough contrast for the scrollbar */
-    div[style*="overflow-y: auto"] {
-        background-color: rgba(6, 22, 31, 0.95) !important;
-        border-radius: 8px !important;
+    /* Footer with undock button */
+    #stargate-footer {
+        padding: 15px !important;
+        position: sticky !important;
+        bottom: 0 !important;
+        background-color: rgba(20, 30, 50, 0.95) !important;
+        z-index: 5 !important;
     }
     
-    /* Ensure the tabs UI is mobile-friendly */
-    .tab {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        justify-content: center !important;
+    /* Feature buttons in single column */
+    .feature-buttons {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
     }
     
-    .tab button {
-        flex: 1 0 auto !important;
-        font-size: 16px !important;
+    /* Sell buttons in two columns for better visibility */
+    .sell-buttons {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    
+    /* Orb buttons in single column */
+    .orb-buttons {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    
+    /* Enhanced button appearance for better touch targets */
+    .action-btn, 
+    .feature-btn, 
+    .sell-btn, 
+    #upgrade-fuel-tank, 
+    #upgrade-engine, 
+    #upgrade-mining, 
+    #upgrade-hull, 
+    #upgrade-scanner, 
+    #purchase-laser {
+        padding: 15px !important;
         min-height: 44px !important;
-        padding: 10px !important;
+        font-size: 16px !important;
+        margin-bottom: 8px !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
     }
     
-    /* Additional padding to prevent content from being hidden behind fixed elements */
-    .tabcontent {
-        padding-bottom: 30px !important;
+    /* Undock button needs to be extra prominent */
+    #undock-btn {
+        padding: 18px !important;
+        font-size: 18px !important;
+        min-height: 54px !important;
+    }
+    
+    /* Fix for upgrade sections */
+    .upgrade-footer {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .upgrade-description {
+        margin-bottom: 10px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Add more spacing between elements for easier touch access */
+    .stargate-section h3 {
+        margin-bottom: 15px !important;
+        padding-bottom: 10px !important;
+        font-size: 18px !important;
+    }
+    
+    /* Status display improvements */
+    .status-bar-container {
+        height: 18px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Resources display in single row */
+    .resources-container {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 5px !important;
+    }
+    
+    /* Make sure the stargate UI has enough space at the bottom */
+    #stargate-content {
+        padding-bottom: 120px !important;
+    }
+}
+
+/* iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+    #stargate-ui {
+        /* Fix for iOS momentum scrolling */
+        -webkit-overflow-scrolling: touch !important;
+        /* Adjust padding to handle iOS notch */
+        padding-top: env(safe-area-inset-top) !important;
+        padding-bottom: calc(100px + env(safe-area-inset-bottom)) !important;
+    }
+    
+    #stargate-footer {
+        /* Add padding to handle iOS home indicator */
+        padding-bottom: calc(15px + env(safe-area-inset-bottom)) !important;
+    }
+    
+    /* Fix for iOS input zooming issue */
+    .stargate-section input, 
+    .stargate-section select, 
+    .stargate-section textarea {
+        font-size: 16px !important; /* Prevent iOS zoom on focus */
     }
 }
 

@@ -138,9 +138,6 @@ export class HUD {
         panelHeader.appendChild(statusIndicator);
         
         // Create flight data items
-        this.createPanelRow(flightPanel, 'THRUST', 'thrust', '0');
-        this.createPanelRow(flightPanel, 'VELOCITY', 'velocity', '0.00');
-        this.createPanelRow(flightPanel, 'BOOST', 'boost', 'OFF', true);
         
         // Add fuel gauge with visual indicator
         const fuelRow = document.createElement('div');
@@ -157,12 +154,25 @@ export class HUD {
         fuelLabel.style.width = '40%';
         fuelRow.appendChild(fuelLabel);
         
+        // Add fuel value display
+        const fuelValue = document.createElement('span');
+        fuelValue.id = 'fuel-value';
+        fuelValue.className = 'row-value';
+        fuelValue.textContent = '100 / 100';
+        fuelValue.style.position = 'absolute';
+        fuelValue.style.right = '15px';
+        fuelValue.style.top = '-18px';
+        fuelValue.style.fontSize = '12px';
+        fuelValue.style.color = 'rgba(120, 220, 232, 0.9)';
+        
         const fuelBarContainer = document.createElement('div');
         fuelBarContainer.style.width = '60%';
         fuelBarContainer.style.height = '10px';
         fuelBarContainer.style.backgroundColor = 'rgba(10, 30, 40, 0.5)';
         fuelBarContainer.style.borderRadius = '5px';
         fuelBarContainer.style.overflow = 'hidden';
+        fuelBarContainer.style.position = 'relative';
+        fuelBarContainer.appendChild(fuelValue);
         fuelRow.appendChild(fuelBarContainer);
         
         const fuelBar = document.createElement('div');
@@ -464,7 +474,7 @@ export class HUD {
                     <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" 
                           fill="rgba(120, 220, 232, 0.8)"/>
                 </svg>
-                <span id="current-location" style="font-weight:600; letter-spacing:1px;">DEEP SPACE</span>
+                <span id="current-system" style="font-weight:600; letter-spacing:1px;">SOLAR SYSTEM</span>
             </div>
             <div id="location-coordinates" style="margin-top:5px; font-size:12px; opacity:0.8;">X: 0 Y: 0 Z: 0</div>
             <div id="fps-display" style="margin-top:5px; font-size:12px; opacity:0.8;">FPS: 0</div>
@@ -939,8 +949,12 @@ export class HUD {
         
         // Update fuel display
         const fuelBar = document.getElementById('fuel-bar');
+        const fuelValue = document.getElementById('fuel-value');
         if (fuelBar) {
-            const fuelPercent = (this.spaceship.fuel / 100) * 100;
+            // Correctly calculate fuel percentage based on maxFuel
+            const fuelPercent = this.spaceship.maxFuel > 0 ? 
+                (this.spaceship.fuel / this.spaceship.maxFuel) * 100 : 0;
+            
             fuelBar.style.width = `${fuelPercent}%`;
             
             // Change color based on fuel level
@@ -951,67 +965,17 @@ export class HUD {
             } else {
                 fuelBar.style.backgroundColor = 'rgba(120, 220, 232, 0.8)';
             }
+            
+            // Update text display if it exists
+            if (fuelValue) {
+                fuelValue.textContent = `${Math.round(this.spaceship.fuel)} / ${Math.round(this.spaceship.maxFuel)}`;
+            }
         }
         
         // Update credits display
         const creditsDisplay = document.getElementById('credits-value');
         if (creditsDisplay) {
             creditsDisplay.textContent = `${this.spaceship.credits} CR`;
-        }
-        
-        // Update thrust display
-        const thrustDisplay = document.getElementById('thrust-value');
-        if (thrustDisplay) {
-            let thrustValue = 0;
-            
-            if (this.spaceship.thrust.forward) thrustValue += 1;
-            if (this.spaceship.thrust.backward) thrustValue += 0.5;
-            if (this.spaceship.thrust.left || this.spaceship.thrust.right) thrustValue += 0.5;
-            
-            thrustDisplay.textContent = thrustValue.toFixed(1);
-            
-            // Change color if thrusting
-            if (thrustValue > 0) {
-                thrustDisplay.style.color = 'rgba(120, 220, 232, 1)';
-            } else {
-                thrustDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
-            }
-        }
-        
-        // Update velocity display
-        const velocityDisplay = document.getElementById('velocity-value');
-        if (velocityDisplay) {
-            // Get velocity from physics or spaceship
-            let velocity = 0;
-            if (this.spaceship.velocity) {
-                velocity = this.spaceship.velocity.length();
-            } else if (window.game && window.game.physics) {
-                // Alternative: get from physics if available
-                velocity = window.game.physics.velocity ? window.game.physics.velocity.length() : 0;
-            }
-            
-            velocityDisplay.textContent = velocity.toFixed(2);
-            
-            // Change color based on velocity
-            if (velocity > this.spaceship.maxVelocity * 0.8) {
-                velocityDisplay.style.color = 'rgba(255, 204, 0, 0.9)';
-            } else if (velocity > 0.5) {
-                velocityDisplay.style.color = 'rgba(120, 220, 232, 1)';
-            } else {
-                velocityDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
-            }
-        }
-        
-        // Update boost display
-        const boostDisplay = document.getElementById('boost-value');
-        if (boostDisplay) {
-            if (this.spaceship.thrust.boost) {
-                boostDisplay.textContent = 'ON';
-                boostDisplay.style.color = 'rgba(255, 204, 0, 0.9)';
-            } else {
-                boostDisplay.textContent = 'OFF';
-                boostDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
-            }
         }
         
         // Update horde mode indicator and timer
@@ -1189,11 +1153,12 @@ export class HUD {
         }
     }
     
-    updateLocation(locationName) {
-        // Update location text in location info panel
-        const currentLocation = document.getElementById('current-location');
-        if (currentLocation) {
-            currentLocation.textContent = locationName.toUpperCase();
+    updateLocation(locationName, systemName = 'Unknown System') {
+        // Update system name in location panel
+        const currentSystem = document.getElementById('current-system');
+        
+        if (currentSystem) {
+            currentSystem.textContent = systemName.toUpperCase();
             
             // Add glitch effect during location change
             const locationPanel = document.getElementById('location-panel');

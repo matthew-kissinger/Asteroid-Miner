@@ -5,6 +5,7 @@
  * This is a simplified version that only implements spectral drones.
  */
 
+import * as THREE from 'three';
 import { System } from '../../core/system.js';
 import { TransformComponent } from '../../components/transform.js';
 import { EnemyAIComponent } from '../../components/combat/enemyAI.js';
@@ -52,6 +53,16 @@ export class EnemySystem extends System {
         // Set up recovery timer for spawn system problems
         this.lastSpawnCheckTime = Date.now();
         this.spawnCheckInterval = 10000; // 10 seconds
+        
+        // Separation behavior parameters
+        this.SEPARATION_FORCE_MAGNITUDE = 150; // Tune this value for proper separation strength
+        this.separationThresholdMultiplier = 2.5; // Multiple of collision radius
+        
+        // Spatial grid for efficient neighbor lookups
+        this.spatialGrid = {
+            cellSize: 200, // Adjust based on typical enemy size and movement speed
+            cells: new Map()
+        };
         
         // Set up event listeners
         this.setupEventListeners();
@@ -332,7 +343,140 @@ export class EnemySystem extends System {
      * @param {number} deltaTime Time since last update in seconds
      */
     processEntity(entity, deltaTime) {
+        // Call the existing lifecycle processing
         this.lifecycle.processEntityUpdate(entity, deltaTime);
+        
+        // Apply separation behavior to avoid overlapping with other enemies
+        this.applySeparationBehavior(entity, deltaTime);
+    }
+    
+    /**
+     * Apply separation behavior to avoid overlapping with other enemies
+     * @param {Entity} entity The entity to apply separation to
+     * @param {number} deltaTime Time since last update in seconds
+     */
+    applySeparationBehavior(entity, deltaTime) {
+        // Get required components
+        const transform = entity.getComponent('TransformComponent');
+        const rigidbody = entity.getComponent('RigidbodyComponent');
+        const enemyAI = entity.getComponent('EnemyAIComponent');
+        
+        // Skip if missing required components
+        if (!transform || !rigidbody || !enemyAI) {
+            return;
+        }
+        
+        // Skip if entity is frozen
+        if (rigidbody.isFrozen) {
+            return;
+        }
+        
+        // Calculate separation force
+        const separationForce = this.calculateSeparationForce(entity, transform, rigidbody);
+        
+        // Apply the separation force if significant
+        if (separationForce.lengthSq() > 0.01) {
+            // Pass separation force to the AI component for more natural behavior
+            enemyAI.setSeparationForce(separationForce);
+            
+            // Also apply directly to the rigidbody for immediate response
+            rigidbody.applyForce(separationForce);
+        } else {
+            // Clear separation force if no significant force is calculated
+            enemyAI.setSeparationForce(new THREE.Vector3());
+        }
+    }
+    
+    /**
+     * Calculate separation force to avoid nearby enemies
+     * @param {Entity} entity The current entity
+     * @param {TransformComponent} transform The entity's transform
+     * @param {RigidbodyComponent} rigidbody The entity's rigidbody
+     * @returns {THREE.Vector3} The calculated separation force
+     */
+    calculateSeparationForce(entity, transform, rigidbody) {
+        // Initialize separation force vector
+        const separationForce = new THREE.Vector3();
+        
+        // Define separation threshold based on collision radius
+        const separationThreshold = rigidbody.collisionRadius * this.separationThresholdMultiplier;
+        
+        // Find nearby enemy entities
+        const nearbyEnemies = this.findNearbyEnemies(entity, transform.position, separationThreshold);
+        
+        // Process each nearby enemy
+        for (const neighborId of nearbyEnemies) {
+            // Skip self
+            if (neighborId === entity.id) continue;
+            
+            // Get neighbor entity
+            const neighbor = this.world.getEntity(neighborId);
+            if (!neighbor) continue;
+            
+            // Get neighbor transform
+            const neighborTransform = neighbor.getComponent('TransformComponent');
+            if (!neighborTransform) continue;
+            
+            // Calculate vector away from neighbor
+            const awayVector = transform.position.clone().sub(neighborTransform.position);
+            
+            // Get distance to neighbor
+            const distance = awayVector.length();
+            
+            // Skip if too far or zero distance
+            if (distance >= separationThreshold || distance === 0) continue;
+            
+            // Calculate repulsion strength (stronger when closer)
+            let strength = (separationThreshold - distance) / separationThreshold;
+            
+            // Normalize away vector
+            awayVector.normalize();
+            
+            // Scale by strength and add to separation force
+            separationForce.add(awayVector.multiplyScalar(strength * this.SEPARATION_FORCE_MAGNITUDE));
+        }
+        
+        return separationForce;
+    }
+    
+    /**
+     * Find nearby enemy entities within a certain radius
+     * @param {Entity} entity The entity to find neighbors for
+     * @param {THREE.Vector3} position The position to check from
+     * @param {number} radius The radius to check within
+     * @returns {Set} Set of nearby enemy entity IDs
+     */
+    findNearbyEnemies(entity, position, radius) {
+        // Simple method: check all active enemies
+        // This could be optimized with a spatial grid for better performance
+        const nearbyEnemies = new Set();
+        
+        // Convert enemies set to array of entity objects for position checking
+        for (const enemyId of this.enemies) {
+            // Skip self
+            if (enemyId === entity.id) continue;
+            
+            // Skip if entity doesn't exist
+            const enemyEntity = this.world.getEntity(enemyId);
+            if (!enemyEntity) continue;
+            
+            // Skip if entity is pooled
+            if (enemyEntity.hasTag('pooled')) continue;
+            
+            // Get transform component
+            const enemyTransform = enemyEntity.getComponent('TransformComponent');
+            if (!enemyTransform) continue;
+            
+            // Calculate distance
+            const distance = position.distanceTo(enemyTransform.position);
+            
+            // Add to nearby set if within radius
+            if (distance < radius) {
+                nearbyEnemies.add(enemyId);
+            }
+        }
+        
+        return nearbyEnemies;
     }
     
     /**

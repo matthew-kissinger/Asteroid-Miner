@@ -465,13 +465,10 @@ export class MiningSystem extends System {
             // Update progress indicator
             this.updateProgressIndicator(sourceId, currentProgress % 1);
             
-            // Check if a resource unit has been mined
+            // Check if mining is complete (progress reaches 1.0)
             if (currentProgress >= 1) {
-                // Reset progress for next resource unit
-                this.miningProgresses.set(sourceId, currentProgress % 1);
-                
-                // Extract resources
-                const miningResult = mineable.mine(1);
+                // Extract all resources at once
+                const miningResult = mineable.mine();
                 
                 // Add to cargo if possible
                 const cargoComponent = sourceEntity.getComponent('CargoComponent');
@@ -490,7 +487,7 @@ export class MiningSystem extends System {
                     }
                 }
                 
-                // Publish resource mined event
+                // Publish resource mined event with total amount
                 this.world.messageBus.publish('mining.resourceMined', {
                     sourceEntity,
                     targetEntity,
@@ -498,20 +495,21 @@ export class MiningSystem extends System {
                     amount: miningResult.amount
                 });
                 
-                // Check if asteroid is depleted
-                if (miningResult.depleted) {
-                    this.world.messageBus.publish('mining.targetDepleted', {
-                        sourceEntity,
-                        targetEntity
-                    });
-                    this.stopMining({ data: { sourceEntity } });
-                    
-                    // Request asteroid destruction
-                    this.world.messageBus.publish('entity.requestDestroy', {
-                        entity: targetEntity
-                    });
-                    continue;
-                }
+                // Publish target depleted event
+                this.world.messageBus.publish('mining.targetDepleted', {
+                    sourceEntity,
+                    targetEntity
+                });
+                
+                // Stop mining
+                this.stopMining({ data: { sourceEntity } });
+                
+                // Request asteroid destruction
+                this.world.messageBus.publish('entity.requestDestroy', {
+                    entity: targetEntity
+                });
+                
+                continue;
             } else {
                 // Update progress for partial completion
                 this.miningProgresses.set(sourceId, currentProgress);

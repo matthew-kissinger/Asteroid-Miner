@@ -16,11 +16,12 @@ export class MiningLaserComponent extends Component {
         this.active = false;       // Whether laser is currently active
         this.targetEntityId = null; // Entity ID of current mining target
         
-        // Mining rate configuration
+        // Mining rate configuration for single-action mining
+        // Values are in progress per second (1 / seconds_required to complete mining)
         this.miningRates = {
-            iron: 2.0,    // Base units per second
-            gold: 0.8,    // Base units per second
-            platinum: 0.3 // Base units per second
+            iron: 0.133,     // 7.5 seconds to complete (1/7.5)
+            gold: 0.044,     // 22.5 seconds to complete (1/22.5) 
+            platinum: 0.022  // 45 seconds to complete (1/45)
         };
         
         // Visual properties (for reference by systems)
@@ -50,12 +51,12 @@ export class MiningLaserComponent extends Component {
     /**
      * Calculate mining speed for a specific resource
      * @param {string} resourceType Resource type (iron, gold, platinum)
-     * @returns {number} Mining speed in units per second
+     * @returns {number} Mining speed in progress per second
      */
     getMiningSpeed(resourceType) {
         if (!this.miningRates.hasOwnProperty(resourceType)) {
             console.warn(`Unknown resource type: ${resourceType}, using default mining rate`);
-            return this.power;
+            return this.miningRates.iron * this.power;
         }
         
         return this.miningRates[resourceType] * this.power;

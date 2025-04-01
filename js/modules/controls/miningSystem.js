@@ -11,13 +11,14 @@ export class MiningSystem {
         this.miningProgress = 0;
         this.lastDestroyedAsteroid = null;
         
-        // Mining speeds based on resource types (lower = slower mining)
+        // Mining speeds for single-action mining that takes 7.5, 22.5, and 45 seconds respectively
+        // Values are in progress per second (1 / seconds_required)
         this.miningSpeedByType = {
-            iron: 0.006,     // Base mining speed
-            gold: 0.0012,    // 5x slower than iron
-            platinum: 0.0004  // 15x slower than iron
+            iron: 0.133,     // 1/7.5 seconds to complete
+            gold: 0.044,     // 1/22.5 seconds to complete
+            platinum: 0.022  // 1/45 seconds to complete
         };
-        this.miningSpeed = 0.03; // Default speed, will be set based on asteroid type
+        this.miningSpeed = 0.133; // Default speed, will be set based on asteroid type
         this.miningDistance = 6000; // Maximum mining distance (reduced from 24000 to 12000)
         this.miningCooldown = 0;
         
@@ -300,7 +301,7 @@ export class MiningSystem {
         
         // Calculate approximate time to mine based on resource type
         const resourceType = this.targetAsteroid.resourceType.toLowerCase();
-        const timeSeconds = Math.round(1 / this.miningSpeed);
+        const secondsRequired = Math.round(1 / this.miningSpeed);
         const efficiency = this.getMiningEfficiency();
         
         let efficiencyText = "";
@@ -308,7 +309,7 @@ export class MiningSystem {
             efficiencyText = ` [${Math.round(efficiency * 100)}% efficiency]`;
         }
         
-        miningStatusElement.textContent = `MINING ${resourceType.toUpperCase()} (${timeSeconds}s per unit)${efficiencyText}`;
+        miningStatusElement.textContent = `MINING ${resourceType.toUpperCase()} (${secondsRequired}s)${efficiencyText}`;
         miningStatusElement.style.color = '#ff4400';
     }
     
@@ -351,7 +352,7 @@ export class MiningSystem {
         }
     }
     
-    update() {
+    update(deltaTime = 1/60) {
         // Update mining cooldown
         if (this.miningCooldown > 0) {
             this.miningCooldown--;
@@ -359,7 +360,7 @@ export class MiningSystem {
         
         // Update mining if active
         if (this.isMining) {
-            this.updateMining();
+            this.updateMining(deltaTime);
         }
         
         // Update mining particles if visible
@@ -373,7 +374,7 @@ export class MiningSystem {
         }
     }
     
-    updateMining() {
+    updateMining(deltaTime = 1/60) {
         // Make sure we have a target asteroid
         if (!this.targetAsteroid || !this.isMining) {
             this.stopMining();
@@ -387,8 +388,8 @@ export class MiningSystem {
             return;
         }
         
-        // Update mining progress
-        this.miningProgress += this.miningSpeed;
+        // Update mining progress using deltaTime for frame-rate independence
+        this.miningProgress += this.miningSpeed * deltaTime;
         
         // Update laser beam position
         this.updateLaserBeam();
@@ -398,10 +399,23 @@ export class MiningSystem {
             this.miningParticles.position.copy(this.targetAsteroid.mesh.position);
         }
         
-        // Extract resources when mining progress reaches 1.0
+        // Complete mining when progress reaches 1.0
         if (this.miningProgress >= 1.0) {
-            this.extractResources();
-            this.miningProgress = 0; // Reset for continuous mining
+            // Add resources from asteroid in one batch
+            this.addAsteroidResources();
+            
+            // Create asteroid break effect
+            this.createAsteroidBreakEffect(this.targetAsteroid.mesh.position);
+            
+            // Store reference to the destroyed asteroid
+            this.lastDestroyedAsteroid = this.targetAsteroid;
+            
+            // Remove asteroid from scene
+            this.scene.remove(this.targetAsteroid.mesh);
+            
+            // Stop mining
+            this.stopMining();
+            this.targetAsteroid = null;
         }
         
         // Update the progress bar
@@ -515,7 +529,10 @@ export class MiningSystem {
         this.miningParticles.geometry.attributes.position.needsUpdate = true;
     }
     
-    extractResources() {
+    /**
+     * Add all resources from the mined asteroid to the player's inventory at once
+     */
+    addAsteroidResources() {
         if (!this.targetAsteroid) return;
         
         // Get the resource type from the asteroid
@@ -525,25 +542,25 @@ export class MiningSystem {
         const efficiency = this.getMiningEfficiency();
         const bonusChance = (efficiency - 1.0) * 0.5; // Chance for bonus resources based on efficiency
         
-        // Add resources based on type (random amount within a range)
+        // Calculate base amount based on asteroid type
         let amount = 0;
         switch (resourceType.toLowerCase()) {
             case 'iron':
-                amount = Math.floor(Math.random() * 3) + 1; // 1-3 iron
+                amount = Math.floor(Math.random() * 5) + 10; // 10-14 iron
                 break;
             case 'gold':
-                amount = Math.floor(Math.random() * 2) + 1; // 1-2 gold
+                amount = Math.floor(Math.random() * 3) + 5; // 5-7 gold
                 break;
             case 'platinum':
-                amount = 1; // 1 platinum (rarer)
+                amount = Math.floor(Math.random() * 2) + 2; // 2-3 platinum
                 break;
             default:
-                amount = 1; // Default to 1 iron
+                amount = 10; // Default to 10 iron
         }
         
         // Apply bonus resources based on mining efficiency
         if (efficiency > 1.0 && Math.random() < bonusChance) {
-            amount += 1; // 1 extra resource
+            amount = Math.ceil(amount * 1.2); // 20% bonus
         }
         
         // Update resource counts
@@ -561,32 +578,55 @@ export class MiningSystem {
                 this.resources.iron += amount;
         }
         
-        // Reduce asteroid health
-        if (this.targetAsteroid.mesh.userData.health) {
-            // Higher efficiency reduces health faster
-            const damageAmount = 10 * (1 + (efficiency - 1) * 0.5);
-            this.targetAsteroid.mesh.userData.health -= damageAmount;
-            
-            // If asteroid is depleted, remove it and stop mining
-            if (this.targetAsteroid.mesh.userData.health <= 0) {
-                // Create a small explosion effect
-                this.createAsteroidBreakEffect(this.targetAsteroid.mesh.position);
-                
-                // Remove from scene
-                this.scene.remove(this.targetAsteroid.mesh);
-                
-                // Store reference to the destroyed asteroid
-                this.lastDestroyedAsteroid = this.targetAsteroid;
-                
-                // Stop mining
-                this.stopMining();
-                this.targetAsteroid = null;
-                
-                return true; // Asteroid was destroyed
-            }
+        console.log(`MiningSystem: Added ${amount} ${resourceType} from asteroid`);
+        
+        // Show resource gain notification
+        this.showResourceGainNotification(amount, resourceType);
+        
+        return true;
+    }
+    
+    /**
+     * Show a notification for resources gained
+     */
+    showResourceGainNotification(amount, resourceType) {
+        // Get color based on resource type
+        let color = '#a0a0a0'; // Default gray for iron
+        if (resourceType === 'gold') {
+            color = '#ffcc00';
+        } else if (resourceType === 'platinum') {
+            color = '#66ffff';
         }
         
-        return false; // No asteroid was destroyed
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.textContent = `+${amount} ${resourceType.toUpperCase()}`;
+        notification.style.position = 'absolute';
+        notification.style.top = '40%';
+        notification.style.left = '50%';
+        notification.style.transform = 'translate(-50%, -50%)';
+        notification.style.color = color;
+        notification.style.fontSize = '24px';
+        notification.style.fontWeight = 'bold';
+        notification.style.textShadow = '0 0 8px black';
+        notification.style.zIndex = '1000';
+        notification.style.opacity = '1';
+        notification.style.transition = 'all 1.5s ease-out';
+        
+        document.body.appendChild(notification);
+        
+        // Animate the notification
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.top = '30%';
+            
+            // Remove after animation
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 1500);
+        }, 100);
     }
     
     createAsteroidBreakEffect(position) {

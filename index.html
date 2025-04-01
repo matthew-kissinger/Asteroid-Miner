@@ -8,6 +8,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
     <title>Solar System Asteroid Miner</title>
+    <script>
+        // Start timing the page load process
+        console.time("init");
+        console.time("domLoaded");
+        
+        // Mark the timestamp when JavaScript first runs
+        window.initialTimestamp = performance.now();
+        console.log(`First JS execution: ${window.initialTimestamp.toFixed(2)}ms`);
+    </script>
     <style>
         body {
             margin: 0;
@@ -117,6 +126,7 @@
         }
     </style>
     <link rel="stylesheet" href="css/custom-system.css">
+    <link rel="stylesheet" href="css/start-screen.css">
     
     <!-- Import map for Three.js r175 -->
     <script type="importmap">
@@ -133,7 +143,7 @@
     
     <!-- Credits -->
     <div class="credits">
-        Solar System Asteroid Miner v0.5.0<br>
+        Solar System Asteroid Miner v0.5.8<br>
         Built by @0xAntimatter
     </div>
     
@@ -145,6 +155,9 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // End DOM loaded timing
+            console.timeEnd("domLoaded");
+            
             // Prevent default touchmove behavior to avoid page scrolling while playing
             document.addEventListener('touchmove', function(e) {
                 e.preventDefault();

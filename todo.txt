@@ -1,0 +1,46 @@
+# Solar System Asteroid Miner - Todo List
+
+## UI Improvements
+- [ ] Add start screen with:
+  - [ ] Stylized title text (no logo)
+  - [ ] "Play" button (triggers intro for new players or goes directly to stargate for returning players - logic for that is already built in)
+  - [ ] "How to Play" button
+  - [ ] "Settings" button
+- [ ] Fix HUD elements:
+  - [ ] Display current star system name as location
+  - [ ] Fix thrust indicator
+  - [ ] Synchronize fuel level display with actual fuel amount. i.e. if it is 200 it only shows the gauge up to 100
+- [ ] Create proper Game Over screen:
+  - [ ] Show reason for game over - planet, sun, asteroid, no fuel(working), died in hoarde (working), dying to enemy (not working)
+  - [ ] Display final score (not resources)
+- [ ] Streamline Stargate Terminal UI:
+  - [ ] Make interface more compact
+  - [ ] Improve layout and usability
+
+## Gameplay Mechanics
+- [ ] Implement scoring system
+  - [ ] Add "dopamine hit" rewards for achievements
+  - [ ] Add increase to score for time alive, asteroid mining, and destroying enemies
+  - [ ] Display score prominently in HUD
+- [ ] Balance asteroid mining:
+  - [ ] Reduce time needed to break asteroids (mining once should break it)
+- [ ] Adjust turret mechanics:
+  - [ ] Remove "PICK UP" functionality for laser turrets
+  - [ ] Update turret range (reduce to longer range)
+- [ ] Lock Horde Mode button until enemies are activated in gameplay
+
+## Visual Effects & Polish
+- [ ] Fix inconsistent sun lighting - should be pointing out at all sides
+- [ ] Add general polish and visual improvements
+
+## Testing & Optimization
+- [ ] Test and fix mobile controls and responsiveness
+- [ ] Perform final balance adjustments
+- [ ] Bug hunting and fixes
+
+## Priority Order
+1. Fix core gameplay mechanics (mining, HUD, game over)
+2. Add start screen and intro
+3. Implement scoring system
+4. Polish visuals and effects
+5. Test and optimize, especially for mobile

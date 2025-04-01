@@ -47,7 +47,7 @@ class Game {
         window.mainMessageBus.subscribe('game.over', this.gameOver.bind(this));
         
         try {
-            // Initialize audio manager first to start loading sounds
+            // Create audio manager first but don't initialize yet
             console.log("Creating audio manager...");
             this.audio = new AudioManager();
             
@@ -65,13 +65,16 @@ class Game {
             // Share camera reference with scene for easy access by other components
             this.scene.camera = this.camera;
             
+            // Initialize essential components needed for the start screen
+            console.log("Initializing essential components...");
+            
             // Initialize physics
             this.physics = new Physics(this.scene);
             
             // Set camera reference in physics
             this.physics.setCamera(this.camera);
             
-            // Initialize environment
+            // Initialize environment (essential components only)
             this.environment = new Environment(this.scene);
             
             // Initialize spaceship
@@ -83,28 +86,6 @@ class Game {
             
             // Set spaceship reference in environment (for VibeVerse portals)
             this.environment.setSpaceship(this.spaceship);
-            
-            // Initialize combat systems
-            console.log("Creating combat module...");
-            this.combat = new Combat(this.scene, this.spaceship);
-            
-            // Ensure the ECS world in combat is properly initialized
-            if (this.combat.world) {
-                console.log("Combat ECS world successfully created");
-            } else {
-                console.log("Waiting for combat ECS world to initialize...");
-                // Add a check to ensure the player entity exists
-                setTimeout(() => {
-                    if (this.combat.world && this.combat.playerEntity) {
-                        console.log("Combat ECS world and player entity initialized after delay");
-                    } else {
-                        console.warn("Combat ECS world or player entity not available after delay, recreating...");
-                        if (this.combat.createPlayerReferenceEntity) {
-                            this.combat.createPlayerReferenceEntity();
-                        }
-                    }
-                }, 1000);
-            }
             
             // Initialize UI
             this.ui = new UI(this.spaceship, this.environment);
@@ -169,28 +150,11 @@ class Game {
             // Register event handlers
             this.setupEventHandlers();
             
-            // Initialize common object pools
-            this.initializeObjectPools();
-            
             // Pre-bind animate method to avoid creating a new function every frame
             this.boundAnimate = this.animate.bind(this);
             
             // Reusable deltaTime variable to avoid creating new variables in hot path
             this.deltaTime = 0;
-            
-            // Time tracking for frame rate cap and FPS calculation
-            this.lastFrameTime = 0;
-            this.actualFrameTime = 0;
-            this.frameStartTime = 0;
-            
-            // FPS averaging for smoother display
-            this.fpsBuffer = [];
-            this.fpsBufferSize = 15; // Smaller buffer for more responsive updates
-            
-            // Update UI to indicate loading is in progress
-            if (this.ui && this.ui.showLoadingScreen) {
-                this.ui.showLoadingScreen("Initializing Audio Systems...");
-            }
             
             // Start the initialization sequence
             this.initializeGameSequence();
@@ -201,43 +165,34 @@ class Game {
         }
     }
     
-    // Initialize game in sequence, ensuring audio is loaded before proceeding
+    // Initialize game in sequence, showing start screen first and loading non-essentials after
     async initializeGameSequence() {
         try {
             console.log("Starting game initialization sequence...");
             
-            // Initialize audio - this includes pre-decoding all sound effects
-            console.log("Initializing audio system and pre-decoding sounds...");
-            await this.audio.initialize();
-            
-            console.log("Audio system initialization complete");
-            
-            // Delay slightly before proceeding to ensure all audio is ready
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Check if intro has been played before
-            const introPlayed = localStorage.getItem('introPlayed') === 'true';
-            
-            if (introPlayed) {
-                console.log("Intro already played, starting in docked state");
-                // Only set initial camera position if we're not doing the intro
-                this.camera.position.set(0, 1500, 0);
-                // Only start docked if we've already seen the intro
-                this.startDocked();
-            } else {
-                console.log("First time playing, preparing for intro sequence");
-                // Make sure ship is docked but DON'T show the UI
-                if (this.spaceship && !this.spaceship.isDocked) {
-                    this.spaceship.dock();
+            // Resume audio context if needed (browser autoplay policy)
+            if (this.audio && this.audio.audioContext && this.audio.audioContext.state === 'suspended') {
+                try {
+                    this.audio.resumeAudioContext();
+                } catch (e) {
+                    console.log("Audio context couldn't be resumed yet, will try again after user interaction");
                 }
-                // Start intro with a small delay to ensure everything is loaded
-                setTimeout(() => {
-                    this.startIntroSequence();
-                }, 500);
             }
             
-            // Start game loop
+            // Show the start screen immediately
+            if (this.ui && this.ui.startScreen) {
+                console.log("Showing start screen");
+                this.ui.startScreen.show();
+            } else {
+                console.error("Start screen not found, falling back to default behavior");
+                this.fallbackToDefaultBehavior();
+            }
+            
+            // Start game loop (even though we're on start screen)
             this.boundAnimate();
+            
+            // Initialize remaining systems in the background after start screen is shown
+            this.initializeRemainingSystemsAsync();
             
             console.log("Game initialization sequence completed successfully");
         } catch (error) {
@@ -252,9 +207,95 @@ class Game {
         }
     }
     
-    /**
-     * Initialize object pools for commonly created objects
-     */
+    // Initialize remaining systems asynchronously after showing the start screen
+    async initializeRemainingSystemsAsync() {
+        try {
+            // Start loading audio in the background
+            this.loadAudioAsync();
+            
+            // Initialize combat systems asynchronously
+            console.log("Initializing combat module asynchronously...");
+            if (!this.combat) {
+                this.combat = new Combat(this.scene, this.spaceship);
+                
+                // Ensure the ECS world in combat is properly initialized
+                if (this.combat.world) {
+                    console.log("Combat ECS world successfully created");
+                } else {
+                    console.log("Waiting for combat ECS world to initialize...");
+                    // Add a check to ensure the player entity exists
+                    setTimeout(() => {
+                        if (this.combat.world && this.combat.playerEntity) {
+                            console.log("Combat ECS world and player entity initialized after delay");
+                        } else {
+                            console.warn("Combat ECS world or player entity not available after delay, recreating...");
+                            if (this.combat.createPlayerReferenceEntity) {
+                                this.combat.createPlayerReferenceEntity();
+                            }
+                        }
+                    }, 1000);
+                }
+            }
+            
+            // Initialize common object pools after start screen is shown
+            setTimeout(() => {
+                this.initializeObjectPools();
+                
+                // Pre-warm essential shaders and projectile assets after start screen is shown
+                this.preWarmBasicShaders();
+            }, 100);
+        } catch (error) {
+            console.error("Error initializing remaining systems:", error);
+        }
+    }
+    
+    // Load audio asynchronously after showing the start screen
+    async loadAudioAsync() {
+        try {
+            if (this.audio) {
+                // Initialize audio in the background
+                console.log("Initializing audio system asynchronously...");
+                this.audio.initialize().then(() => {
+                    console.log("Audio system initialization complete");
+                }).catch(error => {
+                    console.error("Error initializing audio:", error);
+                });
+            }
+        } catch (error) {
+            console.error("Error loading audio:", error);
+        }
+    }
+    
+    // Pre-warm only the most essential shaders needed for immediate gameplay
+    preWarmBasicShaders() {
+        console.log("Pre-warming essential shaders...");
+        
+        // Create template projectile geometry and materials
+        this.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
+        this.projectileMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 5,
+            metalness: 0.7,
+            roughness: 0.3
+        });
+        
+        // Create simple dummy objects to warm up the renderer
+        const dummyProjectile = new THREE.Mesh(this.projectileGeometry, this.projectileMaterial);
+        
+        // Add to scene temporarily
+        this.scene.add(dummyProjectile);
+        
+        // Force shader compilation for better performance
+        this.renderer.renderer.compile(this.scene, this.camera);
+        
+        // Remove dummy object after compilation
+        this.scene.remove(dummyProjectile);
+        
+        console.log("Essential shaders pre-warmed");
+    }
+    
+    // Initialize object pools for commonly created objects
     initializeObjectPools() {
         console.log("Initializing object pools...");
         
@@ -1352,6 +1393,30 @@ class Game {
         // Add debug mode toggle (D key + Shift)
         if (e.key.toLowerCase() === 'd' && e.shiftKey) {
             this.toggleDebugMode();
+        }
+    }
+    
+    // Fallback to old behavior if start screen is not available
+    fallbackToDefaultBehavior() {
+        // Check if intro has been played before
+        const introPlayed = localStorage.getItem('introPlayed') === 'true';
+        
+        if (introPlayed) {
+            console.log("Intro already played, starting in docked state");
+            // Only set initial camera position if we're not doing the intro
+            this.camera.position.set(0, 1500, 0);
+            // Only start docked if we've already seen the intro
+            this.startDocked();
+        } else {
+            console.log("First time playing, preparing for intro sequence");
+            // Make sure ship is docked but DON'T show the UI
+            if (this.spaceship && !this.spaceship.isDocked) {
+                this.spaceship.dock();
+            }
+            // Start intro with a small delay to ensure everything is loaded
+            setTimeout(() => {
+                this.startIntroSequence();
+            }, 500);
         }
     }
 }
