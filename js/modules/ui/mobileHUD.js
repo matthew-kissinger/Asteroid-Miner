@@ -47,8 +47,8 @@ export class MobileHUD {
         this.createStatusBar(hudContainer, 'H', 'hull-bar-mobile', 'rgba(120, 220, 232, 0.8)');
         this.createStatusBar(hudContainer, 'F', 'fuel-bar-mobile', 'rgba(120, 220, 232, 0.8)');
         
-        // Add thrust and velocity displays
-        this.createThrustVelocityDisplay(hudContainer);
+        // Add anomaly count display
+        this.createAnomalyDisplay(hudContainer);
         
         // Create cargo display
         const cargoContainer = document.createElement('div');
@@ -97,9 +97,6 @@ export class MobileHUD {
         
         // Add decorative corner elements
         this.addCornerElements(hudContainer);
-
-        // Add location info
-        this.setupLocationInfo(hudContainer);
     }
     
     createStatusBar(parent, label, id, color) {
@@ -149,6 +146,34 @@ export class MobileHUD {
         parent.appendChild(container);
     }
     
+    createAnomalyDisplay(parent) {
+        const anomalyContainer = document.createElement('div');
+        anomalyContainer.style.display = 'flex';
+        anomalyContainer.style.justifyContent = 'space-between';
+        anomalyContainer.style.alignItems = 'center';
+        anomalyContainer.style.marginBottom = '8px';
+        
+        const anomalyLabel = document.createElement('div');
+        anomalyLabel.textContent = 'A';
+        anomalyLabel.style.marginRight = '8px';
+        anomalyLabel.style.width = '16px';
+        anomalyLabel.style.textAlign = 'center';
+        anomalyLabel.style.fontSize = '14px';
+        
+        const anomalyCount = document.createElement('div');
+        anomalyCount.id = 'anomaly-count-mobile';
+        anomalyCount.textContent = '0';
+        anomalyCount.style.textAlign = 'right';
+        anomalyCount.style.flexGrow = '1';
+        anomalyCount.style.fontSize = '14px';
+        anomalyCount.style.fontWeight = 'bold';
+        anomalyCount.style.color = 'rgba(120, 220, 232, 0.9)';
+        
+        anomalyContainer.appendChild(anomalyLabel);
+        anomalyContainer.appendChild(anomalyCount);
+        parent.appendChild(anomalyContainer);
+    }
+    
     addCornerElements(panel) {
         // Top left corner
         const topLeft = document.createElement('div');
@@ -195,34 +220,6 @@ export class MobileHUD {
         panel.appendChild(bottomRight);
     }
     
-    setupLocationInfo(parent) {
-        // Create simplified location info for mobile
-        const locationInfo = document.createElement('div');
-        locationInfo.id = 'mobile-location-info';
-        locationInfo.style.position = 'absolute';
-        locationInfo.style.top = '10px';
-        locationInfo.style.left = '10px';
-        locationInfo.style.padding = '5px 10px';
-        locationInfo.style.backgroundColor = 'rgba(0, 20, 40, 0.7)';
-        locationInfo.style.borderRadius = '5px';
-        locationInfo.style.color = '#7ecce9';
-        locationInfo.style.fontSize = '12px';
-        locationInfo.style.fontFamily = '"Rajdhani", sans-serif';
-        locationInfo.style.backdropFilter = 'blur(5px)';
-        locationInfo.style.zIndex = '1000';
-        
-        // Add system name and coordinates
-        locationInfo.innerHTML = `
-            <div id="mobile-current-system" style="font-weight:600;">SOLAR SYSTEM</div>
-            <div id="mobile-coordinates" style="font-size:10px; opacity:0.8;">X: 0 Y: 0 Z: 0</div>
-            <div style="display: flex; align-items: center; gap: 5px; font-size:10px; opacity:0.8; margin-top: 2px;">
-                <span>ANOMALIES: <span id="anomaly-count" style="font-weight:600;">0</span></span>
-            </div>
-        `;
-        
-        parent.appendChild(locationInfo);
-    }
-    
     update() {
         // Update shield display
         this.updateShieldDisplay();
@@ -233,12 +230,11 @@ export class MobileHUD {
         // Update fuel display
         this.updateFuelDisplay();
         
-        // Update thrust and velocity displays
-        this.updateThrustDisplay();
-        this.updateVelocityDisplay();
-        
         // Update cargo display
         this.updateCargoDisplay();
+        
+        // Update anomaly count
+        this.updateAnomalyCount();
         
         // Update horde mode display
         this.updateHordeModeDisplay();
@@ -362,6 +358,29 @@ export class MobileHUD {
         }
     }
     
+    updateAnomalyCount() {
+        const anomalyCount = document.getElementById('anomaly-count-mobile');
+        if (!anomalyCount) return;
+        
+        // Get anomaly count from game object if available
+        let count = 0;
+        if (window.game && window.game.environment && window.game.environment.anomalyCount) {
+            count = window.game.environment.anomalyCount;
+        }
+        
+        // Update the anomaly counter
+        anomalyCount.textContent = count.toString();
+        
+        // Highlight if anomalies are present
+        if (count > 0) {
+            anomalyCount.style.color = 'rgba(255, 204, 0, 0.9)';
+            anomalyCount.style.textShadow = '0 0 5px rgba(255, 204, 0, 0.5)';
+        } else {
+            anomalyCount.style.color = 'rgba(120, 220, 232, 0.9)';
+            anomalyCount.style.textShadow = 'none';
+        }
+    }
+    
     /**
      * Update the horde mode indicator and timer in the mobile HUD
      */
@@ -438,159 +457,10 @@ export class MobileHUD {
         console.log("MobileHUD: Setting controls reference");
         this.controls = controls;
     }
-    
-    // Add thrust and velocity display for mobile HUD
-    createThrustVelocityDisplay(parent) {
-        const container = document.createElement('div');
-        container.style.display = 'flex';
-        container.style.justifyContent = 'space-between';
-        container.style.marginTop = '10px';
-        container.style.marginBottom = '10px';
-        container.style.fontSize = '12px';
-        
-        // Thrust display
-        const thrustContainer = document.createElement('div');
-        thrustContainer.style.display = 'flex';
-        thrustContainer.style.flexDirection = 'column';
-        thrustContainer.style.alignItems = 'center';
-        
-        const thrustLabel = document.createElement('div');
-        thrustLabel.textContent = 'THR';
-        thrustLabel.style.fontSize = '10px';
-        thrustLabel.style.opacity = '0.8';
-        
-        const thrustValue = document.createElement('div');
-        thrustValue.id = 'thrust-value-mobile';
-        thrustValue.textContent = '0.0';
-        thrustValue.style.fontWeight = 'bold';
-        
-        thrustContainer.appendChild(thrustLabel);
-        thrustContainer.appendChild(thrustValue);
-        
-        // Velocity display
-        const velocityContainer = document.createElement('div');
-        velocityContainer.style.display = 'flex';
-        velocityContainer.style.flexDirection = 'column';
-        velocityContainer.style.alignItems = 'center';
-        
-        const velocityLabel = document.createElement('div');
-        velocityLabel.textContent = 'VEL';
-        velocityLabel.style.fontSize = '10px';
-        velocityLabel.style.opacity = '0.8';
-        
-        const velocityValue = document.createElement('div');
-        velocityValue.id = 'velocity-value-mobile';
-        velocityValue.textContent = '0.00';
-        velocityValue.style.fontWeight = 'bold';
-        
-        velocityContainer.appendChild(velocityLabel);
-        velocityContainer.appendChild(velocityValue);
-        
-        // Add containers to parent
-        container.appendChild(thrustContainer);
-        container.appendChild(velocityContainer);
-        parent.appendChild(container);
-    }
-    
-    // New methods to update thrust and velocity displays
-    updateThrustDisplay() {
-        const thrustDisplay = document.getElementById('thrust-value-mobile');
-        if (!thrustDisplay) return;
-        
-        let thrustValue = 0;
-        let thrusterComponent = null;
-        
-        // Try to get thrust state from player entity first
-        if (window.game && window.game.world) {
-            const players = window.game.world.getEntitiesByTag('player');
-            if (players && players.length > 0) {
-                thrusterComponent = players[0].getComponent('ThrusterComponent');
-                
-                if (thrusterComponent) {
-                    // Get thrust values from the ThrusterComponent
-                    if (thrusterComponent.thrusting.forward) thrustValue += 1;
-                    if (thrusterComponent.thrusting.backward) thrustValue += 0.5;
-                    if (thrusterComponent.thrusting.left || thrusterComponent.thrusting.right) thrustValue += 0.5;
-                }
-            }
-        }
-        
-        // Fallback to spaceship object if ThrusterComponent not found
-        if (!thrusterComponent && this.spaceship && this.spaceship.thrust) {
-            if (this.spaceship.thrust.forward) thrustValue += 1;
-            if (this.spaceship.thrust.backward) thrustValue += 0.5;
-            if (this.spaceship.thrust.left || this.spaceship.thrust.right) thrustValue += 0.5;
-        }
-        
-        thrustDisplay.textContent = thrustValue.toFixed(1);
-        
-        // Change color if thrusting
-        if (thrustValue > 0) {
-            thrustDisplay.style.color = 'rgba(120, 220, 232, 1)';
-        } else {
-            thrustDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
-        }
-    }
-    
-    updateVelocityDisplay() {
-        const velocityDisplay = document.getElementById('velocity-value-mobile');
-        if (!velocityDisplay) return;
-        
-        // Get velocity from RigidbodyComponent, fallback to spaceship or physics
-        let velocity = 0;
-        let maxVelocity = 25.0; // Default fallback value
-        
-        // Try to get velocity from player entity's RigidbodyComponent first
-        if (window.game && window.game.world) {
-            const players = window.game.world.getEntitiesByTag('player');
-            if (players && players.length > 0) {
-                const rigidbody = players[0].getComponent('RigidbodyComponent');
-                const thruster = players[0].getComponent('ThrusterComponent');
-                
-                if (rigidbody && rigidbody.velocity) {
-                    velocity = rigidbody.velocity.length();
-                }
-                
-                if (thruster) {
-                    maxVelocity = thruster.maxVelocity;
-                    if (thruster.thrusting.boost) {
-                        maxVelocity *= thruster.boostMultiplier;
-                    }
-                }
-            }
-        }
-        
-        // Fallback to spaceship object if not found in component
-        if (velocity === 0 && this.spaceship && this.spaceship.velocity) {
-            velocity = this.spaceship.velocity.length();
-            
-            if (this.spaceship.maxVelocity) {
-                maxVelocity = this.spaceship.maxVelocity;
-            }
-        } 
-        // Last resort fallback to game physics
-        else if (velocity === 0 && window.game && window.game.physics && window.game.physics.velocity) {
-            velocity = window.game.physics.velocity.length();
-        }
-        
-        velocityDisplay.textContent = velocity.toFixed(2);
-        
-        // Change color based on velocity
-        if (velocity > maxVelocity * 0.8) {
-            velocityDisplay.style.color = 'rgba(255, 204, 0, 0.9)';
-        } else if (velocity > 0.5) {
-            velocityDisplay.style.color = 'rgba(120, 220, 232, 1)';
-        } else {
-            velocityDisplay.style.color = 'rgba(120, 220, 232, 0.7)';
-        }
-    }
 
-    // Update updateLocation method to only update system name
+    // Update to handle system name and anomaly count in a simpler way
     updateLocation(locationName, systemName = 'Unknown System') {
-        const currentSystem = document.getElementById('mobile-current-system');
-        
-        if (currentSystem) {
-            currentSystem.textContent = systemName.toUpperCase();
-        }
+        // Since we no longer show system name, we just need to update anomaly count
+        this.updateAnomalyCount();
     }
 } 

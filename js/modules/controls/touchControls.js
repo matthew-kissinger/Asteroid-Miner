@@ -234,10 +234,6 @@ export class TouchControls {
         // Create deploy laser button (on right side)
         this.deployLaserButton = this.createActionButton(rightActionButtonsContainer, 'DEPLOY', 'rgba(255, 100, 100, 0.8)');
         this.addButtonEvents(this.deployLaserButton, this.handleDeployLaser.bind(this));
-        
-        // Create pickup button (on right side)
-        this.pickupButton = this.createActionButton(rightActionButtonsContainer, 'PICKUP', 'rgba(50, 255, 50, 0.8)');
-        this.addButtonEvents(this.pickupButton, this.handlePickup.bind(this));
     }
     
     createActionButton(parent, text, color) {
@@ -911,18 +907,6 @@ export class TouchControls {
         // Publish deploy laser event
         if (window.mainMessageBus) {
             window.mainMessageBus.publish('input.deployLaser', {});
-        }
-    }
-    
-    /**
-     * Handle picking up an item
-     */
-    handlePickup() {
-        console.log("TouchControls: Picking up item");
-        
-        // Publish pickup interact event
-        if (window.mainMessageBus) {
-            window.mainMessageBus.publish('input.pickupInteract', {});
         }
     }
 } 
