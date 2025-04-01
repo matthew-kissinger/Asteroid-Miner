@@ -133,6 +133,9 @@ export class UI {
         console.log("Settings initialized with game instance");
     }
     
+    /**
+     * Set up event handlers
+     */
     setupEventHandlers() {
         console.log("Setting up UI event handlers");
         
@@ -146,6 +149,9 @@ export class UI {
             this.controls.setupStargateUIControls();
         }
         
+        // Listen for UI notification events
+        window.mainMessageBus.subscribe('ui.notification', this.handleNotification.bind(this));
+        
         // Add resize handler to update mobile detection
         window.addEventListener('resize', () => {
             const wasMobile = this.isMobile;
@@ -157,6 +163,26 @@ export class UI {
                 location.reload();
             }
         });
+    }
+    
+    /**
+     * Handle UI notification events
+     * @param {Object} message The notification message
+     */
+    handleNotification(message) {
+        if (message && message.data) {
+            const content = message.data.message || 'System notification';
+            const duration = message.data.duration || 3000;
+            this.showNotification(content, duration);
+        }
+    }
+    
+    /**
+     * Handle game over event
+     * @param {Object} message Event data
+     */
+    handleGameOver(message) {
+        // ... existing code ...
     }
     
     update() {

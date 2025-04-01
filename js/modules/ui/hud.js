@@ -468,6 +468,15 @@ export class HUD {
             </div>
             <div id="location-coordinates" style="margin-top:5px; font-size:12px; opacity:0.8;">X: 0 Y: 0 Z: 0</div>
             <div id="fps-display" style="margin-top:5px; font-size:12px; opacity:0.8;">FPS: 0</div>
+            <div style="margin-top:5px; display:flex; align-items:center; gap:10px; font-size:12px; opacity:0.8;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" 
+                          fill="rgba(120, 220, 232, 0.8)"/>
+                    <path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" 
+                          fill="rgba(120, 220, 232, 0.5)"/>
+                </svg>
+                <span>ANOMALIES: <span id="anomaly-count" style="font-weight:600;">0</span></span>
+            </div>
         `;
         
         // Add decorative corner effects

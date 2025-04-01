@@ -3,13 +3,15 @@
 ## 1. Project Overview
 
 -   **Project Name:** Solar System Asteroid Miner (aminer)
--   **Version:** v0.5.4
+-   **Version:** v0.5.6
 -   **Purpose:** A 3D space mining simulation game playable in a web browser. Players navigate space, mine asteroids, trade resources, upgrade their ship, and engage in combat.
 -   **Core Functionality:**
     -   3D Space Navigation & Physics Simulation
     -   Asteroid Mining & Resource Collection (Split between Module and ECS System)
     -   Ship Upgrades & Trading via Stargate Interface (Likely involves ECS Trading System)
     -   Combat System (Player vs AI Enemies, managed via dedicated ECS)
+    -   Deployable Space Laser Turrets (Autonomous defense platforms)
+    -   Space Anomalies with Collectible Energy Orbs (Exploration incentives outside asteroid belts)
     -   Multiple Star System Exploration (Including procedural/AI generation)
     -   Mobile and Desktop Controls (Split between Module and ECS System)
     -   Object Pooling Systems for Performance Optimization (ProjectilePoolManager and global pool)
@@ -25,13 +27,14 @@
 
 ## 2. Complete File Structure
 
-aminer_0.5.4/
+aminer_0.5.6/
 css/ # CSS Stylesheets
     custom-system.css # Styles for the custom system creator UI
     mobile.css # Specific styles for mobile devices
 js/ # JavaScript source code
     components/ # ECS Components (Data - Primarily used by Combat ECS)
         combat/ # Combat-related components
+            deployableLaser.js # Handles autonomous laser turret behavior
             enemyAI.js
             healthComponent.js # Handles entity health and shields (Player & Enemies)
         common/ # Common components
@@ -45,6 +48,7 @@ js/ # JavaScript source code
         spaceship/ # Spaceship-specific components
             cargo.js # Handles ship cargo hold
             miningLaser.js # Component for mining laser capabilities
+            pickupable.js # Allows objects to be picked up by the player
             shipState.js # Holds high-level ship state (docked, fuel, upgrades)
             thruster.js # Handles ship thruster logic and effects
         transform.js # Standard position, rotation, scale
@@ -80,6 +84,7 @@ js/ # JavaScript source code
             ObjectPool.js # Generic object pool class
             ProjectilePoolManager.js # Manages pools of projectiles/effects for the Combat module
         controls/ # High-level Input handling and control systems (Player Intent, UI)
+            deploymentSystem.js # Handles player deployment/retrieval of space laser turrets
             dockingSystem.js # Handles player intent/UI for docking/undocking
             inputHandler.js # Handles keyboard/mouse input (Desktop)
             miningSystem.js # Handles player mining intent, resource calculation, and UI interaction
@@ -87,6 +92,7 @@ js/ # JavaScript source code
             touchControls.js # Handles touch input (Mobile UI/Gestures)
         environment/ # World environment elements
             asteroidBelt.js # Generates and manages the asteroid belt (Direct THREE.Mesh objects)
+            spaceAnomalies.js # Creates and manages space anomalies with collectible energy orbs
             stargate.js # Creates and manages the stargate object
             planets.js # Creates and manages planets in the system
             skybox.js # Creates and manages the space skybox
@@ -122,10 +128,13 @@ js/ # JavaScript source code
     systems/ # ECS Systems (Logic - Used ONLY within the Combat ECS World)
         combat/ # Combat-related systems
             combatSystem.js # Processes combat interactions
+            deployableLaserSystem.js # Manages autonomous space laser turret targeting and firing
             enemyLifecycle.js # Handles enemy state validation and transitions
             enemyPoolManager.js # Manages pooling of enemy objects for performance
             enemySpawner.js # Handles spawning of enemies
             enemySystem.js # Manages enemy AI and behavior updates
+        deployment/ # Deployment logic within ECS
+            deploymentSystem.js # Handles deployment and retrieval of space laser turrets
         docking/ # Docking logic within ECS (e.g., state changes, visual triggers)
             dockingSystem.js # Handles low-level docking state/events within ECS
         entity/ # Entity state systems
@@ -195,8 +204,10 @@ README.md # Project README file
     -   `rendering/mesh.js`: Represents visual geometry and material.
     -   `combat/healthComponent.js`: Health, shields, damage handling.
     -   `combat/enemyAI.js`: Holds AI state and parameters.
+    -   `combat/deployableLaser.js`: Handles autonomous space laser turret behavior, targeting, and firing.
     -   `rendering/trail.js`: Data for entity trails.
     -   `spaceship/`, `mining/`: Components like `CargoComponent`, `MineableComponent`, `MiningLaserComponent` used by `Spaceship` class, `AsteroidBelt` class, or ECS Systems.
+    -   `spaceship/pickupable.js`: Allows objects (like deployable lasers) to be picked up by the player.
     -   `optimized/`: Contains performance-optimized versions of components using TypedArrays for better memory layout and performance:
         -   `transformComponent.js`: Optimized transform component that uses the `TransformDataStore`.
         -   `rigidbodyComponent.js`: Optimized rigidbody component that uses the `RigidbodyDataStore`.
@@ -213,7 +224,9 @@ README.md # Project README file
     -   `rendering/visualEffectsSystem.js`: Creates and manages temporary visual effects (explosions) triggered by Combat ECS events using pooling.
     -   `combat/combatSystem.js`: Processes combat interactions (damage, etc.).
     -   `combat/enemySystem.js`: Manages enemy AI behavior, state, and spawning.
+    -   `combat/deployableLaserSystem.js`: Manages autonomous space laser turret targeting and firing behavior.
     -   `combat/enemyLifecycle.js`, `enemyPoolManager.js`, `enemySpawner.js`: Support systems for enemy management.
+    -   `deployment/deploymentSystem.js`: Handles deployment and retrieval of space laser turrets.
     -   `entity/healthSystem.js`: Updates health/shields and handles destruction logic.
     -   `mining/miningSystem.js`: Handles the *visuals and entity interactions* of the mining process (e.g., updating laser beam appearance, checking `MineableComponent` state), triggered by events from `js/modules/controls/miningSystem.js`.
     -   `docking/dockingSystem.js`: Handles low-level ECS entity state changes related to docking (e.g., attaching entities, managing physics constraints), likely triggered by events from `js/modules/controls/dockingSystem.js`.
@@ -226,13 +239,14 @@ README.md # Project README file
 -   **Key Files/Subdirectories:**
     -   `game.js`: Central coordinator (`Game` class). Initializes modules, manages the main loop, holds global state (`isGameOver`), applies `DifficultyManager` logic, initializes global `window.objectPool`.
     -   `renderer.js`: Sets up Three.js renderer, scene, camera, lighting, post-processing.
-    -   `spaceship.js`: Authoritative source for player state (hull, shield, cargo, upgrades, etc.). Synchronizes relevant state bidirectionally with the 'player' entity's components within the Combat ECS world via methods called in `combat.js`.
+    -   `spaceship.js`: Authoritative source for player state (hull, shield, cargo, upgrades, etc.). Manages deployable laser inventory. Synchronizes relevant state bidirectionally with the 'player' entity's components within the Combat ECS world via methods called in `combat.js`.
     -   `physics.js`: Coordinator for *player ship* physics simulation. Directly applies forces to the `Spaceship` object based on controls. Operates independently of the Combat ECS physics systems (which handle enemies, projectiles etc.).
-    -   `environment.js`: Manages scene elements (Skybox, Sun, Planets, Stargate, AsteroidBelt). `AsteroidBelt` manages asteroids directly using standard `THREE.Mesh` objects (though asteroids might also have corresponding entities in the ECS for mining/targeting). Uses `StarSystemGenerator`.
-    -   `controls.js`: Main coordinator for player input. Delegates to specific handlers (`inputHandler.js`, `touchControls.js`) and systems (`miningSystem.js`, `targetingSystem.js`, `dockingSystem.js`).
+    -   `environment.js`: Manages scene elements (Skybox, Sun, Planets, Stargate, AsteroidBelt, SpaceAnomalies). `AsteroidBelt` manages asteroids directly using standard `THREE.Mesh` objects (though asteroids might also have corresponding entities in the ECS for mining/targeting). `SpaceAnomalies` manages unique space structures with collectible energy orbs. Uses `StarSystemGenerator`.
+    -   `controls.js`: Main coordinator for player input. Delegates to specific handlers (`inputHandler.js`, `touchControls.js`) and systems (`miningSystem.js`, `targetingSystem.js`, `dockingSystem.js`, `deploymentSystem.js`). Handles automatic collection of energy orbs when colliding with anomalies.
     -   `controls/inputHandler.js`, `controls/touchControls.js`: Handle raw desktop/mobile input events and translate them into game actions or state changes for the `Spaceship` or other modules.
     -   `controls/miningSystem.js`: Handles player *intent* to mine, target selection, UI updates (progress bar, target info), resource calculation and addition to `Spaceship` cargo. Publishes events like `mining.start` / `mining.stop` for the ECS `miningSystem` to handle visuals.
     -   `controls/dockingSystem.js`: Handles player *intent* to dock/undock, target selection (stargate), UI updates. Publishes events for the ECS `dockingSystem` to handle entity state changes.
+    -   `controls/deploymentSystem.js`: Handles player *intent* to deploy/retrieve space laser turrets, UI updates. Publishes events for the ECS `deploymentSystem` to handle entity creation/destruction.
     -   `ui.js`: Manages all UI elements (instantiation, updates). Reads state from `Spaceship` class, `Environment`, and potentially the Combat ECS world via adapters (`CombatManager`) or `MessageBus` events.
     -   `combat.js`: Creates and manages the dedicated Combat ECS `World`. Instantiates `ProjectilePoolManager`. Handles projectile firing logic, synchronization between `Spaceship` state and the Combat ECS player entity. Registers all ECS Systems (`js/systems/*`).
     -   `pooling/ObjectPool.js`: Generic object pool class used by `ProjectilePoolManager`.
@@ -258,6 +272,7 @@ README.md # Project README file
 -   **`js/modules/controls/miningSystem.js`**: Handles player mining intent, UI, and resource logic.
 -   **`js/systems/mining/miningSystem.js`**: Handles ECS-level mining visuals and entity state updates.
 -   **`js/modules/environment/asteroidBelt.js`**: Manages asteroids using direct `THREE.Mesh` objects.
+-   **`js/modules/environment/spaceAnomalies.js`**: Creates and manages space anomalies with collectible energy orbs. Implements 5 unique anomaly types with particle effects, animations, and collision detection.
 -   **`js/modules/utils/apiClient.js`**: Handles external AI API.
 -   **`js/core/dataStore.js`**: Implements Data-Oriented Design pattern using TypedArrays for optimized component storage. Preserved for future scaling but not actively used in the main game.
 -   **`js/core/optimizedEntityFactory.js`**: Factory for creating entities with optimized components. Preserved for future scaling but not actively used in the main game.
@@ -272,6 +287,7 @@ README.md # Project README file
     -   **Direct Object Management:** Other game elements are managed via standard JavaScript classes and direct manipulation of `THREE.Object3D` instances.
         -   **Player Ship:** State managed by `js/modules/spaceship.js` (Authoritative). Physics handled by `js/modules/physics.js`.
         -   **Asteroids:** Managed by `js/modules/environment/asteroidBelt.js` (likely as `THREE.Mesh` objects with metadata). May have corresponding ECS entities for interaction.
+        -   **Space Anomalies:** Managed by `js/modules/environment/spaceAnomalies.js` as THREE.js objects with custom animations and collision logic. Energy orbs inventory is managed through the player's resource system.
 -   **Object Pooling System:** (Dual Implementation)
     -   **System 1: `ProjectilePoolManager`:** Used by `Combat.js` for combat effects. Uses `ObjectPool.js` internally.
     -   **System 2: `window.objectPool`:** Global pool in `main.js` for general effects.
@@ -279,7 +295,7 @@ README.md # Project README file
     -   The `Spaceship` class is the authoritative source for player state (health, shields, cargo, position, etc.).
     -   Synchronization occurs specifically with the 'player' entity within the Combat ECS world. `combat.js` handles this bidirectional data flow.
 -   **Data Flow:**
-    -   Input (`InputHandler`, `TouchControls`) -> `Controls` module (`controls.js`, `miningSystem.js`, `dockingSystem.js`) -> Directly modifies `Spaceship` state / calls `Physics` module methods (for player movement) / Publishes events (e.g., `mining.start`, `docking.request`).
+    -   Input (`InputHandler`, `TouchControls`) -> `Controls` module (`controls.js`, `miningSystem.js`, `dockingSystem.js`, `deploymentSystem.js`) -> Directly modifies `Spaceship` state / calls `Physics` module methods (for player movement) / Publishes events (e.g., `mining.start`, `docking.request`, `deployment.laser`, `pickup.laser`).
     -   Input -> `Controls` module -> May trigger actions in `Combat` module (e.g., `startFiring`).
     -   `Combat` module -> Fires projectiles (using `ProjectilePoolManager`).
     -   `Combat` module -> Updates its internal ECS `World`.
@@ -292,7 +308,7 @@ README.md # Project README file
     -   `Environment` module (`AsteroidBelt`) -> Directly updates asteroid `THREE.Mesh` positions/rotations.
     -   `Renderer` module -> Renders the main scene containing player ship, asteroids (directly managed), and Combat ECS entity meshes.
     -   `UI` modules read state primarily from `Spaceship` class and `Environment` module. Use `CombatManager` adapter to read basic Combat ECS state. React to `MessageBus` events.
-    -   `MessageBus` is used for cross-cutting events (e.g., `game.over`, `vfx.explosion`, `player.docked`, `mining.start`, `mining.stop`).
+    -   `MessageBus` is used for cross-cutting events (e.g., `game.over`, `vfx.explosion`, `player.docked`, `mining.start`, `mining.stop`, `deployment.laser`, `pickup.laser`).
 -   **State Management:** Mix of object-oriented state (`Spaceship` as authoritative player state, `AsteroidBelt`) and the state within the Combat ECS world's components. `Combat.js` acts as a crucial bridge for player state sync. Modules often manage high-level intent/UI state, while ECS systems handle low-level entity state and interactions. `MessageBus` coordinates events between modules and systems. `DifficultyManager` logic applied in `game.js`/`main.js`. `Settings.js` uses `localStorage`.
 
 ## 6. API Documentation
@@ -306,7 +322,9 @@ README.md # Project README file
     -   `player.mining.start`: Triggered when the player starts mining
     -   `player.mining.stop`: Triggered when the player stops mining
     -   `player.mining.complete`: Triggered when the player completes mining an asteroid
-    -   `vfx.explosion`: Triggered to create an explosion effect
+    -   `deployment.laser`: Triggered when the player deploys a space laser turret
+    -   `pickup.laser`: Triggered when the player picks up a space laser turret
+    -   `vfx.explosion`: Triggered to create an explosion effect, also used for anomaly orb collection
     -   `enemy.destroyed`: Triggered when an enemy is destroyed
     -   `intro.completed`: Triggered when the intro sequence completes
     -   `transform.updated`: Triggered when an entity's transform is updated
@@ -348,7 +366,7 @@ README.md # Project README file
     -   **Optimized ECS Components:** Components in `js/future/components/optimized/` and factory in `js/future/core/optimizedEntityFactory.js` implement Data-Oriented Design patterns with TypedArrays for better memory layout and performance. These are preserved for future scaling but not actively used in the main game.
     -   **DataStore:** The `js/future/core/dataStore.js` implements TypedArray-based data storage for transform and rigidbody components, enabling efficient batch processing. Currently preserved for future scaling but not actively used.
     -   **Rendering Optimizations:** Standard THREE.js techniques. ECS `RenderSystem` updates entity visuals. The `Combat` module pre-creates and reuses geometries/materials for better performance.
--   **State Management:** Hybrid: `Spaceship` class is authoritative for player state. Environment uses direct object management. Combat ECS manages state for enemies, projectiles, and potentially interactions involving mining, docking, trading entities. `Combat.js` syncs player state between `Spaceship` and the ECS player entity. Clear separation between module-level (intent, UI, resource logic) and ECS system-level (entity state, physics, visuals) responsibilities for features like mining and docking.
+-   **State Management:** Hybrid: `Spaceship` class is authoritative for player state. Environment uses direct object management. Combat ECS manages state for enemies, projectiles, deployable laser turrets, and potentially interactions involving mining, docking, trading entities. `Combat.js` syncs player state between `Spaceship` and the ECS player entity. Clear separation between module-level (intent, UI, resource logic) and ECS system-level (entity state, physics, visuals) responsibilities for features like mining, docking, and deployment.
 -   **Mobile vs. Desktop:**
     -   Separate UI components (`hud.js` vs `mobileHUD.js`).
     -   Separate high-level control handlers (`inputHandler.js` vs `touchControls.js` in `modules/controls/`).
@@ -363,6 +381,17 @@ README.md # Project README file
 -   **Audio Context:** Audio Context suspension to handle browser restrictions.
 -   **Asset Loading:** Asset paths are handled by `pathUtils.js` to support different deployment environments.
 -   **Shader Pre-compilation:** The `Combat` module pre-compiles shaders during initialization to prevent stuttering during gameplay.
+-   **Deployable Space Laser Turrets Feature:**
+    -   Implements autonomous defense platforms that players can purchase, deploy, retrieve, and reuse.
+    -   Feature cost: 1000 credits per turret, purchasable at the stargate.
+    -   Integration with the Combat ECS world through dedicated components and systems:
+        -   `DeployableLaserComponent`: Handles autonomous targeting and firing logic.
+        -   `PickupableComponent`: Allows turrets to be retrieved by the player.
+        -   `DeployableLaserSystem`: Manages targeting and firing behaviors.
+        -   `DeploymentSystem`: Handles deployment and retrieval mechanics.
+    -   Player can deploy turrets with 'T' key and retrieve them with 'G' key.
+    -   Turrets have 1000m targeting radius with a 3-second firing cycle.
+    -   Visual design includes a dark core with glowing red energy center, four orbiting emitter nodes, and dual intersecting orbital rings.
 -   **Future Scaling Architecture:**
     -   The `js/future/` directory contains components, systems, and utilities preserved for future scaling.
     -   Includes Data-Oriented optimizations using TypedArrays (`dataStore.js`, `components/optimized/`).
@@ -370,3 +399,11 @@ README.md # Project README file
     -   Includes factory for creating optimized entities (`core/optimizedEntityFactory.js`).
     -   Well-documented with READMEs explaining implementation strategies.
     -   Ready to be integrated when the game requires handling thousands of entities simultaneously.
+-   **Space Anomalies Feature:**
+    -   Implements 5 uniquely structured space anomalies with collectible energy orbs positioned outside asteroid belts.
+    -   Anomaly types include Vortex, Crystal Cluster, Nebula Nexus, Quantum Flux, and Dark Matter, each with distinct visual style and animations.
+    -   Energy orbs have 5 rarity levels (common, uncommon, rare, epic, legendary) with increasing value.
+    -   Orbs are automatically collected when players navigate to the center of an anomaly.
+    -   Collected orbs are stored in player inventory and can be sold at the stargate for credits.
+    -   Visual effects for collection include particle animations and screen notifications with color-coded rarities.
+    -   Integrated with existing resource management and stargate trading systems.

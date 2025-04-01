@@ -67,6 +67,9 @@ export class Spaceship {
         this.scannerUpgradeCost = 600;
         this.scanRange = 1000; // Base scanner range
         
+        // Deployable lasers
+        this.deployableLaserCount = 0; // Number of deployable lasers
+        
         // Position where ship should undock to - moved further away from the sun
         this.undockLocation = new THREE.Vector3(0, 10000, 0); // Middle of the stargate
         

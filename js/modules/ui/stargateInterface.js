@@ -250,6 +250,40 @@ export class StargateInterface {
                         <div style="font-size: 12px; margin-top: 3px;">(200 CR each)</div>
                     </button>
                 </div>
+                
+                <h4 style="color: #33aaff; margin-top: 15px;">ENERGY ORBS</h4>
+                <div id="energy-orbs-info" style="font-size: 14px; color: #aaa; margin-bottom: 10px;">
+                    Valuable artifacts collected from space anomalies. Increasing rarity yields higher value.
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <button id="sell-orb-common" class="sell-btn" style="flex: 1; margin-right: 5px; padding: 10px; background-color: rgba(15, 40, 55, 0.8); color: #fff; border: 1px solid #00ff66; border-radius: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(0, 255, 102, 0.3); transition: all 0.2s;">
+                        <div style="font-weight: bold;">COMMON ORB</div>
+                        <div id="orb-common-count" style="font-size: 12px;">0 in inventory</div>
+                        <div style="font-size: 12px; margin-top: 3px;">(100 CR each)</div>
+                    </button>
+                    <button id="sell-orb-uncommon" class="sell-btn" style="flex: 1; margin-right: 5px; padding: 10px; background-color: rgba(15, 40, 55, 0.8); color: #fff; border: 1px solid #0066ff; border-radius: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(0, 102, 255, 0.3); transition: all 0.2s;">
+                        <div style="font-weight: bold;">UNCOMMON ORB</div>
+                        <div id="orb-uncommon-count" style="font-size: 12px;">0 in inventory</div>
+                        <div style="font-size: 12px; margin-top: 3px;">(500 CR each)</div>
+                    </button>
+                    <button id="sell-orb-rare" class="sell-btn" style="flex: 1; padding: 10px; background-color: rgba(15, 40, 55, 0.8); color: #fff; border: 1px solid #9900ff; border-radius: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(153, 0, 255, 0.3); transition: all 0.2s;">
+                        <div style="font-weight: bold;">RARE ORB</div>
+                        <div id="orb-rare-count" style="font-size: 12px;">0 in inventory</div>
+                        <div style="font-size: 12px; margin-top: 3px;">(1,500 CR each)</div>
+                    </button>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <button id="sell-orb-epic" class="sell-btn" style="flex: 1; margin-right: 5px; padding: 10px; background-color: rgba(15, 40, 55, 0.8); color: #fff; border: 1px solid #ff6600; border-radius: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(255, 102, 0, 0.3); transition: all 0.2s;">
+                        <div style="font-weight: bold;">EPIC ORB</div>
+                        <div id="orb-epic-count" style="font-size: 12px;">0 in inventory</div>
+                        <div style="font-size: 12px; margin-top: 3px;">(5,000 CR each)</div>
+                    </button>
+                    <button id="sell-orb-legendary" class="sell-btn" style="flex: 1; padding: 10px; background-color: rgba(15, 40, 55, 0.8); color: #fff; border: 1px solid #ff0000; border-radius: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(255, 0, 0, 0.3); transition: all 0.2s;">
+                        <div style="font-weight: bold;">LEGENDARY ORB</div>
+                        <div id="orb-legendary-count" style="font-size: 12px;">0 in inventory</div>
+                        <div style="font-size: 12px; margin-top: 3px;">(15,000 CR each)</div>
+                    </button>
+                </div>
             </div>
             <div style="border-top: 1px solid #33aaff; padding-top: 20px; margin-bottom: 20px;">
                 <h3 style="color: #33aaff;">INTERSTELLAR TRAVEL</h3>
@@ -412,6 +446,24 @@ export class StargateInterface {
                         </div>
                         <button id="upgrade-scanner" style="flex: 1; padding: 10px; background-color: #9933cc; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold;">
                             UPGRADE (<span id="scanner-upgrade-cost">600</span> CR)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div style="border-top: 1px solid #33aaff; padding-top: 20px; margin-bottom: 20px;">
+                <h3 style="color: #33aaff;">DEPLOYABLE WEAPONS</h3>
+                <div class="upgrade-item" style="margin-bottom: 15px; border: 1px solid #555; border-radius: 8px; padding: 15px; background-color: rgba(0, 0, 0, 0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div>
+                            <strong style="color: #FF3333;">Laser Turrets:</strong> <span id="current-laser-count">0</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 2; padding-right: 10px;">
+                            <p style="margin: 0; font-size: 12px;">Deployable laser turrets automatically target and fire at enemies within 1000m range. Each shot has a 50% chance to instantly destroy an enemy.</p>
+                        </div>
+                        <button id="purchase-laser" style="flex: 1; padding: 10px; background-color: #FF3333; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold;">
+                            PURCHASE (1000 CR)
                         </button>
                     </div>
                 </div>
@@ -684,6 +736,75 @@ export class StargateInterface {
                 btn.style.boxShadow = 'none';
             }
         });
+        
+        // Update the laser turret count
+        const laserCountElement = document.getElementById('current-laser-count');
+        if (laserCountElement) {
+            laserCountElement.textContent = spaceship.deployableLaserCount || 0;
+        }
+        
+        // Update the purchase laser button status
+        const purchaseLaserBtn = document.getElementById('purchase-laser');
+        if (purchaseLaserBtn) {
+            if (spaceship.credits < 1000) {
+                purchaseLaserBtn.disabled = true;
+                purchaseLaserBtn.style.backgroundColor = '#555';
+                purchaseLaserBtn.style.cursor = 'not-allowed';
+            } else {
+                purchaseLaserBtn.disabled = false;
+                purchaseLaserBtn.style.backgroundColor = '#FF3333';
+                purchaseLaserBtn.style.cursor = 'pointer';
+            }
+        }
+        
+        // Update orb counts and button states
+        if (!resources.orbs) {
+            resources.orbs = {
+                common: 0,
+                uncommon: 0,
+                rare: 0,
+                epic: 0,
+                legendary: 0
+            };
+        }
+        
+        // Update orb counts
+        document.getElementById('orb-common-count').textContent = resources.orbs.common > 0 ? 
+            `${resources.orbs.common} in inventory` : "0 in inventory";
+        document.getElementById('orb-uncommon-count').textContent = resources.orbs.uncommon > 0 ? 
+            `${resources.orbs.uncommon} in inventory` : "0 in inventory";
+        document.getElementById('orb-rare-count').textContent = resources.orbs.rare > 0 ? 
+            `${resources.orbs.rare} in inventory` : "0 in inventory";
+        document.getElementById('orb-epic-count').textContent = resources.orbs.epic > 0 ? 
+            `${resources.orbs.epic} in inventory` : "0 in inventory";
+        document.getElementById('orb-legendary-count').textContent = resources.orbs.legendary > 0 ? 
+            `${resources.orbs.legendary} in inventory` : "0 in inventory";
+        
+        // Disable sell buttons if no orbs available
+        const updateOrbSellButton = (buttonId, orbCount, borderColor) => {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            
+            if (orbCount === 0) {
+                button.disabled = true;
+                button.style.backgroundColor = 'rgba(40, 40, 40, 0.8)';
+                button.style.color = '#777';
+                button.style.cursor = 'not-allowed';
+                button.style.boxShadow = 'none';
+            } else {
+                button.disabled = false;
+                button.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
+                button.style.color = '#fff';
+                button.style.cursor = 'pointer';
+                button.style.boxShadow = `0 0 10px ${borderColor}`;
+            }
+        };
+        
+        updateOrbSellButton('sell-orb-common', resources.orbs.common, 'rgba(0, 255, 102, 0.3)');
+        updateOrbSellButton('sell-orb-uncommon', resources.orbs.uncommon, 'rgba(0, 102, 255, 0.3)');
+        updateOrbSellButton('sell-orb-rare', resources.orbs.rare, 'rgba(153, 0, 255, 0.3)');
+        updateOrbSellButton('sell-orb-epic', resources.orbs.epic, 'rgba(255, 102, 0, 0.3)');
+        updateOrbSellButton('sell-orb-legendary', resources.orbs.legendary, 'rgba(255, 0, 0, 0.3)');
     }
     
     // Helper method to update upgrade button status
@@ -839,6 +960,48 @@ export class StargateInterface {
                 this.showHordeConfirmation();
             });
         }
+        
+        // Add handler for purchasing laser turrets
+        const purchaseLaserBtn = document.getElementById('purchase-laser');
+        if (purchaseLaserBtn) {
+            purchaseLaserBtn.addEventListener('click', this.purchaseLaserTurret.bind(this));
+        }
+        
+        // Energy orb sell handlers
+        document.getElementById('sell-orb-common').addEventListener('click', () => {
+            if (this.sellEnergyOrb('common')) {
+                // Update UI after selling
+                this.updateStargateUI(window.game.spaceship, window.game.controls.resources);
+            }
+        });
+        
+        document.getElementById('sell-orb-uncommon').addEventListener('click', () => {
+            if (this.sellEnergyOrb('uncommon')) {
+                // Update UI after selling
+                this.updateStargateUI(window.game.spaceship, window.game.controls.resources);
+            }
+        });
+        
+        document.getElementById('sell-orb-rare').addEventListener('click', () => {
+            if (this.sellEnergyOrb('rare')) {
+                // Update UI after selling
+                this.updateStargateUI(window.game.spaceship, window.game.controls.resources);
+            }
+        });
+        
+        document.getElementById('sell-orb-epic').addEventListener('click', () => {
+            if (this.sellEnergyOrb('epic')) {
+                // Update UI after selling
+                this.updateStargateUI(window.game.spaceship, window.game.controls.resources);
+            }
+        });
+        
+        document.getElementById('sell-orb-legendary').addEventListener('click', () => {
+            if (this.sellEnergyOrb('legendary')) {
+                // Update UI after selling
+                this.updateStargateUI(window.game.spaceship, window.game.controls.resources);
+            }
+        });
     }
     
     /**
@@ -921,5 +1084,168 @@ export class StargateInterface {
         
         // Add modal to body
         document.body.appendChild(modal);
+    }
+
+    /**
+     * Purchase a deployable laser turret
+     */
+    purchaseLaserTurret() {
+        console.log("Attempting to purchase laser turret");
+        
+        // Check if game and spaceship are available
+        if (!window.game || !window.game.spaceship) {
+            console.error("Cannot purchase laser turret: game or spaceship not found");
+            return;
+        }
+        
+        const spaceship = window.game.spaceship;
+        
+        // Check if player has enough credits
+        if (spaceship.credits < 1000) {
+            console.log("Not enough credits to purchase laser turret");
+            // Show notification to the player
+            if (window.mainMessageBus) {
+                window.mainMessageBus.publish('ui.notification', {
+                    message: "Not enough credits to purchase laser turret",
+                    type: "error",
+                    duration: 2
+                });
+            }
+            return;
+        }
+        
+        // Purchase the laser turret
+        spaceship.credits -= 1000;
+        
+        // Initialize deployableLaserCount if it doesn't exist
+        if (typeof spaceship.deployableLaserCount === 'undefined') {
+            spaceship.deployableLaserCount = 0;
+        }
+        
+        // Add a laser turret to the player's inventory
+        spaceship.deployableLaserCount++;
+        
+        // Play purchase sound
+        if (window.game.audio && window.game.audio.playSound) {
+            window.game.audio.playSound('purchase');
+        }
+        
+        // Update the UI
+        this.updateStargateUI(spaceship, window.game.controls.resources);
+        
+        // Show notification to the player
+        if (window.mainMessageBus) {
+            window.mainMessageBus.publish('ui.notification', {
+                message: "Laser turret purchased",
+                type: "success",
+                duration: 2
+            });
+        }
+        
+        console.log("Laser turret purchased successfully");
+    }
+
+    // Sell an energy orb of the specified rarity
+    sellEnergyOrb(rarity) {
+        // Make sure we have spaceship and resources references
+        if (!window.game || !window.game.spaceship || !window.game.controls || !window.game.controls.resources) {
+            console.error("Required game objects not available");
+            return false;
+        }
+        
+        const spaceship = window.game.spaceship;
+        const resources = window.game.controls.resources;
+        
+        // Check if orbs property exists, initialize if needed
+        if (!resources.orbs) {
+            resources.orbs = {
+                common: 0,
+                uncommon: 0,
+                rare: 0,
+                epic: 0,
+                legendary: 0
+            };
+            return false; // No orbs available yet
+        }
+        
+        // Check if player has any orbs of the specified rarity
+        if (!resources.orbs[rarity] || resources.orbs[rarity] <= 0) {
+            console.log(`No ${rarity} orbs available to sell`);
+            return false;
+        }
+        
+        // Calculate value based on rarity
+        let value = 0;
+        switch (rarity) {
+            case 'common':
+                value = 100;
+                break;
+            case 'uncommon':
+                value = 500;
+                break;
+            case 'rare':
+                value = 1500;
+                break;
+            case 'epic':
+                value = 5000;
+                break;
+            case 'legendary':
+                value = 15000;
+                break;
+            default:
+                console.error(`Unknown orb rarity: ${rarity}`);
+                return false;
+        }
+        
+        // Sell the orb - update inventory and credits
+        resources.orbs[rarity]--;
+        spaceship.credits += value;
+        
+        // Show message
+        const capitalizedRarity = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+        this.showNotification(`Sold ${capitalizedRarity} Energy Orb for ${value} credits`, 0x33aaff);
+        
+        // Play sound if audio manager is available
+        if (window.game.audio) {
+            window.game.audio.playSoundEffect('sell', 0.5);
+        }
+        
+        return true;
+    }
+    
+    // Helper method to show notifications
+    showNotification(message, color = 0x33aaff) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.style.position = 'fixed';
+        notification.style.top = '35%';
+        notification.style.left = '50%';
+        notification.style.transform = 'translate(-50%, -50%)';
+        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        notification.style.color = '#fff';
+        notification.style.padding = '15px 30px';
+        notification.style.borderRadius = '10px';
+        notification.style.border = `2px solid #${color.toString(16).padStart(6, '0')}`;
+        notification.style.boxShadow = `0 0 15px #${color.toString(16).padStart(6, '0')}`;
+        notification.style.fontFamily = 'Courier New, monospace';
+        notification.style.fontSize = '16px';
+        notification.style.zIndex = '1001'; // Above the stargate UI
+        notification.style.textAlign = 'center';
+        
+        // Set notification text
+        notification.textContent = message;
+        
+        // Add to DOM
+        document.body.appendChild(notification);
+        
+        // Remove after a few seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.8s';
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 800);
+        }, 2000);
     }
 }

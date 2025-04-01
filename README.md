@@ -14,6 +14,7 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 *   **Mine Resources:** Target and extract Iron, Gold, and Platinum from asteroids using your mining laser.
 *   **Trade & Upgrade:** Dock with the stargate to sell resources, refuel, repair, and purchase upgrades for your ship's engine, hull, shields, mining laser, scanner, and cargo capacity.
 *   **Combat:** Engage with AI-controlled spectral drones (optional, based on difficulty progression).
+*   **Deployable Space Lasers:** Purchase and deploy autonomous laser turrets that automatically target and destroy enemy ships within range.
 *   **Interstellar Travel:** Use the Star Map at the stargate to travel between different star systems.
 *   **Custom System Creation:** (Optional) Use an AI-powered tool to generate unique star systems with custom skyboxes and planets.
 *   **Cross-Platform:** Playable on both desktop (keyboard/mouse) and mobile (touch controls).
@@ -56,12 +57,14 @@ No complex installation is required!
     *   `E`: Toggle Target Lock-On System
     *   `Tab`: Cycle Locked Target
     *   `Q`: Dock with Stargate (when nearby)
+    *   `T`: Deploy Space Laser Turret
+    *   `G`: Pick Up Nearby Space Laser Turret
     *   `M`: Toggle Mute
     *   `Escape`: Exit Pointer Lock / Show Menu (TBD)
 *   **Controls (Mobile):**
     *   **Left Joystick:** Ship Thrust (Forward/Backward/Strafe)
     *   **Right Joystick:** Ship Rotation
-    *   **Buttons:** FIRE, MINE, TARGET (On-screen buttons)
+    *   **Buttons:** FIRE, MINE, TARGET, DEPLOY, PICKUP (On-screen buttons)
     *   **Dock Button:** Appears when near the stargate.
 *   **Goal:** Mine resources, sell them, upgrade your ship, and explore different systems. Survive encounters with hazards or enemies.
 

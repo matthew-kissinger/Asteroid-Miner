@@ -351,8 +351,15 @@ export class Combat {
             }
             
             // Register the trail system for visual effects
-            this.trailSystem = new TrailSystem(this.world);
+            this.trailSystem = await this.importAndRegisterSystem('../systems/rendering/trailSystem.js', 'TrailSystem');
             this.world.registerSystem(this.trailSystem);
+            
+            // Register deployable laser systems
+            this.deployableLaserSystem = await this.importAndRegisterSystem('../systems/weapons/deployableLaserSystem.js', 'DeployableLaserSystem');
+            this.world.registerSystem(this.deployableLaserSystem);
+
+            this.deploymentSystem = await this.importAndRegisterSystem('../systems/deployables/deploymentSystem.js', 'DeploymentSystem');
+            this.world.registerSystem(this.deploymentSystem);
             
             // Add trail system to window.game for global access if game object exists
             if (window.game) {
@@ -1393,5 +1400,28 @@ export class Combat {
         this.disposed = true;
         
         console.log("Combat module resources disposed");
+    }
+    
+    /**
+     * Import and register a system
+     * @param {string} path The path to the system module
+     * @param {string} className The name of the system class
+     * @returns {Object} The system instance
+     */
+    async importAndRegisterSystem(path, className) {
+        try {
+            const module = await import(path);
+            if (!module[className]) {
+                console.error(`[COMBAT] System class ${className} not found in module ${path}`);
+                return null;
+            }
+            
+            const SystemClass = module[className];
+            const system = new SystemClass(this.world);
+            return system;
+        } catch (error) {
+            console.error(`[COMBAT] Error importing system ${className} from ${path}:`, error);
+            return null;
+        }
     }
 }

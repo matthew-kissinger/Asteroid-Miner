@@ -9,6 +9,7 @@ import { StarSystemGenerator } from './environment/starSystemGenerator.js';
 import { SystemTransition } from './environment/systemTransition.js';
 import { CustomSystemCreator } from './ui/customSystemCreator.js';
 import { VibeVersePortals } from './environment/vibeVersePortals.js';
+import { SpaceAnomalies } from './environment/spaceAnomalies.js';
 
 export class Environment {
     constructor(scene) {
@@ -30,6 +31,9 @@ export class Environment {
         
         this.asteroidBelt = new AsteroidBelt(scene);
         this.stargate = new Stargate(scene);
+        
+        // Initialize space anomalies
+        this.spaceAnomalies = new SpaceAnomalies(scene);
         
         // Initialize system transition effects
         this.systemTransition = new SystemTransition(scene, scene.camera);
@@ -192,6 +196,14 @@ export class Environment {
             console.warn("AsteroidBelt or update methods not available");
         }
         
+        // Update space anomalies for this system
+        if (this.spaceAnomalies && this.spaceAnomalies.updateForSystem) {
+            console.log(`Updating space anomalies for ${systemId}`);
+            this.spaceAnomalies.updateForSystem(systemData);
+        } else {
+            console.warn("SpaceAnomalies or updateForSystem method not available");
+        }
+        
         console.log(`Environment updated for ${systemId}`);
     }
     
@@ -272,6 +284,14 @@ export class Environment {
             center: stargateRegion.center,
             radius: stargateRegion.radius
         };
+        
+        // Add space anomalies region
+        const anomaliesRegion = this.spaceAnomalies.getRegionInfo();
+        this.planetRegions["Space Anomalies"] = {
+            center: anomaliesRegion.center,
+            minRadius: anomaliesRegion.innerRadius,
+            maxRadius: anomaliesRegion.outerRadius
+        };
     }
     
     // Get the player's current location based on position
@@ -286,6 +306,38 @@ export class Environment {
             const distanceToStargate = playerPosition.distanceTo(stargateRegion.center);
             if (distanceToStargate <= stargateRegion.radius) {
                 return "Stargate";
+            }
+        }
+        
+        // Check if near an anomaly
+        if (this.spaceAnomalies) {
+            const closestAnomaly = this.spaceAnomalies.findClosestAnomaly(playerPosition, 2000);
+            if (closestAnomaly) {
+                const distance = playerPosition.distanceTo(closestAnomaly.position);
+                if (distance < 800) {
+                    let anomalyType = '';
+                    switch (closestAnomaly.type) {
+                        case 'vortex':
+                            anomalyType = 'Vortex';
+                            break;
+                        case 'crystalCluster':
+                            anomalyType = 'Crystal Cluster';
+                            break;
+                        case 'nebulaNexus':
+                            anomalyType = 'Nebula Nexus';
+                            break;
+                        case 'quantumFlux':
+                            anomalyType = 'Quantum Flux';
+                            break;
+                        case 'darkMatter':
+                            anomalyType = 'Dark Matter';
+                            break;
+                    }
+                    
+                    // Indicate if orb is still available
+                    const orbStatus = closestAnomaly.orbCollected ? 'Depleted' : 'Active';
+                    return `${anomalyType} Anomaly (${orbStatus})`;
+                }
             }
         }
         
@@ -306,6 +358,14 @@ export class Environment {
                         return `Asteroid Field (${nearbyAsteroids.length} nearby)`;
                     }
                     return "Asteroid Belt";
+                }
+            } else if (name === "Space Anomalies") {
+                // Special case for space anomalies region
+                const distance = playerPosition.distanceTo(region.center);
+                if (region.minRadius && region.maxRadius && 
+                    distance >= region.minRadius && 
+                    distance <= region.maxRadius) {
+                    return "Space Anomaly Field";
                 }
             } else if (name !== "Sun" && name !== "Stargate" && region.center && region.radius) {
                 const distance = playerPosition.distanceTo(region.center);
@@ -336,6 +396,32 @@ export class Environment {
         return null;
     }
     
+    // Find the closest space anomaly
+    findClosestAnomaly(position, maxDistance) {
+        if (this.spaceAnomalies && this.spaceAnomalies.findClosestAnomaly) {
+            return this.spaceAnomalies.findClosestAnomaly(position, maxDistance);
+        }
+        return null;
+    }
+    
+    // Check if player is inside an anomaly orb's collection radius
+    checkAnomalyCollision(position) {
+        if (!this.spaceAnomalies) return null;
+        
+        const closestAnomaly = this.spaceAnomalies.findClosestAnomaly(position, 8000);
+        if (closestAnomaly && this.spaceAnomalies.checkCollision(position, closestAnomaly)) {
+            return closestAnomaly;
+        }
+        
+        return null;
+    }
+    
+    // Collect an energy orb from an anomaly
+    collectAnomalyOrb(anomaly) {
+        if (!this.spaceAnomalies || !anomaly) return null;
+        return this.spaceAnomalies.collectOrb(anomaly);
+    }
+    
     update(deltaTime = 0.016, camera) {
         // Update all environment components with deltaTime and camera
         if (this.skybox && this.skybox.update) {
@@ -356,6 +442,11 @@ export class Environment {
         
         if (this.stargate && this.stargate.update) {
             this.stargate.update(deltaTime);
+        }
+        
+        // Update space anomalies
+        if (this.spaceAnomalies && this.spaceAnomalies.update) {
+            this.spaceAnomalies.update(deltaTime);
         }
         
         // Update system transition effects if active
@@ -389,6 +480,10 @@ export class Environment {
         
         if (this.stargate) {
             this.stargate.dispose();
+        }
+        
+        if (this.spaceAnomalies) {
+            this.spaceAnomalies.clearAllAnomalies();
         }
         
         if (this.vibeVersePortals) {

@@ -33,6 +33,11 @@ export class EnemySystem extends System {
         this.spawnInterval = 3;        // Seconds between spawns (reduced from 10)
         this.lastSpawnTime = Date.now(); // Track the last successful spawn time
         
+        // Add initial spawn delay of 60 seconds (one minute)
+        this.initialSpawnDelay = 60;  // Initial delay in seconds before enemies spawn
+        this.initialSpawnTimer = 0;   // Timer to track the initial delay
+        this.initialSpawnComplete = false; // Flag to track if initial spawn delay has completed
+        
         // Initialize the managers for different aspects of enemy handling
         this.poolManager = new EnemyPoolManager(world);
         this.spawner = new EnemySpawner(world);
@@ -167,6 +172,39 @@ export class EnemySystem extends System {
             console.warn(`ENFORCING ENEMY LIMIT: Current count ${this.enemies.size} exceeds limit of ${this.maxEnemies}`);
             this.lifecycle.enforceEnemyLimit(this.enemies, this.maxEnemies, 
                 (entity) => this.poolManager.returnEnemyToPool(entity, this.enemies));
+        }
+        
+        // Check if we need to handle the initial spawn delay
+        if (!this.initialSpawnComplete) {
+            this.initialSpawnTimer += deltaTime;
+            
+            // Log progress toward initial spawn every 10 seconds
+            if (Math.floor(this.initialSpawnTimer) % 10 === 0 && Math.floor(this.initialSpawnTimer) > 0) {
+                const remainingTime = Math.ceil(this.initialSpawnDelay - this.initialSpawnTimer);
+                console.log(`Initial spawn delay: ${remainingTime} seconds remaining`);
+            }
+            
+            // Check if initial spawn delay is complete
+            if (this.initialSpawnTimer >= this.initialSpawnDelay) {
+                this.initialSpawnComplete = true;
+                console.log(`Initial spawn delay complete. Spectral drones beginning to spawn.`);
+                
+                // Show notification that spectral drones have been spotted
+                if (window.mainMessageBus) {
+                    window.mainMessageBus.publish('ui.notification', {
+                        message: 'WARNING: Spectral drones have been spotted in the sector!',
+                        duration: 5000
+                    });
+                }
+                
+                // Alternatively, try using the UI directly if message bus doesn't work
+                if (window.game && window.game.ui && window.game.ui.showNotification) {
+                    window.game.ui.showNotification('WARNING: Spectral drones have been spotted in the sector!', 5000);
+                }
+            } else {
+                // Skip spawning while in initial delay
+                return;
+            }
         }
         
         // Debug logging - show current enemy count and spawn timer

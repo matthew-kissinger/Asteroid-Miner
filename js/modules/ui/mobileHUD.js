@@ -94,6 +94,9 @@ export class MobileHUD {
         
         // Add decorative corner elements
         this.addCornerElements(hudContainer);
+
+        // Add location info
+        this.setupLocationInfo(hudContainer);
     }
     
     createStatusBar(parent, label, id, color) {
@@ -173,6 +176,34 @@ export class MobileHUD {
         bottomRight.style.borderBottom = '1px solid rgba(120, 220, 232, 0.8)';
         bottomRight.style.borderRight = '1px solid rgba(120, 220, 232, 0.8)';
         panel.appendChild(bottomRight);
+    }
+    
+    setupLocationInfo(parent) {
+        // Create simplified location info for mobile
+        const locationInfo = document.createElement('div');
+        locationInfo.id = 'mobile-location-info';
+        locationInfo.style.position = 'absolute';
+        locationInfo.style.top = '10px';
+        locationInfo.style.left = '10px';
+        locationInfo.style.padding = '5px 10px';
+        locationInfo.style.backgroundColor = 'rgba(0, 20, 40, 0.7)';
+        locationInfo.style.borderRadius = '5px';
+        locationInfo.style.color = '#7ecce9';
+        locationInfo.style.fontSize = '12px';
+        locationInfo.style.fontFamily = '"Rajdhani", sans-serif';
+        locationInfo.style.backdropFilter = 'blur(5px)';
+        locationInfo.style.zIndex = '1000';
+        
+        // Add system name and coordinates
+        locationInfo.innerHTML = `
+            <div id="mobile-current-system" style="font-weight:600;">DEEP SPACE</div>
+            <div id="mobile-coordinates" style="font-size:10px; opacity:0.8;">X: 0 Y: 0 Z: 0</div>
+            <div style="display: flex; align-items: center; gap: 5px; font-size:10px; opacity:0.8; margin-top: 2px;">
+                <span>ANOMALIES: <span id="anomaly-count" style="font-weight:600;">0</span></span>
+            </div>
+        `;
+        
+        parent.appendChild(locationInfo);
     }
     
     update() {

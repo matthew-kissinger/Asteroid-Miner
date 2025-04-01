@@ -47,6 +47,17 @@ export class Controls {
         this.resources = this.miningSystem.resources;
         this.dockingSystem.setResources(this.resources);
         
+        // Initialize orb inventory
+        if (!this.resources.orbs) {
+            this.resources.orbs = {
+                common: 0,
+                uncommon: 0,
+                rare: 0,
+                epic: 0,
+                legendary: 0
+            };
+        }
+        
         // Pass control systems to touch controls if on mobile
         if (this.isMobile && this.touchControls) {
             this.touchControls.setControlSystems(this);
@@ -57,6 +68,11 @@ export class Controls {
         
         // Set up event handlers - different for mobile vs desktop
         this.setupEventHandlers();
+        
+        // Initialize anomaly orb collection state
+        this.lastAnomalyCheck = 0;
+        this.currentAnomaly = null;
+        this.showingAnomalyNotification = false;
         
         console.log("Control systems initialized");
     }
@@ -129,6 +145,20 @@ export class Controls {
                         }
                     }
                     break;
+                case 't': 
+                    // Deploy a laser turret
+                    console.log("Deploying laser turret");
+                    if (window.mainMessageBus) {
+                        window.mainMessageBus.publish('input.deployLaser', {});
+                    }
+                    break;
+                case 'g': 
+                    // Pick up an item
+                    console.log("Attempting to pick up an item");
+                    if (window.mainMessageBus) {
+                        window.mainMessageBus.publish('input.pickupInteract', {});
+                    }
+                    break;
             }
         });
         
@@ -171,6 +201,157 @@ export class Controls {
         } else {
             console.error("Docking system not initialized");
         }
+    }
+    
+    // Collect energy orb from space anomaly
+    collectEnergyOrb() {
+        if (!this.environment || !this.spaceship) return;
+        
+        // Check if player is near an anomaly with an active orb
+        const anomaly = this.environment.checkAnomalyCollision(this.spaceship.mesh.position);
+        if (!anomaly) {
+            return; // No anomaly in range, silently return
+        }
+        
+        // Try to collect the orb
+        const orbData = this.environment.collectAnomalyOrb(anomaly);
+        if (!orbData) {
+            // Orb already collected, notification handled in checkForAnomalyOrbs
+            return;
+        }
+        
+        // Initialize orbs inventory if needed
+        if (!this.resources.orbs) {
+            this.resources.orbs = {
+                common: 0,
+                uncommon: 0,
+                rare: 0,
+                epic: 0,
+                legendary: 0
+            };
+        }
+        
+        // Add orb to inventory
+        this.resources.orbs[orbData.rarity]++;
+        
+        // Show notification with value and rarity
+        let rarityColor;
+        switch(orbData.rarity) {
+            case 'legendary':
+                rarityColor = "#ff0000"; // Red
+                break;
+            case 'epic':
+                rarityColor = "#ff6600"; // Orange
+                break;
+            case 'rare':
+                rarityColor = "#9900ff"; // Purple
+                break;
+            case 'uncommon':
+                rarityColor = "#0066ff"; // Blue
+                break;
+            default: // common
+                rarityColor = "#00ff66"; // Green
+                break;
+        }
+        
+        const capitalizedRarity = orbData.rarity.charAt(0).toUpperCase() + orbData.rarity.slice(1);
+        
+        // Show message with appropriate styling
+        this.showAnomalyMessage(
+            `Collected ${capitalizedRarity} Energy Orb (${orbData.value} CR)`,
+            rarityColor
+        );
+        
+        // Trigger collection effect
+        this.triggerOrbCollectionEffect(anomaly);
+        
+        // Play sound if audio manager is available
+        if (window.game && window.game.audio) {
+            // Play different sounds based on rarity
+            switch(orbData.rarity) {
+                case 'legendary':
+                    window.game.audio.playSoundEffect('powerup_legendary', 0.8);
+                    break;
+                case 'epic':
+                    window.game.audio.playSoundEffect('powerup_epic', 0.7);
+                    break;
+                case 'rare':
+                    window.game.audio.playSoundEffect('powerup_rare', 0.6);
+                    break;
+                case 'uncommon':
+                    window.game.audio.playSoundEffect('powerup_uncommon', 0.5);
+                    break;
+                default: // common
+                    window.game.audio.playSoundEffect('powerup_common', 0.4);
+                    break;
+            }
+        }
+    }
+    
+    // Create a visual effect when collecting an orb
+    triggerOrbCollectionEffect(anomaly) {
+        // Check if we have access to the scene and visual effects
+        if (!this.scene || !anomaly) return;
+        
+        // Create an explosion effect at the anomaly orb position
+        if (window.game && window.game.combat) {
+            const position = anomaly.position.clone();
+            
+            // Use explosion effect from combat system
+            window.game.combat.createExplosionEffect(position, 2000, true);
+            
+            // Also publish an event for additional effects
+            if (window.mainMessageBus) {
+                window.mainMessageBus.publish('vfx.explosion', {
+                    position: position,
+                    color: anomaly.orb.color,
+                    size: anomaly.orb.size * 2,
+                    duration: 2000
+                });
+            }
+        }
+    }
+    
+    // Show a notification when anomaly is found or orb is collected
+    showAnomalyMessage(message, color) {
+        if (this.showingAnomalyNotification) return; // Don't stack notifications
+        
+        this.showingAnomalyNotification = true;
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.style.position = 'fixed';
+        notification.style.top = '30%';
+        notification.style.left = '50%';
+        notification.style.transform = 'translate(-50%, -50%)';
+        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        notification.style.color = color || '#ffffff';
+        notification.style.padding = '15px 30px';
+        notification.style.borderRadius = '10px';
+        notification.style.border = `2px solid ${color || '#ffffff'}`;
+        notification.style.boxShadow = `0 0 15px ${color || '#ffffff'}`;
+        notification.style.fontFamily = 'Courier New, monospace';
+        notification.style.fontSize = '18px';
+        notification.style.zIndex = '1000';
+        notification.style.textAlign = 'center';
+        notification.style.pointerEvents = 'none'; // Don't block mouse events
+        
+        // Set notification text
+        notification.textContent = message;
+        
+        // Add to DOM
+        document.body.appendChild(notification);
+        
+        // Remove after a few seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.8s';
+            
+            setTimeout(() => {
+                notification.remove();
+                this.showingAnomalyNotification = false;
+            }, 800);
+        }, 3000);
     }
     
     update() {
@@ -227,6 +408,38 @@ export class Controls {
         // Update touch controls if on mobile
         if (this.isMobile && this.touchControls) {
             this.touchControls.update();
+        }
+        
+        // Check for and automatically collect anomaly orbs
+        this.checkForAnomalyOrbs();
+    }
+    
+    // Check if the player is near an anomaly orb and collect it if close enough
+    checkForAnomalyOrbs() {
+        if (!this.environment || !this.spaceship) return;
+        
+        // Limit check frequency to avoid performance impact
+        const now = performance.now();
+        if (now - this.lastAnomalyCheck < 500) return; // Check every 500ms
+        this.lastAnomalyCheck = now;
+        
+        // Check if player is within an anomaly's orb collection radius
+        const anomaly = this.environment.checkAnomalyCollision(this.spaceship.mesh.position);
+        
+        // If player is within collection radius of an anomaly with an uncollected orb
+        if (anomaly && !anomaly.orbCollected) {
+            // Automatically collect the orb
+            this.collectEnergyOrb();
+            
+            // Reset current anomaly when orb is collected
+            this.currentAnomaly = null;
+        } else if (anomaly && anomaly !== this.currentAnomaly && anomaly.orbCollected) {
+            // If player enters a depleted anomaly, show notification
+            this.currentAnomaly = anomaly;
+            this.showAnomalyMessage("Energy orb already collected", "#ff3333");
+        } else if (!anomaly) {
+            // Reset current anomaly when player leaves the collection radius
+            this.currentAnomaly = null;
         }
     }
     
