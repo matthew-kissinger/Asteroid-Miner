@@ -1,0 +1,25 @@
+{
+  "name": "aminer",
+  "private": true,
+  "version": "0.5.8",
+  "type": "module",
+  "description": "A 3D space mining simulation game playable directly in your web browser",
+  "author": "@0xAntimatter",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --port 8080",
+    "clean": "rimraf dist",
+    "deploy": "npm run build && gh-pages -d dist"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0",
+    "rimraf": "^5.0.5",
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "serve-static": "^2.2.0",
+    "three": "^0.175.0"
+  }
+}

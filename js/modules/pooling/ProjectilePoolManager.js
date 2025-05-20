@@ -12,99 +12,56 @@ export class ProjectilePoolManager {
     /**
      * Create a new ProjectilePoolManager
      * @param {THREE.Scene} scene - The scene to add projectiles to
+     * @param {object} sharedAssets - An object containing pre-warmed materials and pre-created geometries
      */
-    constructor(scene) {
+    constructor(scene, sharedAssets) {
         this.scene = scene;
+        this.sharedAssets = sharedAssets;
+
+        // Assign geometries from sharedAssets
+        this.projectileGeometry = this.sharedAssets.projectileGeometry;
+        this.projectileGlowGeometry = this.sharedAssets.projectileGlowGeometry;
+        this.muzzleFlashGeometry = this.sharedAssets.muzzleFlashGeometry;
+        this.trailParticleGeometries = this.sharedAssets.trailParticleGeometries;
+        this.tracerGeometry = this.sharedAssets.tracerGeometry;
+
+        // Assign materials from sharedAssets
+        this.projectileMaterial = this.sharedAssets.projectileMaterial;
+        this.projectileGlowMaterial = this.sharedAssets.projectileGlowMaterial;
+        this.trailParticleMaterial = this.sharedAssets.trailParticleMaterial;
+        this.muzzleFlashMaterial = this.sharedAssets.muzzleFlashMaterial;
+        this.tracerLineMaterial = this.sharedAssets.tracerLineMaterial;
+        this.explosionParticleMaterial = this.sharedAssets.explosionParticleMaterial; 
         
-        // Create shared geometries and materials
-        this.createSharedAssets();
+        // Populate window.game with these shared assets (for legacy access if needed)
+        this.populateWindowGameWithSharedAssets();
         
-        // Create object pools
+        // Create object pools using these assets
         this.initializePools();
         
-        console.log("ProjectilePoolManager initialized with shared assets and pools");
+        console.log("ProjectilePoolManager initialized using pre-warmed shared assets and pools");
     }
-    
+
     /**
-     * Create shared geometries and materials to be used by all projectiles
+     * Populate window.game with references to the shared assets for global/legacy access.
      */
-    createSharedAssets() {
-        // Projectile geometry
-        this.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
-        this.projectileGlowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
-        
-        // Muzzle flash geometry
-        this.muzzleFlashGeometry = new THREE.CylinderGeometry(0.5, 2, 15, 12, 1, true);
-        this.muzzleFlashGeometry.rotateX(Math.PI / 2);
-        this.muzzleFlashGeometry.translate(0, 0, 15 / 2);
-        
-        // Trail particle geometry (different sizes)
-        this.trailParticleGeometries = [];
-        const numTrailPoints = 20;
-        for (let i = 0; i < numTrailPoints; i++) {
-            const ratio = i / numTrailPoints;
-            const size = 0.5 * (1 - ratio);
-            this.trailParticleGeometries.push(new THREE.SphereGeometry(size, 8, 8));
-        }
-        
-        // Tracer line geometry
-        this.tracerGeometry = new THREE.BufferGeometry();
-        const points = [0, 0, 0, 0, 0, 1];
-        this.tracerGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
-        
-        // Materials
-        this.projectileMaterial = new THREE.MeshStandardMaterial({
-            color: 0x00ffff,
-            emissive: 0x00ffff,
-            emissiveIntensity: 5,
-            metalness: 0.7,
-            roughness: 0.3
-        });
-        
-        this.projectileGlowMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            transparent: true,
-            opacity: 0.4,
-            blending: THREE.AdditiveBlending
-        });
-        
-        this.trailParticleMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            transparent: true,
-            opacity: 0.9,
-            blending: THREE.AdditiveBlending
-        });
-        
-        this.muzzleFlashMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            transparent: true,
-            opacity: 0.7,
-            blending: THREE.AdditiveBlending,
-            side: THREE.DoubleSide,
-            depthWrite: false
-        });
-        
-        this.tracerLineMaterial = new THREE.LineBasicMaterial({
-            color: 0x00ffff,
-            transparent: true,
-            opacity: 0.6,
-            blending: THREE.AdditiveBlending
-        });
-        
-        // Store references in window.game for legacy code
+    populateWindowGameWithSharedAssets() {
         if (!window.game) window.game = {};
         
+        // Geometries
         window.game.projectileGeometry = this.projectileGeometry;
         window.game.projectileGlowGeometry = this.projectileGlowGeometry;
         window.game.muzzleFlashGeometry = this.muzzleFlashGeometry;
         window.game.trailParticleGeometries = this.trailParticleGeometries;
         window.game.tracerGeometry = this.tracerGeometry;
         
+        // Materials
         window.game.projectileMaterial = this.projectileMaterial;
         window.game.projectileGlowMaterial = this.projectileGlowMaterial;
         window.game.trailParticleMaterial = this.trailParticleMaterial;
         window.game.muzzleFlashMaterial = this.muzzleFlashMaterial;
         window.game.tracerLineMaterial = this.tracerLineMaterial;
+        window.game.explosionParticleMaterial = this.explosionParticleMaterial;
     }
     
     /**
@@ -171,13 +128,7 @@ export class ProjectilePoolManager {
                 geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
                 
                 // Create bright material with additive blending for glow effect
-                const material = new THREE.PointsMaterial({
-                    color: 0xff9900,
-                    size: 10,
-                    transparent: true,
-                    opacity: 1,
-                    blending: THREE.AdditiveBlending
-                });
+                const material = this.explosionParticleMaterial.clone();
                 
                 // Create particle system
                 const explosion = new THREE.Points(geometry, material);

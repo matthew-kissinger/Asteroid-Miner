@@ -3,7 +3,7 @@
 ## 1. Project Overview
 
 -   **Project Name:** Solar System Asteroid Miner (aminer)
--   **Version:** v0.5.6
+-   **Version:** v0.5.8
 -   **Purpose:** A 3D space mining simulation game playable in a web browser. Players navigate space, mine asteroids, trade resources, upgrade their ship, and engage in combat.
 -   **Core Functionality:**
     -   3D Space Navigation & Physics Simulation
@@ -19,6 +19,7 @@
     -   JavaScript (ES Modules)
     -   Three.js (r175) for 3D rendering and core structures (Vectors, Quaternions, etc.)
     -   HTML5 & CSS3
+    -   Vite (v5+) as the build system for development and production optimization
     -   Custom ECS Implementation (Used within the Combat module, potentially includes optimized variations)
     -   NippleJS v0.10.1 (for mobile touch joysticks, dynamically loaded from CDN)
     -   Tone.js (for intro sequence audio synthesis - latest version via CDN)
@@ -27,144 +28,72 @@
 
 ## 2. Complete File Structure
 
-aminer_0.5.6/
-css/ # CSS Stylesheets
-    custom-system.css # Styles for the custom system creator UI
-    mobile.css # Specific styles for mobile devices
-js/ # JavaScript source code
+aminer_0.5.8/
+assets/ # Game assets (textures, models, etc.) - Served from public directory
+css/ # CSS Stylesheets - Served from public directory
+dist/ # Production build output (generated)
+js/ # JavaScript source code - Core game logic
     components/ # ECS Components (Data - Primarily used by Combat ECS)
         combat/ # Combat-related components
-            deployableLaser.js # Handles autonomous laser turret behavior
-            enemyAI.js
-            healthComponent.js # Handles entity health and shields (Player & Enemies)
-        common/ # Common components
+        environment/ # Environment-related components
         mining/ # Mining-related components
-            mineable.js
         physics/ # Standard physics components
-            rigidbody.js # Physics properties
         rendering/ # Rendering-related components
-            mesh.js # Standard Three.js mesh wrapper
-            trail.js # Component for rendering entity trails
         spaceship/ # Spaceship-specific components
-            cargo.js # Handles ship cargo hold
-            miningLaser.js # Component for mining laser capabilities
-            pickupable.js # Allows objects to be picked up by the player
-            shipState.js # Holds high-level ship state (docked, fuel, upgrades)
-            thruster.js # Handles ship thruster logic and effects
-        transform.js # Standard position, rotation, scale
     core/ # Core ECS framework
-        component.js # Base class for all components
-        difficultyManager.js # Base logic for game difficulty scaling (Integration primarily in game.js/main.js)
-        entity.js # Base class for entities
-        entityManager.js # Manages entity creation, destruction, and querying
-        messageBus.js # Central event bus for system communication
-        system.js # Base class for all systems
-        systemManager.js # Manages system registration and updates
-        world.js # Main ECS world container
     entities/ # Entity factory/prefab functions
-        spaceship.js # Functions to create spaceship and asteroid entities
-    future/ # Components and systems preserved for future scaling
-        components/ # Future optimized components
-            optimized/ # TypedArray-based components
-                rigidbodyComponent.js # Optimized rigidbody using TypedArrays
-                transformComponent.js # Optimized transform using TypedArrays
-            rendering/ # Instanced rendering components
-                instancedMeshComponent.js # Component for instanced rendering
-        core/ # Future core optimizations
-            dataStore.js # Data-Oriented Design storage using TypedArrays
-            optimizedEntityFactory.js # Factory for optimized entities
-        systems/ # Future optimized systems
-            rendering/ # Optimized rendering systems
-                instancedRenderSystem.js # System for instanced rendering
-        README.md # Documentation on future scaling components
     modules/ # Higher-level game feature modules
         combat/ # Combat management logic
-            combatManager.js # Adapter/bridge to the Combat ECS world state
-        pooling/ # Performance optimization through object reuse
-            ObjectPool.js # Generic object pool class
-            ProjectilePoolManager.js # Manages pools of projectiles/effects for the Combat module
-        controls/ # High-level Input handling and control systems (Player Intent, UI)
-            deploymentSystem.js # Handles player deployment/retrieval of space laser turrets
-            dockingSystem.js # Handles player intent/UI for docking/undocking
-            inputHandler.js # Handles keyboard/mouse input (Desktop)
-            miningSystem.js # Handles player mining intent, resource calculation, and UI interaction
-            targetingSystem.js # Handles target locking and cycling
-            touchControls.js # Handles touch input (Mobile UI/Gestures)
+        controls/ # High-level Input handling and control systems
         environment/ # World environment elements
-            asteroidBelt.js # Generates and manages the asteroid belt (Direct THREE.Mesh objects)
-            spaceAnomalies.js # Creates and manages space anomalies with collectible energy orbs
-            stargate.js # Creates and manages the stargate object
-            planets.js # Creates and manages planets in the system
-            skybox.js # Creates and manages the space skybox
-            starDreadnought.js # Creates the Star Dreadnought model
-            starSystemGenerator.js # Generates procedural star systems and manages transitions
-            sun.js # Creates and manages the system's sun
-            systemTransition.js # Handles visual effects for system transitions
+        pooling/ # Performance optimization through object reuse
         ui/ # User Interface elements and management
-            blackjackGame.js # Implements the Blackjack minigame UI
-            combatDisplay.js # UI elements related to combat status
-            controlsMenu.js # UI for displaying game controls
-            customSystemCreator.js # UI for the AI-powered custom system creation feature
-            gameOverScreen.js # UI displayed on game over
-            hud.js # Heads-Up Display (Desktop)
-            miningDisplay.js # UI elements related to mining status/progress
-            mobileHUD.js # Heads-Up Display (Mobile)
-            stargateInterface.js # UI for interacting with the stargate
-            settings.js # UI for game settings
-            starMap.js # UI for navigating between star systems
-            targetingUI.js # UI components for target display and information
         utils/ # Utility modules coordinating major features
-            apiClient.js # Client for interacting with the external AI API
-            audio.js # Manages audio playback and context
-            combat.js # Creates and manages the Combat ECS world
-            controls.js # Main controls coordinator module
-            environment.js # Main environment coordinator module
-            game.js # Main game loop and state management
-            introSequence.js # Manages the game's intro sequence
-            physics.js # Main physics coordination for player ship (Direct object manipulation)
-            renderer.js # Main rendering setup and coordination
-            spaceship.js # Main spaceship state and logic class (Authoritative source)
-            ui.js # Main UI coordinator module
     systems/ # ECS Systems (Logic - Used ONLY within the Combat ECS World)
         combat/ # Combat-related systems
-            combatSystem.js # Processes combat interactions
-            deployableLaserSystem.js # Manages autonomous space laser turret targeting and firing
-            enemyLifecycle.js # Handles enemy state validation and transitions
-            enemyPoolManager.js # Manages pooling of enemy objects for performance
-            enemySpawner.js # Handles spawning of enemies
-            enemySystem.js # Manages enemy AI and behavior updates
-        deployment/ # Deployment logic within ECS
-            deploymentSystem.js # Handles deployment and retrieval of space laser turrets
-        docking/ # Docking logic within ECS (e.g., state changes, visual triggers)
-            dockingSystem.js # Handles low-level docking state/events within ECS
+        deployables/ # Deployment logic systems
+        docking/ # Docking logic systems
         entity/ # Entity state systems
-            healthSystem.js # Updates health, shields, handles destruction logic
-        input/ # Low-level input processing within ECS
-            inputSystem.js # Generic input processing for ECS entities?
-            shipControlSystem.js # Processes control inputs for ECS entities (e.g., AI ships?)
-            touchInputSystem.js # Low-level touch event handling within ECS?
-        mining/ # Mining process logic within ECS (Visuals, entity interaction)
-            miningSystem.js # Handles laser visuals, entity state changes during mining
-        physics/ # Physics simulation systems for ECS entities
-            collisionSystem.js # Detects and resolves collisions
-            movementSystem.js # Updates entity position/rotation based on physics
-        rendering/ # Rendering update systems for ECS entities
-            renderSystem.js # Updates standard mesh positions/visibility
-            trailSystem.js # Updates and renders entity trails
-            visualEffectsSystem.js # Manages creation and updating of visual effects (explosions)
-        trading/ # Trading logic within ECS (e.g., resource exchange between entities?)
-            tradingSystem.js
+        input/ # Low-level input processing systems
+        mining/ # Mining process logic systems
+        physics/ # Physics simulation systems
+        rendering/ # Rendering update systems
+        trading/ # Trading logic systems
+        weapons/ # Weapon-related systems
     utils/ # Utility classes and functions (General purpose)
-        memoryManager.js # Utilities for memory pooling
-        mobileDetector.js # Detects if the user agent is mobile
-        pathUtils.js # Utility for handling asset paths depending on environment
-    main.js # [ENTRY POINT] Initializes the game and starts the main loop
-assets/ # Game assets (textures, models, etc.)
-sounds/ # Audio files for game sounds
-index.html # [ENTRY POINT] Main HTML file, loads scripts
+    main.js # Original entry point for the game
+node_modules/ # Node.js dependencies (generated)
+public/ # Static assets served directly by Vite
+    assets/ # Symlink to assets directory
+    css/ # Symlink to css directory
+    sounds/ # Symlink to sounds directory
+sounds/ # Audio files for game sounds - Served from public directory
+src/ # Vite source directory
+    three-imports.js # Centralized Three.js imports for Vite
+    main.js # New entry point that imports the original game
+.gitignore # Git ignore file
+architecture.md # This architecture documentation
+index.html # Main HTML file
+package-lock.json # NPM dependencies lock file
+package.json # Project metadata and NPM scripts
 README.md # Project README file
+vite.config.js # Vite configuration file
 
 ## 3. Core Components
+
+### Build System
+
+-   **Purpose:** Provides a modern build system for both development and production using Vite.
+-   **Key Features:**
+    -   **Development:** Hot Module Replacement for fast development iterations
+    -   **Production:** Optimized builds with tree-shaking, minification, code splitting
+    -   **Asset Management:** Efficient handling of static assets
+    -   **Module Resolution:** Handles ES module imports and resolves dependencies
+-   **Key Files:**
+    -   `vite.config.js`: Configures Vite's behavior for development and production
+    -   `src/main.js`: Entry point for Vite that imports the original game
+    -   `src/three-imports.js`: Centralizes Three.js imports to handle module resolution
+-   **Interactions:** Vite processes the source files, handles the module resolution for imports including Three.js, and builds optimized output for production or serves a development server with HMR.
 
 ### `js/core/` (Used by Combat Module ECS)
 -   **Purpose:** Provides the fundamental building blocks for the Entity-Component-System (ECS) architecture used by the Combat module. Includes experimental/optimized variations for future scaling.
@@ -258,8 +187,18 @@ README.md # Project README file
     -   `mobile/`: (Currently Empty) Placeholder.
 -   **Interactions:** Modules hold references to each other (`Game` holds most). `Combat.js` is central to the ECS part. Modules like `controls/miningSystem.js` initiate actions, often by publishing events to the `MessageBus`, which are then handled by corresponding ECS systems in `js/systems/` for low-level execution and visual updates within the 3D world. `Spaceship.js` remains the authoritative source for player status, syncing with the ECS representation.
 
+### `src/` (Vite Integration)
+-   **Purpose:** Contains entry points and integration code for the Vite build system.
+-   **Key Files:**
+    -   `main.js`: New entry point that sets up global objects required by the original game and imports the original game code.
+    -   `three-imports.js`: Centralizes all Three.js imports and exports them for use throughout the application.
+-   **Interactions:** Vite processes these files first, then resolves module imports through the entire dependency tree. The entry point sets up globals needed by the game and imports the original game's `main.js`.
+
 ## 4. File Explanations
 
+-   **`vite.config.js`**: Configures Vite, including aliases, build options, and development server settings.
+-   **`src/main.js`**: Entry point for Vite that imports Three.js, sets up global objects, and imports the original game.
+-   **`src/three-imports.js`**: Centralizes Three.js imports to prevent duplicate loading and ensure consistent versions.
 -   **`main.js`**: Initializes core modules, starts loop, defines global `window.objectPool`, may apply `DifficultyManager` logic.
 -   **`js/core/world.js`**: Represents an ECS world instance. Used by `js/modules/combat.js`.
 -   **`js/core/entityManager.js`**: Manages entities within the Combat ECS world.
@@ -339,11 +278,19 @@ README.md # Project README file
     -   Audio settings: master volume, effects volume, music volume
     -   Control settings: sensitivity, invert Y axis, etc.
     -   These settings are applied during game initialization in `main.js`
+-   **vite.config.js:** Configures the build system
+    -   Development server settings (port, CORS, etc.)
+    -   Build optimization (chunking, tree-shaking, etc.)
+    -   Asset handling and path resolution
+    -   Alias definitions for clean import paths
 
 ## 8. Dependencies
 
 -   **Three.js (r175):** Core 3D library for rendering and math operations.
-    -   *Version:* Specified as `0.175.0` in `index.html` import map.
+    -   *Version:* Specified as `0.175.0` in `package.json`.
+-   **Vite (v5+):** Modern build system for JavaScript applications.
+    -   *Version:* Specified as `^5.0.0` in `package.json`.
+    -   *Purpose:* Development server with HMR, optimized production builds.
 -   **NippleJS:** JavaScript library for creating virtual joysticks used in mobile controls.
     -   *Version:* 0.10.1, dynamically loaded via CDN in `touchControls.js`.
     -   *URL:* 'https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js'
@@ -355,8 +302,16 @@ README.md # Project README file
 
 ## 9. Development Workflow
 
--   **Local Development:** Simple HTTP server to serve the files locally.
--   **Building:** No build step required as the game uses ES modules directly.
+-   **Setup:** Run `npm install` to install dependencies.
+-   **Development:**
+    -   Run `npm run dev` to start the Vite development server with hot module replacement.
+    -   Edit files and see changes reflected immediately in the browser.
+-   **Building:**
+    -   Run `npm run build` to create an optimized production build.
+    -   The build output is created in the `dist/` directory, ready for deployment.
+-   **Preview:**
+    -   Run `npm run preview` to preview the production build locally.
+    -   Run `npm run serve` to serve the production build on port 8080.
 -   **Testing Approach:** Manual testing for gameplay features.
 
 ## 10. Special Considerations
@@ -366,6 +321,7 @@ README.md # Project README file
     -   **Optimized ECS Components:** Components in `js/future/components/optimized/` and factory in `js/future/core/optimizedEntityFactory.js` implement Data-Oriented Design patterns with TypedArrays for better memory layout and performance. These are preserved for future scaling but not actively used in the main game.
     -   **DataStore:** The `js/future/core/dataStore.js` implements TypedArray-based data storage for transform and rigidbody components, enabling efficient batch processing. Currently preserved for future scaling but not actively used.
     -   **Rendering Optimizations:** Standard THREE.js techniques. ECS `RenderSystem` updates entity visuals. The `Combat` module pre-creates and reuses geometries/materials for better performance.
+    -   **Build Optimization:** Vite production builds provide tree-shaking, code-splitting, and minification for optimized delivery.
 -   **State Management:** Hybrid: `Spaceship` class is authoritative for player state. Environment uses direct object management. Combat ECS manages state for enemies, projectiles, deployable laser turrets, and potentially interactions involving mining, docking, trading entities. `Combat.js` syncs player state between `Spaceship` and the ECS player entity. Clear separation between module-level (intent, UI, resource logic) and ECS system-level (entity state, physics, visuals) responsibilities for features like mining, docking, and deployment.
 -   **Mobile vs. Desktop:**
     -   Separate UI components (`hud.js` vs `mobileHUD.js`).

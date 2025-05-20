@@ -79,8 +79,19 @@ export class Environment {
     setupInitialRegions() {
         console.log("Setting up essential environment regions");
         
-        // Get planet regions from planets component
-        this.planetRegions = this.planets.getPlanetRegions();
+        // Initialize the planetRegions object
+        this.planetRegions = {};
+        
+        // Safely get planet regions if the method exists
+        if (this.planets && typeof this.planets.getPlanetRegions === 'function') {
+            try {
+                this.planetRegions = this.planets.getPlanetRegions();
+            } catch (error) {
+                console.warn("Error getting planet regions:", error);
+            }
+        } else {
+            console.warn("planets.getPlanetRegions is not available, using empty object instead");
+        }
         
         // Add sun region
         this.planetRegions["Sun"] = {
@@ -217,8 +228,16 @@ export class Environment {
             console.log(`Updating planets for ${systemId}`);
             this.planets.updateForSystem(systemId);
             
-            // Update planet regions after planets have been updated
-            this.planetRegions = this.planets.getPlanetRegions();
+            // Safely update planet regions if the method exists
+            if (typeof this.planets.getPlanetRegions === 'function') {
+                try {
+                    this.planetRegions = this.planets.getPlanetRegions();
+                } catch (error) {
+                    console.warn(`Error getting planet regions for system ${systemId}:`, error);
+                }
+            } else {
+                console.warn(`planets.getPlanetRegions is not available for system ${systemId}`);
+            }
         } else {
             console.warn("Planets or updateForSystem method not available");
         }
@@ -303,8 +322,19 @@ export class Environment {
     setupRegions() {
         console.log("Setting up environment regions");
         
-        // Get planet regions from planets component
-        this.planetRegions = this.planets.getPlanetRegions();
+        // Initialize or reset the planetRegions object
+        this.planetRegions = {};
+        
+        // Safely get planet regions if the method exists
+        if (this.planets && typeof this.planets.getPlanetRegions === 'function') {
+            try {
+                this.planetRegions = this.planets.getPlanetRegions();
+            } catch (error) {
+                console.warn("Error getting planet regions in setupRegions:", error);
+            }
+        } else {
+            console.warn("planets.getPlanetRegions is not available in setupRegions, using empty object");
+        }
         
         // Add sun region
         this.planetRegions["Sun"] = {

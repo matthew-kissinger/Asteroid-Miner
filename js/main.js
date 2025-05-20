@@ -114,8 +114,8 @@ class Game {
             // Frame rate cap (defaults to auto/monitor refresh rate)
             this.frameRateCap = 0; // Will be updated by settings or refresh rate detection
             
-            // Apply settings if available
-            if (this.ui.settings) {
+            // Apply settings if available (restored block)
+            if (this.ui && this.ui.settings) {
                 // If using 'auto' setting, apply refresh rate detection
                 if (this.ui.settings.settings.frameRateCap === 'auto') {
                     const refreshRate = this.ui.settings.monitorRefreshRate || 60;
@@ -1503,13 +1503,12 @@ window.objectPool = {
     }
 };
 
-// Start the game when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+function startGameMainModule() {
     // Add a console message to help debug loading issues
-    console.log("DOM loaded, preparing to start game...");
+    console.log("DOM ready, starting game initialization...");
     
     // Initialize the game directly instead of using a loading screen
-    console.log("Starting game initialization...");
+    console.log("Creating game instance...");
     
     // Initialize the game with error handling
     try {
@@ -1716,4 +1715,11 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = window.location.pathname + '?cache=' + cacheBuster;
         });
     }
-}); 
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startGameMainModule);
+} else {
+    // DOM is already ready (e.g., module imported after DOMContentLoaded)
+    startGameMainModule();
+} 

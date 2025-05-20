@@ -44,15 +44,28 @@ export class Combat {
         // Combat properties
         this.projectileDamage = 20; // Standard damage per projectile hit
         
-        // Initialize object pooling system
-        this.poolManager = new ProjectilePoolManager(scene);
-        console.log("Initialized ProjectilePoolManager for object pooling");
-        
-        // Initialize template materials to prevent shader compilation stutter
+        // 1. Initialize and pre-compile template materials
         this.initializeTemplateMaterials();
         
-        // Pre-create and cache geometries
+        // 2. Pre-create and cache geometries (and link materials to window.game)
         this.precreateGeometries();
+        
+        // 3. Initialize object pooling system with pre-warmed assets
+        this.poolManager = new ProjectilePoolManager(scene, {
+            projectileMaterial: this.projectileMaterial,
+            projectileGlowMaterial: this.projectileGlowMaterial,
+            trailParticleMaterial: this.trailParticleMaterial, // Will be red, but trail system is removed
+            muzzleFlashMaterial: this.muzzleFlashMaterial,
+            tracerLineMaterial: this.tracerLineMaterial, // For aiming line
+            explosionParticleMaterial: this.explosionParticleMaterial, // For impacts
+            
+            projectileGeometry: window.game.projectileGeometry,
+            projectileGlowGeometry: window.game.projectileGlowGeometry,
+            muzzleFlashGeometry: window.game.muzzleFlashGeometry,
+            trailParticleGeometries: window.game.trailParticleGeometries,
+            tracerGeometry: window.game.tracerGeometry
+        });
+        console.log("Initialized ProjectilePoolManager for object pooling with pre-warmed assets");
         
         // Initialize ECS world for advanced combat systems
         // This needs to be initialized asynchronously, but constructors can't be async
@@ -68,61 +81,62 @@ export class Combat {
     initializeTemplateMaterials() {
         console.log("Initializing template materials for combat effects");
         
-        // Template for projectile material (MeshStandardMaterial)
+        // Template for projectile material (MeshStandardMaterial) - Red Laser Bolt
         this.projectileMaterial = new THREE.MeshStandardMaterial({
-            color: 0x00ffff,
-            emissive: 0x00ffff,
-            emissiveIntensity: 5,
-            metalness: 0.7,
-            roughness: 0.3
+            color: 0xff0000,
+            emissive: 0xff0000,
+            emissiveIntensity: 10, // Vibrant laser
+            metalness: 0.5,
+            roughness: 0.5
         });
         
-        // Template for projectile glow material (MeshBasicMaterial)
+        // Template for projectile glow material (MeshBasicMaterial) - Red Glow
         this.projectileGlowMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0xff0000,
             transparent: true,
-            opacity: 0.4,
+            opacity: 0.5, // Softer glow
             blending: THREE.AdditiveBlending
         });
         
-        // Template for trail particle material (MeshBasicMaterial)
+        // Template for trail particle material (MeshBasicMaterial) - Red (Though complex trail is removed)
         this.trailParticleMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0xff0000,
             transparent: true,
             opacity: 0.9,
             blending: THREE.AdditiveBlending
         });
         
-        // Template for muzzle flash material (MeshBasicMaterial)
+        // Template for muzzle flash material (MeshBasicMaterial) - Red Muzzle Flash
         this.muzzleFlashMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+            color: 0xff0000,
             transparent: true,
-            opacity: 0.7,
+            opacity: 0.8, // Brighter flash
             blending: THREE.AdditiveBlending,
             side: THREE.DoubleSide,
             depthWrite: false,
             wireframe: false
         });
         
-        // Template for tracer line material (LineBasicMaterial)
+        // Template for tracer line material (LineBasicMaterial) - Red Aiming Line
         this.tracerLineMaterial = new THREE.LineBasicMaterial({
-            color: 0x00ffff,
+            color: 0xff0000,
             transparent: true,
-            opacity: 0.6,
+            opacity: 0.8, // More visible aiming line
             blending: THREE.AdditiveBlending
         });
         
         // Template for point light used in muzzle flash and explosions
+        // Point light color should match the flash/explosion
         this.pointLightMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            emissive: 0x00ffff,
+            color: 0xff0000, // Red light
+            emissive: 0xff0000,
             emissiveIntensity: 1.0
         });
         
-        // Template for explosion particles
+        // Template for explosion particles - Red/Orange Impact
         this.explosionParticleMaterial = new THREE.PointsMaterial({
-            color: 0xff9900,
-            size: 10,
+            color: 0xff3300, // Red-orange for impact
+            size: 15, // Slightly larger impact particles
             transparent: true,
             opacity: 1,
             blending: THREE.AdditiveBlending
@@ -141,18 +155,19 @@ export class Combat {
         pointsGeometry.setAttribute('position', new THREE.BufferAttribute(pointsPositions, 3));
         
         // Create dummy objects using all materials that will be used in projectiles
-        const dummyProjectile = new THREE.Mesh(sphereGeometry, this.projectileMaterial.clone());
-        const dummyGlow = new THREE.Mesh(sphereGeometry, this.projectileGlowMaterial.clone());
-        const dummyTrail = new THREE.Mesh(sphereGeometry, this.trailParticleMaterial.clone());
-        const dummyFlash = new THREE.Mesh(cylinderGeometry, this.muzzleFlashMaterial.clone());
+        // IMPORTANT: Use the original material instances, not clones, for pre-compilation.
+        const dummyProjectile = new THREE.Mesh(sphereGeometry, this.projectileMaterial);
+        const dummyGlow = new THREE.Mesh(sphereGeometry, this.projectileGlowMaterial);
+        const dummyTrail = new THREE.Mesh(sphereGeometry, this.trailParticleMaterial);
+        const dummyFlash = new THREE.Mesh(cylinderGeometry, this.muzzleFlashMaterial);
         const dummyTracer = new THREE.Line(
             new THREE.BufferGeometry().setFromPoints([
                 new THREE.Vector3(0, 0, 0),
                 new THREE.Vector3(0, 0, 1)
             ]),
-            this.tracerLineMaterial.clone()
+            this.tracerLineMaterial
         );
-        const dummyExplosion = new THREE.Points(pointsGeometry, this.explosionParticleMaterial.clone());
+        const dummyExplosion = new THREE.Points(pointsGeometry, this.explosionParticleMaterial);
         
         // Create a dummy trail system with multiple particles
         const dummyTrailContainer = new THREE.Object3D();
@@ -216,25 +231,26 @@ export class Combat {
             // Clean up trail particles
             dummyTrailContainer.children.forEach(child => {
                 if (child.geometry) child.geometry.dispose();
-                if (child.material) child.material.dispose();
+                if (child.material) child.material.dispose(); // Material here is a clone, original is on this.trailParticleMaterial
             });
             
             // Store precomputed geometries in window.game for reuse
-            if (window.game) {
-                window.game.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
-                window.game.projectileGlowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
+            // This part is removed as precreateGeometries() will handle setting window.game assets
+            // if (window.game) {
+            //     window.game.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
+            //     window.game.projectileGlowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
                 
-                // Precompute trail particle geometries
-                window.game.trailParticleGeometries = [];
-                const numPoints = 20; // Same as in addProjectileTrail
-                for (let i = 0; i < numPoints; i++) {
-                    const ratio = i / numPoints;
-                    const size = 0.5 * (1 - ratio);
-                    window.game.trailParticleGeometries[i] = new THREE.SphereGeometry(size, 8, 8);
-                }
+            //     // Precompute trail particle geometries
+            //     window.game.trailParticleGeometries = [];
+            //     const numPoints = 20; // Same as in addProjectileTrail
+            //     for (let i = 0; i < numPoints; i++) {
+            //         const ratio = i / numPoints;
+            //         const size = 0.5 * (1 - ratio);
+            //         window.game.trailParticleGeometries[i] = new THREE.SphereGeometry(size, 8, 8);
+            //     }
                 
-                console.log("Stored precomputed geometries in window.game");
-            }
+            //     console.log("Stored precomputed geometries in window.game");
+            // }
             
             console.log("Template materials initialized and dummy objects removed");
         }, 500); // Increased timeout to 500ms to ensure shader compilation completes
@@ -250,9 +266,9 @@ export class Combat {
         // Create geometries and store them on window.game for global access
         if (!window.game) window.game = {};
         
-        // Projectile geometries
-        window.game.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
-        window.game.projectileGlowGeometry = new THREE.SphereGeometry(2.4, 16, 16);
+        // Projectile geometries - Changed to a thin cylinder for laser bolt
+        window.game.projectileGeometry = new THREE.CylinderGeometry(0.15, 0.15, 10, 8); // Thin, 10 units long cylinder
+        window.game.projectileGlowGeometry = new THREE.SphereGeometry(0.8, 12, 12); // Glow radius around the bolt
         
         // Pre-create standard muzzle flash geometry
         window.game.muzzleFlashGeometry = new THREE.CylinderGeometry(0.5, 2, 15, 12, 1, true);
@@ -264,7 +280,7 @@ export class Combat {
         const numPoints = 20; // Same as in addProjectileTrail
         for (let i = 0; i < numPoints; i++) {
             const ratio = i / numPoints;
-            const size = 0.5 * (1 - ratio);
+            const size = 0.5 * (1 - ratio); // These might be unused or repurposed for simple impact sparks
             window.game.trailParticleGeometries[i] = new THREE.SphereGeometry(size, 8, 8);
         }
         
@@ -273,12 +289,14 @@ export class Combat {
         const points = [0, 0, 0, 0, 0, 1]; // Will be updated at runtime
         window.game.tracerGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
         
-        // Store references to template materials
+        // Store references to template materials (which should now be pre-warmed)
+        // These materials are created and warmed in initializeTemplateMaterials()
         window.game.projectileMaterial = this.projectileMaterial;
         window.game.projectileGlowMaterial = this.projectileGlowMaterial;
-        window.game.trailParticleMaterial = this.trailParticleMaterial;
+        window.game.trailParticleMaterial = this.trailParticleMaterial; // Will be red
         window.game.muzzleFlashMaterial = this.muzzleFlashMaterial;
         window.game.tracerLineMaterial = this.tracerLineMaterial;
+        window.game.explosionParticleMaterial = this.explosionParticleMaterial; // Added for consistency
         
         console.log("Combat geometries pre-created successfully");
     }
@@ -921,8 +939,8 @@ export class Combat {
         const leftOffset = new THREE.Vector3().copy(right).multiplyScalar(-1.5);
         const rightOffset = new THREE.Vector3().copy(right).multiplyScalar(1.5);
         
-        // Add slight forward offset so projectiles spawn in front of ship
-        const forwardOffset = new THREE.Vector3().copy(direction).multiplyScalar(7);
+        // Add larger forward offset so projectiles spawn further in front of ship (increased from 7 to 15)
+        const forwardOffset = new THREE.Vector3().copy(direction).multiplyScalar(15);
         
         // Calculate weapon port positions (where the flash should originate)
         // Use smaller forward offset for weapon ports to place them closer to the ship
@@ -949,8 +967,9 @@ export class Combat {
         const rightProjectile = this.createProjectile(rightPosition, direction);
         
         // Create flash effects at the weapon port positions
-        this.createMuzzleFlash(leftWeaponPosition, direction);
-        this.createMuzzleFlash(rightWeaponPosition, direction);
+        // REMOVED: No longer using muzzle flashes for Star Wars laser effect
+        // this.createMuzzleFlash(leftWeaponPosition, direction);
+        // this.createMuzzleFlash(rightWeaponPosition, direction);
         
         // Play projectile sound
         if (window.game && window.game.audio) {
@@ -1164,6 +1183,18 @@ export class Combat {
         projectile.position.copy(position);
         projectile.visible = true;
         
+        // IMPORTANT: Orient the cylinder along the direction of travel
+        // By default cylinders are created along the Y axis, we need to rotate them
+        
+        // First, find the quaternion that rotates from the default cylinder orientation (Y-axis)
+        // to our desired direction
+        const cylinderDefaultDirection = new THREE.Vector3(0, 1, 0); // Y-axis
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(cylinderDefaultDirection, direction);
+        
+        // Apply the rotation to the projectile
+        projectile.quaternion.copy(quaternion);
+        
         // Set velocity based on direction and speed
         projectile.velocity = direction.clone().multiplyScalar(this.projectileSpeed);
         
@@ -1173,7 +1204,7 @@ export class Combat {
         projectile.userData.damage = this.projectileDamage;
         
         // Add a dynamic trail
-        this.addProjectileTrail(projectile, direction);
+        this.addProjectileTrail(projectile, direction); // REINSTATED for laser trails
         
         // Add to scene if not already there
         if (!projectile.parent) {
@@ -1200,20 +1231,28 @@ export class Combat {
             
             // Disable ECS systems
             if (this.world) {
-                if (this.enemySystem) {
+                if (this.enemySystem && typeof this.enemySystem.setEnabled === 'function') { // Check if setEnabled exists
+                    this.enemySystem.setEnabled(false);
+                } else if (this.enemySystem) {
                     this.enemySystem.enabled = false;
                 }
-                if (this.combatSystem) {
+                if (this.combatSystem && typeof this.combatSystem.setEnabled === 'function') { // Check if setEnabled exists
+                    this.combatSystem.setEnabled(false);
+                } else if (this.combatSystem) {
                     this.combatSystem.enabled = false;
                 }
             }
         } else {
             // Enable ECS systems
             if (this.world) {
-                if (this.enemySystem) {
+                if (this.enemySystem && typeof this.enemySystem.setEnabled === 'function') { // Check if setEnabled exists
+                    this.enemySystem.setEnabled(true);
+                } else if (this.enemySystem) {
                     this.enemySystem.enabled = true;
                 }
-                if (this.combatSystem) {
+                if (this.combatSystem && typeof this.combatSystem.setEnabled === 'function') { // Check if setEnabled exists
+                    this.combatSystem.setEnabled(true);
+                } else if (this.combatSystem) {
                     this.combatSystem.enabled = true;
                 }
             }
@@ -1223,80 +1262,87 @@ export class Combat {
     }
     
     /**
-     * Add a dynamic particle trail to a projectile
+     * Add a dynamic particle trail to a projectile (Simplified for Lasers)
      * @param {THREE.Mesh} projectile The projectile mesh
      * @param {THREE.Vector3} direction Direction of travel
      */
     addProjectileTrail(projectile, direction) {
-        // Create a more dynamic and visually appealing trail using object pooling
-        
-        // Parameters
-        const numPoints = 20; // Number of particles in the trail
-        const trailLength = 6.0; // Total length of the trail
-        
-        // Get a trail container from the pool
+        // Parameters for a subtle, short trail
+        const numPoints = 4; // Number of particles in the trail
+        const trailLength = 4.0; // Total length of the trail (shorter than laser bolt length for subtlety)
+        const particleLifetime = 150; // milliseconds
+
+        if (!this.poolManager) {
+            console.warn("PoolManager not available for projectile trail.");
+            return;
+        }
+
         const trailContainer = this.poolManager.getTrailContainer();
+        if (!trailContainer) {
+            console.warn("Failed to get trail container from pool.");
+            return;
+        }
         projectile.add(trailContainer);
-        
-        // Array to store particles for this trail
+
         const trailParticles = [];
-        trailContainer.userData.particles = trailParticles;
-        
-        // Create individual trail particles from pool
+        trailContainer.userData.particles = trailParticles; // Store for release by PoolManager if needed
+        trailContainer.userData.isTrailActive = true; // Flag for animation loop
+
         for (let i = 0; i < numPoints; i++) {
-            // Calculate size and position
-            const ratio = i / numPoints;
+            const ratio = i / (numPoints -1); // Distribute particles along the trail length
+            const particle = this.poolManager.getTrailParticle(i % window.game.trailParticleGeometries.length); // Cycle through available geometries
             
-            // Get a trail particle from the pool with the appropriate size
-            const particle = this.poolManager.getTrailParticle(i);
-            
-            // Position particle along trail
-            const offset = direction.clone().multiplyScalar(-ratio * trailLength);
+            if (!particle) {
+                console.warn(`Failed to get trail particle ${i} from pool.`);
+                continue;
+            }
+
+            const offset = direction.clone().multiplyScalar(-ratio * trailLength - 2.0); // Start trail slightly behind the projectile tip
             particle.position.copy(offset);
             
-            // Store initial values for animation
-            particle.userData.initialOffset = offset.clone();
-            particle.userData.initialOpacity = particle.material.opacity;
+            particle.userData.creationTime = performance.now();
+            particle.userData.initialOpacity = particle.material.opacity; // Should be from pre-warmed red material
+            particle.userData.initialScale = particle.scale.x; // Assuming uniform scale
             
-            // Add to trail container
             trailContainer.add(particle);
             trailParticles.push(particle);
         }
         
-        // Store trail reference
-        projectile.userData.trail = trailContainer;
-        projectile.userData.trailParticles = trailParticles;
-        
-        // Set up animation for trail particles
+        projectile.userData.trail = trailContainer; // For cleanup by PoolManager
+
         const animateTrail = () => {
-            if (!projectile.parent) return; // Stop if projectile is removed
-            
-            // Update each particle
-            for (let i = 0; i < trailParticles.length; i++) {
+            if (!projectile.parent || !trailContainer.userData.isTrailActive) {
+                // Projectile removed or trail explicitly deactivated, stop animation and ensure cleanup
+                trailContainer.userData.isTrailActive = false;
+                // Particles will be cleaned up by releaseProjectile -> releaseTrail if not already done
+                return;
+            }
+
+            for (let i = trailParticles.length - 1; i >= 0; i--) {
                 const particle = trailParticles[i];
-                const ratio = i / numPoints;
-                
-                // Create wake effect by slightly moving particles
-                const time = performance.now() * 0.001;
-                const wakeFactor = Math.sin(time * 10 + i) * 0.03;
-                
-                // Calculate perpendicular vectors for movement
-                const perpVector = new THREE.Vector3(-direction.z, 0, direction.x).normalize();
-                perpVector.multiplyScalar(wakeFactor);
-                
-                // Set position with wake effect
-                particle.position.copy(particle.userData.initialOffset).add(perpVector);
-                
-                // Pulse opacity for energy effect
-                const opacityPulse = 0.2 * Math.sin(time * 5 + i * 0.5) + 0.8;
-                particle.material.opacity = particle.userData.initialOpacity * opacityPulse;
+                const elapsed = performance.now() - particle.userData.creationTime;
+                const progress = Math.min(elapsed / particleLifetime, 1.0);
+
+                if (progress >= 1.0) {
+                    this.poolManager.releaseTrailParticle(particle);
+                    trailParticles.splice(i, 1);
+                    if (particle.parent) particle.parent.remove(particle); // Ensure removal from container
+                } else {
+                    particle.material.opacity = particle.userData.initialOpacity * (1 - progress);
+                    const currentScale = particle.userData.initialScale * (1 - progress);
+                    particle.scale.set(currentScale, currentScale, currentScale);
+                }
+            }
+
+            if (trailParticles.length === 0) {
+                trailContainer.userData.isTrailActive = false; // All particles expired
+                // The container itself will be released when the projectile is released.
+                return;
             }
             
-            // Continue animation
             requestAnimationFrame(animateTrail);
         };
         
-        // Start trail animation
         animateTrail();
     }
     
@@ -1361,7 +1407,9 @@ export class Combat {
         
         // Position and orient the flash
         muzzleFlash.position.copy(position);
-        muzzleFlash.lookAt(position.clone().add(direction));
+        // Orient the flash to point away from the ship, along the direction of fire
+        const lookAtPosition = position.clone().add(direction.clone().normalize().multiplyScalar(10)); // Look 10 units along direction
+        muzzleFlash.lookAt(lookAtPosition);
         
         // Store reference to initial position and direction for animation
         muzzleFlash.userData.initialPosition = position.clone();
@@ -1410,14 +1458,23 @@ export class Combat {
      */
     async importAndRegisterSystem(path, className) {
         try {
-            const module = await import(path);
+            // Add vite-ignore to allow dynamic imports
+            // @ts-ignore
+            const module = await import(/* @vite-ignore */ path);
             if (!module[className]) {
                 console.error(`[COMBAT] System class ${className} not found in module ${path}`);
                 return null;
             }
             
             const SystemClass = module[className];
-            const system = new SystemClass(this.world);
+            // Pass world and scene to systems that might need them for rendering or context
+            let system;
+            if (className === 'TrailSystem' || className === 'VisualEffectsSystem' || className === 'RenderSystem') {
+                 // These systems might specifically need the scene
+                system = new SystemClass(this.world, this.scene);
+            } else {
+                system = new SystemClass(this.world);
+            }
             return system;
         } catch (error) {
             console.error(`[COMBAT] Error importing system ${className} from ${path}:`, error);
@@ -1425,3 +1482,10 @@ export class Combat {
         }
     }
 }
+
+// Helper to remove the addProjectileTrail method entirely if it exists as a standalone function in an unexpected way
+// This is unlikely given typical class structure but added for robustness
+// if (typeof Combat !== 'undefined' && Combat.prototype.addProjectileTrail) {
+// delete Combat.prototype.addProjectileTrail;
+//     console.log("Dynamically removed addProjectileTrail from Combat prototype if it existed.");
+// }

@@ -1,0 +1,713 @@
+/**
+ * mobile.css - Mobile-specific styles for the game
+ * Applied when the game is loaded on a mobile device
+ */
+
+/* Basic mobile adjustments */
+@media (max-width: 900px) {
+    /* Improve touch targets */
+    button, 
+    select, 
+    input[type="button"], 
+    input[type="submit"],
+    .button-like {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 12px !important;
+        font-size: 16px !important;
+        margin-bottom: 10px !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important; /* Remove tap highlight on iOS */
+    }
+    
+    /* Hide desktop HUD elements */
+    #hud-container {
+        display: none !important;
+    }
+    
+    /* Ensure text readability */
+    body {
+        font-size: 16px !important;
+        -webkit-text-size-adjust: 100%; /* Prevent iOS from adjusting font sizes */
+    }
+    
+    /* Adjust control instructions for mobile */
+    #pointer-lock-instructions {
+        display: none !important;
+    }
+    
+    /* Ensure buttons have proper spacing and sizing */
+    button {
+        margin: 8px !important;
+    }
+    
+    /* Make links and interactive elements more tappable */
+    a, .clickable, [onclick] {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        display: inline-block !important;
+        padding: 10px !important;
+        touch-action: manipulation !important;
+    }
+    
+    /* Fix known iOS Safari bottom bar issue */
+    html, body {
+        height: -webkit-fill-available;
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+    }
+}
+
+/* iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+    /* iOS-only CSS */
+    body {
+        /* Fix for iOS momentum scrolling */
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Fix for iOS input zooming issue */
+    input, select, textarea {
+        font-size: 16px !important; /* Prevent iOS zoom on focus */
+    }
+    
+    /* Fix scrolling containers on iOS */
+    [style*="overflow-y: auto"], [style*="overflow: auto"] {
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* Android-specific fixes */
+@supports not (-webkit-touch-callout: none) {
+    /* Non-iOS devices (Android) */
+    button:active, [role="button"]:active {
+        transform: scale(0.97); /* Give tactile feedback */
+    }
+}
+
+/* Responsive Stargate Terminal */
+@media (max-width: 900px) {
+    /* Main stargate UI container */
+    #stargate-ui {
+        width: 95% !important;
+        max-width: 95vw !important;
+        max-height: 85vh !important;
+        padding: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important; /* Enable smooth scrolling on iOS */
+        touch-action: pan-y !important; /* Enable vertical touch scrolling */
+        overscroll-behavior: contain !important; /* Prevent overscroll effects */
+        margin: 0 auto !important; /* Center on screen */
+        border-radius: 10px !important;
+    }
+    
+    /* Sticky header */
+    #stargate-header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        background-color: rgba(30, 40, 60, 0.95) !important;
+    }
+    
+    /* Convert grid layout to single column for mobile */
+    #stargate-content {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        padding: 15px !important;
+    }
+    
+    /* Ensure all sections span full width and appear in logical order */
+    #ship-status-section,
+    #market-section,
+    #upgrades-section,
+    #features-section,
+    #challenge-section {
+        grid-column: 1 !important;
+        grid-row: auto !important;
+        width: 100% !important;
+    }
+    
+    /* Fix the display order on mobile */
+    #stargate-content {
+        display: grid !important;
+        grid-template-areas: 
+            "status"
+            "market"
+            "upgrades"
+            "features"
+            "challenge" !important;
+    }
+    
+    #ship-status-section { grid-area: status !important; }
+    #market-section { grid-area: market !important; }
+    #upgrades-section { grid-area: upgrades !important; }
+    #features-section { grid-area: features !important; }
+    #challenge-section { grid-area: challenge !important; }
+    
+    /* Make section backgrounds slightly more opaque for better readability */
+    .stargate-section {
+        background-color: rgba(10, 20, 35, 0.9) !important;
+        padding: 15px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Footer with undock button */
+    #stargate-footer {
+        padding: 15px !important;
+        position: sticky !important;
+        bottom: 0 !important;
+        background-color: rgba(20, 30, 50, 0.95) !important;
+        z-index: 5 !important;
+    }
+    
+    /* Feature buttons in single column */
+    .feature-buttons {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    
+    /* Sell buttons in two columns for better visibility */
+    .sell-buttons {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    
+    /* Orb buttons in single column */
+    .orb-buttons {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    
+    /* Enhanced button appearance for better touch targets */
+    .action-btn, 
+    .feature-btn, 
+    .sell-btn, 
+    #upgrade-fuel-tank, 
+    #upgrade-engine, 
+    #upgrade-mining, 
+    #upgrade-hull, 
+    #upgrade-scanner, 
+    #purchase-laser {
+        padding: 15px !important;
+        min-height: 44px !important;
+        font-size: 16px !important;
+        margin-bottom: 8px !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+    
+    /* Undock button needs to be extra prominent */
+    #undock-btn {
+        padding: 18px !important;
+        font-size: 18px !important;
+        min-height: 54px !important;
+    }
+    
+    /* Fix for upgrade sections */
+    .upgrade-footer {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .upgrade-description {
+        margin-bottom: 10px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Add more spacing between elements for easier touch access */
+    .stargate-section h3 {
+        margin-bottom: 15px !important;
+        padding-bottom: 10px !important;
+        font-size: 18px !important;
+    }
+    
+    /* Status display improvements */
+    .status-bar-container {
+        height: 18px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Resources display in single row */
+    .resources-container {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 5px !important;
+    }
+    
+    /* Make sure the stargate UI has enough space at the bottom */
+    #stargate-content {
+        padding-bottom: 120px !important;
+    }
+}
+
+/* iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+    #stargate-ui {
+        /* Fix for iOS momentum scrolling */
+        -webkit-overflow-scrolling: touch !important;
+        /* Adjust padding to handle iOS notch */
+        padding-top: env(safe-area-inset-top) !important;
+        padding-bottom: calc(100px + env(safe-area-inset-bottom)) !important;
+    }
+    
+    #stargate-footer {
+        /* Add padding to handle iOS home indicator */
+        padding-bottom: calc(15px + env(safe-area-inset-bottom)) !important;
+    }
+    
+    /* Fix for iOS input zooming issue */
+    .stargate-section input, 
+    .stargate-section select, 
+    .stargate-section textarea {
+        font-size: 16px !important; /* Prevent iOS zoom on focus */
+    }
+}
+
+/* Star Map Adjustments */
+@media (max-width: 900px) {
+    #star-map {
+        width: 92% !important;
+        max-width: 92vw !important;
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 15px !important;
+    }
+    
+    #star-map-controls {
+        flex-direction: column !important;
+    }
+    
+    #star-map-controls button {
+        margin: 5px 0 !important;
+        width: 100% !important;
+        min-height: 44px !important;
+        padding: 12px !important;
+    }
+    
+    /* Adjust card sizing for touch */
+    .system-card {
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Make close button larger and more tappable */
+    #close-star-map {
+        padding: 14px !important;
+        font-size: 16px !important;
+        min-height: 44px !important;
+        background-color: #30cfd0 !important; /* Make more visible */
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+    
+    /* Add spacing for scrolling content */
+    #star-map-details {
+        padding-bottom: 30px !important;
+    }
+}
+
+/* Blackjack Game UI Adjustments */
+@media (max-width: 900px) {
+    #blackjack-container, #blackjack-game {
+        width: 92% !important;
+        max-width: 92vw !important;
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-y !important;
+        padding: 15px !important;
+    }
+    
+    #blackjack-controls {
+        flex-direction: column !important;
+    }
+    
+    #blackjack-controls button {
+        margin: 5px 0 !important;
+        width: 100% !important;
+        min-height: 44px !important;
+        padding: 12px !important;
+    }
+    
+    .card {
+        width: 60px !important;
+        height: 90px !important;
+        margin: 5px !important;
+    }
+    
+    /* Make dealer cards container scroll horizontally */
+    #dealer-cards, #player-cards {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 10px !important;
+        min-height: 100px !important;
+    }
+    
+    /* Larger close button */
+    #blackjack-game button[onclick*="hide"] {
+        font-size: 32px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        position: absolute !important;
+        top: 10px !important;
+        right: 10px !important;
+        padding: 0 !important;
+        z-index: 10 !important;
+    }
+}
+
+/* Settings UI Adjustments */
+@media (max-width: 900px) {
+    #settings-container {
+        width: 95% !important;
+        max-width: 95vw !important;
+        max-height: 85vh !important;
+        padding: 20px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .settings-section {
+        padding: 15px !important;
+    }
+    
+    .settings-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .settings-row label {
+        margin-bottom: 10px !important;
+        font-size: 16px !important;
+    }
+    
+    .settings-row input[type="range"] {
+        width: 100% !important;
+        height: 30px !important; /* Taller for better touch control */
+    }
+    
+    /* Make buttons more tappable */
+    #settings-container button {
+        min-height: 50px !important;
+        padding: 14px !important;
+        font-size: 16px !important;
+        margin: 10px 5px !important;
+    }
+}
+
+/* Game Over Screen Adjustments */
+@media (max-width: 900px) {
+    #game-over-container {
+        width: 95% !important;
+        max-width: 95vw !important;
+        padding: 20px !important;
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    #game-over-container h2 {
+        font-size: 24px !important;
+    }
+    
+    #game-over-resources {
+        flex-direction: column !important;
+    }
+    
+    #game-over-resources > div {
+        width: 100% !important;
+        margin-bottom: 20px !important;
+    }
+    
+    /* Make restart button larger for touch */
+    #restart-game-button {
+        padding: 20px !important;
+        font-size: 20px !important;
+        min-height: 60px !important;
+        margin-top: 30px !important;
+    }
+}
+
+/* Mining Display Adjustments */
+@media (max-width: 900px) {
+    #mining-display {
+        top: auto !important;
+        bottom: 220px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 85% !important;
+        max-width: 400px !important;
+        padding: 15px !important;
+    }
+    
+    /* Make mining bar larger */
+    #mining-progress {
+        height: 15px !important;
+    }
+    
+    /* Larger fonts for readability */
+    #mining-display div {
+        font-size: 16px !important;
+    }
+}
+
+/* Touch Controls */
+.mobile-action-button {
+    background-color: rgba(10, 20, 30, 0.7);
+    border: 2px solid rgba(120, 220, 232, 0.5);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(120, 220, 232, 0.5);
+    user-select: none;
+    touch-action: manipulation;
+    width: 70px !important;
+    height: 70px !important;
+    font-size: 16px !important;
+    transition: transform 0.1s ease-out, background-color 0.1s ease-out, border-color 0.1s ease-out;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-action-button.pressed {
+    transform: scale(0.95);
+    background-color: rgba(120, 220, 232, 0.2);
+    border-color: rgba(120, 220, 232, 0.8);
+}
+
+.mobile-action-button.active {
+    background-color: rgba(120, 220, 232, 0.3);
+    border-color: rgba(120, 220, 232, 1);
+    box-shadow: 0 0 15px rgba(120, 220, 232, 0.8);
+}
+
+/* Fire button specific styles */
+#fire-button {
+    border-color: rgba(255, 80, 80, 0.5);
+    box-shadow: 0 0 10px rgba(255, 80, 80, 0.5);
+}
+
+#fire-button.pressed,
+#fire-button.active {
+    background-color: rgba(255, 80, 80, 0.3);
+    border-color: rgba(255, 80, 80, 1);
+    box-shadow: 0 0 15px rgba(255, 80, 80, 0.8);
+}
+
+/* Joystick zones */
+#leftJoystickZone,
+#rightJoystickZone {
+    background-color: rgba(10, 20, 30, 0.3);
+    border: 2px dashed rgba(120, 220, 232, 0.3);
+    border-radius: 50%;
+    width: 120px !important;
+    height: 120px !important;
+    transition: border-color 0.2s ease-out;
+    touch-action: none;
+}
+
+#leftJoystickZone.active,
+#rightJoystickZone.active {
+    border-color: rgba(120, 220, 232, 0.8);
+}
+
+/* Nipple.js customization */
+.nipple {
+    opacity: 0.9 !important;
+}
+
+.nipple .front {
+    background: rgba(120, 220, 232, 0.8) !important;
+}
+
+.nipple .back {
+    background: rgba(10, 20, 30, 0.7) !important;
+    border: 2px solid rgba(120, 220, 232, 0.5) !important;
+}
+
+/* Crosshair */
+#mobile-crosshair {
+    pointer-events: none;
+    z-index: 1000;
+    mix-blend-mode: screen;
+}
+
+#mobile-crosshair div {
+    background-color: rgba(120, 220, 232, 0.8);
+    box-shadow: 0 0 5px rgba(120, 220, 232, 0.5);
+}
+
+/* Button container layout */
+#mobile-action-buttons-left,
+#mobile-action-buttons-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 10px;
+    z-index: 1000;
+}
+
+/* Prevent scrolling/zooming when using touch controls */
+body.touch-controls-active {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: auto;
+}
+
+/* Optimize touch targets */
+.mobile-action-button,
+.nipple,
+#leftJoystickZone,
+#rightJoystickZone {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Improve visibility in different lighting conditions */
+@media (prefers-color-scheme: dark) {
+    .mobile-action-button {
+        background-color: rgba(20, 30, 40, 0.8);
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    .mobile-action-button {
+        background-color: rgba(5, 15, 25, 0.9);
+    }
+}
+
+/* Handle different screen sizes */
+@media (max-height: 600px) {
+    .mobile-action-button {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 14px !important;
+    }
+
+    #leftJoystickZone,
+    #rightJoystickZone {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    #mobile-action-buttons-left,
+    #mobile-action-buttons-right {
+        gap: 15px;
+    }
+}
+
+/* Improve touch area for buttons */
+@media (min-width: 600px) {
+    .mobile-action-button {
+        width: 80px !important;
+        height: 80px !important;
+        font-size: 18px !important;
+    }
+}
+
+/* General mobile scrolling improvements */
+@media (max-width: 900px) {
+    /* Add extra padding to the bottom of all scrollable elements to ensure content isn't hidden behind controls */
+    [style*="overflow-y: auto"], [style*="overflow: auto"], 
+    #stargate-ui, #star-map, #blackjack-container, #blackjack-game, 
+    #settings-container, #game-over-container, .tabcontent {
+        padding-bottom: 100px !important; /* Extra padding to account for touch controls */
+    }
+    
+    /* Prevent text selection on interactive elements */
+    button, .button-like, [role="button"] {
+        user-select: none !important;
+        -webkit-user-select: none !important;
+    }
+
+    /* Fix for Safari 100vh issue */
+    .full-height {
+        height: 100%;
+        height: -webkit-fill-available;
+    }
+    
+    /* Fix iOS input focus issues */
+    input:focus, textarea:focus, select:focus {
+        font-size: 16px !important;
+        -webkit-appearance: none;
+    }
+    
+    /* Ensure touch events are properly handled */
+    html {
+        touch-action: manipulation;
+    }
+    
+    /* Adjust scrollbar styling for better touch control */
+    ::-webkit-scrollbar {
+        width: 6px !important;
+        height: 6px !important;
+    }
+    
+    /* Fix Android elastic overscroll effect */
+    body {
+        overscroll-behavior-y: none;
+    }
+}
+
+/* Undocking state styles */
+.undocking {
+    /* Fix for Android - make sure touch events pass through */
+    touch-action: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    /* Keep position fixed for loading indicator positioning */
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    /* Allow pointer events to pass through */
+    pointer-events: auto !important;
+    /* Allow scrolling */
+    overflow: auto !important;
+}
+
+/* Loading indicator for undocking */
+.undocking-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    font-size: 1.2rem;
+    z-index: 10000;
+    /* Make sure indicator doesn't block touches */
+    pointer-events: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Android-specific undocking fix */
+@supports not (-webkit-touch-callout: none) {
+    /* Non-iOS devices (Android) */
+    .undocking {
+        /* Make sure Android touch events work properly */
+        touch-action: auto !important;
+        pointer-events: auto !important;
+    }
+    
+    /* Make sure the undock button specifically works on Android */
+    #undock-btn {
+        position: relative !important;
+        z-index: 10001 !important;
+        pointer-events: auto !important;
+        touch-action: auto !important;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+} 

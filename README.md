@@ -26,6 +26,7 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 *   **Frontend:** HTML5, CSS3, JavaScript (ES Modules)
 *   **3D Engine:** Three.js (r175+)
+*   **Build System:** Vite (v5+)
 *   **Architecture:** Custom Entity-Component-System (ECS) with Data-Oriented optimizations
 *   **Mobile Controls:** NippleJS
 *   **Audio:** Web Audio API, Tone.js (for intro sequence)
@@ -34,14 +35,40 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 ## Installation
 
-No complex installation is required!
-
 1.  **Clone or Download:** Get the code from the repository.
-2.  **Serve Files:** Use a simple local web server to serve the project files. Due to browser security restrictions (CORS, ES Modules), you cannot simply open `index.html` directly from the file system.
-    *   If you have Python 3: `python -m http.server`
-    *   If you have Node.js: `npm install -g serve && serve .`
-    *   Or use an extension like "Live Server" for VS Code.
-3.  **Access:** Open your browser and navigate to the local server address (e.g., `http://localhost:8000`).
+    ```bash
+    git clone https://github.com/yourusername/aminer.git
+    cd aminer
+    ```
+
+2.  **Install Dependencies:** Use npm to install all dependencies.
+    ```bash
+    npm install
+    ```
+
+3.  **Development Server:** Run the development server with hot module replacement.
+    ```bash
+    npm run dev
+    ```
+
+4.  **Build for Production:** Create an optimized production build.
+    ```bash
+    npm run build
+    ```
+
+5.  **Preview Production Build:** Test the production build locally.
+    ```bash
+    npm run preview
+    ```
+
+## Development Workflow
+
+This project uses Vite for an optimized development experience:
+
+* **Hot Module Replacement:** Changes reflect immediately without a full page reload.
+* **Fast Builds:** Blazing fast build times with efficient bundling.
+* **Asset Optimization:** Automatic asset optimization during production builds.
+* **Local Dev Server:** Automatic port assignment and network access options.
 
 ## Usage
 
@@ -76,6 +103,16 @@ The game includes several settings to optimize for different hardware capabiliti
 * **Volumetric Lighting:** Choose between standard god rays, "Claude Rays" effect, or disable for performance
 * **Resolution Scaling:** Adjust rendering resolution for better performance
 * **Graphical Quality Presets:** Choose Performance, Balanced, or Quality presets
+
+## Production Build
+
+When you run `npm run build`, Vite creates an optimized production build:
+
+* **Tree-Shaking:** Eliminates unused code for smaller bundle sizes
+* **Minification:** Reduces file sizes for faster loading
+* **Asset Hashing:** Facilitates efficient caching
+* **Code Splitting:** Improves initial load times by loading only what's needed
+* **Smart Chunking:** Optimized chunk sizes for better network performance
 
 ## Future Scaling Capabilities
 

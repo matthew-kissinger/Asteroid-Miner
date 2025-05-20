@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -125,20 +126,11 @@
             -webkit-tap-highlight-color: transparent;
         }
     </style>
-    <link rel="stylesheet" href="css/custom-system.css">
-    <link rel="stylesheet" href="css/start-screen.css">
-    
-    <!-- Import map for Three.js r175 -->
-    <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/"
-      }
-    }
-    </script>
-</head>
-<body>
+    <!-- Import CSS files using Vite approach -->
+    <link rel="stylesheet" href="./css/custom-system.css">
+    <link rel="stylesheet" href="./css/start-screen.css">
+  </head>
+  <body>
     <!-- Three.js will create its own canvas -->
     
     <!-- Credits -->
@@ -150,8 +142,8 @@
     <!-- Load Tone.js for ASMR sound effects -->
     <script src="https://unpkg.com/tone"></script>
     
-    <!-- Load the game -->
-    <script type="module" src="js/main.js"></script>
+    <!-- Load the game using Vite's module handling -->
+    <script type="module" src="/src/main.js"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -169,8 +161,5 @@
             });
         });
     </script>
-    
-    <!-- Vibe Jam 2025 link -->
-    <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
-</body>
+  </body>
 </html>
