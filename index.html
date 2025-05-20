@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/Asteroid-Miner/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <title>Solar System Asteroid Miner</title>
+    <script>
+        // Start timing the page load process
+        console.time("init");
+        console.time("domLoaded");
+        
+        // Mark the timestamp when JavaScript first runs
+        window.initialTimestamp = performance.now();
+        console.log(`First JS execution: ${window.initialTimestamp.toFixed(2)}ms`);
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            touch-action: none;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        
+        /* UI Styles */
+        .ui-item {
+            margin-bottom: 8px;
+        }
+        
+        .ui-label {
+            display: inline-block;
+            width: 120px;
+            color: #30cfd0;
+        }
+        
+        .ui-value {
+            color: #fff;
+            font-weight: bold;
+        }
+        
+        .help-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #30cfd0;
+            text-align: center;
+        }
+        
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .key {
+            background-color: rgba(48, 207, 208, 0.2);
+            border: 1px solid #30cfd0;
+            border-radius: 4px;
+            padding: 0 5px;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+        
+        .loading-element {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* Star background for initial loading */
+        .star-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #101020 0%, #000000 70%);
+            z-index: -1;
+        }
+        
+        /* Credits */
+        .credits {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 12px;
+            text-align: left;
+            pointer-events: none;
+        }
+        
+        /* Disable pull-to-refresh on mobile */
+        html {
+            overscroll-behavior-y: contain;
+        }
+        
+        /* Disable long-press context menu on mobile */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Prevent tap highlight on mobile */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+    <!-- Import CSS files using Vite approach -->
+    <script type="module" crossorigin src="/Asteroid-Miner/assets/index-BS-0Rjpt.js"></script>
+    <link rel="modulepreload" crossorigin href="/Asteroid-Miner/assets/three-VvwEKp-s.js">
+    <link rel="modulepreload" crossorigin href="/Asteroid-Miner/assets/core-BBQ_RQx4.js">
+    <link rel="modulepreload" crossorigin href="/Asteroid-Miner/assets/modules-DGRLABPx.js">
+    <link rel="stylesheet" crossorigin href="/Asteroid-Miner/assets/index-D9m7A1fG.css">
+  </head>
+  <body>
+    <!-- Three.js will create its own canvas -->
+    
+    <!-- Credits -->
+    <div class="credits">
+        Solar System Asteroid Miner v0.5.8<br>
+        Built by @0xAntimatter
+    </div>
+    
+    <!-- Load Tone.js for ASMR sound effects -->
+    <script src="https://unpkg.com/tone"></script>
+    
+    <!-- Load the game using Vite's module handling -->
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // End DOM loaded timing
+            console.timeEnd("domLoaded");
+            
+            // Prevent default touchmove behavior to avoid page scrolling while playing
+            document.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+            
+            // Prevent contextmenu on long-press
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+        });
+    </script>
+  </body>
+</html>
