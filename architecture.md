@@ -166,7 +166,7 @@ vite.config.js # Vite configuration file
 ### `js/modules/`
 -   **Purpose:** Encapsulates higher-level game features and logic. Acts as coordinators or implementers of specific game functionalities, handling player intent, UI, overall game state, and interactions with non-ECS game objects. Often triggers actions or publishes events processed by the Combat ECS systems.
 -   **Key Files/Subdirectories:**
-    -   `game.js`: Central coordinator (`Game` class). Initializes modules, manages the main loop, holds global state (`isGameOver`), applies `DifficultyManager` logic, initializes global `window.objectPool`.
+    -   `game.js`: Central coordinator (`Game` class). Initializes modules, manages the main loop, holds global state (`isGameOver`), applies `DifficultyManager` logic, initializes global `window.objectPool`. Note: The primary game initialization and main loop are driven by the `Game` class within `js/main.js`. This `js/modules/game.js` might represent an earlier version, a refactoring experiment, or a module with a similar name. `js/main.js` is the effective entry point for the game logic execution as instantiated by `src/main.js`.
     -   `renderer.js`: Sets up Three.js renderer, scene, camera, lighting, post-processing.
     -   `spaceship.js`: Authoritative source for player state (hull, shield, cargo, upgrades, etc.). Manages deployable laser inventory. Synchronizes relevant state bidirectionally with the 'player' entity's components within the Combat ECS world via methods called in `combat.js`.
     -   `physics.js`: Coordinator for *player ship* physics simulation. Directly applies forces to the `Spaceship` object based on controls. Operates independently of the Combat ECS physics systems (which handle enemies, projectiles etc.).
@@ -205,7 +205,7 @@ vite.config.js # Vite configuration file
 -   **`js/core/systemManager.js`**: Manages systems within the Combat ECS world.
 -   **`js/modules/pooling/ObjectPool.js`**: Generic object pool class.
 -   **`js/modules/pooling/ProjectilePoolManager.js`**: Specialized pool manager for combat effects.
--   **`js/modules/game.js`**: Central coordinator. Holds references to modules. Manages game loop.
+-   **`js/modules/game.js`**: Central coordinator. (Note: `js/main.js` contains the primary `Game` class that is executed. This file might be legacy or a variant.)
 -   **`js/modules/spaceship.js`**: Authoritative player state. Syncs with the Combat ECS player entity.
 -   **`js/modules/combat.js`**: Creates and manages the Combat ECS world, registers combat systems, handles projectile logic and pooling, syncs player state with ECS.
 -   **`js/modules/controls/miningSystem.js`**: Handles player mining intent, UI, and resource logic.
@@ -318,8 +318,8 @@ vite.config.js # Vite configuration file
 
 -   **Performance:**
     -   **Object Pooling:** Two complementary systems: `ProjectilePoolManager` (Combat ECS effects) and `window.objectPool` (general effects). Enemy pooling via `EnemyPoolManager` within ECS.
-    -   **Optimized ECS Components:** Components in `js/future/components/optimized/` and factory in `js/future/core/optimizedEntityFactory.js` implement Data-Oriented Design patterns with TypedArrays for better memory layout and performance. These are preserved for future scaling but not actively used in the main game.
-    -   **DataStore:** The `js/future/core/dataStore.js` implements TypedArray-based data storage for transform and rigidbody components, enabling efficient batch processing. Currently preserved for future scaling but not actively used.
+    -   **Optimized ECS Components:** Components in `js/components/optimized/` and factory in `js/core/optimizedEntityFactory.js` implement Data-Oriented Design patterns with TypedArrays for better memory layout and performance. These are preserved for future scaling but not actively used in the main game.
+    -   **DataStore:** The `js/core/dataStore.js` implements TypedArray-based data storage for transform and rigidbody components, enabling efficient batch processing. Currently preserved for future scaling but not actively used.
     -   **Rendering Optimizations:** Standard THREE.js techniques. ECS `RenderSystem` updates entity visuals. The `Combat` module pre-creates and reuses geometries/materials for better performance.
     -   **Build Optimization:** Vite production builds provide tree-shaking, code-splitting, and minification for optimized delivery.
 -   **State Management:** Hybrid: `Spaceship` class is authoritative for player state. Environment uses direct object management. Combat ECS manages state for enemies, projectiles, deployable laser turrets, and potentially interactions involving mining, docking, trading entities. `Combat.js` syncs player state between `Spaceship` and the ECS player entity. Clear separation between module-level (intent, UI, resource logic) and ECS system-level (entity state, physics, visuals) responsibilities for features like mining, docking, and deployment.
@@ -349,11 +349,10 @@ vite.config.js # Vite configuration file
     -   Turrets have 1000m targeting radius with a 3-second firing cycle.
     -   Visual design includes a dark core with glowing red energy center, four orbiting emitter nodes, and dual intersecting orbital rings.
 -   **Future Scaling Architecture:**
-    -   The `js/future/` directory contains components, systems, and utilities preserved for future scaling.
-    -   Includes Data-Oriented optimizations using TypedArrays (`dataStore.js`, `components/optimized/`).
-    -   Includes instanced rendering systems for thousands of similar objects (`components/rendering/instancedMeshComponent.js`, `systems/rendering/instancedRenderSystem.js`).
-    -   Includes factory for creating optimized entities (`core/optimizedEntityFactory.js`).
-    -   Well-documented with READMEs explaining implementation strategies.
+    -   The codebase preserves foundational elements and concepts for future scaling, primarily located within `js/core/` and `js/components/optimized/`.
+    -   Includes Data-Oriented optimizations using TypedArrays (`js/core/dataStore.js`, `js/components/optimized/`).
+    -   The architecture anticipates the use of instanced rendering (e.g., leveraging `THREE.InstancedMesh`) for efficiently rendering many similar objects. The Data-Oriented Design components in `js/core/dataStore.js` and `js/components/optimized/` would provide a foundation for managing data for such systems.
+    -   Includes factory for creating optimized entities (`js/core/optimizedEntityFactory.js`).
     -   Ready to be integrated when the game requires handling thousands of entities simultaneously.
 -   **Space Anomalies Feature:**
     -   Implements 5 uniquely structured space anomalies with collectible energy orbs positioned outside asteroid belts.
