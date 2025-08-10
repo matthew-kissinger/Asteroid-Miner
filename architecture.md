@@ -2,18 +2,19 @@
 
 ## 1. Project Overview
 
--   **Project Name:** Solar System Asteroid Miner (aminer)
--   **Version:** v0.5.8
+-   **Project Name:** Asteroid Miner 
+-   **Version:** v0.6.0
 -   **Purpose:** A 3D space mining simulation game playable in a web browser. Players navigate space, mine asteroids, trade resources, upgrade their ship, and engage in combat.
 -   **Core Functionality:**
     -   3D Space Navigation & Physics Simulation
     -   Asteroid Mining & Resource Collection (Split between Module and ECS System)
     -   Ship Upgrades & Trading via Stargate Interface (Likely involves ECS Trading System)
-    -   Combat System (Player vs AI Enemies, managed via dedicated ECS)
+    -   Combat System (Player vs Spectral Drones, managed via dedicated ECS with balanced encounter timing)
     -   Deployable Space Laser Turrets (Autonomous defense platforms)
     -   Space Anomalies with Collectible Energy Orbs (Exploration incentives outside asteroid belts)
     -   Multiple Star System Exploration (Including procedural/AI generation)
-    -   Mobile and Desktop Controls (Split between Module and ECS System)
+    -   Mobile and Desktop Controls with Full Gamepad/Controller Support (Split between Module and ECS System)
+    -   Optimized UI/UX with Clean Targeting System and Performance-Focused Updates
     -   Object Pooling Systems for Performance Optimization (ProjectilePoolManager and global pool)
 -   **Main Technologies & Frameworks:**
     -   JavaScript (ES Modules)
@@ -26,9 +27,28 @@
     -   External AI API (Optional, via `apiClient.js`) for custom system generation.
 -   **System Architecture Type:** Client-Side Monolith with a hybrid architecture. Features a dedicated Entity-Component-System (ECS) world managed by the `Combat` module for enemies, combat logic, trading, mining visuals, docking visuals, and potentially input/control handling. Other aspects like player ship physics, resource management, and asteroid management use direct object manipulation and custom classes (`Spaceship`, `AsteroidBelt`). Includes two object pooling systems for performance. Communicates with an external API for optional AI content generation.
 
+## Recent Improvements (v0.6.0)
+
+### Combat Balance & Enemy Behavior
+- **Delayed Enemy Spawning:** Spectral drones now begin spawning after 1 minute instead of 5 seconds, providing players peaceful mining time
+- **Progressive Spawn Rate Scaling:** Enemy spawn intervals increase over time (spawn 2x slower at higher survival times) for balanced long-term gameplay
+- **Single Notification System:** Fixed duplicate spectral drone detection notifications
+
+### Controller Support Enhancement  
+- **Full Gamepad Integration:** Comprehensive controller support with Xbox, PlayStation, and generic controller compatibility
+- **Advanced Control Mapping:** Optimized axis mapping with proper deadzone handling and response curves for precision aiming
+- **Sensitivity Controls:** F7/F8 keys for real-time sensitivity adjustment with controller smoothing and acceleration
+- **Intelligent Button Mapping:** Context-aware controls including mining toggle, targeting, weapon firing, and deployment systems
+
+### UI/UX Performance Optimization
+- **Targeting System Overhaul:** Clean, unobtrusive target info display positioned at screen top with minimal visual clutter
+- **Performance-Optimized Updates:** Reduced UI update frequency from every frame to every 30 frames (~0.5 seconds) for better performance
+- **Simplified Visual Effects:** Streamlined pulsing animations and removed expensive Date.now() calculations
+- **Batch Processing:** Grouped expensive operations across multiple frames to maintain smooth framerates
+
 ## 2. Complete File Structure
 
-aminer_0.5.8/
+asteroid-miner_v0.6.0/
 assets/ # Game assets (textures, models, etc.) - Served from public directory
 css/ # CSS Stylesheets - Served from public directory
 dist/ # Production build output (generated)
@@ -152,7 +172,7 @@ vite.config.js # Vite configuration file
     -   `rendering/trailSystem.js`: Manages and updates trails for Combat ECS entities (e.g., projectiles).
     -   `rendering/visualEffectsSystem.js`: Creates and manages temporary visual effects (explosions) triggered by Combat ECS events using pooling.
     -   `combat/combatSystem.js`: Processes combat interactions (damage, etc.).
-    -   `combat/enemySystem.js`: Manages enemy AI behavior, state, and spawning.
+    -   `combat/enemySystem.js`: Manages spectral drone AI behavior, state, and balanced spawning with 1-minute initial delay and progressive spawn rate scaling.
     -   `combat/deployableLaserSystem.js`: Manages autonomous space laser turret targeting and firing behavior.
     -   `combat/enemyLifecycle.js`, `enemyPoolManager.js`, `enemySpawner.js`: Support systems for enemy management.
     -   `deployment/deploymentSystem.js`: Handles deployment and retrieval of space laser turrets.
@@ -173,7 +193,9 @@ vite.config.js # Vite configuration file
     -   `environment.js`: Manages scene elements (Skybox, Sun, Planets, Stargate, AsteroidBelt, SpaceAnomalies). `AsteroidBelt` manages asteroids directly using standard `THREE.Mesh` objects (though asteroids might also have corresponding entities in the ECS for mining/targeting). `SpaceAnomalies` manages unique space structures with collectible energy orbs. Uses `StarSystemGenerator`.
     -   `controls.js`: Main coordinator for player input. Delegates to specific handlers (`inputHandler.js`, `touchControls.js`) and systems (`miningSystem.js`, `targetingSystem.js`, `dockingSystem.js`, `deploymentSystem.js`). Handles automatic collection of energy orbs when colliding with anomalies.
     -   `controls/inputHandler.js`, `controls/touchControls.js`: Handle raw desktop/mobile input events and translate them into game actions or state changes for the `Spaceship` or other modules.
+    -   `controls/gamepadHandler.js`: Comprehensive gamepad/controller support with advanced axis mapping, sensitivity controls, response curves, and intelligent button mapping for all game functions.
     -   `controls/miningSystem.js`: Handles player *intent* to mine, target selection, UI updates (progress bar, target info), resource calculation and addition to `Spaceship` cargo. Publishes events like `mining.start` / `mining.stop` for the ECS `miningSystem` to handle visuals.
+    -   `controls/targetingSystem.js`: Performance-optimized targeting system with reduced update frequencies, simplified visual effects, and clean UI positioning at screen top.
     -   `controls/dockingSystem.js`: Handles player *intent* to dock/undock, target selection (stargate), UI updates. Publishes events for the ECS `dockingSystem` to handle entity state changes.
     -   `controls/deploymentSystem.js`: Handles player *intent* to deploy/retrieve space laser turrets, UI updates. Publishes events for the ECS `deploymentSystem` to handle entity creation/destruction.
     -   `ui.js`: Manages all UI elements (instantiation, updates). Reads state from `Spaceship` class, `Environment`, and potentially the Combat ECS world via adapters (`CombatManager`) or `MessageBus` events.

@@ -81,6 +81,9 @@ export class StargateInterface {
                 position: sticky;
                 top: 0;
                 z-index: 10;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
             
             #stargate-content {
@@ -310,9 +313,53 @@ export class StargateInterface {
                 animation: pulse-warning 2s infinite;
             }
             .btn-undock {
-                background-color: var(--accent-blue);
-                font-size: 1.2em;
-                padding: 15px;
+                background: linear-gradient(135deg, #00a8ff 0%, #0066cc 100%);
+                font-size: 1.4em;
+                font-weight: bold;
+                letter-spacing: 3px;
+                padding: 16px 40px;
+                width: auto;
+                min-width: 200px;
+                margin-bottom: 15px;
+                border: 2px solid #00d4ff;
+                box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), inset 0 0 20px rgba(0, 168, 255, 0.2);
+                text-transform: uppercase;
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+            
+            .btn-undock:hover {
+                background: linear-gradient(135deg, #00d4ff 0%, #0088ff 100%);
+                box-shadow: 0 0 30px rgba(0, 212, 255, 0.8), inset 0 0 20px rgba(0, 212, 255, 0.3);
+                transform: translateY(-2px);
+            }
+            
+            .btn-undock:active {
+                transform: translateY(0);
+            }
+            
+            .btn-undock::before {
+                content: '';
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                background: linear-gradient(45deg, transparent, #00d4ff, transparent);
+                z-index: -1;
+                opacity: 0;
+                transition: opacity 0.3s;
+                animation: pulse-glow 2s infinite;
+            }
+            
+            .btn-undock:hover::before {
+                opacity: 1;
+            }
+            
+            @keyframes pulse-glow {
+                0%, 100% { opacity: 0.5; }
+                50% { opacity: 1; }
             }
             
             .iron-border { border: 1px solid #cc6633; box-shadow: 0 0 10px rgba(204, 102, 51, 0.3); }
@@ -484,6 +531,9 @@ export class StargateInterface {
         stargateUI.innerHTML = `
             <!-- Header -->
             <div id="stargate-header">
+                <button id="undock-btn" class="action-btn btn-undock" data-no-touch-overlay="true">
+                    <span class="undock-text">◆ UNDOCK ◆</span>
+                </button>
                 <h2 style="text-align: center; color: #33aaff; margin: 0;">STARGATE TERMINAL</h2>
             </div>
             
@@ -797,7 +847,7 @@ export class StargateInterface {
             
             <!-- Footer -->
             <div id="stargate-footer">
-                <button id="undock-btn" class="action-btn btn-undock" data-no-touch-overlay="true">UNDOCK</button>
+                <!-- Footer now empty, undock button moved to header -->
             </div>
         `;
         

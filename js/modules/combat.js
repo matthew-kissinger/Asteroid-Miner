@@ -627,8 +627,11 @@ export class Combat {
         // Update the spaceship health from ECS
         this.updateSpaceshipHealth();
         
-        // Update all active projectiles
+        // Update all active projectiles (if any from old system)
         this.updateProjectiles(deltaTime);
+        
+        // Update active tracer beams
+        this.updateTracers(deltaTime);
         
         // Update pooled visual effects (muzzle flashes, tracers, etc.)
         if (this.poolManager) {
@@ -864,6 +867,71 @@ export class Combat {
     }
     
     /**
+     * Update active tracer beams - fade them out from start to end
+     * @param {number} deltaTime Time since last update
+     */
+    updateTracers(deltaTime) {
+        if (!this.activeTracers || this.activeTracers.length === 0) return;
+        
+        const currentTime = performance.now();
+        const tracersToRemove = [];
+        
+        for (let i = this.activeTracers.length - 1; i >= 0; i--) {
+            const beamGroup = this.activeTracers[i];
+            const userData = beamGroup.userData;
+            
+            if (!userData) continue;
+            
+            const elapsed = currentTime - userData.startTime;
+            const fadeProgress = Math.min(elapsed / userData.fadeTime, 1.0);
+            
+            if (fadeProgress >= 1.0) {
+                // Remove entire beam group
+                this.scene.remove(beamGroup);
+                tracersToRemove.push(i);
+            } else {
+                // Progressive dissolve from start to end
+                // The beam shortens from the start point toward the end point
+                const dissolveDistance = userData.beamLength * fadeProgress;
+                
+                // Calculate new start position (moves toward end as it dissolves)
+                const newStartOffset = userData.direction.clone().multiplyScalar(dissolveDistance);
+                const newStartPos = userData.startPos.clone().add(newStartOffset);
+                
+                // Calculate new beam length
+                const newLength = userData.beamLength * (1.0 - fadeProgress);
+                
+                if (newLength > 0.1) {
+                    // Update beam geometry to be shorter
+                    // We need to recreate the cylinders with new height
+                    userData.coreMesh.geometry.dispose();
+                    userData.innerGlowMesh.geometry.dispose();
+                    userData.outerGlowMesh.geometry.dispose();
+                    
+                    userData.coreMesh.geometry = new THREE.CylinderGeometry(1.5, 1.5, newLength, 12);
+                    userData.innerGlowMesh.geometry = new THREE.CylinderGeometry(3, 3, newLength, 8);
+                    userData.outerGlowMesh.geometry = new THREE.CylinderGeometry(5, 5, newLength, 6);
+                    
+                    // Update position to new midpoint
+                    const newMidpoint = new THREE.Vector3().addVectors(newStartPos, userData.endPos).multiplyScalar(0.5);
+                    beamGroup.position.copy(newMidpoint);
+                    
+                    // Also fade opacity slightly as it dissolves
+                    const opacityFactor = Math.pow(1.0 - fadeProgress, 0.3); // Slower opacity fade
+                    userData.coreMesh.material.opacity = userData.initialCoreOpacity * opacityFactor;
+                    userData.innerGlowMesh.material.opacity = userData.initialInnerOpacity * opacityFactor;
+                    userData.outerGlowMesh.material.opacity = userData.initialOuterOpacity * opacityFactor;
+                }
+            }
+        }
+        
+        // Remove completed tracers from the array
+        for (const index of tracersToRemove) {
+            this.activeTracers.splice(index, 1);
+        }
+    }
+    
+    /**
      * Register an enemy entity for synchronization with EnemySystem
      * @param {string} enemyId ID of the enemy entity
      */
@@ -902,7 +970,7 @@ export class Combat {
             return false;
         }
         
-        console.log("*** COMBAT MODULE: Firing particle cannon ***");
+        console.log("*** COMBAT MODULE: Firing pulse cannon with railgun effect ***");
         
         // Update last shot time for cooldown tracking
         this.lastFireTime = currentTime;
@@ -929,6 +997,9 @@ export class Combat {
         // Get the ray direction in world space
         const direction = raycaster.ray.direction.clone().normalize();
         
+        // Maximum range for weapon
+        const maxRange = 5000;
+        
         // Log the new direction approach
         console.log(`Projectile direction (using camera ray): ${direction.x.toFixed(2)}, ${direction.y.toFixed(2)}, ${direction.z.toFixed(2)}`);
         
@@ -942,9 +1013,9 @@ export class Combat {
         // Add larger forward offset so projectiles spawn further in front of ship (increased from 7 to 15)
         const forwardOffset = new THREE.Vector3().copy(direction).multiplyScalar(15);
         
-        // Calculate weapon port positions (where the flash should originate)
-        // Use smaller forward offset for weapon ports to place them closer to the ship
-        const weaponForwardOffset = new THREE.Vector3().copy(direction).multiplyScalar(4);
+        // Calculate weapon port positions (where the beams originate)
+        // Start beams 25 units in front of ship to avoid self-intersection when moving forward
+        const weaponForwardOffset = new THREE.Vector3().copy(direction).multiplyScalar(25);
         
         const leftWeaponPosition = new THREE.Vector3().copy(shipPosition)
             .add(leftOffset)
@@ -954,17 +1025,9 @@ export class Combat {
             .add(rightOffset)
             .add(weaponForwardOffset);
         
-        // Create left projectile (still uses original forward offset)
-        const leftPosition = new THREE.Vector3().copy(shipPosition)
-            .add(leftOffset)
-            .add(forwardOffset);
-        const leftProjectile = this.createProjectile(leftPosition, direction);
-        
-        // Create right projectile (still uses original forward offset)
-        const rightPosition = new THREE.Vector3().copy(shipPosition)
-            .add(rightOffset)
-            .add(forwardOffset);
-        const rightProjectile = this.createProjectile(rightPosition, direction);
+        // REMOVED: Old projectile creation - replaced with instant tracers below
+        // const leftProjectile = this.createProjectile(leftPosition, direction);
+        // const rightProjectile = this.createProjectile(rightPosition, direction);
         
         // Create flash effects at the weapon port positions
         // REMOVED: No longer using muzzle flashes for Star Wars laser effect
@@ -976,6 +1039,12 @@ export class Combat {
             console.log("Playing ASMR projectile sound for particle cannon");
             window.game.audio.playSound('projectile');
         }
+        
+        // Variables to track hits for tracer visualization
+        let leftHitPoint = null;
+        let rightHitPoint = null;
+        let leftHitEnemy = false;
+        let rightHitEnemy = false;
         
         // DIRECT ENEMY CHECK - Find any enemies in the scene and check for direct hits
         console.log("DIRECT ENEMY CHECK: Searching for enemies to destroy");
@@ -1166,6 +1235,24 @@ export class Combat {
             console.log("No world or entityManager available for enemy check");
         }
         
+        // Create instant tracer beams from weapon ports
+        // Left cannon tracer
+        const leftEndPoint = leftHitPoint || leftWeaponPosition.clone().add(direction.clone().multiplyScalar(maxRange));
+        this.createInstantTracer(leftWeaponPosition, leftEndPoint, leftHitEnemy, 0.4);
+        
+        // Right cannon tracer
+        const rightEndPoint = rightHitPoint || rightWeaponPosition.clone().add(direction.clone().multiplyScalar(maxRange));
+        this.createInstantTracer(rightWeaponPosition, rightEndPoint, rightHitEnemy, 0.4);
+        
+        // Create impact effects if we hit something
+        if (leftHitPoint && leftHitEnemy) {
+            this.createExplosionEffect(leftHitPoint, 0.5);
+        }
+        if (rightHitPoint && rightHitEnemy && rightHitPoint.distanceTo(leftHitPoint || rightHitPoint) > 10) {
+            // Only create second explosion if hit points are far enough apart
+            this.createExplosionEffect(rightHitPoint, 0.5);
+        }
+        
         // Return true to indicate successful firing
         return true;
     }
@@ -1259,6 +1346,94 @@ export class Combat {
         }
         
         console.log(`Combat systems ${enabled ? 'enabled' : 'disabled'}`);
+    }
+    
+    /**
+     * Create an instant plasma beam with hot glow
+     * @param {THREE.Vector3} startPos Starting position of the beam
+     * @param {THREE.Vector3} endPos End position of the beam (hit point or max range)
+     * @param {boolean} isHit Whether this beam hit a target
+     * @param {number} fadeTime Time in seconds for the beam to fade
+     */
+    createInstantTracer(startPos, endPos, isHit = false, fadeTime = 0.5) {
+        const distance = startPos.distanceTo(endPos);
+        
+        // Create multiple cylinders for a layered plasma effect
+        const beamGroup = new THREE.Group();
+        
+        // Core beam - bright white/yellow hot plasma
+        const coreGeometry = new THREE.CylinderGeometry(1.5, 1.5, distance, 12);
+        const coreMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffaa, // Hot yellow-white
+            transparent: true,
+            opacity: 1.0,
+            blending: THREE.AdditiveBlending,
+            emissive: 0xffffaa,
+            emissiveIntensity: 2
+        });
+        const coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
+        
+        // Inner glow - orange-white plasma
+        const innerGlowGeometry = new THREE.CylinderGeometry(3, 3, distance, 8);
+        const innerGlowMaterial = new THREE.MeshBasicMaterial({
+            color: isHit ? 0xffaa00 : 0xff8800, // Orange for hits, red-orange for misses
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+        const innerGlowMesh = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial);
+        
+        // Outer glow - cooler blue-cyan edge
+        const outerGlowGeometry = new THREE.CylinderGeometry(5, 5, distance, 6);
+        const outerGlowMaterial = new THREE.MeshBasicMaterial({
+            color: isHit ? 0x00ffff : 0x0088ff, // Cyan for hits, blue for misses
+            transparent: true,
+            opacity: 0.3,
+            blending: THREE.AdditiveBlending
+        });
+        const outerGlowMesh = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
+        
+        // Add all layers to the group
+        beamGroup.add(coreMesh);
+        beamGroup.add(innerGlowMesh);
+        beamGroup.add(outerGlowMesh);
+        
+        // Position and orient the entire beam group
+        const midpoint = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5);
+        beamGroup.position.copy(midpoint);
+        
+        // Orient the cylinders along the beam direction
+        const direction = new THREE.Vector3().subVectors(endPos, startPos).normalize();
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+        beamGroup.quaternion.copy(quaternion);
+        
+        this.scene.add(beamGroup);
+        
+        // Store beam data for progressive fade animation
+        beamGroup.userData = {
+            startTime: performance.now(),
+            fadeTime: fadeTime * 1000,
+            beamLength: distance,
+            startPos: startPos.clone(),
+            endPos: endPos.clone(),
+            direction: direction.clone(),
+            coreMesh: coreMesh,
+            innerGlowMesh: innerGlowMesh,
+            outerGlowMesh: outerGlowMesh,
+            initialCoreOpacity: 1.0,
+            initialInnerOpacity: 0.6,
+            initialOuterOpacity: 0.3,
+            isDissolving: false
+        };
+        
+        // Add to active tracers list for update loop
+        if (!this.activeTracers) {
+            this.activeTracers = [];
+        }
+        this.activeTracers.push(beamGroup);
+        
+        return beamGroup;
     }
     
     /**

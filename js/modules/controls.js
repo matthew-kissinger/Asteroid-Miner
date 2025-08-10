@@ -1,6 +1,7 @@
 // controls.js - Main controls module that integrates all control components
 
 import { InputHandler } from './controls/inputHandler.js';
+import { GamepadHandler } from './controls/gamepadHandler.js';
 import { MiningSystem } from './controls/miningSystem.js';
 import { TargetingSystem } from './controls/targetingSystem.js';
 import { DockingSystem } from './controls/dockingSystem.js';
@@ -26,6 +27,10 @@ export class Controls {
         if (!this.isMobile) {
             console.log("Initializing keyboard/mouse controls");
             this.inputHandler = new InputHandler(spaceship, physics);
+            
+            // Initialize gamepad support for desktop
+            console.log("Initializing gamepad support");
+            this.gamepadHandler = new GamepadHandler(spaceship, physics, this);
         } else {
             console.log("Initializing touch controls for mobile");
             this.touchControls = new TouchControls(spaceship, physics);
@@ -120,6 +125,32 @@ export class Controls {
                 case 'e': 
                     // Toggle targeting system (changed from 't' to 'e')
                     this.targetingSystem.toggleLockOn();
+                    break;
+                case 'f7':
+                    // Decrease gamepad sensitivity
+                    if (this.gamepadHandler) {
+                        this.gamepadHandler.lookSensitivity = Math.max(0.2, this.gamepadHandler.lookSensitivity - 0.2);
+                        console.log(`Gamepad sensitivity: ${this.gamepadHandler.lookSensitivity.toFixed(1)}`);
+                        this.showSensitivityNotification(this.gamepadHandler.lookSensitivity);
+                    }
+                    e.preventDefault();
+                    break;
+                case 'f8':
+                    // Increase gamepad sensitivity
+                    if (this.gamepadHandler) {
+                        this.gamepadHandler.lookSensitivity = Math.min(3.0, this.gamepadHandler.lookSensitivity + 0.2);
+                        console.log(`Gamepad sensitivity: ${this.gamepadHandler.lookSensitivity.toFixed(1)}`);
+                        this.showSensitivityNotification(this.gamepadHandler.lookSensitivity);
+                    }
+                    e.preventDefault();
+                    break;
+                case 'f9':
+                    // Toggle gamepad debug display
+                    if (this.gamepadHandler) {
+                        this.gamepadHandler.toggleDebug();
+                        console.log('Gamepad debug display toggled');
+                    }
+                    e.preventDefault();
                     break;
                 case 'tab': 
                     // Cycle through targets if targeting is enabled
@@ -354,6 +385,34 @@ export class Controls {
         }, 3000);
     }
     
+    showSensitivityNotification(sensitivity) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.textContent = `Gamepad Sensitivity: ${sensitivity.toFixed(1)}`;
+        notification.style.position = 'fixed';
+        notification.style.top = '100px';
+        notification.style.left = '50%';
+        notification.style.transform = 'translateX(-50%)';
+        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        notification.style.color = '#30cfd0';
+        notification.style.padding = '10px 20px';
+        notification.style.borderRadius = '5px';
+        notification.style.border = '1px solid #30cfd0';
+        notification.style.fontFamily = 'monospace';
+        notification.style.fontSize = '16px';
+        notification.style.zIndex = '10000';
+        notification.style.pointerEvents = 'none';
+        
+        document.body.appendChild(notification);
+        
+        // Fade out and remove after 2 seconds
+        setTimeout(() => {
+            notification.style.transition = 'opacity 0.5s';
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 500);
+        }, 2000);
+    }
+    
     /**
      * Update control systems
      * @param {number} deltaTime Time since last update in seconds
@@ -387,6 +446,11 @@ export class Controls {
                 this.dockingSystem.update();
             }
             return;
+        }
+        
+        // Update gamepad input if available
+        if (this.gamepadHandler) {
+            this.gamepadHandler.update(deltaTime);
         }
         
         // Update all control systems

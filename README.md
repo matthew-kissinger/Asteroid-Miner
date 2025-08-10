@@ -1,10 +1,10 @@
-# aminer
+# Asteroid Miner
 
 ![Gameplay Screenshot](placeholder.png)  <!-- Add a screenshot later -->
 
 *For detailed technical information, please see `architecture.md`.*
 
-A 3D space mining simulation game playable directly in your web browser. Navigate the cosmos, mine valuable resources, upgrade your ship, and defend yourself against dangers.
+A 3D space mining simulation game playable directly in your web browser. Navigate the cosmos, mine valuable resources, upgrade your ship, and defend yourself against spectral drone attacks in this immersive space adventure.
 
 **[► Play Now!](https://matthew-kissinger.github.io/Asteroid-Miner/)** *(Link from original README)*
 
@@ -13,13 +13,16 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 *   **Explore Procedurally Generated Star Systems:** Navigate diverse 3D environments with dynamic lighting and celestial bodies.
 *   **Mine Resources:** Target and extract Iron, Gold, and Platinum from asteroids using your mining laser.
 *   **Trade & Upgrade:** Dock with the stargate to sell resources, refuel, repair, and purchase upgrades for your ship's engine, hull, shields, mining laser, scanner, and cargo capacity.
-*   **Dynamic Combat:** Engage with AI-controlled enemy ships.
+*   **Dynamic Combat:** Battle against spectral drones - remnants of ancient defense systems with varying difficulty levels and visual variants.
+*   **Balanced Enemy Encounters:** Enemies begin spawning after 1 minute of gameplay and gradually spawn less frequently over time for a well-paced experience.
 *   **Deployable Space Laser Turrets:** Purchase and deploy autonomous laser turrets that automatically target and destroy enemy ships within range.
 *   **Interstellar Travel:** Use the Star Map at the stargate to travel between different star systems.
 *   **Space Anomalies & Energy Orbs:** Discover and investigate unique space anomalies to collect valuable energy orbs.
 *   **Custom System Creation (Optional AI Feature):** Use an AI-powered tool to generate unique star systems with custom skyboxes and planets.
 *   **VibeVerse Portals (Experimental):** Discover and explore experimental VibeVerse portals. (Confirm if this is a prominent feature to keep).
 *   **Cross-Platform:** Playable on both desktop (keyboard/mouse) and mobile (touch controls).
+*   **Advanced Controller Support:** Full gamepad/controller support with optimized controls, sensitivity adjustment, and responsive aiming.
+*   **Optimized UI Experience:** Clean, unobtrusive targeting system with minimal visual clutter and performance-optimized updates.
 *   **Mini-Game:** Try your luck at Stellar Blackjack aboard the stargate.
 *   **Adaptive Performance:** Optimizes frame rate limits based on your monitor's refresh rate.
 *   **Realistic Volumetric Lighting:** Experience god rays from the sun with options for standard or stylized "Claude Rays" effects.
@@ -100,8 +103,9 @@ This project uses Vite for an optimized development experience:
     *   `Mouse`: Rotate Ship (Requires clicking in the game window to lock pointer)
     *   `Left Click`: Fire Weapon
     *   `R`: Toggle Mining Laser (must have an asteroid targeted)
-    *   `E`: Toggle Target Lock-On System
+    *   `E`: Toggle Target Lock-On System (optimized with clean top-screen display)
     *   `Tab`: Cycle Locked Target
+    *   `F7`/`F8`: Adjust Controller Sensitivity (gamepad users)
     *   `Q`: Dock with Stargate (when nearby)
     *   `T`: Deploy Space Laser Turret
     *   `G`: Pick Up Nearby Space Laser Turret
@@ -112,6 +116,17 @@ This project uses Vite for an optimized development experience:
     *   **Right Joystick:** Ship Rotation
     *   **Buttons:** `FIRE`, `MINE`, `TARGET`, `DEPLOY` (On-screen buttons). `PICKUP` functionality for deployed turrets is typically contextual or might share a button, refer to in-game prompts.
     *   **Dock Button:** Appears when near the stargate.
+*   **Controls (Gamepad/Controller):**
+    *   **Left Stick:** Ship Movement (Forward/Backward/Strafe)
+    *   **Right Stick:** Ship Rotation (with sensitivity adjustment and smoothing)
+    *   **Left Stick Click (L3):** Boost
+    *   **A Button:** Toggle Target Lock-On System
+    *   **B Button:** Toggle Mining Laser (tap to start/stop)
+    *   **X Button:** Dock with Stargate (when nearby)
+    *   **Y Button:** Deploy Space Laser Turret
+    *   **Right Trigger (RT):** Fire Weapons
+    *   **Left/Right Bumpers:** Cycle Targets
+    *   **Start Button:** Pause/Menu
 *   **Goal:** Mine resources, sell them, upgrade your ship, and explore different systems. Survive encounters with hazards or enemies.
 
 ## Performance Optimization

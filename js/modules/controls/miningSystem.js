@@ -89,19 +89,32 @@ export class MiningSystem {
                 const targetInfo = document.getElementById('target-info');
                 if (targetInfo) {
                     targetInfo.style.display = 'block';
-                    targetInfo.style.color = '#30cfd0';
+                    
+                    // Calculate distance and range status
+                    const distance = Math.round(this.spaceship.mesh.position.distanceTo(asteroid.mesh.position));
+                    const inRange = distance <= this.miningDistance;
+                    
+                    // Set color based on range
+                    targetInfo.style.color = inRange ? '#30cfd0' : '#ff4400';
                     
                     // Update target name/type
                     const targetName = document.getElementById('target-name');
                     if (targetName) {
-                        targetName.textContent = `${resourceType.toUpperCase()} Asteroid`;
+                        if (!inRange) {
+                            targetName.textContent = `${resourceType.toUpperCase()} Asteroid - OUT OF RANGE`;
+                            targetName.style.color = '#ff4400';
+                        } else {
+                            targetName.textContent = `${resourceType.toUpperCase()} Asteroid`;
+                            targetName.style.color = '#30cfd0';
+                        }
                     }
                     
-                    // Update distance to target
-                    const distance = Math.round(this.spaceship.mesh.position.distanceTo(asteroid.mesh.position));
+                    // Update distance with range status
                     const targetDistance = document.getElementById('target-distance');
                     if (targetDistance) {
-                        targetDistance.textContent = `Distance: ${distance} units`;
+                        const rangeStatus = inRange ? ' [IN RANGE]' : ' [OUT OF RANGE]';
+                        const rangeColor = inRange ? '#00ff00' : '#ff4400';
+                        targetDistance.innerHTML = `Distance: ${distance} units<span style="color: ${rangeColor}">${rangeStatus}</span>`;
                     }
                 }
             } else {
@@ -706,21 +719,32 @@ export class MiningSystem {
         try {
             // Update distance calculation
             const distance = this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position);
+            const inRange = distance <= this.miningDistance;
             
             // Update UI elements if they exist
             const targetDistance = document.getElementById('target-distance');
             if (targetDistance) {
-                targetDistance.textContent = `Distance: ${Math.round(distance)} units`;
+                const rangeStatus = inRange ? ' [IN RANGE]' : ' [OUT OF RANGE]';
+                const rangeColor = inRange ? '#00ff00' : '#ff4400';
+                targetDistance.innerHTML = `Distance: ${Math.round(distance)} units<span style="color: ${rangeColor}">${rangeStatus}</span>`;
             }
             
-            // Check if target is still in range and update UI accordingly
-            const inRange = distance <= this.miningDistance;
+            // Update target info color
             const targetInfo = document.getElementById('target-info');
             if (targetInfo) {
-                if (inRange) {
-                    targetInfo.style.color = '#30cfd0'; // Blue for in range
+                targetInfo.style.color = inRange ? '#30cfd0' : '#ff4400';
+            }
+            
+            // Update target name to show range status
+            const targetName = document.getElementById('target-name');
+            if (targetName && this.targetAsteroid.resourceType) {
+                const resourceType = this.targetAsteroid.resourceType.toUpperCase();
+                if (!inRange) {
+                    targetName.textContent = `${resourceType} Asteroid - OUT OF RANGE`;
+                    targetName.style.color = '#ff4400';
                 } else {
-                    targetInfo.style.color = '#ff4400'; // Red for out of range
+                    targetName.textContent = `${resourceType} Asteroid`;
+                    targetName.style.color = '#30cfd0';
                 }
             }
         } catch (error) {

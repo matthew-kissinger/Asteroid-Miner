@@ -34,7 +34,7 @@ export class EnemySystem extends System {
         this.spawnInterval = 3;        // Seconds between spawns (reduced from 10)
         this.lastSpawnTime = Date.now(); // Track the last successful spawn time
         
-        // Add initial spawn delay of 60 seconds (one minute)
+        // Add initial spawn delay of 1 minute for game startup
         this.initialSpawnDelay = 60;  // Initial delay in seconds before enemies spawn
         this.initialSpawnTimer = 0;   // Timer to track the initial delay
         this.initialSpawnComplete = false; // Flag to track if initial spawn delay has completed
@@ -200,17 +200,14 @@ export class EnemySystem extends System {
                 this.initialSpawnComplete = true;
                 console.log(`Initial spawn delay complete. Spectral drones beginning to spawn.`);
                 
-                // Show notification that spectral drones have been spotted
-                if (window.mainMessageBus) {
+                // Show notification that spectral drones have been spotted (single notification)
+                if (window.game && window.game.ui && window.game.ui.showNotification) {
+                    window.game.ui.showNotification('WARNING: Spectral drones have been spotted in the sector!', 5000);
+                } else if (window.mainMessageBus) {
                     window.mainMessageBus.publish('ui.notification', {
                         message: 'WARNING: Spectral drones have been spotted in the sector!',
                         duration: 5000
                     });
-                }
-                
-                // Alternatively, try using the UI directly if message bus doesn't work
-                if (window.game && window.game.ui && window.game.ui.showNotification) {
-                    window.game.ui.showNotification('WARNING: Spectral drones have been spotted in the sector!', 5000);
                 }
             } else {
                 // Skip spawning while in initial delay
@@ -299,12 +296,12 @@ export class EnemySystem extends System {
         // Cap at a reasonable maximum to prevent performance issues
         this.maxEnemies = Math.min(Math.floor(maxEnemiesScale), 300);
         
-        // 2. Spawn interval: Start at 1s, decrease to minimum of 0.2s
-        const minSpawnInterval = 0.2;
+        // 2. Spawn interval: Start at 1s, increase over time (spawn 2x slower)
+        const maxSpawnInterval = 6.0;  // Maximum spawn interval
         const baseSpawnInterval = 1.0;
-        this.spawnInterval = Math.max(
-            baseSpawnInterval * Math.pow(0.95, minutesPassed * 2),
-            minSpawnInterval
+        this.spawnInterval = Math.min(
+            baseSpawnInterval * Math.pow(1.05, minutesPassed * 2),  // Increase interval (slower spawning)
+            maxSpawnInterval
         );
         
         // 3. Update enemy config in spawner if available

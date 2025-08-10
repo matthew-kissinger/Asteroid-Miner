@@ -408,29 +408,33 @@ export class HUD {
         // Target info display that appears when targeting something
         const targetInfo = document.createElement('div');
         targetInfo.id = 'target-info';
-        targetInfo.style.position = 'absolute';
-        targetInfo.style.top = '60px';
+        targetInfo.className = 'hud-panel';  // Use consistent HUD panel class
+        targetInfo.style.position = 'fixed';
+        targetInfo.style.top = '15px';  // Add some padding from the very top
         targetInfo.style.left = '50%';
         targetInfo.style.transform = 'translateX(-50%)';
-        targetInfo.style.width = '200px';
-        targetInfo.style.backgroundColor = 'rgba(6, 22, 31, 0.5)';
-        targetInfo.style.backdropFilter = 'blur(5px)';
-        targetInfo.style.borderRadius = '5px';
-        targetInfo.style.padding = '8px';
-        targetInfo.style.fontSize = '12px';
+        targetInfo.style.width = '280px';  // Slightly wider to match other panels
+        targetInfo.style.padding = '10px 15px';  // Match other panel padding
+        targetInfo.style.backgroundColor = 'rgba(6, 22, 31, 0.7)';  // Match other panels
+        targetInfo.style.backdropFilter = 'blur(5px)';  // Match other panels
+        targetInfo.style.borderRadius = '8px';  // Match other panel border radius
+        targetInfo.style.fontSize = '14px';  // Match other panel font size
         targetInfo.style.color = 'rgba(120, 220, 232, 0.9)';
         targetInfo.style.border = '1px solid rgba(120, 220, 232, 0.3)';
-        targetInfo.style.boxShadow = '0 0 10px rgba(120, 220, 232, 0.2)';
+        targetInfo.style.boxShadow = '0 0 15px rgba(120, 220, 232, 0.2)';  // Match other panels
         targetInfo.style.textAlign = 'center';
         targetInfo.style.display = 'none';
-        targetingSystem.appendChild(targetInfo);
+        targetInfo.style.zIndex = '999';  // Below notifications but above other HUD elements
+        targetInfo.style.fontFamily = '"Rajdhani", "Electrolize", sans-serif';  // Match HUD font
+        parent.appendChild(targetInfo);  // Append to main HUD parent, not targetingSystem
         
-        // Target info content
+        // Add decorative corner elements to match other HUD panels
+        this.addCornerElements(targetInfo);
+        
+        // Target info content - simplified for less clutter
         targetInfo.innerHTML = `
-            <div id="target-name" style="font-weight:600; margin-bottom:5px; font-size:14px;">NO TARGET</div>
-            <div id="target-distance" style="margin-bottom:3px;">DISTANCE: ---</div>
-            <div id="target-type" style="margin-bottom:3px;">TYPE: ---</div>
-            <div id="target-resources" style="margin-bottom:3px;">RESOURCES: ---</div>
+            <div id="target-name" style="font-weight:600; margin-bottom:5px;">NO TARGET</div>
+            <div id="target-distance" style="margin-bottom:0;">DISTANCE: ---</div>
         `;
         
         // Laser beam

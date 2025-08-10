@@ -111,6 +111,10 @@ class Game {
             this.introSequenceActive = false; // Flag to prevent player control during intro
             this.gameTime = 0; // Track total game time in seconds
             
+            // Detect mobile device
+            this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                           (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+            
             // Frame rate cap (defaults to auto/monitor refresh rate)
             this.frameRateCap = 0; // Will be updated by settings or refresh rate detection
             
@@ -119,25 +123,39 @@ class Game {
                 // If using 'auto' setting, apply refresh rate detection
                 if (this.ui.settings.settings.frameRateCap === 'auto') {
                     const refreshRate = this.ui.settings.monitorRefreshRate || 60;
-                    // If refresh rate is over 65Hz, default to unlimited
-                    if (refreshRate > 65) {
-                        this.frameRateCap = 0; // Unlimited
-                        console.log(`Defaulting to unlimited frame rate (refresh rate ${refreshRate}Hz > 65Hz)`);
+                    
+                    // Mobile devices: cap at 60fps for battery life
+                    if (this.isMobile) {
+                        this.frameRateCap = 60;
+                        console.log(`Mobile device detected: capping at 60fps for battery life`);
+                    }
+                    // High refresh displays: use fixed timestep with interpolation
+                    else if (refreshRate > 65) {
+                        this.frameRateCap = 0; // Unlimited with fixed timestep
+                        console.log(`High refresh display (${refreshRate}Hz): using fixed timestep with interpolation`);
                     } else {
                         this.frameRateCap = refreshRate;
-                        console.log(`Defaulting to monitor refresh rate: ${refreshRate}Hz`);
+                        console.log(`Standard display: matching refresh rate at ${refreshRate}Hz`);
                     }
                 } else {
                     // Otherwise use the specific setting value
                     this.frameRateCap = parseInt(this.ui.settings.settings.frameRateCap) || 0;
+                    
+                    // Override for mobile if unlimited is selected
+                    if (this.isMobile && this.frameRateCap === 0) {
+                        this.frameRateCap = 60;
+                        console.log(`Mobile device: overriding unlimited to 60fps`);
+                    }
                 }
-                console.log(`Applied frame rate cap from settings: ${this.frameRateCap}`);
+                console.log(`Applied frame rate cap: ${this.frameRateCap}`);
             }
             
             // Time tracking for frame rate cap and FPS calculation
             this.lastFrameTime = 0;
             this.actualFrameTime = 0;
             this.frameStartTime = 0;
+            this.accumulator = 0;
+            this.fixedDeltaTime = 1/60; // Fixed 60 Hz update rate
             
             // FPS averaging for smoother display
             this.fpsBuffer = [];
@@ -189,7 +207,7 @@ class Game {
             }
             
             // Start game loop (even though we're on start screen)
-            this.boundAnimate();
+            requestAnimationFrame(this.boundAnimate);
             
             // Initialize remaining systems in the background after start screen is shown
             this.initializeRemainingSystemsAsync();
@@ -969,13 +987,12 @@ class Game {
     }
     
     animate(timestamp) {
-        // Request next frame early to ensure consistent frame scheduling
-        requestAnimationFrame(this.boundAnimate);
-        
         // Initialize frame timing if needed
         if (!this.lastFrameTime) {
             this.lastFrameTime = timestamp;
             this.frameStartTime = performance.now();
+            // Request next frame and return
+            requestAnimationFrame(this.boundAnimate);
             return; // Skip first frame to establish baseline
         }
         
@@ -992,6 +1009,8 @@ class Game {
             
             // If we haven't reached the target frame time yet, skip this frame
             if (elapsedSinceLastFrame < targetFrameTime - 0.5) { // Subtract small amount to account for timing imprecision
+                // Request next frame and return early
+                requestAnimationFrame(this.boundAnimate);
                 return;
             }
             
@@ -1010,17 +1029,49 @@ class Game {
         
         // Calculate delta time
         const now = performance.now();
-        this.deltaTime = Math.min(now - this.lastUpdateTime, 100) / 1000; // Clamped to 100ms
+        let frameDelta = Math.min(now - this.lastUpdateTime, 100) / 1000; // Clamped to 100ms
+        
+        // For high refresh rates (>90Hz), use fixed timestep with interpolation
+        // This ensures consistent physics regardless of display refresh rate
+        if (!this.frameRateCap || this.frameRateCap > 90) {
+            // Accumulate time for fixed timestep
+            this.accumulator += frameDelta;
+            
+            // Fixed timestep updates (60Hz physics)
+            const fixedTimestep = 1/60;
+            let updates = 0;
+            const maxUpdates = 3; // Prevent spiral of death
+            
+            while (this.accumulator >= fixedTimestep && updates < maxUpdates) {
+                this.update(fixedTimestep);
+                this.accumulator -= fixedTimestep;
+                updates++;
+            }
+            
+            // If we're behind, catch up without spiraling
+            if (this.accumulator > fixedTimestep * maxUpdates) {
+                this.accumulator = fixedTimestep;
+            }
+            
+            // Interpolation factor for smooth rendering
+            const alpha = this.accumulator / fixedTimestep;
+            
+            // Render with interpolation (could be used for smoother visuals)
+            this.renderer.render();
+        } else {
+            // For locked frame rates, use simple delta time
+            this.deltaTime = frameDelta;
+            this.update(this.deltaTime);
+            this.renderer.render();
+        }
+        
         this.lastUpdateTime = now;
-        
-        // Update game state
-        this.update(this.deltaTime);
-        
-        // Render scene
-        this.renderer.render();
         
         // Update frame counter
         this.frameCount++;
+        
+        // Request next frame at the END of the animation cycle
+        requestAnimationFrame(this.boundAnimate);
     }
     
     pause() {

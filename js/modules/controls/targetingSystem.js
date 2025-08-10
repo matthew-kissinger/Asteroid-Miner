@@ -64,12 +64,20 @@ export class TargetingSystem {
             // Scan for nearby asteroids
             this.scanForAsteroids();
             
-            // Show targeting UI
+            // Show targeting UI with proper structure
             const targetInfoElement = document.getElementById('target-info');
             if (targetInfoElement) {
-                targetInfoElement.textContent = 'Lock-On Targeting: ACTIVE';
+                // Don't overwrite the content, just make it visible
                 targetInfoElement.style.display = 'block';
                 targetInfoElement.style.color = '#30cfd0';
+                
+                // Create proper structure if it doesn't exist
+                if (!document.getElementById('target-name')) {
+                    targetInfoElement.innerHTML = `
+                        <div id="target-name">Scanning for targets...</div>
+                        <div id="target-distance"></div>
+                    `;
+                }
             }
             
             // Automatically select the closest target
@@ -159,18 +167,9 @@ export class TargetingSystem {
         this.targetAsteroid = this.nearbyAsteroids[this.currentLockOnIndex];
         
         if (this.targetAsteroid) {
-            // Update target info
-            const targetNameElement = document.getElementById('target-name');
-            if (targetNameElement) {
-                targetNameElement.textContent = 
-                    `Asteroid (${this.targetAsteroid.resourceType}) - ${this.currentLockOnIndex + 1}/${this.nearbyAsteroids.length}`;
-            }
-            
-            const targetResourcesElement = document.getElementById('target-resources');
-            if (targetResourcesElement) {
-                targetResourcesElement.textContent = 
-                    `Health: ${this.targetAsteroid.mesh.userData.health}`;
-            }
+            // Don't update UI here - let the mining system handle it
+            // This prevents overwriting the mining system's detailed info
+            console.log(`Target locked: ${this.targetAsteroid.resourceType} asteroid`);
             
             // Position the targeting indicator
             this.targetReticle.position.copy(this.targetAsteroid.mesh.position);
@@ -284,64 +283,92 @@ export class TargetingSystem {
     }
     
     update() {
-        // Update scan radius in case it has changed (from upgrades)
-        this.scanRadius = this.getScanRadius();
+        // Only update scan radius every 30 frames for performance
+        if (!this.scanRadiusCounter) this.scanRadiusCounter = 0;
+        this.scanRadiusCounter++;
+        if (this.scanRadiusCounter >= 30) {
+            this.scanRadiusCounter = 0;
+            this.scanRadius = this.getScanRadius();
+        }
         
-        // Update lock-on targeting visuals
+        // If targeting is enabled, periodically rescan for new asteroids
+        if (this.lockOnEnabled) {
+            // Rescan every 120 frames (about every 2 seconds at 60fps) for better performance
+            if (!this.rescanCounter) this.rescanCounter = 0;
+            this.rescanCounter++;
+            
+            if (this.rescanCounter >= 120) {
+                this.rescanCounter = 0;
+                const previousCount = this.nearbyAsteroids.length;
+                this.scanForAsteroids();
+                
+                // If we found new asteroids and don't have a target, auto-select one
+                if (this.nearbyAsteroids.length > 0 && !this.targetAsteroid) {
+                    this.findNearestTarget();
+                }
+            }
+        }
+        
+        // Update lock-on targeting visuals (optimized)
         if (this.lockOnEnabled && this.targetAsteroid) {
             // Update target indicator position
             this.targetReticle.position.copy(this.targetAsteroid.mesh.position);
             
-            // Make indicator face the camera
-            const lookAtPos = new THREE.Vector3().copy(this.scene.camera.position);
-            this.targetReticle.lookAt(lookAtPos);
+            // Make indicator face the camera (less frequently)
+            if (!this.lookAtCounter) this.lookAtCounter = 0;
+            this.lookAtCounter++;
+            if (this.lookAtCounter >= 10) {  // Every 10 frames instead of every frame
+                this.lookAtCounter = 0;
+                this.targetReticle.lookAt(this.scene.camera.position);
+            }
             
-            // Rotate the inner rings in opposite directions for dynamic effect
-            this.targetReticle.rotation.z += 0.01;
+            // Simple rotation animation (more efficient)
+            this.targetReticle.rotation.z += 0.005;  // Reduced rotation speed
             if (this.targetReticle.children.length > 0) {
-                this.targetReticle.children[0].rotation.z -= 0.02;
+                this.targetReticle.children[0].rotation.z -= 0.01;
             }
             
-            // Pulse the opacity and size for visual effect
-            const pulseValue = Math.sin(Date.now() * 0.005);
-            const opacity = 0.6 + 0.4 * pulseValue;
-            const scale = 1 + 0.1 * pulseValue;
-            
+            // Simplified pulsing (no Date.now() calls)
+            if (!this.pulseTime) this.pulseTime = 0;
+            this.pulseTime += 0.02;  // Fixed time step
+            const pulseValue = Math.sin(this.pulseTime);
+            const opacity = 0.7 + 0.2 * pulseValue;  // Less dramatic pulsing
             this.targetReticle.material.opacity = opacity;
-            this.targetReticle.scale.set(scale, scale, scale);
             
-            // Update distance in UI
-            const targetDistanceElement = document.getElementById('target-distance');
-            if (targetDistanceElement) {
-                const distance = Math.round(this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position));
-                targetDistanceElement.textContent = `Distance: ${distance} units`;
+            // Update UI less frequently for performance
+            if (!this.uiUpdateCounter) this.uiUpdateCounter = 0;
+            this.uiUpdateCounter++;
+            if (this.uiUpdateCounter >= 30) {  // Update UI every 30 frames (~0.5 seconds)
+                this.uiUpdateCounter = 0;
+                
+                // Update distance in UI
+                const targetDistanceElement = document.getElementById('target-distance');
+                if (targetDistanceElement) {
+                    const distance = Math.round(this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position));
+                    targetDistanceElement.textContent = `Distance: ${distance} units`;
+                }
+                
+                // Check if target is destroyed or too far away
+                if (!this.targetAsteroid.mesh.parent || 
+                    this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position) > this.scanRadius) {
+                    this.scanForAsteroids();
+                }
             }
             
-            // Check if target is on screen or not
-            const isOnScreen = this.isTargetOnScreen();
-            
-            // ALWAYS show the reticle when targeting, regardless of whether it's on screen
+            // Always show the reticle when targeting
             this.targetReticle.visible = true;
             
-            // Update off-screen indicator if target is off-screen
-            if (!isOnScreen) {
-                const screenPosition = this.getScreenPosition(this.targetAsteroid.mesh.position);
-                const targetDirection = this.getTargetDirection();
-                this.showOffScreenIndicator(screenPosition, targetDirection);
-            } else {
-                this.hideOffScreenIndicators();
+            // Simplified off-screen indicator (check less frequently)
+            if (this.uiUpdateCounter === 15) {  // Check half-way through UI update cycle
+                const isOnScreen = this.isTargetOnScreen();
+                if (!isOnScreen) {
+                    const screenPosition = this.getScreenPosition(this.targetAsteroid.mesh.position);
+                    const targetDirection = this.getTargetDirection();
+                    this.showOffScreenIndicator(screenPosition, targetDirection);
+                } else {
+                    this.hideOffScreenIndicators();
+                }
             }
-            
-            // If target is destroyed or too far away, find a new one
-            if (!this.targetAsteroid.mesh.parent || 
-                this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position) > this.scanRadius) {
-                this.scanForAsteroids();
-            }
-        }
-        
-        // Rescan for asteroids periodically in lock-on mode
-        if (this.lockOnEnabled && Date.now() % 50 === 0) {
-            this.scanForAsteroids();
         }
     }
     
