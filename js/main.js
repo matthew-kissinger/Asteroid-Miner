@@ -1594,7 +1594,11 @@ function startGameMainModule() {
         dummyProjectile.add(dummyGlow);
         
         // Add to scene temporarily
-        this.renderer._withGuard(() => window.game.scene.add(dummyProjectile));
+        if (window.game && window.game.renderer && typeof window.game.renderer._withGuard === 'function') {
+            window.game.renderer._withGuard(() => window.game.scene.add(dummyProjectile));
+        } else {
+            window.game.scene.add(dummyProjectile);
+        }
         
         // Precompute and warm shaders for explosion and hit effects
         console.log("Precomputing explosion effect assets...");
@@ -1612,7 +1616,11 @@ function startGameMainModule() {
         
         // Create dummy explosion particles for shader warming
         const dummyExplosionContainer = new THREE.Group();
-        this.renderer._withGuard(() => window.game.scene.add(dummyExplosionContainer));
+        if (window.game && window.game.renderer && typeof window.game.renderer._withGuard === 'function') {
+            window.game.renderer._withGuard(() => window.game.scene.add(dummyExplosionContainer));
+        } else {
+            window.game.scene.add(dummyExplosionContainer);
+        }
         
         // Create a sample of explosion particles with various sizes
         const explosionParticleCount = 20;
@@ -1720,7 +1728,11 @@ function startGameMainModule() {
             if (hitEffect && hitEffect.mesh) {
                 // Position far away but still rendered
                 hitEffect.mesh.position.set(0, -10100, 0);
-                this.renderer._withGuard(() => window.game.scene.add(hitEffect.mesh));
+                if (window.game && window.game.renderer && typeof window.game.renderer._withGuard === 'function') {
+                    window.game.renderer._withGuard(() => window.game.scene.add(hitEffect.mesh));
+                } else {
+                    window.game.scene.add(hitEffect.mesh);
+                }
                 dummyHitEffects.push(hitEffect);
             }
         }
@@ -1731,7 +1743,11 @@ function startGameMainModule() {
         console.log("Cleaning up dummy objects after warming...");
         
         // Remove dummy explosion container after compilation
-        this.renderer._withGuard(() => window.game.scene.remove(dummyExplosionContainer));
+        if (window.game && window.game.renderer && typeof window.game.renderer._withGuard === 'function') {
+            window.game.renderer._withGuard(() => window.game.scene.remove(dummyExplosionContainer));
+        } else {
+            window.game.scene.remove(dummyExplosionContainer);
+        }
         for (const particle of dummyExplosionParticles) {
             dummyExplosionContainer.remove(particle);
         }
