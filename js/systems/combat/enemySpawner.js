@@ -492,7 +492,7 @@ export class EnemySpawner {
                 }
             }
             
-            // Get transform component to sync position - verify it still exists
+            // Get transform component to sync position - it should definitely exist
             const transformComp = entity.getComponent('TransformComponent');
             if (transformComp && transformComp.position) {
                 // Ensure mesh position, rotation, and scale match entity transform
@@ -504,15 +504,9 @@ export class EnemySpawner {
                 
                 console.log(`Synced mesh position to (${transformComp.position.x.toFixed(0)}, ${transformComp.position.y.toFixed(0)}, ${transformComp.position.z.toFixed(0)})`);
             } else {
-                console.error(`Entity ${entity.id} has no valid TransformComponent! Re-adding...`);
-                // Emergency re-add of transform component
-                const emergencyTransform = new TransformComponent(position.clone());
-                emergencyTransform.scale.set(finalSize, finalSize, finalSize);
-                entity.addComponent(emergencyTransform);
-                
-                // Sync mesh to emergency transform
-                meshComponent.mesh.position.copy(position);
-                meshComponent.mesh.scale.set(finalSize, finalSize, finalSize);
+                console.error(`CRITICAL: Entity ${entity.id} lost its TransformComponent! This should not happen.`);
+                console.error(`Entity components: ${[...entity.components.keys()].join(', ')}`);
+                // Don't re-add - this is a symptom of a bigger problem
             }
             
             console.log("Added enemy drone mesh to scene with visibility:", meshComponent.mesh.visible);

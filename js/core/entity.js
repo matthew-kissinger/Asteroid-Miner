@@ -48,7 +48,7 @@ export class Entity {
     
     /**
      * Remove a component from this entity
-     * @param {Function} componentType The component class to remove
+     * @param {Function|string} componentType The component class or name to remove
      * @returns {Entity} This entity for chaining
      */
     removeComponent(componentType) {
@@ -59,8 +59,10 @@ export class Entity {
             }
             component.entity = null;
             
-            // Get the component type name before deleting
-            const componentTypeName = componentType.name;
+            // Get the component type name - handle both string and class inputs
+            const componentTypeName = typeof componentType === 'string' 
+                ? componentType 
+                : componentType.name;
             this.components.delete(componentTypeName);
             
             // Notify the world that a component was removed
