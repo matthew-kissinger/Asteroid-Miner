@@ -377,54 +377,60 @@ export class EnemySpawner {
         // Get existing mesh component if any
         let meshComponent = entity.getComponent('MeshComponent');
         
-        // If we don't have a mesh component, create one
-        if (!meshComponent) {
-            meshComponent = new MeshComponent();
-            entity.addComponent(meshComponent);
-        }
-        
-        // Clean up old mesh if exists
-        if (meshComponent.mesh) {
-            if (meshComponent.mesh.parent) {
+        // Clean up old mesh component if exists
+        if (meshComponent) {
+            // Remove old mesh from scene if exists
+            if (meshComponent.mesh && meshComponent.mesh.parent) {
                 meshComponent.mesh.parent.remove(meshComponent.mesh);
             }
             
-            if (meshComponent.mesh.geometry) {
-                meshComponent.mesh.geometry.dispose();
-            }
-            
-            if (meshComponent.mesh.material) {
-                if (Array.isArray(meshComponent.mesh.material)) {
-                    meshComponent.mesh.material.forEach(mat => mat.dispose());
-                } else {
-                    meshComponent.mesh.material.dispose();
+            // Dispose of old mesh resources
+            if (meshComponent.mesh) {
+                if (meshComponent.mesh.geometry) {
+                    meshComponent.mesh.geometry.dispose();
+                }
+                
+                if (meshComponent.mesh.material) {
+                    if (Array.isArray(meshComponent.mesh.material)) {
+                        meshComponent.mesh.material.forEach(mat => mat.dispose());
+                    } else {
+                        meshComponent.mesh.material.dispose();
+                    }
                 }
             }
+            
+            // Remove the old component
+            entity.removeComponent('MeshComponent');
         }
         
-        // Assign the mesh to the component
+        // Create new mesh component with the actual mesh
         if (spectralMesh.isGLTF) {
-            meshComponent.mesh = spectralMesh.model;
+            // For GLTF models, pass the model directly
+            meshComponent = new MeshComponent(spectralMesh.model);
         } else {
-            // This is the placeholder case when model isn't loaded
-            meshComponent.mesh = new THREE.Mesh(spectralMesh.geometry, spectralMesh.material);
+            // For placeholder geometry
+            meshComponent = new MeshComponent(spectralMesh.geometry, spectralMesh.material);
         }
         
-        // Ensure the mesh will be added to the scene
-        meshComponent.onAddedToScene = function(scene) {
-            if (this.mesh && !this.mesh.parent && scene) {
-                console.log("Adding enemy drone mesh to scene");
-                scene.add(this.mesh);
-            }
-        };
+        // Add the new component to the entity
+        entity.addComponent(meshComponent);
+        
+        // Ensure the mesh is visible
+        meshComponent.setVisible(true);
         
         // Try to add to the scene immediately if it's available
         if (this.world && this.world.scene && meshComponent.mesh) {
-            // Make the mesh visible
-            meshComponent.mesh.visible = true;
-            
-            // Add to scene
-            this.world.scene.add(meshComponent.mesh);
+            // Add to scene if not already added
+            if (!meshComponent.mesh.parent) {
+                // Set renderer guard to prevent warning
+                const prevGuard = window.__rendererGuard;
+                window.__rendererGuard = true;
+                try {
+                    this.world.scene.add(meshComponent.mesh);
+                } finally {
+                    window.__rendererGuard = prevGuard;
+                }
+            }
             
             // Get transform component to sync position
             const transformComp = entity.getComponent('TransformComponent');
@@ -435,7 +441,7 @@ export class EnemySpawner {
                 meshComponent.mesh.scale.copy(transformComp.scale);
             }
             
-            console.log("Added enemy drone mesh to scene immediately");
+            console.log("Added enemy drone mesh to scene with visibility:", meshComponent.mesh.visible);
         }
         
         // Add physics if needed
