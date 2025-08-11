@@ -426,10 +426,14 @@ export class EnemySpawner {
             // Add to scene
             this.world.scene.add(meshComponent.mesh);
             
-            // Ensure mesh position, rotation, and scale match entity transform
-            meshComponent.mesh.position.copy(transform.position);
-            meshComponent.mesh.quaternion.copy(transform.quaternion);
-            meshComponent.mesh.scale.copy(transform.scale);
+            // Get transform component to sync position
+            const transformComp = entity.getComponent('TransformComponent');
+            if (transformComp) {
+                // Ensure mesh position, rotation, and scale match entity transform
+                meshComponent.mesh.position.copy(transformComp.position);
+                meshComponent.mesh.quaternion.copy(transformComp.quaternion);
+                meshComponent.mesh.scale.copy(transformComp.scale);
+            }
             
             console.log("Added enemy drone mesh to scene immediately");
         }
