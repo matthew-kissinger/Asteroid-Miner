@@ -55,6 +55,10 @@ export class CombatSystem extends System {
      * @param {number} deltaTime Time since last update in seconds
      */
     update(deltaTime) {
+        // Advance optimized projectile store if present
+        if (this.world && this.world.optimizedProjectiles && typeof this.world.optimizedProjectiles.update === 'function') {
+            this.world.optimizedProjectiles.update(deltaTime);
+        }
         // Get all entities with transforms (potential targets)
         // Use the correct method to get entities - entityManager.getEntities()
         const entities = this.world.entityManager.getEntities();

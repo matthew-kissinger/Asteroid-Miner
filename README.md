@@ -32,7 +32,7 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 *   **Frontend:** HTML5, CSS3, JavaScript (ES Modules)
 *   **3D Engine:** Three.js (r175+)
 *   **Build System:** Vite (v5+)
-*   **Architecture:** Hybrid ECS. A dedicated Entity-Component-System (ECS) is used for combat systems (enemies, projectiles), while other features like player ship physics and resource management use direct object manipulation. See `architecture.md` for a detailed breakdown.
+*   **Architecture:** Hybrid ECS. Combat (enemies/projectiles) runs under ECS with fixed-step and instanced rendering; player ship physics and economy/UI run via modules. See `architecture.md`.
 *   **Mobile Controls:** NippleJS
 *   **Audio:** Web Audio API, Tone.js (for intro sequence)
 *   **AI Generation API (Optional):** External API (likely FastAPI/Google Gemini) for custom system creation feature.
@@ -129,14 +129,31 @@ This project uses Vite for an optimized development experience:
     *   **Start Button:** Pause/Menu
 *   **Goal:** Mine resources, sell them, upgrade your ship, and explore different systems. Survive encounters with hazards or enemies.
 
-## Performance Optimization
+## Performance Optimization (v0.7.0)
 
 The game includes several settings to optimize for different hardware capabilities:
 
-* **Post-Processing Effects:** Toggle bloom, anti-aliasing, and other visual effects
-* **Volumetric Lighting:** Choose between standard god rays, "Claude Rays" effect, or disable for performance
-* **Resolution Scaling:** Adjust rendering resolution for better performance
-* **Graphical Quality Presets:** Choose Performance, Balanced, or Quality presets
+* **Perf Overlay (F3):** FPS, sim ms, render ms, draw calls, visible instances, pool stats, GC count, per-system timings (~2 Hz).
+* **Unified Pooling:** All hot-path allocations use PoolRegistry with hit/miss stats.
+* **Fixed-Step + Interpolation:** ECS updates at fixed dt; renderer interpolates between snapshots for smooth visuals.
+* **Spatial Hash:** Proximity queries and interest bubbles built atop hashed cells.
+* **Instanced Rendering:** Enemies render as InstancedMesh per cell × archetype to collapse draw calls.
+* **Typed Events:** Enum + schema with dev-time validation to prevent stray event names.
+
+## Runbook (v0.7.0)
+
+- Toggle Perf Overlay: Press `F3` in-game. Metrics: FPS, sim ms, render ms, draw calls, visible instances, pool stats, GC count, per-system timings.
+- Renderer Facade: Use `renderer.addView/removeView` or guarded `renderer.add`; avoid direct `scene.add/remove` in modules. Migrated hotspots: `js/modules/combat.js`, `js/modules/pooling/ProjectilePoolManager.js`, `js/modules/environment/spaceAnomalies.js`, shader warm-up in `js/main.js`.
+- Pooling: Use `window.objectPool` facade (delegates to `PoolRegistry`); ECS combat visuals use `ProjectilePoolManager` internally.
+- Fixed-Step Sim: 60 Hz physics with render interpolation, automatically used on high-refresh displays.
+- Typed Events: Publish via `window.mainMessageBus` with canonical event names; dev mode validates payloads.
+- Test Flow: Fire weapons (no emissive warnings; no facade warnings), wait for anomalies to spawn (no facade warnings), watch overlay for draw calls, visible instances, pool stats.
+
+### Upgrade Notes from v0.6.x to v0.7.0
+- Renderer facade now guards all `scene.add/remove`; modules should call the facade (already migrated for combat pools and space anomalies).
+- Input intent → ECS: Ship movement is progressively driven by ECS systems; avoid writing directly to `Spaceship.position/rotation` in new code.
+- Pooling: Use `window.objectPool` facade (delegates to `PoolRegistry`); for ECS combat visuals, continue using `ProjectilePoolManager` which internally reuses `ObjectPool` and respects the facade.
+- Fixed-step simulation with render interpolation is on by default, tuned for 60 Hz physics.
 
 ## Production Build
 

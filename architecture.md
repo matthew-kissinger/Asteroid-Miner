@@ -3,7 +3,7 @@
 ## 1. Project Overview
 
 -   **Project Name:** Asteroid Miner 
--   **Version:** v0.6.0
+-   **Version:** v0.7.0
 -   **Purpose:** A 3D space mining simulation game playable in a web browser. Players navigate space, mine asteroids, trade resources, upgrade their ship, and engage in combat.
 -   **Core Functionality:**
     -   3D Space Navigation & Physics Simulation
@@ -27,12 +27,17 @@
     -   External AI API (Optional, via `apiClient.js`) for custom system generation.
 -   **System Architecture Type:** Client-Side Monolith with a hybrid architecture. Features a dedicated Entity-Component-System (ECS) world managed by the `Combat` module for enemies, combat logic, trading, mining visuals, docking visuals, and potentially input/control handling. Other aspects like player ship physics, resource management, and asteroid management use direct object manipulation and custom classes (`Spaceship`, `AsteroidBelt`). Includes two object pooling systems for performance. Communicates with an external API for optional AI content generation.
 
-## Recent Improvements (v0.6.0)
+## Recent Improvements (v0.7.0 Hybrid-Tightening)
 
-### Combat Balance & Enemy Behavior
-- **Delayed Enemy Spawning:** Spectral drones now begin spawning after 1 minute instead of 5 seconds, providing players peaceful mining time
-- **Progressive Spawn Rate Scaling:** Enemy spawn intervals increase over time (spawn 2x slower at higher survival times) for balanced long-term gameplay
-- **Single Notification System:** Fixed duplicate spectral drone detection notifications
+### Performance & Architecture
+- Perf overlay (F3) with FPS, sim ms, render ms, draw calls, visible instances, pool stats, GC count, per-system timings via `js/modules/debug/perfOverlay.js`.
+- Unified PoolRegistry in `js/modules/pooling/PoolRegistry.js` (legacy `window.objectPool` bridged) with overlay hits/misses.
+- Fixed-step simulation and render interpolation: snapshots in `TransformComponent`; interpolation in `renderer.interpolateMeshes(alpha)`.
+- Spatial Hash (`js/core/spatial/SpatialHash.js`) and `EntityIndex` integrated into `World`; transform updates feed index.
+- Instanced rendering for enemies via `js/systems/rendering/InstancedRenderer.js`; original meshes hidden, draw calls reduced.
+- Typed events (`js/core/events.js`) and dev-time payload validation; `MessageBus` validates in dev.
+- OptimizedProjectileStore (TypedArrays) integrated (first slice) for projectile updates.
+- Renderer facade guard warns on direct `scene.add/remove` outside renderer in dev.
 
 ### Controller Support Enhancement  
 - **Full Gamepad Integration:** Comprehensive controller support with Xbox, PlayStation, and generic controller compatibility
@@ -187,7 +192,7 @@ vite.config.js # Vite configuration file
 -   **Purpose:** Encapsulates higher-level game features and logic. Acts as coordinators or implementers of specific game functionalities, handling player intent, UI, overall game state, and interactions with non-ECS game objects. Often triggers actions or publishes events processed by the Combat ECS systems.
 -   **Key Files/Subdirectories:**
     -   `game.js`: Central coordinator (`Game` class). Initializes modules, manages the main loop, holds global state (`isGameOver`), applies `DifficultyManager` logic, initializes global `window.objectPool`. Note: The primary game initialization and main loop are driven by the `Game` class within `js/main.js`. This `js/modules/game.js` might represent an earlier version, a refactoring experiment, or a module with a similar name. `js/main.js` is the effective entry point for the game logic execution as instantiated by `src/main.js`.
-    -   `renderer.js`: Sets up Three.js renderer, scene, camera, lighting, post-processing.
+    -   `renderer.js`: Sets up Three.js renderer, scene, camera, lighting, post-processing. Provides facade guards for `scene.add/remove` and exposes `_withGuard`, `add`, `removeView`, `addView` placeholders. Also collects perf counters per frame.
     -   `spaceship.js`: Authoritative source for player state (hull, shield, cargo, upgrades, etc.). Manages deployable laser inventory. Synchronizes relevant state bidirectionally with the 'player' entity's components within the Combat ECS world via methods called in `combat.js`.
     -   `physics.js`: Coordinator for *player ship* physics simulation. Directly applies forces to the `Spaceship` object based on controls. Operates independently of the Combat ECS physics systems (which handle enemies, projectiles etc.).
     -   `environment.js`: Manages scene elements (Skybox, Sun, Planets, Stargate, AsteroidBelt, SpaceAnomalies). `AsteroidBelt` manages asteroids directly using standard `THREE.Mesh` objects (though asteroids might also have corresponding entities in the ECS for mining/targeting). `SpaceAnomalies` manages unique space structures with collectible energy orbs. Uses `StarSystemGenerator`.
@@ -199,9 +204,9 @@ vite.config.js # Vite configuration file
     -   `controls/dockingSystem.js`: Handles player *intent* to dock/undock, target selection (stargate), UI updates. Publishes events for the ECS `dockingSystem` to handle entity state changes.
     -   `controls/deploymentSystem.js`: Handles player *intent* to deploy/retrieve space laser turrets, UI updates. Publishes events for the ECS `deploymentSystem` to handle entity creation/destruction.
     -   `ui.js`: Manages all UI elements (instantiation, updates). Reads state from `Spaceship` class, `Environment`, and potentially the Combat ECS world via adapters (`CombatManager`) or `MessageBus` events.
-    -   `combat.js`: Creates and manages the dedicated Combat ECS `World`. Instantiates `ProjectilePoolManager`. Handles projectile firing logic, synchronization between `Spaceship` state and the Combat ECS player entity. Registers all ECS Systems (`js/systems/*`).
+    -   `combat.js`: Creates and manages the dedicated Combat ECS `World`. Instantiates `ProjectilePoolManager`. Handles projectile firing logic, synchronization between `Spaceship` state and the Combat ECS player entity. Registers all ECS Systems (`js/systems/*`). Uses renderer facade helpers `_addToScene/_removeFromScene` for visual adds/removes; removes invalid emissive props from MeshBasicMaterial usage.
     -   `pooling/ObjectPool.js`: Generic object pool class used by `ProjectilePoolManager`.
-    -   `pooling/ProjectilePoolManager.js`: Used by `js/modules/combat.js` for pooling combat effects. Uses `ObjectPool.js` internally.
+    -   `pooling/ProjectilePoolManager.js`: Used by `js/modules/combat.js` for pooling combat effects. Uses `ObjectPool.js` internally. Scene mutations are routed through the renderer facade helpers.
     -   `combat/combatManager.js`: Thin adapter providing a simplified view into the Combat ECS world state (enemies, stats) primarily for UI display.
     -   `audio.js`: Manages audio.
     -   `introSequence.js`: Manages intro sequence.

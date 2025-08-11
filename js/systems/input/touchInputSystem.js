@@ -43,6 +43,9 @@ export class TouchInputSystem extends System {
             boost: false
         };
         
+        // Mining state
+        this.isMining = false;
+        
         // Environment state
         this.playerIsDocked = false;
         this.introActive = false;
@@ -257,7 +260,7 @@ export class TouchInputSystem extends System {
         
         // Create mine button (on left side)
         this.mineButton = this.createActionButton(leftActionButtonsContainer, 'MINE', 'rgba(120, 220, 232, 0.8)');
-        this.addButtonEvents(this.mineButton, this.handleMiningStart.bind(this), this.handleMiningEnd.bind(this));
+        this.addButtonEvents(this.mineButton, this.handleMiningToggle.bind(this));
         
         // Create target button (on right side)
         this.targetButton = this.createActionButton(rightActionButtonsContainer, 'TARGET', 'rgba(255, 215, 0, 0.8)');
@@ -503,31 +506,29 @@ export class TouchInputSystem extends System {
     }
     
     /**
-     * Handle mining button press
+     * Handle mining button toggle
      */
-    handleMiningStart() {
+    handleMiningToggle() {
         if (!this.enabled) return;
         
-        this.world.messageBus.publish('mining.start', {
-            source: 'touch'
-        });
+        // Toggle mining state
+        this.isMining = !this.isMining;
         
-        // Add visual feedback
-        this.mineButton.classList.add('active');
-    }
-    
-    /**
-     * Handle mining button release
-     */
-    handleMiningEnd() {
-        if (!this.enabled) return;
-        
-        this.world.messageBus.publish('mining.stop', {
-            source: 'touch'
-        });
-        
-        // Remove visual feedback
-        this.mineButton.classList.remove('active');
+        if (this.isMining) {
+            this.world.messageBus.publish('mining.start', {
+                source: 'touch'
+            });
+            
+            // Add visual feedback
+            this.mineButton.classList.add('active');
+        } else {
+            this.world.messageBus.publish('mining.stop', {
+                source: 'touch'
+            });
+            
+            // Remove visual feedback
+            this.mineButton.classList.remove('active');
+        }
     }
     
     /**

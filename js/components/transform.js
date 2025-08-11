@@ -16,6 +16,9 @@ export class TransformComponent extends Component {
         this.quaternion = new THREE.Quaternion().setFromEuler(this.rotation);
         this.matrix = new THREE.Matrix4();
         this.needsUpdate = true;
+        // Previous state for interpolation
+        this.prevPosition = this.position.clone();
+        this.prevQuaternion = this.quaternion.clone();
     }
     
     /**
@@ -98,6 +101,14 @@ export class TransformComponent extends Component {
             this.needsUpdate = false;
         }
         return this.matrix;
+    }
+
+    /**
+     * Snapshot the current transform to previous for interpolation
+     */
+    snapshotPrevious() {
+        this.prevPosition.copy(this.position);
+        this.prevQuaternion.copy(this.quaternion);
     }
     
     /**

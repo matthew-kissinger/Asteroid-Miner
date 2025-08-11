@@ -18,21 +18,11 @@ export class InputHandler {
             if (this.spaceship.isDocked || (window.game && window.game.introSequenceActive)) return;
             
             switch (e.key.toLowerCase()) {
-                case 'w': 
-                    this.spaceship.thrust.forward = true;
-                    break;
-                case 's': 
-                    this.spaceship.thrust.backward = true; 
-                    break;
-                case 'a': 
-                    this.spaceship.thrust.right = true; 
-                    break;
-                case 'd': 
-                    this.spaceship.thrust.left = true; 
-                    break;
-                case 'shift': 
-                    this.spaceship.thrust.boost = true; 
-                    break;
+                case 'w': window.inputIntent = (window.inputIntent||0) | 1; break;
+                case 's': window.inputIntent = (window.inputIntent||0) | 2; break;
+                case 'a': window.inputIntent = (window.inputIntent||0) | 4; break;
+                case 'd': window.inputIntent = (window.inputIntent||0) | 8; break;
+                case 'shift': window.inputIntent = (window.inputIntent||0) | 16; break;
             }
         });
         
@@ -48,12 +38,13 @@ export class InputHandler {
                 return;
             }
             
+            const clearBit = (bit) => { window.inputIntent = (window.inputIntent||0) & ~bit; };
             switch (e.key.toLowerCase()) {
-                case 'w': this.spaceship.thrust.forward = false; break;
-                case 's': this.spaceship.thrust.backward = false; break;
-                case 'a': this.spaceship.thrust.right = false; break; // A fires right thruster (moves left)
-                case 'd': this.spaceship.thrust.left = false; break;  // D fires left thruster (moves right)
-                case 'shift': this.spaceship.thrust.boost = false; break;
+                case 'w': clearBit(1); break;
+                case 's': clearBit(2); break;
+                case 'a': clearBit(4); break;
+                case 'd': clearBit(8); break;
+                case 'shift': clearBit(16); break;
             }
         });
     }

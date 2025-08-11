@@ -192,7 +192,7 @@ export class ProjectilePoolManager {
                 // Create a point light that will be attached to the flash
                 const flashLight = new THREE.PointLight(0x00ffff, 200, 10, 2);
                 flashLight.visible = false;
-                this.scene.add(flashLight);
+                this._addToScene(flashLight);
                 
                 // Store reference to light
                 muzzleFlash.userData.flashLight = flashLight;
@@ -350,7 +350,7 @@ export class ProjectilePoolManager {
         
         // Add to scene if not already there
         if (!projectile.parent) {
-            this.scene.add(projectile);
+            this._addToScene(projectile);
         }
         
         return projectile;
@@ -375,7 +375,7 @@ export class ProjectilePoolManager {
         
         // Add to scene if not already there
         if (!muzzleFlash.parent) {
-            this.scene.add(muzzleFlash);
+            this._addToScene(muzzleFlash);
         }
         
         return muzzleFlash;
@@ -424,7 +424,7 @@ export class ProjectilePoolManager {
         
         // Add to scene if not already there
         if (!tracer.parent) {
-            this.scene.add(tracer);
+            this._addToScene(tracer);
         }
         
         return tracer;
@@ -446,7 +446,7 @@ export class ProjectilePoolManager {
         
         // Add to scene if not already there
         if (!explosion.parent) {
-            this.scene.add(explosion);
+            this._addToScene(explosion);
         }
         
         return explosion;
@@ -472,7 +472,7 @@ export class ProjectilePoolManager {
         
         // Remove from scene to ensure it's not rendered
         if (projectile.parent) {
-            projectile.parent.remove(projectile);
+            this._removeFromParent(projectile);
         }
         
         // Return to pool
@@ -497,7 +497,7 @@ export class ProjectilePoolManager {
         
         // Remove from scene
         if (muzzleFlash.parent) {
-            muzzleFlash.parent.remove(muzzleFlash);
+            this._removeFromParent(muzzleFlash);
         }
         
         // Return to pool
@@ -559,7 +559,7 @@ export class ProjectilePoolManager {
         
         // Remove from scene
         if (tracer.parent) {
-            tracer.parent.remove(tracer);
+            this._removeFromParent(tracer);
         }
         
         // Return to pool
@@ -578,7 +578,7 @@ export class ProjectilePoolManager {
         
         // Remove from scene
         if (explosion.parent) {
-            explosion.parent.remove(explosion);
+            this._removeFromParent(explosion);
         }
         
         // Return to pool
@@ -723,7 +723,7 @@ export class ProjectilePoolManager {
         // Dispose pools with custom dispose functions
         this.projectilePool.dispose(projectile => {
             // Remove from scene
-            if (projectile.parent) projectile.parent.remove(projectile);
+            if (projectile.parent) this._removeFromParent(projectile);
             
             // Clean up materials
             if (projectile.userData.glowMesh && projectile.userData.glowMesh.material) {
@@ -736,7 +736,7 @@ export class ProjectilePoolManager {
         
         this.muzzleFlashPool.dispose(muzzleFlash => {
             // Remove from scene
-            if (muzzleFlash.parent) muzzleFlash.parent.remove(muzzleFlash);
+            if (muzzleFlash.parent) this._removeFromParent(muzzleFlash);
             
             // Remove flash light
             if (muzzleFlash.userData.flashLight) {
@@ -751,12 +751,12 @@ export class ProjectilePoolManager {
         
         this.trailContainerPool.dispose(trail => {
             // Remove from scene or parent
-            if (trail.parent) trail.parent.remove(trail);
+            if (trail.parent) this._removeFromParent(trail);
         });
         
         this.trailParticlePool.dispose(particle => {
             // Remove from parent if still attached
-            if (particle.parent) particle.parent.remove(particle);
+            if (particle.parent) this._removeFromParent(particle);
             
             // Materials are cloned per particle
             if (particle.material) particle.material.dispose();
@@ -764,12 +764,44 @@ export class ProjectilePoolManager {
         
         this.tracerPool.dispose(tracer => {
             // Remove from scene
-            if (tracer.parent) tracer.parent.remove(tracer);
+            if (tracer.parent) this._removeFromParent(tracer);
             
             // Materials are cloned per tracer
             if (tracer.material) tracer.material.dispose();
         });
         
         console.log("ProjectilePoolManager disposed all pools and shared assets");
+    }
+
+    // --- Renderer facade helpers ---
+    _getRenderer() {
+        return (window.game && window.game.renderer) ? window.game.renderer : null;
+    }
+
+    _addToScene(object) {
+        const renderer = this._getRenderer();
+        if (renderer && typeof renderer._withGuard === 'function') {
+            renderer._withGuard(() => renderer.add(object));
+        } else if (this.scene && typeof this.scene.add === 'function') {
+            this.scene.add(object);
+        }
+    }
+
+    _removeFromScene(object) {
+        const renderer = this._getRenderer();
+        if (renderer && typeof renderer._withGuard === 'function') {
+            renderer._withGuard(() => this.scene.remove(object));
+        } else if (this.scene && typeof this.scene.remove === 'function') {
+            this.scene.remove(object);
+        }
+    }
+
+    _removeFromParent(object) {
+        if (!object || !object.parent) return;
+        if (object.parent === this.scene) {
+            this._removeFromScene(object);
+        } else if (typeof object.parent.remove === 'function') {
+            object.parent.remove(object);
+        }
     }
 } 

@@ -50,38 +50,11 @@ export class Renderer {
         // Setup for instanced meshes
         this.instancedMeshes = new Map();
         
-    this.setupRenderer();
+        this.setupRenderer();
         this.setupPostProcessing();
         this.setupLighting();
         this.setupResizeHandler();
         console.log("Enhanced renderer initialized successfully");
-
-    // Perf counters
-    this._frameDrawCalls = 0;
-    this._frameVisibleInstances = 0;
-    // Interpolation alpha provided by main
-    this.renderAlpha = 0;
-
-    // Renderer facade guard
-    if (typeof window !== 'undefined') {
-      window.__rendererGuard = false;
-    }
-
-    // Wrap scene add/remove to warn on direct mutations
-    const originalAdd = this.scene.add.bind(this.scene);
-    const originalRemove = this.scene.remove.bind(this.scene);
-    this.scene.add = (...args) => {
-      if (!window.__rendererGuard && window && window.DEBUG_MODE) {
-        console.warn('[RendererFacade] Direct scene.add detected outside renderer facade');
-      }
-      return originalAdd(...args);
-    };
-    this.scene.remove = (...args) => {
-      if (!window.__rendererGuard && window && window.DEBUG_MODE) {
-        console.warn('[RendererFacade] Direct scene.remove detected outside renderer facade');
-      }
-      return originalRemove(...args);
-    };
     }
     
     setupRenderer() {
@@ -302,9 +275,9 @@ export class Renderer {
         }
     }
     
-    // Add an object to the scene through guarded path
+    // Add an object to the scene
     add(object) {
-        return this._withGuard(() => this.scene.add(object));
+        this.scene.add(object);
     }
     
     // Allow dynamic adjustment of post-processing settings
@@ -487,77 +460,12 @@ export class Renderer {
     
     // Override the render method to use the composer if available, otherwise fallback to basic rendering
     render() {
-    // reset counters
-    this._frameDrawCalls = 0;
-    this._frameVisibleInstances = 0;
-
-    // count visible instances from instancedMeshes map
-    try {
-      for (const [, inst] of this.instancedMeshes) {
-        if (inst && inst.mesh) {
-          this._frameVisibleInstances += inst.mesh.count || 0;
+        if (this.composer && !this.useBasicRendering) {
+            this.composer.render();
+        } else {
+            this.renderer.render(this.scene, this.camera);
         }
-      }
-    } catch {}
-
-    // track render start
-    const ctx = this.renderer.info;
-    const startCalls = ctx.render.calls;
-    if (this.composer && !this.useBasicRendering) {
-      this.composer.render();
-    } else {
-      this.renderer.render(this.scene, this.camera);
     }
-    const endCalls = this.renderer.info.render.calls;
-    this._frameDrawCalls = Math.max(0, endCalls - startCalls);
-
-    if (window.__perf) {
-      window.__perf.drawCalls = endCalls; // total since reset
-      window.__perf.visibleInstances = this._frameVisibleInstances;
-    }
-    }
-
-  // Interpolate ECS meshes before compositing
-  interpolateMeshes(alpha) {
-    this.renderAlpha = alpha;
-    // If ECS world present on scene, interpolate known meshes
-    const world = this.scene && this.scene.ecsWorld ? this.scene.ecsWorld : null;
-    if (!world || !world.entityManager) return;
-    try {
-      const entities = world.getEntitiesWithComponents(['TransformComponent', 'MeshComponent']);
-      for (const entity of entities) {
-        const t = entity.getComponent('TransformComponent');
-        const m = entity.getComponent('MeshComponent');
-        if (!t || !m || !m.mesh) continue;
-        // slerp rotation
-        const q = new THREE.Quaternion().copy(t.prevQuaternion).slerp(t.quaternion, alpha);
-        // lerp position
-        const p = new THREE.Vector3().copy(t.prevPosition).lerp(t.position, alpha);
-        m.mesh.position.copy(p);
-        m.mesh.quaternion.copy(q);
-      }
-    } catch {}
-  }
-
-  // Facade API for views
-  addView(entityId, viewDef) {
-    // For future: create mesh/instanced entry based on viewDef
-    // Placeholder; current rendering handled by systems
-  }
-
-  removeView(entityId) {
-    // Placeholder for centralized removal
-  }
-
-  _withGuard(fn) {
-    const prev = window.__rendererGuard;
-    window.__rendererGuard = true;
-    try { return fn(); } finally { window.__rendererGuard = prev; }
-  }
-
-  updateView(entityId, props) {
-    // Placeholder for centralized updates
-  }
     
     /**
      * Create an instanced mesh for efficient rendering of many similar objects

@@ -29,8 +29,7 @@ export class VibeVersePortals {
             this.createStartPortal();
         }
         
-        // Always create exit portal
-        this.createExitPortal();
+        // Exit portal removed - no longer creating it
     }
     
     createStartPortal() {
@@ -239,18 +238,7 @@ export class VibeVersePortals {
             }
         }
         
-        // Check exit portal interaction
-        if (this.exitPortalGroup && this.exitPortalBox) {
-            const distance = this.spaceship.mesh.position.distanceTo(this.exitPortalGroup.position);
-            
-            // If player is close to the exit portal - INCREASED DETECTION RANGE
-            if (distance < 400) { // Increased from 200 to match much larger portal size
-                // Check for collision
-                if (shipBox.intersectsBox(this.exitPortalBox)) {
-                    this.handleExitPortalEntry();
-                }
-            }
-        }
+        // Exit portal interaction removed
     }
     
     handleStartPortalEntry() {
@@ -366,9 +354,8 @@ export class VibeVersePortals {
     }
     
     update(deltaTime) {
-        // Animate both portals
+        // Animate start portal only (if it exists)
         this.animateStartPortal(deltaTime);
-        this.animateExitPortal(deltaTime);
         
         // Check for portal interactions
         this.checkPortalInteractions(deltaTime);

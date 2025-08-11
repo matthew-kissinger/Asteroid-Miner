@@ -410,7 +410,22 @@ export class HUD {
         targetInfo.id = 'target-info';
         targetInfo.className = 'hud-panel';  // Use consistent HUD panel class
         targetInfo.style.position = 'fixed';
-        targetInfo.style.top = '15px';  // Add some padding from the very top
+        
+        // Detect mobile device and position accordingly
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                          (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) ||
+                          window.innerWidth <= 768;
+        
+        if (isMobile) {
+            // Position at bottom on mobile
+            targetInfo.style.bottom = '15px';
+            targetInfo.style.top = 'auto';
+        } else {
+            // Position at top on desktop
+            targetInfo.style.top = '15px';
+            targetInfo.style.bottom = 'auto';
+        }
+        
         targetInfo.style.left = '50%';
         targetInfo.style.transform = 'translateX(-50%)';
         targetInfo.style.width = '280px';  // Slightly wider to match other panels

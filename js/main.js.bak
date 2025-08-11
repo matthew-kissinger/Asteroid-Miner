@@ -15,8 +15,6 @@ import { Combat } from './modules/combat.js';
 import { MessageBus } from './core/messageBus.js';
 import { IntroSequence } from './modules/introSequence.js';
 import { DifficultyManager } from './core/difficultyManager.js';
-import { getGlobalPoolRegistry } from './modules/pooling/PoolRegistry.js';
-import { initPerfOverlay } from './modules/debug/perfOverlay.js';
 
 // Global vector pool for reusing vector objects
 window.vectorPool = {
@@ -112,11 +110,6 @@ class Game {
             this.currentFPS = 0;
             this.introSequenceActive = false; // Flag to prevent player control during intro
             this.gameTime = 0; // Track total game time in seconds
-
-            // Perf overlay & sink
-            initPerfOverlay();
-            if (!window.__perf) window.__perf = {};
-            window.__perf.enabled = false;
             
             // Detect mobile device
             this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -312,10 +305,10 @@ class Game {
         this.scene.add(dummyProjectile);
         
         // Force shader compilation for better performance
-            this.renderer.renderer.compile(this.scene, this.camera);
+        this.renderer.renderer.compile(this.scene, this.camera);
         
         // Remove dummy object after compilation
-            this.renderer._withGuard(() => this.scene.remove(dummyProjectile));
+        this.scene.remove(dummyProjectile);
         
         console.log("Essential shaders pre-warmed");
     }
@@ -745,8 +738,8 @@ class Game {
             this.hordeSurvivalTime = performance.now() - this.hordeStartTime;
         }
         
-            // Update physics
-            this.physics.update(deltaTime);
+        // Update physics
+        this.physics.update(deltaTime);
         
         // Update spaceship
         if (this.spaceship.update) {
@@ -847,13 +840,10 @@ class Game {
         // Count frames for performance monitoring
         this.frameCount++;
         
-            // Update the ECS world with the current delta time - skip during intro sequence
-            if (this.world && !this.introSequenceActive) {
-                // Fixed-step for ECS using same delta to keep in lockstep
-                this.world.messageBus && this.world.messageBus.fastPublish && this.world.messageBus.fastPublish('world.preUpdate', { deltaTime });
-                this.world.systemManager.update(deltaTime);
-                this.world.messageBus && this.world.messageBus.fastPublish && this.world.messageBus.fastPublish('world.postUpdate', { deltaTime });
-            } else if (this.world && this.introSequenceActive) {
+        // Update the ECS world with the current delta time - skip during intro sequence
+        if (this.world && !this.introSequenceActive) {
+            this.world.update(deltaTime);
+        } else if (this.world && this.introSequenceActive) {
             // If intro is active, only update essential systems but not enemy systems
             // This is a fallback in case freezeAllEnemies() wasn't called or doesn't work
             if (this.world.entityManager && this.world.systemManager) {
@@ -1052,21 +1042,11 @@ class Game {
             let updates = 0;
             const maxUpdates = 3; // Prevent spiral of death
             
-            const simStart = performance.now();
             while (this.accumulator >= fixedTimestep && updates < maxUpdates) {
-                // Snapshot transforms before step for interpolation
-                if (this.combat && this.combat.world) {
-                    const ents = this.combat.world.getEntitiesWithComponents(['TransformComponent']);
-                    for (const e of ents) {
-                        const t = e.getComponent('TransformComponent');
-                        t && t.snapshotPrevious && t.snapshotPrevious();
-                    }
-                }
                 this.update(fixedTimestep);
                 this.accumulator -= fixedTimestep;
                 updates++;
             }
-            const simEnd = performance.now();
             
             // If we're behind, catch up without spiraling
             if (this.accumulator > fixedTimestep * maxUpdates) {
@@ -1077,42 +1057,12 @@ class Game {
             const alpha = this.accumulator / fixedTimestep;
             
             // Render with interpolation (could be used for smoother visuals)
-            const renderStart = performance.now();
-            // Interpolate visuals
-            if (this.renderer.interpolateMeshes) this.renderer.interpolateMeshes(alpha);
             this.renderer.render();
-            const renderEnd = performance.now();
-
-            // Update perf sink
-            if (window.__perf) {
-                const frameFps = this.actualFrameTime ? (1000 / this.actualFrameTime) : 60;
-                window.__perf.fps = Math.round(frameFps);
-                window.__perf.simMs = (simEnd - simStart) || 0;
-                window.__perf.renderMs = (renderEnd - renderStart) || 0;
-            }
         } else {
             // For locked frame rates, use simple delta time
             this.deltaTime = frameDelta;
-            const simStart = performance.now();
-            // Snapshot transforms before variable step (still provide some interpolation)
-            if (this.combat && this.combat.world) {
-                const ents = this.combat.world.getEntitiesWithComponents(['TransformComponent']);
-                for (const e of ents) {
-                    const t = e.getComponent('TransformComponent');
-                    t && t.snapshotPrevious && t.snapshotPrevious();
-                }
-            }
             this.update(this.deltaTime);
-            const simEnd = performance.now();
-            const renderStart = performance.now();
-            if (this.renderer.interpolateMeshes) this.renderer.interpolateMeshes(1);
             this.renderer.render();
-            const renderEnd = performance.now();
-            if (window.__perf) {
-                window.__perf.fps = Math.round(1 / (this.deltaTime||0.016));
-                window.__perf.simMs = (simEnd - simStart) || 0;
-                window.__perf.renderMs = (renderEnd - renderStart) || 0;
-            }
         }
         
         this.lastUpdateTime = now;
@@ -1522,21 +1472,87 @@ class Game {
     }
 }
 
-// Bridge legacy window.objectPool to unified PoolRegistry (no-alloc facade)
-(() => {
-    const registry = getGlobalPoolRegistry();
-    window.objectPool = {
-        createPool: function(type, factory, initialSize = 10, maxSize = 100) {
-            registry.register(type, { factory, reset: (o)=>{}, preallocate: initialSize, maxSize });
-        },
-        get: function(type, ...args) {
-            try { return registry.get(type, ...args); } catch (e) { console.warn(e.message); return null; }
-        },
-        release: function(type, obj) { registry.release(type, obj); },
-        clearAllPools: function() { registry.clearAll(); },
-        clearPool: function(type) { registry.clear(type); }
-    };
-})();
+// Object pooling manager for frequently created objects
+window.objectPool = {
+    pools: {},
+    
+    // Initialize a pool for a specific object type
+    createPool: function(type, factory, initialSize = 10, maxSize = 100) {
+        if (!this.pools[type]) {
+            this.pools[type] = {
+                objects: [],
+                factory: factory,
+                maxSize: maxSize
+            };
+            
+            // Pre-populate the pool
+            for (let i = 0; i < initialSize; i++) {
+                this.pools[type].objects.push(factory());
+            }
+        }
+    },
+    
+    // Get an object from the pool or create a new one
+    get: function(type, ...args) {
+        const pool = this.pools[type];
+        if (!pool) {
+            console.warn(`No pool exists for type: ${type}`);
+            return null;
+        }
+        
+        let obj;
+        if (pool.objects.length > 0) {
+            obj = pool.objects.pop();
+        } else {
+            obj = pool.factory();
+        }
+        
+        // Call reset method if it exists
+        if (typeof obj.reset === 'function') {
+            obj.reset(...args);
+        }
+        
+        return obj;
+    },
+    
+    // Return an object to the pool
+    release: function(type, obj) {
+        const pool = this.pools[type];
+        if (!pool) {
+            console.warn(`No pool exists for type: ${type}`);
+            return;
+        }
+        
+        // Prevent pool overflow
+        if (pool.objects.length < pool.maxSize) {
+            // Clear any references the object might have
+            if (typeof obj.clear === 'function') {
+                obj.clear();
+            }
+            
+            pool.objects.push(obj);
+        }
+    },
+    
+    // Clear all pools
+    clearAllPools: function() {
+        for (const type in this.pools) {
+            this.clearPool(type);
+        }
+    },
+    
+    // Clear a specific pool
+    clearPool: function(type) {
+        const pool = this.pools[type];
+        if (!pool) {
+            console.warn(`No pool exists for type: ${type}`);
+            return;
+        }
+        
+        // Clear all objects in the pool
+        pool.objects = [];
+    }
+};
 
 function startGameMainModule() {
     // Add a console message to help debug loading issues
@@ -1594,7 +1610,7 @@ function startGameMainModule() {
         dummyProjectile.add(dummyGlow);
         
         // Add to scene temporarily
-        this.renderer._withGuard(() => window.game.scene.add(dummyProjectile));
+        window.game.scene.add(dummyProjectile);
         
         // Precompute and warm shaders for explosion and hit effects
         console.log("Precomputing explosion effect assets...");
@@ -1612,7 +1628,7 @@ function startGameMainModule() {
         
         // Create dummy explosion particles for shader warming
         const dummyExplosionContainer = new THREE.Group();
-        this.renderer._withGuard(() => window.game.scene.add(dummyExplosionContainer));
+        window.game.scene.add(dummyExplosionContainer);
         
         // Create a sample of explosion particles with various sizes
         const explosionParticleCount = 20;
@@ -1681,36 +1697,6 @@ function startGameMainModule() {
             };
         }, 50, 200); // Pre-create 50, max 200
         
-        // Ensure hitEffect pool exists before using it during warming
-        try {
-            let testHit = window.objectPool.get('hitEffect');
-            if (!testHit) {
-                // Minimal factory mirroring initializeObjectPools behavior
-                window.objectPool.createPool('hitEffect', () => {
-                    const geo = window.game.hitEffectGeometry || new THREE.SphereGeometry(1, 8, 8);
-                    const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
-                    const mesh = new THREE.Mesh(geo, material);
-                    return {
-                        mesh,
-                        material,
-                        reset(color = 0xff5500, size = 1) {
-                            this.material.color.set(color);
-                            this.material.opacity = 0.8;
-                            this.mesh.scale.set(size, size, size);
-                            this.mesh.visible = true;
-                        },
-                        clear() {
-                            if (this.mesh.parent) { this.mesh.parent.remove(this.mesh); }
-                            this.mesh.visible = false;
-                        }
-                    };
-                }, 10, 100);
-            } else {
-                // Put back the test object since we just probed
-                window.objectPool.release('hitEffect', testHit);
-            }
-        } catch {}
-
         // Create variation of hit effects with different colors for shader warming
         const hitEffectColors = [0xff5500, 0x3399ff, 0xff0000, 0xffff00];
         const dummyHitEffects = [];
@@ -1720,7 +1706,7 @@ function startGameMainModule() {
             if (hitEffect && hitEffect.mesh) {
                 // Position far away but still rendered
                 hitEffect.mesh.position.set(0, -10100, 0);
-                this.renderer._withGuard(() => window.game.scene.add(hitEffect.mesh));
+                window.game.scene.add(hitEffect.mesh);
                 dummyHitEffects.push(hitEffect);
             }
         }
@@ -1731,7 +1717,7 @@ function startGameMainModule() {
         console.log("Cleaning up dummy objects after warming...");
         
         // Remove dummy explosion container after compilation
-        this.renderer._withGuard(() => window.game.scene.remove(dummyExplosionContainer));
+        window.game.scene.remove(dummyExplosionContainer);
         for (const particle of dummyExplosionParticles) {
             dummyExplosionContainer.remove(particle);
         }

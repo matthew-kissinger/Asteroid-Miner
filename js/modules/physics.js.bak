@@ -81,19 +81,11 @@ export class Physics {
         const rightThruster = this.spaceship.thrusters.find(t => t.type === 'right');
         
         if (hasFuel) {
-            // NOTE: Player authority migrating to ECS. Respect global inputIntent when available.
-            const intent = window.inputIntent || 0;
-            const forwardPressed = this.spaceship.thrust.forward || ((intent & 1) !== 0);
-            const backwardPressed = this.spaceship.thrust.backward || ((intent & 2) !== 0);
-            const leftPressed = this.spaceship.thrust.left || ((intent & 4) !== 0);
-            const rightPressed = this.spaceship.thrust.right || ((intent & 8) !== 0);
-            const boostPressed = this.spaceship.thrust.boost || ((intent & 16) !== 0);
-
             // Forward thrust handling
-            if (forwardPressed) {
+            if (this.spaceship.thrust.forward) {
                 isThrusting = true;
                 const forwardThrust = new THREE.Vector3(0, 0, -Physics.THRUST_FORCE);
-                if (boostPressed) forwardThrust.multiplyScalar(Physics.BOOST_MULTIPLIER);
+                if (this.spaceship.thrust.boost) forwardThrust.multiplyScalar(Physics.BOOST_MULTIPLIER);
                 thrustVector.add(forwardThrust);
                 
                 // Show main thruster particles based on actual forward motion
@@ -139,7 +131,7 @@ export class Physics {
             }
             
             // Backward thrust handling
-            if (backwardPressed) {
+            if (this.spaceship.thrust.backward) {
                 isThrusting = true;
                 thrustVector.add(new THREE.Vector3(0, 0, Physics.THRUST_FORCE));
                 
@@ -178,7 +170,7 @@ export class Physics {
             }
             
             // Left thrust handling - only activate when left key is pressed
-            if (leftPressed) {
+            if (this.spaceship.thrust.left) {
                 isThrusting = true;
                 thrustVector.add(new THREE.Vector3(Physics.THRUST_FORCE, 0, 0));
                 
@@ -201,7 +193,7 @@ export class Physics {
             }
             
             // Right thrust handling - only activate when right key is pressed
-            if (rightPressed) {
+            if (this.spaceship.thrust.right) {
                 isThrusting = true;
                 thrustVector.add(new THREE.Vector3(-Physics.THRUST_FORCE, 0, 0));
                 

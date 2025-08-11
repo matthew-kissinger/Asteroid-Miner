@@ -5,8 +5,6 @@
  * by publishing and subscribing to specific message types.
  */
 
-import { validateEventPayload } from './events.js';
-
 export class MessageBus {
     constructor() {
         this.listeners = new Map();
@@ -88,8 +86,6 @@ export class MessageBus {
      * @param {Object} data Data to include with the message
      */
     fastPublish(messageType, data = {}) {
-        // Typed event validation in dev
-        try { validateEventPayload && validateEventPayload(messageType, data); } catch {}
         if (!this.listeners.has(messageType)) return;
         
         const listeners = this.listeners.get(messageType);
@@ -111,8 +107,6 @@ export class MessageBus {
      * @param {Object} data Data to include with the message
      */
     publish(messageType, data = {}) {
-        // Typed event validation in dev
-        try { validateEventPayload && validateEventPayload(messageType, data); } catch {}
         // Use fast path for high-frequency messages
         if (this.highFrequencyTypes.has(messageType)) {
             return this.fastPublish(messageType, data);

@@ -9,9 +9,6 @@ export class SystemManager {
         this.world = world;
         this.systems = [];
         this.systemsByType = new Map();
-    // perf timings bucket
-    if (!window.__perf) window.__perf = { systems: {} };
-    this._tick = 0;
     }
     
     /**
@@ -48,23 +45,11 @@ export class SystemManager {
      * @param {number} deltaTime Time since last update in seconds
      */
     update(deltaTime) {
-    this._tick = (this._tick + 1) >>> 0;
-    for (const system of this.systems) {
-      if (!system.enabled) continue;
-      // Stagger heavy systems every 2 ticks (example heuristic)
-      const name = system.constructor.name;
-      const isHeavy = name === 'EnemySystem' || name === 'CollisionSystem' || name === 'TargetingSystem';
-      if (isHeavy && (this._tick & 1) === 1) {
-        continue;
-      }
-      const t0 = performance.now();
-      system.update(deltaTime);
-      const t1 = performance.now();
-      if (window.__perf) {
-        if (!window.__perf.systems) window.__perf.systems = {};
-        window.__perf.systems[name] = Number(t1 - t0);
-      }
-    }
+        for (const system of this.systems) {
+            if (system.enabled) {
+                system.update(deltaTime);
+            }
+        }
     }
     
     /**

@@ -46,6 +46,30 @@ export class SpaceAnomalies {
         // Notify about active anomalies
         this.updateAnomalyCountDisplay();
     }
+
+    // --- Renderer facade helpers ---
+    _getRenderer() {
+        return (window.game && window.game.renderer) ? window.game.renderer : null;
+    }
+
+    _addToScene(object) {
+        const renderer = this._getRenderer();
+        if (renderer && typeof renderer._withGuard === 'function') {
+            renderer._withGuard(() => renderer.add(object));
+        } else if (this.scene && typeof this.scene.add === 'function') {
+            this.scene.add(object);
+        }
+    }
+
+    _removeFromScene(object) {
+        const renderer = this._getRenderer();
+        if (!object) return;
+        if (renderer && typeof renderer._withGuard === 'function') {
+            renderer._withGuard(() => this.scene.remove(object));
+        } else if (this.scene && typeof this.scene.remove === 'function') {
+            this.scene.remove(object);
+        }
+    }
     
     // Method to check and potentially spawn/despawn anomalies
     checkAnomalySpawning(deltaTime) {
@@ -121,7 +145,7 @@ export class SpaceAnomalies {
         console.log(`Despawning ${anomaly.type} anomaly`);
         
         // Remove from scene
-        this.scene.remove(anomaly.mesh);
+        this._removeFromScene(anomaly.mesh);
         
         // Perform specific cleanup based on anomaly type
         switch (anomaly.type) {
@@ -434,7 +458,7 @@ export class SpaceAnomalies {
         anomalyGroup.add(orb.mesh);
         
         // Add to scene
-        this.scene.add(anomalyGroup);
+        this._addToScene(anomalyGroup);
         
         // Save anomaly data
         this.anomalies.push({
@@ -556,7 +580,7 @@ export class SpaceAnomalies {
         anomalyGroup.add(orb.mesh);
         
         // Add to scene
-        this.scene.add(anomalyGroup);
+        this._addToScene(anomalyGroup);
         
         // Save anomaly data
         this.anomalies.push({
@@ -745,7 +769,7 @@ export class SpaceAnomalies {
         anomalyGroup.add(orb.mesh);
         
         // Add to scene
-        this.scene.add(anomalyGroup);
+        this._addToScene(anomalyGroup);
         
         // Save anomaly data
         this.anomalies.push({
@@ -873,7 +897,7 @@ export class SpaceAnomalies {
         anomalyGroup.add(orb.mesh);
         
         // Add to scene
-        this.scene.add(anomalyGroup);
+        this._addToScene(anomalyGroup);
         
         // Save anomaly data
         this.anomalies.push({

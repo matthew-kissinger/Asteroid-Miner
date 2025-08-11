@@ -18,8 +18,6 @@ export class ObjectPool {
         this.expandSize = expandSize;
         this.pool = [];
         this.active = new Set();
-        this._hits = 0;
-        this._misses = 0;
         
         // Pre-populate the pool with initial objects
         this.expand(initialSize);
@@ -38,24 +36,13 @@ export class ObjectPool {
         if (this.pool.length === 0) {
             console.log(`Pool empty, expanding by ${this.expandSize} objects`);
             this.expand(this.expandSize);
-            this._misses++;
         }
         
         // Get an object from the pool
         object = this.pool.pop();
-        this._hits++;
         
         // Add to active set
         this.active.add(object);
-        
-        if (window.__perf) {
-            // Aggregate across pools by summing
-            const prev = window.__perf.pools || { hits: 0, misses: 0 };
-            window.__perf.pools = {
-                hits: (prev.hits || 0) + 1,
-                misses: prev.misses || 0
-            };
-        }
         
         return object;
     }
@@ -88,13 +75,6 @@ export class ObjectPool {
         for (let i = 0; i < count; i++) {
             const object = this.createFn();
             this.pool.push(object);
-        }
-        if (window.__perf) {
-            const prev = window.__perf.pools || { hits: 0, misses: 0 };
-            window.__perf.pools = {
-                hits: prev.hits || 0,
-                misses: (prev.misses || 0) + count
-            };
         }
     }
     

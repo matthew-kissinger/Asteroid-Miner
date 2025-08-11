@@ -210,9 +210,17 @@ export class ShipControlSystem extends System {
         
         // Skip if any component is missing
         if (!thruster || !transformComponent) return;
-        
-        // Apply thrust if active
-        if (Object.values(thruster.thrusting).some(Boolean)) {
+
+        // Read global bitfield intent (temporary bridge until full typed events)
+        const intent = window.inputIntent || 0;
+        const forward = (intent & 1) !== 0;
+        const backward = (intent & 2) !== 0;
+        const left = (intent & 4) !== 0;
+        const right = (intent & 8) !== 0;
+        const boost = (intent & 16) !== 0;
+
+        thruster.thrusting = { forward, backward, left, right, boost };
+        if (forward || backward || left || right) {
             thruster.applyThrust(deltaTime);
         }
     }

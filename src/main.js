@@ -30,94 +30,23 @@ window.__vite_compat = {
   }
 };
 
-// Initialize the global object pool early
-window.objectPool = {
-  pools: {},
-  
-  // Initialize a pool for a specific object type
-  createPool: function(type, factory, initialSize = 10, maxSize = 100) {
-    if (!this.pools[type]) {
-      this.pools[type] = {
-        objects: [],
-        factory: factory,
-        maxSize: maxSize
-      };
-      
-      // Pre-populate the pool
-      for (let i = 0; i < initialSize; i++) {
-        this.pools[type].objects.push(factory());
-      }
-    }
-  },
-  
-  // Get an object from the pool or create a new one
-  get: function(type, ...args) {
-    const pool = this.pools[type];
-    if (!pool) {
-      console.warn(`No pool exists for type: ${type}`);
-      return null;
-    }
-    
-    let obj;
-    if (pool.objects.length > 0) {
-      obj = pool.objects.pop();
-    } else {
-      obj = pool.factory();
-    }
-    
-    // Call reset method if it exists
-    if (typeof obj.reset === 'function') {
-      obj.reset(...args);
-    }
-    
-    return obj;
-  },
-  
-  // Return an object to the pool
-  release: function(type, obj) {
-    const pool = this.pools[type];
-    if (!pool) {
-      console.warn(`No pool exists for type: ${type}`);
-      return;
-    }
-    
-    // Prevent pool overflow
-    if (pool.objects.length < pool.maxSize) {
-      // Clear any references the object might have
-      if (typeof obj.clear === 'function') {
-        obj.clear();
-      }
-      
-      pool.objects.push(obj);
-    }
-  },
-  
-  // Clear all pools
-  clearAllPools: function() {
-    for (const type in this.pools) {
-      this.clearPool(type);
-    }
-  },
-  
-  // Clear a specific pool
-  clearPool: function(type) {
-    const pool = this.pools[type];
-    if (!pool) {
-      console.warn(`No pool exists for type: ${type}`);
-      return;
-    }
-    
-    // Clear each object in the pool
-    for (const obj of pool.objects) {
-      if (typeof obj.clear === 'function') {
-        obj.clear();
-      }
-    }
-    
-    // Empty the pool array
-    pool.objects = [];
-  }
-};
+import { getGlobalPoolRegistry } from '../js/modules/pooling/PoolRegistry.js';
+
+// Initialize the global object pool early via PoolRegistry facade
+window.objectPool = (() => {
+  const registry = getGlobalPoolRegistry();
+  return {
+    createPool: function(type, factory, initialSize = 10, maxSize = 100) {
+      registry.register(type, { factory, reset: (o)=>{}, preallocate: initialSize, maxSize });
+    },
+    get: function(type, ...args) {
+      try { return registry.get(type, ...args); } catch (e) { console.warn(e.message); return null; }
+    },
+    release: function(type, obj) { registry.release(type, obj); },
+    clearAllPools: function() { registry.clearAll(); },
+    clearPool: function(type) { registry.clear(type); }
+  };
+})();
 
 // ---------------- Asynchronous Asset Loading & Progress UI -----------------
 

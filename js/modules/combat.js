@@ -125,12 +125,13 @@ export class Combat {
             blending: THREE.AdditiveBlending
         });
         
-        // Template for point light used in muzzle flash and explosions
-        // Point light color should match the flash/explosion
+        // Template material for light-halo meshes (basic unlit glow)
         this.pointLightMaterial = new THREE.MeshBasicMaterial({
-            color: 0xff0000, // Red light
-            emissive: 0xff0000,
-            emissiveIntensity: 1.0
+            color: 0xff0000,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
         });
         
         // Template for explosion particles - Red/Orange Impact
@@ -189,14 +190,14 @@ export class Combat {
         tempScene.add(dummyTrailContainer);
         tempScene.add(dummyExplosion);
         
-        // Add to main scene temporarily for visibility checking
-        this.scene.add(dummyProjectile);
-        this.scene.add(dummyGlow);
-        this.scene.add(dummyTrail);
-        this.scene.add(dummyFlash);
-        this.scene.add(dummyTracer);
-        this.scene.add(dummyTrailContainer);
-        this.scene.add(dummyExplosion);
+        // Add to main scene temporarily for visibility checking via renderer facade
+        this._addToScene(dummyProjectile);
+        this._addToScene(dummyGlow);
+        this._addToScene(dummyTrail);
+        this._addToScene(dummyFlash);
+        this._addToScene(dummyTracer);
+        this._addToScene(dummyTrailContainer);
+        this._addToScene(dummyExplosion);
         
         // Force shader compilation using renderer.compile if available
         if (window.renderer) {
@@ -213,14 +214,14 @@ export class Combat {
         
         // Keep dummy objects in scene longer to ensure compilation completes
         setTimeout(() => {
-            // Remove from scene after shader compilation is complete
-            this.scene.remove(dummyProjectile);
-            this.scene.remove(dummyGlow);
-            this.scene.remove(dummyTrail);
-            this.scene.remove(dummyFlash);
-            this.scene.remove(dummyTracer);
-            this.scene.remove(dummyTrailContainer);
-            this.scene.remove(dummyExplosion);
+            // Remove from scene after shader compilation is complete via renderer facade
+            this._removeFromScene(dummyProjectile);
+            this._removeFromScene(dummyGlow);
+            this._removeFromScene(dummyTrail);
+            this._removeFromScene(dummyFlash);
+            this._removeFromScene(dummyTracer);
+            this._removeFromScene(dummyTrailContainer);
+            this._removeFromScene(dummyExplosion);
             
             // Clean up temporary objects
             dummyGeometry.dispose();
@@ -325,6 +326,17 @@ export class Combat {
             
             // Continue with full world setup
             await this.setupECSWorld();
+
+            // Create optimized projectile store
+            if (!this.world.optimizedProjectiles) {
+                try {
+                    const { OptimizedProjectileStore } = await import('../core/optimized/OptimizedProjectileStore.js');
+                    this.world.optimizedProjectiles = new OptimizedProjectileStore(4096);
+                    console.log('[COMBAT] OptimizedProjectileStore created');
+                } catch (e) {
+                    console.warn('[COMBAT] OptimizedProjectileStore unavailable:', e);
+                }
+            }
             
             console.log("[COMBAT] ECS world initialization complete");
         } catch (error) {
@@ -385,6 +397,16 @@ export class Combat {
                 console.log("[COMBAT] Registered trail system with window.game for global access");
             }
             
+            // Register the instanced renderer first
+            try {
+                const { InstancedRenderer } = await import('../systems/rendering/InstancedRenderer.js');
+                this.instancedRenderer = new InstancedRenderer(this.world, this.scene);
+                this.world.registerSystem(this.instancedRenderer);
+                console.log('[COMBAT] InstancedRenderer registered');
+            } catch (e) {
+                console.warn('[COMBAT] InstancedRenderer not available:', e);
+            }
+
             // Register the render system - this is critical for making meshes visible
             // Use the scene's camera reference if available
             const camera = this.scene.camera;
@@ -417,6 +439,16 @@ export class Combat {
             if (this.scene) {
                 this.scene.ecsWorld = this.world;
                 console.log("[COMBAT] Set ECS world reference in scene for cross-system access");
+            }
+
+            // Subscribe to transform updates to refresh spatial hash
+            if (this.world && this.world.messageBus) {
+                this.world.messageBus.subscribe('transform.updated', (msg) => {
+                    const entity = msg.data && msg.data.entity;
+                    if (entity && this.world.onEntityTransformUpdated) {
+                        this.world.onEntityTransformUpdated(entity);
+                    }
+                });
             }
             
             // Initialize the world
@@ -887,7 +919,7 @@ export class Combat {
             
             if (fadeProgress >= 1.0) {
                 // Remove entire beam group
-                this.scene.remove(beamGroup);
+                    this._removeFromScene(beamGroup);
                 tracersToRemove.push(i);
             } else {
                 // Progressive dissolve from start to end
@@ -1223,8 +1255,8 @@ export class Combat {
                                 ]),
                                 new THREE.LineBasicMaterial({ color: 0xff0000 })
                             );
-                            this.scene.add(rayLine);
-                            setTimeout(() => this.scene.remove(rayLine), 1000); // Remove after 1 second
+            this._addToScene(rayLine);
+            setTimeout(() => this._removeFromScene(rayLine), 1000); // Remove after 1 second
                         }
                     }
                 } catch (error) {
@@ -1293,9 +1325,9 @@ export class Combat {
         // Add a dynamic trail
         this.addProjectileTrail(projectile, direction); // REINSTATED for laser trails
         
-        // Add to scene if not already there
+        // Add to scene if not already there via renderer facade
         if (!projectile.parent) {
-            this.scene.add(projectile);
+            this._addToScene(projectile);
         }
         
         // Store creation time for lifespan tracking
@@ -1303,6 +1335,11 @@ export class Combat {
         
         // Add to projectiles array to track active projectiles
         this.projectiles.push(projectile);
+
+        // Register into optimized store if available
+        if (this.world && this.world.optimizedProjectiles) {
+            try { this.world.optimizedProjectiles.register(projectile); } catch {}
+        }
         
         return projectile;
     }
@@ -1367,9 +1404,7 @@ export class Combat {
             color: 0xffffaa, // Hot yellow-white
             transparent: true,
             opacity: 1.0,
-            blending: THREE.AdditiveBlending,
-            emissive: 0xffffaa,
-            emissiveIntensity: 2
+            blending: THREE.AdditiveBlending
         });
         const coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
         
@@ -1408,7 +1443,7 @@ export class Combat {
         quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
         beamGroup.quaternion.copy(quaternion);
         
-        this.scene.add(beamGroup);
+        this._addToScene(beamGroup);
         
         // Store beam data for progressive fade animation
         beamGroup.userData = {
@@ -1527,6 +1562,9 @@ export class Combat {
     clearAllProjectiles() {
         // Release all projectiles back to the pool
         for (const projectile of this.projectiles) {
+            if (this.world && this.world.optimizedProjectiles) {
+                try { this.world.optimizedProjectiles.unregister(projectile); } catch {}
+            }
             // Remove associated entity from ECS world
             if (projectile.userData && projectile.userData.entityId && this.world) {
                 try {
@@ -1623,6 +1661,27 @@ export class Combat {
         this.disposed = true;
         
         console.log("Combat module resources disposed");
+    }
+
+    // --- Renderer facade helpers to centralize scene mutations ---
+    _addToScene(object) {
+        const renderer = window.game && window.game.renderer ? window.game.renderer : null;
+        if (renderer && typeof renderer._withGuard === 'function') {
+            renderer._withGuard(() => renderer.add(object));
+        } else if (this.scene && typeof this.scene.add === 'function') {
+            // Fallback for safety; may warn in dev via guard wrapper
+            this.scene.add(object);
+        }
+    }
+
+    _removeFromScene(object) {
+        const renderer = window.game && window.game.renderer ? window.game.renderer : null;
+        if (renderer && typeof renderer._withGuard === 'function') {
+            renderer._withGuard(() => this.scene.remove(object));
+        } else if (this.scene && typeof this.scene.remove === 'function') {
+            // Fallback for safety
+            this.scene.remove(object);
+        }
     }
     
     /**
