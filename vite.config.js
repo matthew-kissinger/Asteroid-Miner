@@ -17,6 +17,10 @@ export default defineConfig({
     // Output directory for production build
     outDir: 'dist',
     
+    // DISABLE MINIFICATION - it's breaking our component system
+    // The size savings aren't worth the complexity and debugging issues
+    minify: false,
+    
     // Customize asset chunking
     rollupOptions: {
       output: {
