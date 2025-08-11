@@ -45,31 +45,53 @@ export class EnemySpawner {
     loadModels() {
         const loader = new GLTFLoader();
         
-        // Load enemy model
-        loader.load(
+        // Try multiple paths for the GLB file
+        const modelPaths = [
+            '/assets/enemy.glb',
+            './assets/enemy.glb',
             'assets/enemy.glb',
-            (gltf) => {
-                console.log('Enemy model loaded successfully');
-                this.modelCache.enemyDrone = gltf.scene;
-                
-                // Apply any global transformations or material adjustments
-                this.modelCache.enemyDrone.traverse((child) => {
-                    if (child.isMesh) {
-                        // Make materials glow with emissive
-                        if (child.material) {
-                            child.material.emissive = new THREE.Color(0x0088ff);
-                            child.material.emissiveIntensity = 2.0;
-                        }
-                    }
-                });
-            },
-            (xhr) => {
-                console.log('Loading enemy model: ' + (xhr.loaded / xhr.total) * 100 + '% loaded');
-            },
-            (error) => {
-                console.error('Error loading enemy model', error);
+            '/Asteroid-Miner/assets/enemy.glb'  // GitHub Pages path
+        ];
+        
+        let loadAttempts = 0;
+        const tryLoadModel = (index) => {
+            if (index >= modelPaths.length) {
+                console.warn('Could not load enemy model from any path, will use fallback meshes');
+                // Don't set modelCache.enemyDrone so fallback will be used
+                return;
             }
-        );
+            
+            const path = modelPaths[index];
+            console.log(`Attempting to load enemy model from: ${path}`);
+            
+            loader.load(
+                path,
+                (gltf) => {
+                    console.log(`Enemy model loaded successfully from ${path}`);
+                    this.modelCache.enemyDrone = gltf.scene;
+                    
+                    // Apply any global transformations or material adjustments
+                    this.modelCache.enemyDrone.traverse((child) => {
+                        if (child.isMesh) {
+                            // Make materials glow with emissive
+                            if (child.material) {
+                                child.material.emissive = new THREE.Color(0x0088ff);
+                                child.material.emissiveIntensity = 2.0;
+                            }
+                        }
+                    });
+                },
+                (xhr) => {
+                    // Progress callback
+                },
+                (error) => {
+                    console.log(`Failed to load from ${path}, trying next...`);
+                    tryLoadModel(index + 1);
+                }
+            );
+        };
+        
+        tryLoadModel(0);
     }
     
     /**
@@ -79,9 +101,56 @@ export class EnemySpawner {
         // Clear existing spawn points
         this.spawnPoints = [];
         
-        // Find player position
-        const players = this.world.entityManager.getEntitiesByTag('player');
-        if (players.length === 0) {
+        // Try multiple methods to find the player
+        let players = [];
+        let playerPosition = null;
+        
+        // Method 1: Try using entityManager
+        try {
+            if (this.world.entityManager && this.world.entityManager.getEntitiesByTag) {
+                players = this.world.entityManager.getEntitiesByTag('player');
+                if (players.length > 0) {
+                    const transform = players[0].getComponent('TransformComponent');
+                    if (transform && transform.position) {
+                        playerPosition = transform.position;
+                    }
+                }
+            }
+        } catch (e) {
+            console.log("Could not get player via entityManager:", e.message);
+        }
+        
+        // Method 2: Try direct world method
+        if (!playerPosition) {
+            try {
+                if (this.world.getEntitiesByTag) {
+                    players = this.world.getEntitiesByTag('player');
+                    if (players.length > 0) {
+                        const transform = players[0].getComponent('TransformComponent');
+                        if (transform && transform.position) {
+                            playerPosition = transform.position;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log("Could not get player via world.getEntitiesByTag:", e.message);
+            }
+        }
+        
+        // Method 3: Check window.game for spaceship position
+        if (!playerPosition && window.game) {
+            try {
+                if (window.game.spaceship && window.game.spaceship.mesh && window.game.spaceship.mesh.position) {
+                    playerPosition = window.game.spaceship.mesh.position;
+                    console.log("Using spaceship mesh position for spawn points");
+                }
+            } catch (e) {
+                console.log("Could not get player via window.game.spaceship:", e.message);
+            }
+        }
+        
+        // If still no player position found, use default spawn points
+        if (!playerPosition) {
             // Default spawn points in a circle around origin if no player found
             const radius = 3000;
             const count = 10;
@@ -94,20 +163,12 @@ export class EnemySpawner {
                 this.spawnPoints.push(new THREE.Vector3(x, y, z));
             }
             
-            console.log(`Generated ${this.spawnPoints.length} default spawn points around origin`);
-            return;
-        }
-        
-        // Get player position
-        const player = players[0];
-        const transform = player.getComponent('TransformComponent');
-        if (!transform) {
-            console.warn("Player entity has no transform component, using default spawn points");
+            console.log(`No player position found - generated ${this.spawnPoints.length} default spawn points around origin`);
             return;
         }
         
         // Generate spawn points in a sphere around player
-        const center = transform.position.clone();
+        const center = playerPosition.clone ? playerPosition.clone() : new THREE.Vector3(playerPosition.x, playerPosition.y, playerPosition.z);
         const radius = 2500; // Spawn at a reasonable distance
         const count = 12;
         
@@ -575,12 +636,46 @@ export class EnemySpawner {
     createSpectralDroneMesh() {
         console.log("Creating spectral drone from GLB model...");
         
-        // If model isn't loaded yet, create a placeholder mesh
+        // If model isn't loaded yet, create a stylized fallback mesh
         if (!this.modelCache.enemyDrone) {
-            console.warn("Enemy model not loaded yet - using temporary placeholder");
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
-            return { geometry, material, isPlaceholder: true };
+            console.warn("Enemy model not loaded - creating stylized fallback enemy");
+            
+            // Create a more interesting fallback enemy shape
+            const group = new THREE.Group();
+            
+            // Main body - octahedron for alien look
+            const bodyGeometry = new THREE.OctahedronGeometry(2, 0);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x00ffff,
+                emissive: 0x0088ff,
+                emissiveIntensity: 1.5,
+                transparent: true,
+                opacity: 0.9
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            group.add(body);
+            
+            // Add some wings/fins for visual interest
+            const wingGeometry = new THREE.BoxGeometry(4, 0.2, 1);
+            const wingMaterial = new THREE.MeshPhongMaterial({
+                color: 0x8888ff,
+                emissive: 0x4444ff,
+                emissiveIntensity: 1.0
+            });
+            const wing1 = new THREE.Mesh(wingGeometry, wingMaterial);
+            wing1.position.set(0, 0, 0);
+            wing1.rotation.z = Math.PI / 6;
+            group.add(wing1);
+            
+            const wing2 = new THREE.Mesh(wingGeometry, wingMaterial);
+            wing2.position.set(0, 0, 0);
+            wing2.rotation.z = -Math.PI / 6;
+            group.add(wing2);
+            
+            // Scale the group to appropriate size
+            group.scale.set(1.5, 1.5, 1.5);
+            
+            return group;
         }
         
         // Clone the model to avoid shared instance issues

@@ -34,8 +34,8 @@ export class EnemySystem extends System {
         this.spawnInterval = 3;        // Seconds between spawns (reduced from 10)
         this.lastSpawnTime = Date.now(); // Track the last successful spawn time
         
-        // Add initial spawn delay of 1 minute for game startup
-        this.initialSpawnDelay = 60;  // Initial delay in seconds before enemies spawn
+        // Add initial spawn delay of 5 seconds for easier testing
+        this.initialSpawnDelay = 5;  // Initial delay in seconds before enemies spawn
         this.initialSpawnTimer = 0;   // Timer to track the initial delay
         this.initialSpawnComplete = false; // Flag to track if initial spawn delay has completed
         

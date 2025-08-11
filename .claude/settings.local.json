@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run deploy:*)",
+      "Bash(git add:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

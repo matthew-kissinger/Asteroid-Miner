@@ -381,7 +381,8 @@ export class Combat {
             }
             
             // Register the trail system for visual effects
-            this.trailSystem = await this.importAndRegisterSystem('../systems/rendering/trailSystem.js', 'TrailSystem');
+            // Use the already imported TrailSystem class instead of dynamic import
+            this.trailSystem = new TrailSystem(this.world);
             this.world.registerSystem(this.trailSystem);
             
             // Register deployable laser systems
