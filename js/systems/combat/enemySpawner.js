@@ -367,29 +367,28 @@ export class EnemySpawner {
         const visualVariant = Math.floor(Math.random() * 4);
         entity.visualVariant = visualVariant;
         
-        // Configure transform
-        const transform = entity.getComponent('TransformComponent');
+        // Configure transform - ALWAYS ensure we have a valid transform
+        let transform = entity.getComponent('TransformComponent');
+        
+        // Remove old transform if it exists to ensure clean state
         if (transform) {
-            transform.position.copy(position);
-            transform.scale.set(finalSize, finalSize, finalSize);
-            
-            // Apply rotation offset
-            transform.rotation.x += rotationOffset.x;
-            transform.rotation.y += rotationOffset.y;
-            transform.rotation.z += rotationOffset.z;
-            
-            transform.needsUpdate = true;
-        } else {
-            const newTransform = new TransformComponent(position);
-            newTransform.scale.set(finalSize, finalSize, finalSize);
-            
-            // Apply rotation offset
-            newTransform.rotation.x += rotationOffset.x;
-            newTransform.rotation.y += rotationOffset.y;
-            newTransform.rotation.z += rotationOffset.z;
-            
-            entity.addComponent(newTransform);
+            entity.removeComponent('TransformComponent');
         }
+        
+        // Always create a fresh transform component
+        transform = new TransformComponent(position.clone());
+        transform.scale.set(finalSize, finalSize, finalSize);
+        
+        // Apply rotation offset
+        transform.rotation.x = rotationOffset.x;
+        transform.rotation.y = rotationOffset.y;
+        transform.rotation.z = rotationOffset.z;
+        
+        transform.needsUpdate = true;
+        
+        // Add the new transform component
+        entity.addComponent(transform);
+        console.log(`Added TransformComponent to entity ${entity.id} at position (${position.x.toFixed(0)}, ${position.y.toFixed(0)}, ${position.z.toFixed(0)})`);
         
         // Add or update health component with difficulty-scaled health
         let health = entity.getComponent('HealthComponent');
@@ -493,13 +492,19 @@ export class EnemySpawner {
                 }
             }
             
-            // Get transform component to sync position
+            // Get transform component to sync position - this should always exist now
             const transformComp = entity.getComponent('TransformComponent');
             if (transformComp) {
                 // Ensure mesh position, rotation, and scale match entity transform
                 meshComponent.mesh.position.copy(transformComp.position);
-                meshComponent.mesh.quaternion.copy(transformComp.quaternion);
+                meshComponent.mesh.rotation.x = transformComp.rotation.x;
+                meshComponent.mesh.rotation.y = transformComp.rotation.y;
+                meshComponent.mesh.rotation.z = transformComp.rotation.z;
                 meshComponent.mesh.scale.copy(transformComp.scale);
+                
+                console.log(`Synced mesh position to (${transformComp.position.x.toFixed(0)}, ${transformComp.position.y.toFixed(0)}, ${transformComp.position.z.toFixed(0)})`);
+            } else {
+                console.error(`Entity ${entity.id} has no TransformComponent after it was just added!`);
             }
             
             console.log("Added enemy drone mesh to scene with visibility:", meshComponent.mesh.visible);
@@ -519,6 +524,12 @@ export class EnemySpawner {
             rigidbody.velocity.set(0, 0, 0);
             // Make sure collision radius is set correctly
             rigidbody.collisionRadius = 50;
+        }
+        
+        // Sync rigidbody position with transform
+        const currentTransform = entity.getComponent('TransformComponent');
+        if (currentTransform && rigidbody) {
+            rigidbody.position = currentTransform.position.clone();
         }
         
         // Add trail effect if not already present - thrusting effect
