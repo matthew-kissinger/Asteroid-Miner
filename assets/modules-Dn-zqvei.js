@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/InstancedRenderer-CEqLcCDY.js","assets/three-Cpq8ZWQ0.js","assets/core-D1pAqHYH.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/InstancedRenderer-C288RrBb.js","assets/three-Cpq8ZWQ0.js","assets/core-D1pAqHYH.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -23261,7 +23261,7 @@ class EnemyAIComponent extends Component$1 {
     transform2.rotation.setFromQuaternion(transform2.quaternion);
   }
 }
-class TrailComponent extends Component$1 {
+let TrailComponent$1 = class TrailComponent2 extends Component$1 {
   /**
    * Creates a new plasma trail component
    * @param {Object} config Trail configuration
@@ -23628,7 +23628,7 @@ class TrailComponent extends Component$1 {
       this.trailGeometry.setDrawRange(0, 0);
     }
   }
-}
+};
 class EnemyPoolManager {
   constructor(world, maxPoolSize = 20) {
     this.world = world;
@@ -23741,7 +23741,7 @@ class EnemyPoolManager {
       }
     }
     if (this.enemyPool.length < this.maxPoolSize) {
-      const trailComponent = entity.getComponent(TrailComponent);
+      const trailComponent = entity.getComponent(TrailComponent$1);
       if (trailComponent) {
         try {
           if (typeof trailComponent.onDetached === "function") {
@@ -23761,7 +23761,7 @@ class EnemyPoolManager {
               trailComponent.trailMesh.material.dispose();
             }
           }
-          entity.removeComponent(TrailComponent);
+          entity.removeComponent(TrailComponent$1);
           console.log(`Removed and cleaned up TrailComponent from entity ${entityId}`);
         } catch (error) {
           console.error(`Error cleaning up trail for entity ${entityId}:`, error);
@@ -24306,7 +24306,6 @@ class EnemySpawner {
     if (currentTransform && rigidbody) {
       rigidbody.position = currentTransform.position.clone();
     }
-    if (!entity.getComponent(TrailComponent)) ;
     enemies.delete(entity.id);
     enemies.add(entity.id);
     this.lastSpawnTime = Date.now();
@@ -25150,7 +25149,7 @@ class EnemySystem extends System {
         this.enemies.delete(entityId);
         console.log(`Removed entity ${entityId} from enemies tracking`);
       }
-      const trailComponent = entity.getComponent(TrailComponent);
+      const trailComponent = entity.getComponent(TrailComponent$1);
       if (trailComponent) {
         try {
           if (typeof trailComponent.onDetached === "function") {
@@ -27717,7 +27716,7 @@ class Combat {
       }
       try {
         const { InstancedRenderer } = await __vitePreload(async () => {
-          const { InstancedRenderer: InstancedRenderer2 } = await import("./InstancedRenderer-CEqLcCDY.js");
+          const { InstancedRenderer: InstancedRenderer2 } = await import("./InstancedRenderer-C288RrBb.js");
           return { InstancedRenderer: InstancedRenderer2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0);
         this.instancedRenderer = new InstancedRenderer(this.world, this.scene);
@@ -28639,4 +28638,4 @@ export {
   Combat as h,
   System as i
 };
-//# sourceMappingURL=modules-oS9g4xYP.js.map
+//# sourceMappingURL=modules-Dn-zqvei.js.map

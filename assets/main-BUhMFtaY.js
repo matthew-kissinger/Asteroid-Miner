@@ -2,9 +2,9 @@ var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { U as Group, z as BufferGeometry, B as BufferAttribute, v as MeshStandardMaterial, E as Mesh, av as BoxGeometry, aq as CylinderGeometry, au as SphereGeometry, ad as ShaderMaterial, aj as AdditiveBlending, w as DoubleSide, C as Color, aB as RingGeometry, K as Points, a3 as Texture, s as PointsMaterial, g as Vector3, x as MeshBasicMaterial, aU as THREE } from "./three-Cpq8ZWQ0.js";
-import { g as getAbsolutePath, A as AudioManager, b as Renderer, P as Physics, c as Environment, d as Spaceship, e as UI, f as Controls, h as Combat } from "./modules-oS9g4xYP.js";
+import { g as getAbsolutePath, A as AudioManager, b as Renderer, P as Physics, c as Environment, d as Spaceship, e as UI, f as Controls, h as Combat } from "./modules-Dn-zqvei.js";
 import { MessageBus } from "./core-D1pAqHYH.js";
-import { g as getGlobalPoolRegistry } from "./index-BAJ48QH_.js";
+import { g as getGlobalPoolRegistry } from "./index-DeLDFO0X.js";
 class StarDreadnought {
   constructor(scene) {
     this.scene = scene;
@@ -3041,4 +3041,4 @@ if (document.readyState === "loading") {
 } else {
   startGameMainModule();
 }
-//# sourceMappingURL=main-DffMw3nC.js.map
+//# sourceMappingURL=main-BUhMFtaY.js.map
