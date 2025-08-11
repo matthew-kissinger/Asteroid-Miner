@@ -885,65 +885,148 @@ export class Settings {
     }
     
     detectMonitorRefreshRate() {
-        this.monitorRefreshRate = 60; // Default fallback value
+        // Start with intelligent default based on common scenarios
+        this.monitorRefreshRate = 60;
         
         try {
-            // Method 1: requestAnimationFrame timing
-            let rafCount = 0;
-            let startTime = performance.now();
-            let prevTimestamp = 0;
-            const refreshRates = []; // Store intervals between frames
+            // Method 1: Try screen.refresh first (most reliable when available)
+            if (window.screen && typeof window.screen.refresh === 'number' && window.screen.refresh > 0) {
+                this.monitorRefreshRate = Math.round(window.screen.refresh);
+                console.log(`Using screen.refresh value: ${this.monitorRefreshRate}Hz`);
+                return; // Use this value immediately if available
+            }
             
-            const detectFrame = (timestamp) => {
-                if (prevTimestamp) {
-                    // Calculate time between frames
-                    const interval = timestamp - prevTimestamp;
-                    if (interval > 0) { // Avoid division by zero
-                        refreshRates.push(1000 / interval);
-                    }
-                }
-                
-                prevTimestamp = timestamp;
-                rafCount++;
-                
-                // Collect samples for about 500ms
-                if (timestamp - startTime < 500 && rafCount < 60) { 
-                    requestAnimationFrame(detectFrame);
-                } else {
-                    // Calculate average refresh rate from samples
-                    if (refreshRates.length > 0) {
-                        // Remove outliers (values more than 20% from median)
-                        refreshRates.sort((a, b) => a - b);
-                        const median = refreshRates[Math.floor(refreshRates.length / 2)];
-                        const validRates = refreshRates.filter(rate => 
-                            rate >= median * 0.8 && rate <= median * 1.2
-                        );
-                        
-                        // Calculate average from valid rates
-                        if (validRates.length > 0) {
-                            const sum = validRates.reduce((a, b) => a + b, 0);
-                            const avg = Math.round(sum / validRates.length);
-                            this.monitorRefreshRate = avg;
-                            console.log(`Detected monitor refresh rate: ${this.monitorRefreshRate}Hz`);
-                        }
-                    }
-                    
-                    // Method 2: Try screen.refresh if available in some browsers
-                    if (window.screen && 'refresh' in window.screen) {
-                        try {
-                            this.monitorRefreshRate = window.screen.refresh;
-                            console.log(`Using screen.refresh value: ${this.monitorRefreshRate}Hz`);
-                        } catch (error) {
-                            console.warn("Error accessing screen.refresh:", error);
-                        }
-                    }
-                }
-            };
+            // Method 2: Quick synchronous measurement (first few frames)
+            // This provides an immediate estimate for game initialization
+            const quickMeasure = this.quickRefreshRateMeasure();
+            if (quickMeasure > 0) {
+                this.monitorRefreshRate = quickMeasure;
+                console.log(`Quick measure refresh rate: ${this.monitorRefreshRate}Hz`);
+            }
             
-            requestAnimationFrame(detectFrame);
+            // Method 3: Start accurate async measurement for refinement
+            // This will update the rate after more samples
+            this.startAccurateRefreshDetection();
+            
         } catch (error) {
             console.warn("Error detecting refresh rate:", error);
-            // Keep the default value (60)
         }
+    }
+    
+    quickRefreshRateMeasure() {
+        // Quick estimate based on common monitor configurations
+        // Avoid busy-wait which can cause initial lag
+        
+        // Check if we have screen refresh rate available
+        if (window.screen && typeof window.screen.refresh === 'number' && window.screen.refresh > 0) {
+            return Math.round(window.screen.refresh);
+        }
+        
+        // Check common indicators for high refresh displays
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isGaming = userAgent.includes('gaming') || userAgent.includes('rog');
+        const isHighEnd = window.screen && window.screen.width > 2560;
+        
+        // Make educated guess based on device
+        if (this.isMobile) {
+            return 60; // Most mobile devices are 60Hz
+        } else if (isGaming || isHighEnd) {
+            return 144; // Assume high refresh for gaming systems
+        }
+        
+        // Default to 60Hz for standard displays
+        return 60;
+    }
+    
+    startAccurateRefreshDetection() {
+        // Accurate async detection over longer period
+        let warmupFrames = 5; // Skip initial irregular frames
+        let frameCount = 0;
+        const timestamps = [];
+        const startTime = performance.now();
+        
+        const detectFrame = (timestamp) => {
+            frameCount++;
+            
+            // Skip warmup frames
+            if (frameCount <= warmupFrames) {
+                requestAnimationFrame(detectFrame);
+                return;
+            }
+            
+            timestamps.push(timestamp);
+            
+            // Collect for 1 second or 120 frames
+            if (timestamps.length < 120 && performance.now() - startTime < 1000) {
+                requestAnimationFrame(detectFrame);
+            } else {
+                this.processRefreshRateSamples(timestamps);
+            }
+        };
+        
+        requestAnimationFrame(detectFrame);
+    }
+    
+    processRefreshRateSamples(timestamps) {
+        if (timestamps.length < 2) return;
+        
+        const intervals = [];
+        for (let i = 1; i < timestamps.length; i++) {
+            const delta = timestamps[i] - timestamps[i-1];
+            if (delta > 0) {
+                intervals.push(1000 / delta);
+            }
+        }
+        
+        if (intervals.length === 0) return;
+        
+        // Remove outliers using IQR method
+        intervals.sort((a, b) => a - b);
+        const q1 = intervals[Math.floor(intervals.length * 0.25)];
+        const q3 = intervals[Math.floor(intervals.length * 0.75)];
+        const iqr = q3 - q1;
+        
+        const validRates = intervals.filter(rate => 
+            rate >= q1 - 1.5 * iqr && rate <= q3 + 1.5 * iqr
+        );
+        
+        if (validRates.length > 0) {
+            const avg = validRates.reduce((a, b) => a + b, 0) / validRates.length;
+            const newRate = this.roundToCommonRefreshRate(avg);
+            
+            // Only update if significantly different
+            if (Math.abs(newRate - this.monitorRefreshRate) >= 5) {
+                console.log(`Refined refresh rate: ${this.monitorRefreshRate}Hz -> ${newRate}Hz`);
+                this.monitorRefreshRate = newRate;
+                
+                // Update game settings if using auto mode
+                if (this.settings.frameRateCap === 'auto' && this.game) {
+                    this.applyFrameRateSettings();
+                }
+            }
+        }
+    }
+    
+    roundToCommonRefreshRate(rate) {
+        // Common refresh rates in 2024
+        const commonRates = [24, 30, 48, 50, 60, 72, 75, 90, 100, 120, 144, 165, 180, 240, 360, 480];
+        
+        let closest = 60;
+        let minDiff = Math.abs(rate - 60);
+        
+        for (const commonRate of commonRates) {
+            const diff = Math.abs(rate - commonRate);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = commonRate;
+            }
+        }
+        
+        // Only accept if within 10% of a common rate
+        if (minDiff / closest < 0.1) {
+            return closest;
+        }
+        
+        return Math.round(rate); // Return raw rate if no close match
     }
 } 

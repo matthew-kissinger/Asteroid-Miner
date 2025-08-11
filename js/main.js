@@ -124,37 +124,13 @@ class Game {
             
             // Frame rate cap (defaults to auto/monitor refresh rate)
             this.frameRateCap = 0; // Will be updated by settings or refresh rate detection
+            this.warmupFrames = 10; // Number of frames to skip for timing stabilization
+            this.currentWarmupFrame = 0;
+            this.performanceStable = false;
             
             // Apply settings if available (restored block)
             if (this.ui && this.ui.settings) {
-                // If using 'auto' setting, apply refresh rate detection
-                if (this.ui.settings.settings.frameRateCap === 'auto') {
-                    const refreshRate = this.ui.settings.monitorRefreshRate || 60;
-                    
-                    // Mobile devices: cap at 60fps for battery life
-                    if (this.isMobile) {
-                        this.frameRateCap = 60;
-                        console.log(`Mobile device detected: capping at 60fps for battery life`);
-                    }
-                    // High refresh displays: use fixed timestep with interpolation
-                    else if (refreshRate > 65) {
-                        this.frameRateCap = 0; // Unlimited with fixed timestep
-                        console.log(`High refresh display (${refreshRate}Hz): using fixed timestep with interpolation`);
-                    } else {
-                        this.frameRateCap = refreshRate;
-                        console.log(`Standard display: matching refresh rate at ${refreshRate}Hz`);
-                    }
-                } else {
-                    // Otherwise use the specific setting value
-                    this.frameRateCap = parseInt(this.ui.settings.settings.frameRateCap) || 0;
-                    
-                    // Override for mobile if unlimited is selected
-                    if (this.isMobile && this.frameRateCap === 0) {
-                        this.frameRateCap = 60;
-                        console.log(`Mobile device: overriding unlimited to 60fps`);
-                    }
-                }
-                console.log(`Applied frame rate cap: ${this.frameRateCap}`);
+                this.applyFrameRateSettings();
             }
             
             // Time tracking for frame rate cap and FPS calculation
@@ -195,6 +171,9 @@ class Game {
         try {
             console.log("Starting game initialization sequence...");
             
+            // Add a small delay to let browser stabilize after page load
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             // Resume audio context if needed (browser autoplay policy)
             if (this.audio && this.audio.audioContext && this.audio.audioContext.state === 'suspended') {
                 try {
@@ -213,7 +192,8 @@ class Game {
                 this.fallbackToDefaultBehavior();
             }
             
-            // Start game loop (even though we're on start screen)
+            // Start game loop with warm-up frames
+            console.log("Starting game loop with warm-up frames");
             requestAnimationFrame(this.boundAnimate);
             
             // Initialize remaining systems in the background after start screen is shown
@@ -997,7 +977,25 @@ class Game {
     }
     
     animate(timestamp) {
-        // Initialize frame timing if needed
+        // Handle warm-up frames for timing stabilization
+        if (this.currentWarmupFrame < this.warmupFrames) {
+            this.currentWarmupFrame++;
+            
+            // Initialize timing on first real frame after warm-up
+            if (this.currentWarmupFrame === this.warmupFrames) {
+                this.lastFrameTime = timestamp;
+                this.frameStartTime = performance.now();
+                this.lastUpdateTime = performance.now();
+                this.performanceStable = true;
+                console.log(`Warm-up complete, starting game loop`);
+            }
+            
+            // Continue warm-up
+            requestAnimationFrame(this.boundAnimate);
+            return;
+        }
+        
+        // Initialize frame timing if needed (fallback)
         if (!this.lastFrameTime) {
             this.lastFrameTime = timestamp;
             this.frameStartTime = performance.now();
@@ -1037,49 +1035,63 @@ class Game {
             this.lastFrameTime = timestamp;
         }
         
-        // Calculate delta time
+        // Calculate delta time with better precision
         const now = performance.now();
         let frameDelta = Math.min(now - this.lastUpdateTime, 100) / 1000; // Clamped to 100ms
         
-        // For high refresh rates (>90Hz), use fixed timestep with interpolation
-        // This ensures consistent physics regardless of display refresh rate
-        if (!this.frameRateCap || this.frameRateCap > 90) {
+        // Performance auto-adjustment
+        if (this.performanceStable && this.frameCount % 60 === 0) {
+            this.checkPerformanceAndAdjust();
+        }
+        
+        // Improved fixed timestep implementation
+        // Use fixed timestep for consistent physics on all refresh rates
+        const useFixedTimestep = !this.frameRateCap || this.frameRateCap > 90 || this.frameRateCap === 0;
+        
+        if (useFixedTimestep) {
             // Accumulate time for fixed timestep
             this.accumulator += frameDelta;
             
-            // Fixed timestep updates (60Hz physics)
-            const fixedTimestep = 1/60;
+            // Use consistent 60Hz physics timestep
+            const fixedTimestep = this.fixedDeltaTime || (1/60);
             let updates = 0;
-            const maxUpdates = 3; // Prevent spiral of death
+            const maxUpdates = 4; // Allow up to 4 updates to catch up
             
             const simStart = performance.now();
+            
+            // Process fixed timestep updates
             while (this.accumulator >= fixedTimestep && updates < maxUpdates) {
                 // Snapshot transforms before step for interpolation
                 if (this.combat && this.combat.world) {
                     const ents = this.combat.world.getEntitiesWithComponents(['TransformComponent']);
                     for (const e of ents) {
                         const t = e.getComponent('TransformComponent');
-                        t && t.snapshotPrevious && t.snapshotPrevious();
+                        if (t && t.snapshotPrevious) t.snapshotPrevious();
                     }
                 }
+                
+                // Fixed timestep update
                 this.update(fixedTimestep);
                 this.accumulator -= fixedTimestep;
                 updates++;
             }
+            
             const simEnd = performance.now();
             
-            // If we're behind, catch up without spiraling
-            if (this.accumulator > fixedTimestep * maxUpdates) {
+            // Prevent spiral of death - if we're too far behind, reset
+            if (this.accumulator > fixedTimestep * 2) {
+                console.warn(`Resetting accumulator from ${this.accumulator} to prevent spiral`);
                 this.accumulator = fixedTimestep;
             }
             
-            // Interpolation factor for smooth rendering
-            const alpha = this.accumulator / fixedTimestep;
+            // Calculate interpolation factor for smooth rendering
+            const alpha = Math.min(this.accumulator / fixedTimestep, 1.0);
             
-            // Render with interpolation (could be used for smoother visuals)
+            // Render with interpolation
             const renderStart = performance.now();
-            // Interpolate visuals
-            if (this.renderer.interpolateMeshes) this.renderer.interpolateMeshes(alpha);
+            if (this.renderer.interpolateMeshes) {
+                this.renderer.interpolateMeshes(alpha);
+            }
             this.renderer.render();
             const renderEnd = performance.now();
 
@@ -1497,6 +1509,84 @@ class Game {
         }
     }
     
+    /**
+     * Apply frame rate settings based on detected refresh rate and user preferences
+     */
+    applyFrameRateSettings() {
+        if (!this.ui || !this.ui.settings) return;
+        
+        const settings = this.ui.settings.settings;
+        const refreshRate = this.ui.settings.monitorRefreshRate || 60;
+        
+        if (settings.frameRateCap === 'auto') {
+            // Mobile devices: cap at 60fps for battery life
+            if (this.isMobile) {
+                this.frameRateCap = 60;
+                console.log(`Mobile device: capping at 60fps for battery life`);
+            }
+            // High refresh displays: use adaptive approach
+            else if (refreshRate > 90) {
+                // For very high refresh rates, use fixed timestep with interpolation
+                this.frameRateCap = 0; // Unlimited with fixed timestep
+                this.fixedDeltaTime = 1/60; // Keep physics at 60Hz
+                console.log(`High refresh display (${refreshRate}Hz): using fixed 60Hz physics with interpolation`);
+            }
+            else if (refreshRate > 65) {
+                // For moderate high refresh (75-90Hz), cap at refresh rate
+                this.frameRateCap = refreshRate;
+                console.log(`Moderate high refresh (${refreshRate}Hz): capping at monitor rate`);
+            } else {
+                // Standard 60Hz display
+                this.frameRateCap = refreshRate;
+                console.log(`Standard display: matching refresh rate at ${refreshRate}Hz`);
+            }
+        } else {
+            // Manual setting
+            this.frameRateCap = parseInt(settings.frameRateCap) || 0;
+            
+            // Override for mobile if unlimited
+            if (this.isMobile && this.frameRateCap === 0) {
+                this.frameRateCap = 60;
+                console.log(`Mobile device: overriding unlimited to 60fps`);
+            }
+        }
+        
+        console.log(`Frame rate configuration: cap=${this.frameRateCap}, fixed timestep=${this.fixedDeltaTime * 1000}ms`);
+    }
+    
+    /**
+     * Monitor performance and auto-adjust settings if needed
+     */
+    checkPerformanceAndAdjust() {
+        if (!this.ui || !this.ui.settings || !this.ui.settings.settings.autoQuality) {
+            return;
+        }
+        
+        // Calculate average FPS over recent samples
+        if (this.fpsBuffer.length < 10) return;
+        
+        const avgFPS = this.fpsBuffer.reduce((a, b) => a + b, 0) / this.fpsBuffer.length;
+        const targetFPS = this.frameRateCap || 60;
+        const performanceRatio = avgFPS / targetFPS;
+        
+        // Auto-adjust quality if performance is poor
+        if (performanceRatio < 0.85) { // Less than 85% of target FPS
+            const currentQuality = this.ui.settings.settings.graphicalQuality;
+            
+            if (currentQuality === 'high') {
+                console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to medium`);
+                this.ui.settings.settings.graphicalQuality = 'medium';
+                this.ui.settings.applyGraphicsSettings();
+                this.ui.settings.saveSettings();
+            } else if (currentQuality === 'medium') {
+                console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to low`);
+                this.ui.settings.settings.graphicalQuality = 'low';
+                this.ui.settings.applyGraphicsSettings();
+                this.ui.settings.saveSettings();
+            }
+        }
+    }
+    
     // Fallback to old behavior if start screen is not available
     fallbackToDefaultBehavior() {
         // Check if intro has been played before
@@ -1542,6 +1632,22 @@ function startGameMainModule() {
     // Add a console message to help debug loading issues
     console.log("DOM ready, starting game initialization...");
     
+    // Clear any existing WebGL contexts to ensure clean start
+    const canvases = document.querySelectorAll('canvas');
+    canvases.forEach(canvas => {
+        const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+        if (gl && gl.getExtension('WEBGL_lose_context')) {
+            gl.getExtension('WEBGL_lose_context').loseContext();
+        }
+    });
+    
+    // Small delay to ensure clean GPU state
+    setTimeout(() => {
+        initializeGame();
+    }, 50);
+}
+
+function initializeGame() {
     // Initialize the game directly instead of using a loading screen
     console.log("Creating game instance...");
     
