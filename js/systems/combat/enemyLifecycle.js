@@ -2,6 +2,12 @@
  * Enemy Lifecycle Manager - Handles the lifecycle of enemy entities
  */
 
+import { TransformComponent } from '../../components/transform.js';
+import { EnemyAIComponent } from '../../components/combat/enemyAI.js';
+import { HealthComponent } from '../../components/combat/healthComponent.js';
+import { MeshComponent } from '../../components/rendering/mesh.js';
+import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
+
 export class EnemyLifecycle {
     constructor(world) {
         this.world = world;
@@ -219,7 +225,7 @@ export class EnemyLifecycle {
             }
             
             // Get the rigidbody component if it exists
-            const rigidbody = enemy.getComponent('RigidbodyComponent');
+            const rigidbody = enemy.getComponent(RigidbodyComponent);
             if (rigidbody) {
                 // Set velocity to zero
                 rigidbody.velocity.set(0, 0, 0);
@@ -234,7 +240,7 @@ export class EnemyLifecycle {
             }
             
             // Get the enemy AI component
-            const enemyAI = enemy.getComponent('EnemyAIComponent');
+            const enemyAI = enemy.getComponent(EnemyAIComponent);
             if (enemyAI) {
                 // Store original enabled state if not already stored
                 if (enemyAI.originalEnabledState === undefined) {
@@ -275,14 +281,14 @@ export class EnemyLifecycle {
             }
             
             // Get the rigidbody component if it exists
-            const rigidbody = enemy.getComponent('RigidbodyComponent');
+            const rigidbody = enemy.getComponent(RigidbodyComponent);
             if (rigidbody) {
                 // Un-mark as frozen
                 rigidbody.isFrozen = false;
             }
             
             // Get the enemy AI component
-            const enemyAI = enemy.getComponent('EnemyAIComponent');
+            const enemyAI = enemy.getComponent(EnemyAIComponent);
             if (enemyAI) {
                 // Restore original enabled state or default to enabled
                 enemyAI.enabled = (enemyAI.originalEnabledState !== undefined) ? 
@@ -326,7 +332,7 @@ export class EnemyLifecycle {
                 enemies.delete(entityId);
                 
                 // If entity has health component, mark as destroyed
-                const health = entity.getComponent('HealthComponent');
+                const health = entity.getComponent(HealthComponent);
                 if (health) {
                     health.health = 0;
                     health.isDestroyed = true;
@@ -334,7 +340,7 @@ export class EnemyLifecycle {
                 
                 // Create explosion effect
                 if (this.world && this.world.messageBus) {
-                    const transform = entity.getComponent('TransformComponent');
+                    const transform = entity.getComponent(TransformComponent);
                     if (transform) {
                         this.world.messageBus.publish('vfx.explosion', {
                             position: transform.position.clone(),
@@ -378,19 +384,19 @@ export class EnemyLifecycle {
      */
     processEntityUpdate(entity, deltaTime) {
         // Get enemy AI component
-        const enemyAI = entity.getComponent('EnemyAIComponent');
+        const enemyAI = entity.getComponent(EnemyAIComponent);
         
         // Skip if entity is missing an enemy AI component
         if (!enemyAI) return;
         
         // Get transform component
-        const transform = entity.getComponent('TransformComponent');
+        const transform = entity.getComponent(TransformComponent);
         
         // Skip if entity is missing a transform component
         if (!transform) return;
         
         // Get mesh component
-        const meshComponent = entity.getComponent('MeshComponent');
+        const meshComponent = entity.getComponent(MeshComponent);
         
         // Check if mesh component exists and has been added to scene
         if (meshComponent && meshComponent.mesh) {
@@ -464,7 +470,7 @@ export class EnemyLifecycle {
         enemyAI.update(deltaTime);
         
         // Get health component to update shield regeneration
-        const health = entity.getComponent('HealthComponent');
+        const health = entity.getComponent(HealthComponent);
         if (health) {
             health.update(deltaTime);
         }

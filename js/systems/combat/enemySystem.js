@@ -354,9 +354,9 @@ export class EnemySystem extends System {
      */
     applySeparationBehavior(entity, deltaTime) {
         // Get required components
-        const transform = entity.getComponent('TransformComponent');
-        const rigidbody = entity.getComponent('RigidbodyComponent');
-        const enemyAI = entity.getComponent('EnemyAIComponent');
+        const transform = entity.getComponent(TransformComponent);
+        const rigidbody = entity.getComponent(RigidbodyComponent);
+        const enemyAI = entity.getComponent(EnemyAIComponent);
         
         // Skip if missing required components
         if (!transform || !rigidbody || !enemyAI) {
@@ -411,7 +411,7 @@ export class EnemySystem extends System {
             if (!neighbor) continue;
             
             // Get neighbor transform
-            const neighborTransform = neighbor.getComponent('TransformComponent');
+            const neighborTransform = neighbor.getComponent(TransformComponent);
             if (!neighborTransform) continue;
             
             // Calculate vector away from neighbor
@@ -461,7 +461,7 @@ export class EnemySystem extends System {
             if (enemyEntity.hasTag('pooled')) continue;
             
             // Get transform component
-            const enemyTransform = enemyEntity.getComponent('TransformComponent');
+            const enemyTransform = enemyEntity.getComponent(TransformComponent);
             if (!enemyTransform) continue;
             
             // Calculate distance
@@ -507,7 +507,7 @@ export class EnemySystem extends System {
             
             // TRAIL CLEANUP: Ensure any trails are properly removed
             // This prevents the "line to center" visual bug
-            const trailComponent = entity.getComponent('TrailComponent');
+            const trailComponent = entity.getComponent(TrailComponent);
             if (trailComponent) {
                 try {
                     // Call onDetached to clean up resources
@@ -545,7 +545,7 @@ export class EnemySystem extends System {
             }
             
             // Clean up mesh resources before returning to pool
-            const meshComponent = entity.getComponent('MeshComponent');
+            const meshComponent = entity.getComponent(MeshComponent);
             if (meshComponent && meshComponent.mesh) {
                 try {
                     // Remove from scene if it has a parent

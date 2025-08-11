@@ -8,6 +8,7 @@ import { System } from '../../core/system.js';
 import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { TransformComponent } from '../../components/transform.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
+import { MeshComponent } from '../../components/rendering/mesh.js';
 import { FixedArray } from '../../utils/memoryManager.js';
 import * as THREE from 'three';
 
@@ -142,8 +143,8 @@ export class CombatSystem extends System {
                     this.projectiles.add(projectile.id);
                 }
                 
-                const projectileTransform = projectile.getComponent('TransformComponent');
-                const projectileRigidbody = projectile.getComponent('RigidbodyComponent');
+                const projectileTransform = projectile.getComponent(TransformComponent);
+                const projectileRigidbody = projectile.getComponent(RigidbodyComponent);
                 
                 if (!projectileTransform || !projectileRigidbody) {
                     console.log(`Projectile ${projectile.id} missing transform or rigidbody component`);
@@ -197,7 +198,7 @@ export class CombatSystem extends System {
                     if (target.id === projectile.id) continue;
                     
                     // Get the mesh component for collision testing
-                    const meshComponent = target.getComponent('MeshComponent');
+                    const meshComponent = target.getComponent(MeshComponent);
                     
                     // Skip if no mesh component or mesh
                     if (!meshComponent || !meshComponent.mesh) {
@@ -248,7 +249,7 @@ export class CombatSystem extends System {
                         break;
                     } else {
                         // Debug when no intersection is found
-                        const targetTransform = target.getComponent('TransformComponent');
+                        const targetTransform = target.getComponent(TransformComponent);
                         if (targetTransform) {
                             const distance = projectilePosition.distanceTo(targetTransform.position);
                             console.log(`No intersection with ${target.id} at distance ${distance.toFixed(1)}`);
@@ -284,7 +285,7 @@ export class CombatSystem extends System {
         }
         
         // Apply damage to target
-        const targetHealth = target.getComponent('HealthComponent');
+        const targetHealth = target.getComponent(HealthComponent);
         if (targetHealth) {
             const damageType = projectile.userData?.attackType || 'projectile';
             const damageResult = targetHealth.applyDamage(damage, damageType, source);
@@ -300,7 +301,7 @@ export class CombatSystem extends System {
             }
             
             // Get position using our reusable vector
-            const projectileTransform = projectile.getComponent('TransformComponent');
+            const projectileTransform = projectile.getComponent(TransformComponent);
             if (projectileTransform) {
                 this.hitPosition.copy(projectileTransform.position);
             } else {
@@ -328,7 +329,7 @@ export class CombatSystem extends System {
      */
     createHitEffect(projectile, target, damageResult) {
         // Get projectile information
-        const projectileTransform = projectile.getComponent('TransformComponent');
+        const projectileTransform = projectile.getComponent(TransformComponent);
         if (!projectileTransform) return;
         
         // Determine hit effect based on damage type and result
