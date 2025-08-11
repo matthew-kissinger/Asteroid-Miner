@@ -1,6 +1,7 @@
 // spaceship.js - Handles spaceship creation and management
 
 import * as THREE from 'three';
+import { TrailEffects } from './trail.js';
 
 export class Spaceship {
     constructor(scene) {
@@ -21,8 +22,7 @@ export class Spaceship {
             right: false,
             boost: false
         };
-        this.particleSystems = [];
-        this.trailParticles = null;
+        this.trailEffects = null; // Will be initialized after mesh creation
         this.shipScale = 2.0; // New property to track ship scale
         
         // Combat properties
@@ -75,7 +75,9 @@ export class Spaceship {
         
         console.log("Creating spaceship...");
         this.createSpaceship();
-        this.createTrailEffect();
+        
+        // Initialize trail effects after spaceship mesh is created
+        this.trailEffects = new TrailEffects(this.scene, this.mesh);
         
         // Start the ship invisible since it's docked
         if (this.mesh) {
@@ -307,9 +309,6 @@ export class Spaceship {
         
         // Add to scene
         this.scene.add(this.mesh);
-        
-        // Create particle systems for thrusters
-        this.createThrusterParticles();
     }
     
     // Create mining laser beam - the actual beam is handled by the Controls class
@@ -339,328 +338,20 @@ export class Spaceship {
         }
     }
     
-    createThrusterParticles() {
-        // Main thruster particles
-        const particleCount = 150; // Reduced from 200
-        
-        // Function to create a particle system
-        const createParticleSystem = (position, rotation, size, type, color = 0xff5500) => {
-            const positions = new Float32Array(particleCount * 3);
-            
-            for (let i = 0; i < particleCount; i++) {
-                const i3 = i * 3;
-                positions[i3] = (Math.random() - 0.5) * size.x * 0.7; // Reduced spread by 30%
-                positions[i3 + 1] = (Math.random() - 0.5) * size.y * 0.7; // Reduced spread by 30%
-                positions[i3 + 2] = Math.random() * size.z * 0.7; // Reduced length by 30%
-            }
-            
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            
-            const material = new THREE.PointsMaterial({
-                color: color,
-                size: 0.04, // Reduced from 0.06
-                transparent: true,
-                opacity: 0.6, // Reduced from 0.9
-                blending: THREE.AdditiveBlending
-            });
-            
-            const particleSystem = new THREE.Points(geometry, material);
-            particleSystem.visible = false; // Initially invisible
-            particleSystem.position.copy(position);
-            if (rotation) particleSystem.rotation.copy(rotation);
-            this.mesh.add(particleSystem);
-            
-            return {
-                system: particleSystem,
-                geometry: geometry,
-                positions: positions,
-                type: type,
-                baseSize: size
-            };
-        };
-        
-        // Main thruster (back)
-        this.particleSystems.push(
-            createParticleSystem(
-                new THREE.Vector3(0, 0, 1.1), // Position
-                new THREE.Euler(Math.PI, 0, 0), // Rotation
-                new THREE.Vector3(0.15, 0.15, 2), // Size - reduced from 0.2x0.2x3
-                'main',
-                0xff4400 // Darker color than before
-            )
-        );
-        
-        // Left thruster
-        this.particleSystems.push(
-            createParticleSystem(
-                new THREE.Vector3(0.5, 0, 0.5), // Position
-                new THREE.Euler(0, 0, Math.PI / 2), // Rotation
-                new THREE.Vector3(0.08, 0.08, 0.8), // Size - reduced from 0.1x0.1x1.2
-                'left',
-                0xff3300 // Darker color
-            )
-        );
-        
-        // Right thruster
-        this.particleSystems.push(
-            createParticleSystem(
-                new THREE.Vector3(-0.5, 0, 0.5), // Position
-                new THREE.Euler(0, 0, -Math.PI / 2), // Rotation
-                new THREE.Vector3(0.08, 0.08, 0.8), // Size - reduced from 0.1x0.1x1.2
-                'right',
-                0xff3300 // Darker color
-            )
-        );
-        
-        // Reverse thruster (front)
-        this.particleSystems.push(
-            createParticleSystem(
-                new THREE.Vector3(0, 0, -1.1), // Position
-                new THREE.Euler(0, 0, 0), // Rotation
-                new THREE.Vector3(0.15, 0.15, 1.4), // Size - reduced from 0.2x0.2x2
-                'reverse',
-                0x44ccff // Darker blue-cyan color
-            )
-        );
-    }
+    // Removed createThrusterParticles - now in trail.js
     
-    createTrailEffect() {
-        // Create particle system for the ship's trail - cypherpunk style
-        const particleCount = 1800; // Reduced slightly
-        const particles = new THREE.BufferGeometry();
-        
-        // Create positions for particles
-        const positions = new Float32Array(particleCount * 3);
-        const velocities = new Float32Array(particleCount * 3);
-        const colors = new Float32Array(particleCount * 3);
-        const sizes = new Float32Array(particleCount);
-        
-        // Initial positions - cypherpunk style with more angular distribution
-        for (let i = 0; i < particleCount; i++) {
-            const i3 = i * 3;
-            
-            // Angular, grid-like positioning for cypherpunk aesthetic
-            positions[i3] = (Math.floor((Math.random() - 0.5) * 10) / 10) * 0.4; // Grid-like X distribution
-            positions[i3 + 1] = (Math.floor((Math.random() - 0.5) * 10) / 10) * 0.4; // Grid-like Y distribution
-            positions[i3 + 2] = 1.8 + (Math.random() * 0.4); // Z position with less randomness
-            
-            // More consistent velocities for straight, digital-looking trails
-            velocities[i3] = (Math.random() - 0.5) * 0.008; // Reduced randomness
-            velocities[i3 + 1] = (Math.random() - 0.5) * 0.008;
-            velocities[i3 + 2] = 0.12 + (Math.random() * 0.05); // More consistent speed
-            
-            // Cypherpunk colors - neon blues, purples, and teals
-            // Assign one of three color schemes randomly for variety
-            const colorScheme = Math.floor(Math.random() * 3);
-            if (colorScheme === 0) {
-                // Neon blue/cyan
-                colors[i3] = 0.0;
-                colors[i3 + 1] = 0.7 + Math.random() * 0.3;
-                colors[i3 + 2] = 0.8 + Math.random() * 0.2;
-            } else if (colorScheme === 1) {
-                // Neon purple/magenta
-                colors[i3] = 0.7 + Math.random() * 0.3;
-                colors[i3 + 1] = 0.0;
-                colors[i3 + 2] = 0.8 + Math.random() * 0.2;
-            } else {
-                // Electric green
-                colors[i3] = 0.0;
-                colors[i3 + 1] = 0.9 + Math.random() * 0.1;
-                colors[i3 + 2] = 0.4 + Math.random() * 0.2;
-            }
-            
-            // Random variation between small angular particles and larger ones
-            sizes[i] = Math.random() < 0.7 ? 
-                0.8 + Math.random() * 0.4 : // Small particles
-                1.5 + Math.random() * 0.5;  // Occasional larger particles
-        }
-        
-        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        particles.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
-        particles.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-        
-        // Trail particle shader material - cypherpunk style with angular particles
-        const trailMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                color: { value: new THREE.Color(0x00ffff) }, // Base cyan color
-                pointTexture: { value: new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/spark1.png') } // Using spark texture instead of disc
-            },
-            vertexShader: `
-                attribute float size;
-                attribute vec3 customColor;
-                varying vec3 vColor;
-                void main() {
-                    vColor = customColor;
-                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                    
-                    // Add slight "digital jitter" to the position for glitch effect
-                    if (mod(mvPosition.y * 10.0, 4.0) < 0.1) {
-                        mvPosition.x += sin(mvPosition.z) * 0.05;
-                    }
-                    
-                    gl_PointSize = size * (180.0 / -mvPosition.z); // Adjusted size calculation
-                    gl_Position = projectionMatrix * mvPosition;
-                }
-            `,
-            fragmentShader: `
-                uniform vec3 color;
-                uniform sampler2D pointTexture;
-                varying vec3 vColor;
-                void main() {
-                    // Create more angular particles by manipulating texture coordinates
-                    vec2 uv = gl_PointCoord;
-                    
-                    // Digital distortion effect - occasional "glitch" lines
-                    if (mod(gl_FragCoord.y, 16.0) < 0.5) {
-                        uv.x = mod(uv.x + sin(uv.y * 10.0) * 0.1, 1.0);
-                    }
-                    
-                    // Apply texture with the modified coordinates
-                    vec4 texColor = texture2D(pointTexture, uv);
-                    
-                    // Sharper edges for angular look
-                    texColor.a = step(0.2, texColor.r);
-                    
-                    // Combine with color
-                    gl_FragColor = vec4(color * vColor, 0.75) * texColor;
-                    
-                    // Hard cutoff for sharper particle edges
-                    if (gl_FragColor.a < 0.2) discard;
-                }
-            `,
-            blending: THREE.AdditiveBlending,
-            depthTest: false,
-            transparent: true
-        });
-        
-        // Add after creating the material
-        trailMaterial.uniforms.pointTexture.value.colorSpace = THREE.SRGBColorSpace;
-        
-        this.trailParticles = new THREE.Points(particles, trailMaterial);
-        this.trailParticles.visible = false; // Only visible when moving
-        this.mesh.add(this.trailParticles);
-        
-        // Store data for updating
-        this.trailParticles.userData = {
-            positions: positions,
-            velocities: velocities,
-            colors: colors
-        };
-    }
+    /* REMOVED THRUSTER PARTICLES CODE - NOW IN trail.js */
+    
+    // Removed createTrailEffect - now in trail.js
     
     updateParticles() {
-        if (!this.particleSystems) return;
-        
-        this.particleSystems.forEach(ps => {
-            if (ps.system.visible) {
-                const positions = ps.positions;
-                const baseSize = ps.baseSize;
-                
-                for (let i = 0; i < positions.length; i += 3) {
-                    // Move particle outward along z-axis of particle system
-                    positions[i] += (Math.random() - 0.5) * 0.02; // More randomness
-                    positions[i + 1] += (Math.random() - 0.5) * 0.02;
-                    positions[i + 2] += 0.15; // Faster speed outward for more dynamic effect
-                    
-                    // Add some randomness to particle movement
-                    positions[i] += (Math.random() - 0.5) * 0.01;
-                    positions[i + 1] += (Math.random() - 0.5) * 0.01;
-                    
-                    // Reset particles that go too far
-                    if (positions[i + 2] > baseSize.z) {
-                        positions[i] = (Math.random() - 0.5) * baseSize.x;
-                        positions[i + 1] = (Math.random() - 0.5) * baseSize.y;
-                        positions[i + 2] = 0;
-                    }
-                }
-                
-                // Update the geometry
-                ps.geometry.attributes.position.needsUpdate = true;
-            }
-        });
-        
-        // Update trail particles with cypherpunk effects
-        if (this.trailParticles && this.trailParticles.visible) {
-            const positions = this.trailParticles.userData.positions;
-            const velocities = this.trailParticles.userData.velocities;
-            const colors = this.trailParticles.userData.colors;
-            
-            // Calculate a trail speed factor based on current velocity
-            const speedFactor = this.velocity.length() / 8;
-            
-            for (let i = 0; i < positions.length; i += 3) {
-                // Add digital "glitch" effect occasionally
-                if (Math.random() < 0.01) {
-                    // Sudden position jump to simulate digital glitch
-                    positions[i] += (Math.random() - 0.5) * 0.2;
-                    positions[i + 1] += (Math.random() - 0.5) * 0.2;
-                }
-                
-                // Move particles based on velocity, with occasional "stutter" for digital effect
-                const stutter = Math.random() < 0.05 ? 0 : 1; // Occasionally freeze particle
-                positions[i] += velocities[i] * speedFactor * stutter;
-                positions[i + 1] += velocities[i + 1] * speedFactor * stutter;
-                positions[i + 2] += velocities[i + 2] * speedFactor * stutter;
-                
-                // Digital color shift - occasional color changes for glitch effect
-                if (Math.random() < 0.005) {
-                    // Sudden color swap
-                    const temp = colors[i];
-                    colors[i] = colors[i + 2];
-                    colors[i + 2] = temp;
-                }
-                
-                // Slower fade for digital persistence effect
-                colors[i] *= 0.99;
-                colors[i + 1] *= 0.99;
-                colors[i + 2] *= 0.99;
-                
-                // Reset particles that go too far or fade out
-                // Increased distance threshold for longer trails
-                const distance = Math.sqrt(
-                    positions[i] * positions[i] + 
-                    positions[i + 1] * positions[i + 1] + 
-                    positions[i + 2] * positions[i + 2]
-                );
-                
-                if (distance > 45 || colors[i] + colors[i+1] + colors[i+2] < 0.3) {
-                    // Reset position with grid-like distribution for cypherpunk aesthetic
-                    positions[i] = (Math.floor((Math.random() - 0.5) * 10) / 10) * 0.4;
-                    positions[i + 1] = (Math.floor((Math.random() - 0.5) * 10) / 10) * 0.4;
-                    positions[i + 2] = 1.8 + (Math.random() * 0.4);
-                    
-                    // Reset velocity - digital precision
-                    velocities[i] = (Math.random() - 0.5) * 0.008;
-                    velocities[i + 1] = (Math.random() - 0.5) * 0.008;
-                    velocities[i + 2] = 0.12 + (Math.random() * 0.05);
-                    
-                    // Reset with cypherpunk colors - rotating between schemes
-                    const colorScheme = Math.floor(Math.random() * 3);
-                    if (colorScheme === 0) {
-                        // Neon blue/cyan
-                        colors[i] = 0.0;
-                        colors[i + 1] = 0.7 + Math.random() * 0.3;
-                        colors[i + 2] = 0.8 + Math.random() * 0.2;
-                    } else if (colorScheme === 1) {
-                        // Neon purple/magenta
-                        colors[i] = 0.7 + Math.random() * 0.3;
-                        colors[i + 1] = 0.0;
-                        colors[i + 2] = 0.8 + Math.random() * 0.2;
-                    } else {
-                        // Electric green
-                        colors[i] = 0.0;
-                        colors[i + 1] = 0.9 + Math.random() * 0.1;
-                        colors[i + 2] = 0.4 + Math.random() * 0.2;
-                    }
-                }
-            }
-            
-            // Update the geometry
-            this.trailParticles.geometry.attributes.position.needsUpdate = true;
-            this.trailParticles.geometry.attributes.customColor.needsUpdate = true;
+        // Delegate to trail effects module
+        if (this.trailEffects) {
+            this.trailEffects.updateParticles(this.thrust, this.velocity);
         }
     }
+    
+    /* REMOVED OLD updateParticles CODE - NOW IN trail.js */
 
     dock() {
         console.log("Docking spaceship");
@@ -1023,11 +714,13 @@ export class Spaceship {
     }
 
     updateTrailVisibility(isMoving) {
-        // Show trail particles when the ship is moving, not just when thrusting forward
-        if (this.trailParticles) {
-            this.trailParticles.visible = isMoving;
+        // Delegate to trail effects module
+        if (this.trailEffects) {
+            this.trailEffects.updateTrailVisibility(isMoving, this.thrust, this.velocity);
         }
     }
+    
+    /* REMOVED OLD updateTrailVisibility CODE - NOW IN trail.js */
     
     /**
      * Subscribe to player entity destruction events
@@ -1069,17 +762,16 @@ export class Spaceship {
     handleDestruction() {
         // Visual and behavioral changes for destroyed state
         if (this.mesh) {
-            // Disable thrusters
-            this.particleSystems.forEach(ps => {
-                if (ps && ps.system) {
-                    ps.system.visible = false;
-                }
-            });
-            
-            // Disable trail
-            if (this.trailParticles) {
-                this.trailParticles.visible = false;
+            // Disable thrusters via trail effects
+            if (this.trailEffects) {
+                this.trailEffects.particleSystems.forEach(ps => {
+                    if (ps && ps.system) {
+                        ps.system.visible = false;
+                    }
+                });
             }
+            
+            // Trail disabled via trail effects module
             
             // Could add explosion effect, damage texture, etc.
         }

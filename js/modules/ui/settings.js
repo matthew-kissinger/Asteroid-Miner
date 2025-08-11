@@ -559,6 +559,18 @@ export class Settings {
         console.log('All settings applied successfully');
     }
     
+    applyGraphicsSettings() {
+        if (!this.game) return;
+        
+        // Apply renderer settings (graphics-related)
+        this.applyRendererSettings();
+        
+        // Apply environment settings (affects visual quality)
+        this.applyEnvironmentSettings();
+        
+        console.log('Graphics settings applied successfully');
+    }
+    
     applyRendererSettings() {
         if (!this.game.renderer) return;
         

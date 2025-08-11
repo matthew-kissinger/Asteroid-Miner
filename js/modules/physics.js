@@ -70,15 +70,8 @@ export class Physics {
         // Calculate dot product to determine how much we're moving forward
         const forwardVelocity = shipForward.dot(this.spaceship.velocity);
         
-        // Define thruster references outside the if blocks so they're in scope throughout
-        const mainThrusterParticles = this.spaceship.particleSystems.find(ps => ps.type === 'main');
-        const mainThruster = this.spaceship.thrusters.find(t => t.type === 'main');
-        const reverseThrusterParticles = this.spaceship.particleSystems.find(ps => ps.type === 'reverse');
-        const reverseThruster = this.spaceship.thrusters.find(t => t.type === 'reverse');
-        const leftThrusterParticles = this.spaceship.particleSystems.find(ps => ps.type === 'left');
-        const leftThruster = this.spaceship.thrusters.find(t => t.type === 'left');
-        const rightThrusterParticles = this.spaceship.particleSystems.find(ps => ps.type === 'right');
-        const rightThruster = this.spaceship.thrusters.find(t => t.type === 'right');
+        // Visual effects are now handled entirely by the trail module
+        // Physics only handles movement calculations
         
         if (hasFuel) {
             // NOTE: Player authority migrating to ECS. Respect global inputIntent when available.
@@ -96,132 +89,36 @@ export class Physics {
                 if (boostPressed) forwardThrust.multiplyScalar(Physics.BOOST_MULTIPLIER);
                 thrustVector.add(forwardThrust);
                 
-                // Show main thruster particles based on actual forward motion
-                if (mainThrusterParticles) {
-                    mainThrusterParticles.system.visible = true;
-                    
-                    // Increase emissive intensity of thruster when active
-                    if (mainThruster) {
-                        mainThruster.mesh.material.emissiveIntensity = 
-                            this.spaceship.thrust.boost ? 1.5 : 1.0;
-                        // Make the thruster glow more in boost mode
-                        if (this.spaceship.thrust.boost) {
-                            mainThruster.mesh.material.emissive.setHex(0xff8800);
-                        } else {
-                            mainThruster.mesh.material.emissive.setHex(0xff5500);
-                        }
-                    }
-                }
-            } else {
-                // If not thrusting forward but still moving forward, show the thruster with reduced intensity
-                if (forwardVelocity > 5.0 && mainThrusterParticles) {
-                    // Show thruster with intensity based on speed
-                    const maxVelocity = this.getMaxVelocity();
-                    const intensityFactor = Math.min(forwardVelocity / maxVelocity, 0.8);
-                    mainThrusterParticles.system.visible = true;
-                    
-                    if (mainThruster) {
-                        mainThruster.mesh.material.emissiveIntensity = intensityFactor * 0.8;
-                        mainThruster.mesh.material.emissive.setHex(0xff3300);
-                    }
-                } else {
-                    // Deactivate main thruster particles
-                    if (mainThrusterParticles) {
-                        mainThrusterParticles.system.visible = false;
-                        
-                        // Reset emissive intensity when inactive
-                        if (mainThruster) {
-                            mainThruster.mesh.material.emissiveIntensity = 0.5;
-                            mainThruster.mesh.material.emissive.setHex(0xff5500);
-                        }
-                    }
-                }
+                // Visual effects handled by trail module
             }
+            // Visual effects handled by trail module
             
             // Backward thrust handling
             if (backwardPressed) {
                 isThrusting = true;
                 thrustVector.add(new THREE.Vector3(0, 0, Physics.THRUST_FORCE));
                 
-                // Activate reverse thruster particles
-                if (reverseThrusterParticles) {
-                    reverseThrusterParticles.system.visible = true;
-                    // Increase emissive intensity of reverse thruster when active
-                    if (reverseThruster) {
-                        reverseThruster.mesh.material.emissiveIntensity = 1.0;
-                        reverseThruster.mesh.material.emissive.setHex(0x33ccff);
-                    }
-                }
-            } else {
-                // If moving backward significantly, show reverse thrusters
-                if (forwardVelocity < -5.0) {
-                    if (reverseThrusterParticles) {
-                        reverseThrusterParticles.system.visible = true;
-                        
-                        if (reverseThruster) {
-                            const maxVelocity = this.getMaxVelocity();
-                            const intensityFactor = Math.min(Math.abs(forwardVelocity) / maxVelocity, 0.8);
-                            reverseThruster.mesh.material.emissiveIntensity = intensityFactor * 0.8;
-                        }
-                    }
-                } else {
-                    // Deactivate reverse thruster particles
-                    if (reverseThrusterParticles) {
-                        reverseThrusterParticles.system.visible = false;
-                        // Reset emissive intensity when inactive
-                        if (reverseThruster) {
-                            reverseThruster.mesh.material.emissiveIntensity = 0.5;
-                            reverseThruster.mesh.material.emissive.setHex(0x33ccff);
-                        }
-                    }
-                }
+                // Visual effects handled by trail module
             }
+            // Visual effects handled by trail module
             
-            // Left thrust handling - only activate when left key is pressed
+            // Left thrust handling - A key pressed, move LEFT (negative X)
             if (leftPressed) {
-                isThrusting = true;
-                thrustVector.add(new THREE.Vector3(Physics.THRUST_FORCE, 0, 0));
-                
-                // Activate right thruster particles (for leftward movement)
-                if (rightThrusterParticles) {
-                    rightThrusterParticles.system.visible = true;
-                    // Increase emissive intensity when active
-                    if (rightThruster) {
-                        rightThruster.mesh.material.emissiveIntensity = 0.8;
-                    }
-                }
-            } else {
-                // Always turn off right thrusters when not pressing left
-                if (rightThrusterParticles) {
-                    rightThrusterParticles.system.visible = false;
-                    if (rightThruster) {
-                        rightThruster.mesh.material.emissiveIntensity = 0.5;
-                    }
-                }
-            }
-            
-            // Right thrust handling - only activate when right key is pressed
-            if (rightPressed) {
                 isThrusting = true;
                 thrustVector.add(new THREE.Vector3(-Physics.THRUST_FORCE, 0, 0));
                 
-                // Activate left thruster particles (for rightward movement)
-                if (leftThrusterParticles) {
-                    leftThrusterParticles.system.visible = true;
-                    // Increase emissive intensity when active
-                    if (leftThruster) {
-                        leftThruster.mesh.material.emissiveIntensity = 0.8;
-                    }
-                }
-            } else {
-                // Always turn off left thrusters when not pressing right
-                if (leftThrusterParticles) {
-                    leftThrusterParticles.system.visible = false;
-                    if (leftThruster) {
-                        leftThruster.mesh.material.emissiveIntensity = 0.5;
-                    }
-                }
+                // Visual effects handled by trail module
             }
+            // Visual effects handled by trail module
+            
+            // Right thrust handling - D key pressed, move RIGHT (positive X)
+            if (rightPressed) {
+                isThrusting = true;
+                thrustVector.add(new THREE.Vector3(Physics.THRUST_FORCE, 0, 0));
+                
+                // Visual effects handled by trail module
+            }
+            // Visual effects handled by trail module
             
             if (isThrusting) {
                 // Apply thrust in world space (only if actively thrusting)
@@ -264,13 +161,18 @@ export class Physics {
         // Update camera position
         this.updateCamera();
         
-        // Update trail particles based on ship's current velocity
-        // Only show trail when actively thrusting forward (W key pressed)
-        if (this.spaceship.updateParticles) {
-            // Enable trail visibility only when actively thrusting forward 
-            const isThrusting = this.spaceship.thrust.forward;
-            this.spaceship.updateTrailVisibility(isThrusting);
-            this.spaceship.updateParticles();
+        // Update trail effects based on movement and thrust
+        if (this.spaceship.trailEffects) {
+            // Show effects based on ANY thrust or movement
+            const isThrusting = this.spaceship.thrust.forward || 
+                               this.spaceship.thrust.backward || 
+                               this.spaceship.thrust.left || 
+                               this.spaceship.thrust.right;
+            const isMoving = this.spaceship.velocity.length() > 0.1;
+            
+            // Update trail effects directly
+            this.spaceship.trailEffects.updateTrailVisibility(isMoving, this.spaceship.thrust, this.spaceship.velocity);
+            this.spaceship.trailEffects.updateParticles(this.spaceship.thrust, this.spaceship.velocity);
         }
         
         // Check for collisions with asteroids and planets
