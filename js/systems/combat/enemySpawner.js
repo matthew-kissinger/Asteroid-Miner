@@ -9,7 +9,7 @@ import { TransformComponent } from '../../components/transform.js';
 import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
 import { MeshComponent } from '../../components/rendering/mesh.js';
-import { TrailComponent } from '../../components/rendering/trail.js';
+// import { TrailComponent } from '../../components/rendering/trail.js'; // Trails disabled
 
 export class EnemySpawner {
     constructor(world) {
@@ -534,11 +534,10 @@ export class EnemySpawner {
             rigidbody.position = currentTransform.position.clone();
         }
         
-        // Add trail effect if not already present - thrusting effect
-        if (!entity.getComponent(TrailComponent)) {
-            // Temporarily disabled trail effect
-            // this.addSpectralTrail(entity, transform);
-        }
+        // Trail effects are disabled for enemies
+        // if (!entity.getComponent(TrailComponent)) {
+        //     this.addSpectralTrail(entity, transform);
+        // }
         
         // SYNCHRONIZATION FIX: Remove any existing references to this entity ID before adding
         // This prevents duplicate tracking if an entity with the same ID is already tracked
