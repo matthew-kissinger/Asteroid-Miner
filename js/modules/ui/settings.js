@@ -1001,7 +1001,7 @@ export class Settings {
                 
                 // Update game settings if using auto mode
                 if (this.settings.frameRateCap === 'auto' && this.game) {
-                    this.applyFrameRateSettings();
+                    this.applyUISettings();
                 }
             }
         }
