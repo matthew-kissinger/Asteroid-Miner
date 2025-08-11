@@ -9,7 +9,7 @@ import { TransformComponent } from '../../components/transform.js';
 import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
 import { MeshComponent } from '../../components/rendering/mesh.js';
-// import { TrailComponent } from '../../components/rendering/trail.js';
+import { TrailComponent } from '../../components/rendering/trail.js';
 
 export class EnemySpawner {
     constructor(world) {
@@ -110,7 +110,7 @@ export class EnemySpawner {
             if (this.world.entityManager && this.world.entityManager.getEntitiesByTag) {
                 players = this.world.entityManager.getEntitiesByTag('player');
                 if (players.length > 0) {
-                    const transform = players[0].getComponent('TransformComponent');
+                    const transform = players[0].getComponent(TransformComponent);
                     if (transform && transform.position) {
                         playerPosition = transform.position;
                     }
@@ -126,7 +126,7 @@ export class EnemySpawner {
                 if (this.world.getEntitiesByTag) {
                     players = this.world.getEntitiesByTag('player');
                     if (players.length > 0) {
-                        const transform = players[0].getComponent('TransformComponent');
+                        const transform = players[0].getComponent(TransformComponent);
                         if (transform && transform.position) {
                             playerPosition = transform.position;
                         }
@@ -368,7 +368,7 @@ export class EnemySpawner {
         entity.visualVariant = visualVariant;
         
         // Configure transform - reuse existing or create new
-        let transform = entity.getComponent('TransformComponent');
+        let transform = entity.getComponent(TransformComponent);
         
         if (!transform) {
             // Create new transform if it doesn't exist
@@ -391,7 +391,7 @@ export class EnemySpawner {
         console.log(`Configured TransformComponent for entity ${entity.id} at position (${position.x.toFixed(0)}, ${position.y.toFixed(0)}, ${position.z.toFixed(0)})`);
         
         // Add or update health component with difficulty-scaled health
-        let health = entity.getComponent('HealthComponent');
+        let health = entity.getComponent(HealthComponent);
         if (!health) {
             health = new HealthComponent(this.enemyConfig.health, 0);
             entity.addComponent(health);
@@ -402,7 +402,7 @@ export class EnemySpawner {
         }
         
         // Configure AI component
-        let enemyAI = entity.getComponent('EnemyAIComponent');
+        let enemyAI = entity.getComponent(EnemyAIComponent);
         if (!enemyAI) {
             const config = {
                 faction: 'spectrals',
@@ -435,7 +435,7 @@ export class EnemySpawner {
         this.currentEntity = null;
         
         // Get existing mesh component if any
-        let meshComponent = entity.getComponent('MeshComponent');
+        let meshComponent = entity.getComponent(MeshComponent);
         
         // Clean up old mesh component if exists
         if (meshComponent) {
@@ -460,7 +460,7 @@ export class EnemySpawner {
             }
             
             // Remove the old component
-            entity.removeComponent('MeshComponent');
+            entity.removeComponent(MeshComponent);
         }
         
         // Create new mesh component with the actual mesh
@@ -493,7 +493,7 @@ export class EnemySpawner {
             }
             
             // Get transform component to sync position - it should definitely exist
-            const transformComp = entity.getComponent('TransformComponent');
+            const transformComp = entity.getComponent(TransformComponent);
             if (transformComp && transformComp.position) {
                 // Ensure mesh position, rotation, and scale match entity transform
                 meshComponent.mesh.position.copy(transformComp.position);
@@ -513,7 +513,7 @@ export class EnemySpawner {
         }
         
         // Add physics if needed
-        let rigidbody = entity.getComponent('RigidbodyComponent');
+        let rigidbody = entity.getComponent(RigidbodyComponent);
         if (!rigidbody) {
             rigidbody = new RigidbodyComponent(1);
             rigidbody.useGravity = false;
@@ -529,13 +529,13 @@ export class EnemySpawner {
         }
         
         // Sync rigidbody position with transform
-        const currentTransform = entity.getComponent('TransformComponent');
+        const currentTransform = entity.getComponent(TransformComponent);
         if (currentTransform && rigidbody) {
             rigidbody.position = currentTransform.position.clone();
         }
         
         // Add trail effect if not already present - thrusting effect
-        if (!entity.getComponent('TrailComponent')) {
+        if (!entity.getComponent(TrailComponent)) {
             // Temporarily disabled trail effect
             // this.addSpectralTrail(entity, transform);
         }

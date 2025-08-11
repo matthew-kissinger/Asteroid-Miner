@@ -6,6 +6,8 @@
 
 import * as THREE from 'three';
 import { Component } from '../../core/component.js';
+import { TransformComponent } from '../transform.js';
+import { HealthComponent } from './healthComponent.js';
 
 export class EnemyAIComponent extends Component {
     constructor(config = {}) {
@@ -129,7 +131,7 @@ export class EnemyAIComponent extends Component {
             // We'll create a minimal object with the necessary properties
             player = {
                 getComponent: (type) => {
-                    if (type === 'TransformComponent') {
+                    if (type === TransformComponent) {
                         return {
                             position: window.game.spaceship.mesh.position,
                             rotation: window.game.spaceship.mesh.rotation,
@@ -151,19 +153,19 @@ export class EnemyAIComponent extends Component {
         }
         
         // Get required components
-        const transform = this.entity.getComponent('TransformComponent');
+        const transform = this.entity.getComponent(TransformComponent);
         if (!transform) {
             return;
         }
         
         // Get health component to check status
-        const health = this.entity.getComponent('HealthComponent');
+        const health = this.entity.getComponent(HealthComponent);
         if (health && health.isDestroyed) {
             return;
         }
         
         // Get player transform
-        let playerTransform = player.getComponent ? player.getComponent('TransformComponent') : null;
+        let playerTransform = player.getComponent ? player.getComponent(TransformComponent) : null;
         if (!playerTransform) {
             // If using spaceship directly, playerTransform is already correctly set up
             if (player.position) {
@@ -213,7 +215,7 @@ export class EnemyAIComponent extends Component {
             console.log("ENEMY KAMIKAZE ATTACK!");
             
             // Get player health component
-            const playerHealth = player.getComponent('HealthComponent');
+            const playerHealth = player.getComponent(HealthComponent);
             if (playerHealth) {
                 // Use the configured damage value instead of calculating from player's health
                 playerHealth.applyDamage(this.damage, 'collision', this.entity);

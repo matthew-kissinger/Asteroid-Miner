@@ -7,6 +7,7 @@ import { EnemyAIComponent } from '../../components/combat/enemyAI.js';
 import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { MeshComponent } from '../../components/rendering/mesh.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
+import { TrailComponent } from '../../components/rendering/trail.js';
 
 export class EnemyPoolManager {
     constructor(world, maxPoolSize = 20) {
@@ -110,7 +111,7 @@ export class EnemyPoolManager {
             }
             
             // Reset any component states that might be problematic
-            const enemyAI = entity.getComponent('EnemyAIComponent');
+            const enemyAI = entity.getComponent(EnemyAIComponent);
             if (enemyAI) {
                 // Reset internal state
                 enemyAI.playerFound = false;
@@ -178,7 +179,7 @@ export class EnemyPoolManager {
         if (this.enemyPool.length < this.maxPoolSize) {
             // TRAIL CLEANUP: Remove trail component and its visual elements first
             // This is critical to prevent the trail from persisting after enemy destruction
-            const trailComponent = entity.getComponent('TrailComponent');
+            const trailComponent = entity.getComponent(TrailComponent);
             if (trailComponent) {
                 try {
                     // Call the onDetached method if it exists to clean up resources
@@ -208,7 +209,7 @@ export class EnemyPoolManager {
                     }
                     
                     // Remove the component from the entity
-                    entity.removeComponent('TrailComponent');
+                    entity.removeComponent(TrailComponent);
                     console.log(`Removed and cleaned up TrailComponent from entity ${entityId}`);
                 } catch (error) {
                     console.error(`Error cleaning up trail for entity ${entityId}:`, error);
@@ -216,7 +217,7 @@ export class EnemyPoolManager {
             }
             
             // Reset the entity's transform
-            const transform = entity.getComponent('TransformComponent');
+            const transform = entity.getComponent(TransformComponent);
             if (transform) {
                 transform.position.set(0, 0, 0);
                 transform.rotation.set(0, 0, 0);
@@ -224,14 +225,14 @@ export class EnemyPoolManager {
             }
             
             // Reset health if present
-            const health = entity.getComponent('HealthComponent');
+            const health = entity.getComponent(HealthComponent);
             if (health) {
                 health.health = 0;
                 health.isDestroyed = true;
             }
             
             // Disable AI component if present
-            const enemyAI = entity.getComponent('EnemyAIComponent');
+            const enemyAI = entity.getComponent(EnemyAIComponent);
             if (enemyAI) {
                 enemyAI.enabled = false;
                 // Reset internal state variables to prevent stale behavior
@@ -241,7 +242,7 @@ export class EnemyPoolManager {
             }
             
             // Clean up and hide mesh
-            const meshComponent = entity.getComponent('MeshComponent');
+            const meshComponent = entity.getComponent(MeshComponent);
             if (meshComponent && meshComponent.mesh) {
                 try {
                     // Remove from scene if it has a parent
@@ -257,7 +258,7 @@ export class EnemyPoolManager {
             }
             
             // Disable rigidbody physics
-            const rigidbody = entity.getComponent('RigidbodyComponent');
+            const rigidbody = entity.getComponent(RigidbodyComponent);
             if (rigidbody) {
                 rigidbody.isFrozen = true;
                 if (rigidbody.velocity) {
