@@ -367,28 +367,28 @@ export class EnemySpawner {
         const visualVariant = Math.floor(Math.random() * 4);
         entity.visualVariant = visualVariant;
         
-        // Configure transform - ALWAYS ensure we have a valid transform
+        // Configure transform - reuse existing or create new
         let transform = entity.getComponent('TransformComponent');
         
-        // Remove old transform if it exists to ensure clean state
-        if (transform) {
-            entity.removeComponent('TransformComponent');
+        if (!transform) {
+            // Create new transform if it doesn't exist
+            transform = new TransformComponent(position.clone());
+            entity.addComponent(transform);
+            console.log(`Created new TransformComponent for entity ${entity.id}`);
+        } else {
+            // Update existing transform
+            transform.position.copy(position);
+            console.log(`Updated existing TransformComponent for entity ${entity.id}`);
         }
         
-        // Always create a fresh transform component
-        transform = new TransformComponent(position.clone());
+        // Set scale and rotation
         transform.scale.set(finalSize, finalSize, finalSize);
-        
-        // Apply rotation offset
         transform.rotation.x = rotationOffset.x;
         transform.rotation.y = rotationOffset.y;
         transform.rotation.z = rotationOffset.z;
-        
         transform.needsUpdate = true;
         
-        // Add the new transform component
-        entity.addComponent(transform);
-        console.log(`Added TransformComponent to entity ${entity.id} at position (${position.x.toFixed(0)}, ${position.y.toFixed(0)}, ${position.z.toFixed(0)})`);
+        console.log(`Configured TransformComponent for entity ${entity.id} at position (${position.x.toFixed(0)}, ${position.y.toFixed(0)}, ${position.z.toFixed(0)})`);
         
         // Add or update health component with difficulty-scaled health
         let health = entity.getComponent('HealthComponent');
@@ -492,19 +492,27 @@ export class EnemySpawner {
                 }
             }
             
-            // Get transform component to sync position - this should always exist now
+            // Get transform component to sync position - verify it still exists
             const transformComp = entity.getComponent('TransformComponent');
-            if (transformComp) {
+            if (transformComp && transformComp.position) {
                 // Ensure mesh position, rotation, and scale match entity transform
                 meshComponent.mesh.position.copy(transformComp.position);
-                meshComponent.mesh.rotation.x = transformComp.rotation.x;
-                meshComponent.mesh.rotation.y = transformComp.rotation.y;
-                meshComponent.mesh.rotation.z = transformComp.rotation.z;
+                meshComponent.mesh.rotation.x = transformComp.rotation.x || 0;
+                meshComponent.mesh.rotation.y = transformComp.rotation.y || 0;
+                meshComponent.mesh.rotation.z = transformComp.rotation.z || 0;
                 meshComponent.mesh.scale.copy(transformComp.scale);
                 
                 console.log(`Synced mesh position to (${transformComp.position.x.toFixed(0)}, ${transformComp.position.y.toFixed(0)}, ${transformComp.position.z.toFixed(0)})`);
             } else {
-                console.error(`Entity ${entity.id} has no TransformComponent after it was just added!`);
+                console.error(`Entity ${entity.id} has no valid TransformComponent! Re-adding...`);
+                // Emergency re-add of transform component
+                const emergencyTransform = new TransformComponent(position.clone());
+                emergencyTransform.scale.set(finalSize, finalSize, finalSize);
+                entity.addComponent(emergencyTransform);
+                
+                // Sync mesh to emergency transform
+                meshComponent.mesh.position.copy(position);
+                meshComponent.mesh.scale.set(finalSize, finalSize, finalSize);
             }
             
             console.log("Added enemy drone mesh to scene with visibility:", meshComponent.mesh.visible);

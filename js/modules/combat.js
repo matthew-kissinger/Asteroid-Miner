@@ -16,6 +16,8 @@ import { RenderSystem } from '../systems/rendering/renderSystem.js';
 import { CollisionSystem } from '../systems/physics/collisionSystem.js'; // Import CollisionSystem
 import { VisualEffectsSystem } from '../systems/rendering/visualEffectsSystem.js'; // Import VisualEffectsSystem
 import { TrailSystem } from '../systems/rendering/trailSystem.js';
+import { DeployableLaserSystem } from '../systems/weapons/deployableLaserSystem.js';
+import { DeploymentSystem } from '../systems/deployables/deploymentSystem.js';
 import { ProjectilePoolManager } from './pooling/ProjectilePoolManager.js'; // Import our new pooling system
 import * as THREE from 'three';
 
@@ -386,11 +388,19 @@ export class Combat {
             this.world.registerSystem(this.trailSystem);
             
             // Register deployable laser systems
-            this.deployableLaserSystem = await this.importAndRegisterSystem('../systems/weapons/deployableLaserSystem.js', 'DeployableLaserSystem');
-            this.world.registerSystem(this.deployableLaserSystem);
+            try {
+                this.deployableLaserSystem = new DeployableLaserSystem(this.world);
+                this.world.registerSystem(this.deployableLaserSystem);
+            } catch (error) {
+                console.warn('[COMBAT] Failed to register DeployableLaserSystem:', error);
+            }
 
-            this.deploymentSystem = await this.importAndRegisterSystem('../systems/deployables/deploymentSystem.js', 'DeploymentSystem');
-            this.world.registerSystem(this.deploymentSystem);
+            try {
+                this.deploymentSystem = new DeploymentSystem(this.world);
+                this.world.registerSystem(this.deploymentSystem);
+            } catch (error) {
+                console.warn('[COMBAT] Failed to register DeploymentSystem:', error);
+            }
             
             // Add trail system to window.game for global access if game object exists
             if (window.game) {
