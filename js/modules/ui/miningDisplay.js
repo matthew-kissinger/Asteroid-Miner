@@ -11,40 +11,9 @@ export class MiningDisplay {
     }
     
     setupMiningDisplay() {
-        // Create only the target info display for when targeting asteroids
-        const targetInfo = document.createElement('div');
-        targetInfo.id = 'target-info';
-        targetInfo.style.position = 'absolute';
-        targetInfo.style.bottom = '120px';
-        targetInfo.style.left = '50%';
-        targetInfo.style.transform = 'translateX(-50%)';
-        targetInfo.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-        targetInfo.style.padding = '10px 20px';
-        targetInfo.style.borderRadius = '20px';
-        targetInfo.style.border = '1px solid #30cfd0';
-        targetInfo.style.boxShadow = '0 0 10px #30cfd0';
-        targetInfo.style.display = 'none';
-        targetInfo.style.textAlign = 'center';
-        document.body.appendChild(targetInfo);
-        
-        // Target name
-        const targetName = document.createElement('div');
-        targetName.id = 'target-name';
-        targetName.textContent = 'Asteroid';
-        targetInfo.appendChild(targetName);
-        
-        // Target distance
-        const targetDistance = document.createElement('div');
-        targetDistance.id = 'target-distance';
-        targetDistance.textContent = 'Distance: 0 units';
-        targetInfo.appendChild(targetDistance);
-        
-        // Add estimated mining time display
-        const miningTime = document.createElement('div');
-        miningTime.id = 'mining-time';
-        miningTime.textContent = 'Mining time: calculating...';
-        miningTime.style.color = '#ffcc00';
-        targetInfo.appendChild(miningTime);
+        // Don't create a duplicate target-info element
+        // The HUD already creates one that we'll use
+        // We just need to ensure mining-time element exists when needed
     }
     
     update() {

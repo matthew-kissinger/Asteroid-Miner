@@ -3,7 +3,7 @@
 ## 1. Project Overview
 
 -   **Project Name:** Asteroid Miner 
--   **Version:** v0.7.0
+-   **Version:** v0.6.1 (Post-Cleanup, Targeting Fix)
 -   **Purpose:** A 3D space mining simulation game playable in a web browser. Players navigate space, mine asteroids, trade resources, upgrade their ship, and engage in combat.
 -   **Core Functionality:**
     -   3D Space Navigation & Physics Simulation
@@ -21,13 +21,45 @@
     -   Three.js (r175) for 3D rendering and core structures (Vectors, Quaternions, etc.)
     -   HTML5 & CSS3
     -   Vite (v5+) as the build system for development and production optimization
-    -   Custom ECS Implementation (Used within the Combat module, potentially includes optimized variations)
+    -   Hybrid Architecture: ECS for combat entities, module-based for player systems
     -   NippleJS v0.10.1 (for mobile touch joysticks, dynamically loaded from CDN)
     -   Tone.js (for intro sequence audio synthesis - latest version via CDN)
     -   External AI API (Optional, via `apiClient.js`) for custom system generation.
 -   **System Architecture Type:** Client-Side Monolith with a hybrid architecture. Features a dedicated Entity-Component-System (ECS) world managed by the `Combat` module for enemies, combat logic, trading, mining visuals, docking visuals, and potentially input/control handling. Other aspects like player ship physics, resource management, and asteroid management use direct object manipulation and custom classes (`Spaceship`, `AsteroidBelt`). Includes two object pooling systems for performance. Communicates with an external API for optional AI content generation.
 
-## Recent Improvements (v0.7.0 Hybrid-Tightening)
+## Hybrid Architecture Design (Intentional)
+
+The codebase uses a **pragmatic hybrid architecture** that is working as designed:
+
+### Why Hybrid?
+- **ECS for Many Similar Entities:** Enemies, projectiles, deployables benefit from batch processing
+- **Module-based for Unique Objects:** Player ship, UI, environment are simpler as direct objects
+- **Performance Optimized:** ECS overhead only where it provides value
+- **Easier Debugging:** Player state in one place (Spaceship class), not scattered across components
+
+### What Uses ECS:
+- Enemy ships (multiple instances, similar behavior)
+- Projectiles (many instances, pooled)
+- Deployable turrets (multiple, autonomous)
+- Combat visual effects (pooled, temporary)
+
+### What Uses Modules:
+- Player ship (single instance, complex state)
+- Mining/docking UI logic (player-centric)
+- Environment objects (asteroids, planets)
+- Audio and intro sequences
+
+### Available for Future Activation:
+See `ECS_SYSTEMS_INVENTORY.md` for 5 complete ECS systems ready to activate if moving toward full ECS for multiplayer or other needs.
+
+## Recent Improvements
+
+### v0.6.1 - UI/UX Improvements
+- **Targeting HUD Fix:** Target information panel now properly starts hidden and only appears when targeting is activated
+- **Mining UI Coordination:** Mining system now checks targeting state before showing UI elements
+- **Cleaner Initial State:** No UI elements appear until their features are actively used
+
+### v0.7.0 - Hybrid-Tightening
 
 ### Performance & Architecture
 - Perf overlay (F3) with FPS, sim ms, render ms, draw calls, visible instances, pool stats, GC count, per-system timings via `js/modules/debug/perfOverlay.js`.
@@ -53,9 +85,7 @@
 
 ## 2. Complete File Structure
 
-asteroid-miner_v0.6.0/
-assets/ # Game assets (textures, models, etc.) - Served from public directory
-css/ # CSS Stylesheets - Served from public directory
+asteroid-miner/
 dist/ # Production build output (generated)
 js/ # JavaScript source code - Core game logic
     components/ # ECS Components (Data - Primarily used by Combat ECS)
@@ -89,10 +119,9 @@ js/ # JavaScript source code - Core game logic
     main.js # Original entry point for the game
 node_modules/ # Node.js dependencies (generated)
 public/ # Static assets served directly by Vite
-    assets/ # Symlink to assets directory
-    css/ # Symlink to css directory
-    sounds/ # Symlink to sounds directory
-sounds/ # Audio files for game sounds - Served from public directory
+    assets/ # Game textures and models
+    css/ # CSS stylesheets
+    sounds/ # Audio files
 src/ # Vite source directory
     three-imports.js # Centralized Three.js imports for Vite
     main.js # New entry point that imports the original game
@@ -131,8 +160,6 @@ vite.config.js # Vite configuration file
     -   `world.js`: Orchestrates an ECS instance, holding references to the `EntityManager` and `SystemManager`. Instantiated by `js/modules/combat.js`.
     -   `messageBus.js`: A publish/subscribe event bus. A global instance (`window.mainMessageBus`) is created in `main.js`, and the Combat ECS world uses this shared bus.
     -   `difficultyManager.js`: Contains base logic for difficulty scaling. Primary integration and application occur within the `Game` class (`js/modules/game.js`) and `main.js`.
-    -   `dataStore.js`: Implements Data-Oriented Design pattern using TypedArrays for optimal memory layout and performance. Currently preserved for future scaling but not actively used in the main game. Provides optimized storage for transform and rigidbody components.
-    -   `optimizedEntityFactory.js`: Factory for creating entities with optimized components found in `js/components/optimized/`. Preserved for future scaling but not actively used in the main game.
 -   **Interactions:** The `World` instance created by `Combat.js` uses `EntityManager` and `SystemManager`. Systems registered within this world query its `EntityManager` and communicate via the shared `MessageBus`.
 
 ### Object Pooling Systems
@@ -162,16 +189,11 @@ vite.config.js # Vite configuration file
     -   `rendering/trail.js`: Data for entity trails.
     -   `spaceship/`, `mining/`: Components like `CargoComponent`, `MineableComponent`, `MiningLaserComponent` used by `Spaceship` class, `AsteroidBelt` class, or ECS Systems.
     -   `spaceship/pickupable.js`: Allows objects (like deployable lasers) to be picked up by the player.
-    -   `optimized/`: Contains performance-optimized versions of components using TypedArrays for better memory layout and performance:
-        -   `transformComponent.js`: Optimized transform component that uses the `TransformDataStore`.
-        -   `rigidbodyComponent.js`: Optimized rigidbody component that uses the `RigidbodyDataStore`.
-        -   These optimized components are preserved for future scaling but not actively used in the main game.
 -   **Interactions:** Components are added to Entities via `entity.addComponent()`. Systems query entities based on components using `entityManager.getEntitiesWithComponents()`.
 
 ### `js/systems/` (Used ONLY by Combat ECS)
 -   **Purpose:** Implements game logic specifically for the Combat ECS world by operating on entities (enemies, player reference, projectiles, potentially asteroids/stations) that possess specific sets of components. Handles low-level state changes, physics, rendering updates, and visual effects within the ECS context.
--   **Key Systems Registered in Combat ECS:**
-    -   `physics/movementSystem.js`: Updates Combat ECS entity positions based on velocity/forces.
+-   **Key Systems ACTUALLY Registered in Combat ECS:**
     -   `physics/collisionSystem.js`: Detects and resolves collisions between Combat ECS entities.
     -   `rendering/renderSystem.js`: Updates transforms of `THREE.Mesh` objects associated with Combat ECS entities.
     -   `rendering/trailSystem.js`: Manages and updates trails for Combat ECS entities (e.g., projectiles).
@@ -181,11 +203,12 @@ vite.config.js # Vite configuration file
     -   `combat/deployableLaserSystem.js`: Manages autonomous space laser turret targeting and firing behavior.
     -   `combat/enemyLifecycle.js`, `enemyPoolManager.js`, `enemySpawner.js`: Support systems for enemy management.
     -   `deployment/deploymentSystem.js`: Handles deployment and retrieval of space laser turrets.
-    -   `entity/healthSystem.js`: Updates health/shields and handles destruction logic.
-    -   `mining/miningSystem.js`: Handles the *visuals and entity interactions* of the mining process (e.g., updating laser beam appearance, checking `MineableComponent` state), triggered by events from `js/modules/controls/miningSystem.js`.
-    -   `docking/dockingSystem.js`: Handles low-level ECS entity state changes related to docking (e.g., attaching entities, managing physics constraints), likely triggered by events from `js/modules/controls/dockingSystem.js`.
-    -   `trading/tradingSystem.js`: Manages resource exchange or interactions between entities within the ECS (e.g., player entity trading with station entity). Details need confirmation.
-    -   `input/inputSystem.js`, `shipControlSystem.js`, `touchInputSystem.js`: Potentially handle low-level input processing directed at ECS entities (e.g., AI ship movement based on internal state, translating touch data for ECS). Relationship with module-level input handlers needs clarification.
+-   **Available But NOT Registered ECS Systems:** (See ECS_SYSTEMS_INVENTORY.md for details)
+    -   `entity/healthSystem.js`: Complete health management system with UI hooks
+    -   `mining/miningSystem.js`: Production-ready with full visual effects (579 lines)
+    -   `docking/dockingSystem.js`: Proximity detection and state management
+    -   `trading/tradingSystem.js`: Market mechanics and UI integration
+    -   `physics/movementSystem.js`: Complete physics implementation
 -   **Interactions:** Systems are managed by the `SystemManager` within the Combat ECS `World`. They fetch relevant entities from that world's `EntityManager`, operate on their components, and communicate via the shared `MessageBus`. They often react to events published by higher-level modules.
 
 ### `js/modules/`
@@ -240,9 +263,6 @@ vite.config.js # Vite configuration file
 -   **`js/modules/environment/asteroidBelt.js`**: Manages asteroids using direct `THREE.Mesh` objects.
 -   **`js/modules/environment/spaceAnomalies.js`**: Creates and manages space anomalies with collectible energy orbs. Implements 5 unique anomaly types with particle effects, animations, and collision detection.
 -   **`js/modules/utils/apiClient.js`**: Handles external AI API.
--   **`js/core/dataStore.js`**: Implements Data-Oriented Design pattern using TypedArrays for optimized component storage. Preserved for future scaling but not actively used in the main game.
--   **`js/core/optimizedEntityFactory.js`**: Factory for creating entities with optimized components. Preserved for future scaling but not actively used in the main game.
--   **`js/components/optimized/*`**: Optimized component versions using TypedArrays. Preserved for future scaling but not actively used in the main game.
 
 ## 5. Data Models
 

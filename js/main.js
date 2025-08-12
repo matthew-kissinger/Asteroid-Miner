@@ -39,7 +39,7 @@ window.vectorPool = {
 
 class Game {
     constructor() {
-        console.log("Initializing game...");
+        if (window.DEBUG_MODE) console.log("Initializing game...");
         
         // Make game instance globally accessible for emergency access
         window.game = this;
@@ -50,25 +50,25 @@ class Game {
         
         try {
             // Create audio manager first but don't initialize yet
-            console.log("Creating audio manager...");
+            if (window.DEBUG_MODE) console.log("Creating audio manager...");
             this.audio = new AudioManager();
             
             // Initialize renderer first
-            console.log("Creating renderer...");
+            if (window.DEBUG_MODE) console.log("Creating renderer...");
             this.renderer = new Renderer();
-            console.log("Renderer created, getting scene...");
+            if (window.DEBUG_MODE) console.log("Renderer created, getting scene...");
             
             // Access scene and camera directly rather than through getters
             this.scene = this.renderer.scene;
             this.camera = this.renderer.camera;
             
-            console.log("Scene and camera references obtained");
+            if (window.DEBUG_MODE) console.log("Scene and camera references obtained");
             
             // Share camera reference with scene for easy access by other components
             this.scene.camera = this.camera;
             
             // Initialize essential components needed for the start screen
-            console.log("Initializing essential components...");
+            if (window.DEBUG_MODE) console.log("Initializing essential components...");
             
             // Initialize physics
             this.physics = new Physics(this.scene);
@@ -80,7 +80,7 @@ class Game {
             this.environment = new Environment(this.scene);
             
             // Initialize spaceship
-            console.log("Creating spaceship...");
+            if (window.DEBUG_MODE) console.log("Creating spaceship...");
             this.spaceship = new Spaceship(this.scene);
             
             // Set spaceship reference in physics
@@ -102,7 +102,7 @@ class Game {
             this.ui.setControls(this.controls);
             
             // Initialize settings
-            console.log("Initializing settings...");
+            if (window.DEBUG_MODE) console.log("Initializing settings...");
             this.ui.initializeSettings(this);
             
             // Game state
@@ -145,7 +145,7 @@ class Game {
             this.fpsBufferSize = 15; // Smaller buffer for more responsive updates
             
             // Initialize difficulty manager 
-            console.log("Initializing difficulty manager...");
+            if (window.DEBUG_MODE) console.log("Initializing difficulty manager...");
             this.initializeDifficultyManager();
             
             // Register event handlers
@@ -169,7 +169,7 @@ class Game {
     // Initialize game in sequence, showing start screen first and loading non-essentials after
     async initializeGameSequence() {
         try {
-            console.log("Starting game initialization sequence...");
+            if (window.DEBUG_MODE) console.log("Starting game initialization sequence...");
             
             // Add a small delay to let browser stabilize after page load
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -179,13 +179,13 @@ class Game {
                 try {
                     this.audio.resumeAudioContext();
                 } catch (e) {
-                    console.log("Audio context couldn't be resumed yet, will try again after user interaction");
+                    if (window.DEBUG_MODE) console.log("Audio context couldn't be resumed yet, will try again after user interaction");
                 }
             }
             
             // Show the start screen immediately
             if (this.ui && this.ui.startScreen) {
-                console.log("Showing start screen");
+                if (window.DEBUG_MODE) console.log("Showing start screen");
                 this.ui.startScreen.show();
             } else {
                 console.error("Start screen not found, falling back to default behavior");
@@ -193,13 +193,13 @@ class Game {
             }
             
             // Start game loop with warm-up frames
-            console.log("Starting game loop with warm-up frames");
+            if (window.DEBUG_MODE) console.log("Starting game loop with warm-up frames");
             requestAnimationFrame(this.boundAnimate);
             
             // Initialize remaining systems in the background after start screen is shown
             this.initializeRemainingSystemsAsync();
             
-            console.log("Game initialization sequence completed successfully");
+            if (window.DEBUG_MODE) console.log("Game initialization sequence completed successfully");
         } catch (error) {
             console.error("Error during game initialization sequence:", error);
             
@@ -219,19 +219,19 @@ class Game {
             this.loadAudioAsync();
             
             // Initialize combat systems asynchronously
-            console.log("Initializing combat module asynchronously...");
+            if (window.DEBUG_MODE) console.log("Initializing combat module asynchronously...");
             if (!this.combat) {
                 this.combat = new Combat(this.scene, this.spaceship);
                 
                 // Ensure the ECS world in combat is properly initialized
                 if (this.combat.world) {
-                    console.log("Combat ECS world successfully created");
+                    if (window.DEBUG_MODE) console.log("Combat ECS world successfully created");
                 } else {
-                    console.log("Waiting for combat ECS world to initialize...");
+                    if (window.DEBUG_MODE) console.log("Waiting for combat ECS world to initialize...");
                     // Add a check to ensure the player entity exists
                     setTimeout(() => {
                         if (this.combat.world && this.combat.playerEntity) {
-                            console.log("Combat ECS world and player entity initialized after delay");
+                            if (window.DEBUG_MODE) console.log("Combat ECS world and player entity initialized after delay");
                         } else {
                             console.warn("Combat ECS world or player entity not available after delay, recreating...");
                             if (this.combat.createPlayerReferenceEntity) {
@@ -259,9 +259,9 @@ class Game {
         try {
             if (this.audio) {
                 // Initialize audio in the background
-                console.log("Initializing audio system asynchronously...");
+                if (window.DEBUG_MODE) console.log("Initializing audio system asynchronously...");
                 this.audio.initialize().then(() => {
-                    console.log("Audio system initialization complete");
+                    if (window.DEBUG_MODE) console.log("Audio system initialization complete");
                 }).catch(error => {
                     console.error("Error initializing audio:", error);
                 });
@@ -273,7 +273,7 @@ class Game {
     
     // Pre-warm only the most essential shaders needed for immediate gameplay
     preWarmBasicShaders() {
-        console.log("Pre-warming essential shaders...");
+        if (window.DEBUG_MODE) console.log("Pre-warming essential shaders...");
         
         // Create template projectile geometry and materials
         this.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
@@ -297,12 +297,12 @@ class Game {
         // Remove dummy object after compilation
             this.renderer._withGuard(() => this.scene.remove(dummyProjectile));
         
-        console.log("Essential shaders pre-warmed");
+        if (window.DEBUG_MODE) console.log("Essential shaders pre-warmed");
     }
     
     // Initialize object pools for commonly created objects
     initializeObjectPools() {
-        console.log("Initializing object pools...");
+        if (window.DEBUG_MODE) console.log("Initializing object pools...");
         
         // Hit effect pool
         window.objectPool.createPool('hitEffect', () => {
@@ -550,7 +550,7 @@ class Game {
             };
         }, 10, 50); // Pre-create 10, max 50
         
-        console.log("Object pools initialized");
+        if (window.DEBUG_MODE) console.log("Object pools initialized");
     }
     
     startDocked() {
@@ -568,7 +568,7 @@ class Game {
             if (this.controls && this.controls.dockingSystem) {
                 // Just show stargate UI without changing state
                 this.controls.dockingSystem.dockWithStargate();
-                console.log("Stargate UI shown");
+                if (window.DEBUG_MODE) console.log("Stargate UI shown");
             } else {
                 console.error("Controls or dockingSystem not available");
             }
@@ -579,7 +579,7 @@ class Game {
      * Initialize the intro sequence
      */
     initIntroSequence() {
-        console.log("Initializing intro sequence...");
+        if (window.DEBUG_MODE) console.log("Initializing intro sequence...");
         
         // Create intro sequence instance
         this.introSequence = new IntroSequence(
@@ -593,7 +593,7 @@ class Game {
         this.originalCameraPosition = this.camera.position.clone();
         this.originalCameraRotation = this.camera.rotation.clone();
         
-        console.log("Intro sequence initialized");
+        if (window.DEBUG_MODE) console.log("Intro sequence initialized");
     }
     
     /**
@@ -604,15 +604,15 @@ class Game {
             this.initIntroSequence();
         }
         
-        console.log("Starting intro sequence...");
+        if (window.DEBUG_MODE) console.log("Starting intro sequence...");
         this.introSequenceActive = true; // Mark intro as active to prevent player control
         
         // Freeze all enemies during intro sequence
         if (this.combat && this.combat.world && this.combat.enemySystem) {
-            console.log("Freezing all enemies for intro sequence");
+            if (window.DEBUG_MODE) console.log("Freezing all enemies for intro sequence");
             this.combat.enemySystem.freezeAllEnemies();
         } else if (window.game && window.game.ecsWorld && window.game.ecsWorld.enemySystem) {
-            console.log("Freezing all enemies via global reference for intro sequence");
+            if (window.DEBUG_MODE) console.log("Freezing all enemies via global reference for intro sequence");
             window.game.ecsWorld.enemySystem.freezeAllEnemies();
         }
         
@@ -628,7 +628,7 @@ class Game {
         
         // Explicitly hide stargate UI
         if (this.ui && this.ui.stargateInterface) {
-            console.log("Explicitly hiding stargate UI before intro sequence");
+            if (window.DEBUG_MODE) console.log("Explicitly hiding stargate UI before intro sequence");
             this.ui.stargateInterface.hideStargateUI();
         }
         
@@ -652,20 +652,20 @@ class Game {
      * Handle completion of the intro sequence
      */
     completeIntroSequence() {
-        console.log("Intro sequence completed - final phase");
+        if (window.DEBUG_MODE) console.log("Intro sequence completed - final phase");
         
         // Unfreeze all enemies after intro sequence
         if (this.combat && this.combat.world && this.combat.enemySystem) {
-            console.log("Unfreezing all enemies after intro sequence");
+            if (window.DEBUG_MODE) console.log("Unfreezing all enemies after intro sequence");
             this.combat.enemySystem.unfreezeAllEnemies();
         } else if (window.game && window.game.ecsWorld && window.game.ecsWorld.enemySystem) {
-            console.log("Unfreezing all enemies via global reference after intro sequence");
+            if (window.DEBUG_MODE) console.log("Unfreezing all enemies via global reference after intro sequence");
             window.game.ecsWorld.enemySystem.unfreezeAllEnemies();
         }
         
         // Explicitly hide stargate UI if it's visible
         if (this.ui && this.ui.stargateInterface) {
-            console.log("Explicitly hiding stargate UI after intro sequence");
+            if (window.DEBUG_MODE) console.log("Explicitly hiding stargate UI after intro sequence");
             this.ui.stargateInterface.hideStargateUI();
         }
         
@@ -674,7 +674,7 @@ class Game {
         
         // Show all UI elements AFTER marking intro inactive
         if (this.ui) {
-            console.log("Showing game UI elements after intro completion");
+            if (window.DEBUG_MODE) console.log("Showing game UI elements after intro completion");
             this.ui.showUI();
         }
         
@@ -684,14 +684,14 @@ class Game {
             
             // Force undocked state
             if (this.spaceship.isDocked) {
-                console.log("Forcing undocked state in completeIntroSequence");
+                if (window.DEBUG_MODE) console.log("Forcing undocked state in completeIntroSequence");
                 this.spaceship.isDocked = false;
             }
         }
         
         // NOW is when we re-enable player controls (at the very end)
         if (this.controls && this.controls.inputHandler) {
-            console.log("Re-enabling player controls");
+            if (window.DEBUG_MODE) console.log("Re-enabling player controls");
             this.controls.inputHandler.enabled = true;
         }
         
@@ -703,7 +703,7 @@ class Game {
             window.mainMessageBus.publish('intro.completed', {});
         }
         
-        console.log("Game starting after intro sequence");
+        if (window.DEBUG_MODE) console.log("Game starting after intro sequence");
     }
     
     setupEventHandlers() {
@@ -798,7 +798,7 @@ class Game {
             
             // Try to initialize player entity directly if method is missing
             if (this.combat.createPlayerReferenceEntity && !this.combat.playerEntity) {
-                console.log("Creating player entity directly since updatePlayerReference is not available");
+                if (window.DEBUG_MODE) console.log("Creating player entity directly since updatePlayerReference is not available");
                 this.combat.createPlayerReferenceEntity();
             }
         }
@@ -919,7 +919,7 @@ class Game {
     gameOver(message) {
         if (this.isGameOver) return;
         
-        console.log("Game over:", message);
+        if (window.DEBUG_MODE) console.log("Game over:", message);
         this.isGameOver = true;
         
         // Play explosion sound
@@ -987,7 +987,7 @@ class Game {
                 this.frameStartTime = performance.now();
                 this.lastUpdateTime = performance.now();
                 this.performanceStable = true;
-                console.log(`Warm-up complete, starting game loop`);
+                if (window.DEBUG_MODE) console.log(`Warm-up complete, starting game loop`);
             }
             
             // Continue warm-up
@@ -1138,7 +1138,7 @@ class Game {
     
     pause() {
         // Pause game logic here
-        console.log('Game paused');
+        if (window.DEBUG_MODE) console.log('Game paused');
         
         // Mute audio when game is paused
         if (this.audio) {
@@ -1154,7 +1154,7 @@ class Game {
     
     resume() {
         // Resume game logic here
-        console.log('Game resumed');
+        if (window.DEBUG_MODE) console.log('Game resumed');
         this.lastUpdateTime = performance.now(); // Reset timer to avoid large delta
         
         // Unmute audio when game is resumed
@@ -1170,20 +1170,11 @@ class Game {
     
     // Create a fallback for the initOptimizedECS method that is causing errors
     initOptimizedECS() {
-        // [PRESERVED FOR FUTURE SCALING]
-        // This method is a placeholder for a potential future implementation
-        // of the optimized ECS system using TypedArrays and Data-Oriented Design.
-        // 
-        // The optimized components, systems and DataStore code are preserved 
-        // in the codebase for future performance scaling needs, such as:
-        // - Massive asteroid fields (1000+ asteroids)
-        // - Large-scale space battles
-        // - Advanced particle systems
-        console.log("initOptimizedECS called - This is a placeholder implementation");
+        if (window.DEBUG_MODE) console.log("initOptimizedECS called - This is a placeholder implementation");
         
         // Check if we need to initialize optimized systems
         if (this.world && typeof this.world.getSystem !== 'function') {
-            console.log("Adding getSystem method to World class to fix compatibility issues");
+            if (window.DEBUG_MODE) console.log("Adding getSystem method to World class to fix compatibility issues");
             // Add getSystem method to World prototype if it doesn't exist
             this.world.getSystem = function(systemType) {
                 if (this.systemManager && typeof this.systemManager.getSystem === 'function') {
@@ -1231,7 +1222,7 @@ class Game {
         // Add global debug command to trigger intro sequence
         window.playIntro = () => {
             if (this.startIntroSequence) {
-                console.log("Manually triggering intro sequence");
+                if (window.DEBUG_MODE) console.log("Manually triggering intro sequence");
                 this.startIntroSequence();
                 return "Playing intro sequence...";
             }
@@ -1279,9 +1270,11 @@ class Game {
                     this.params.enemyDamage = Math.floor(15 * difficultyMultiplier);
                     this.params.enemySpeed = Math.min(700 * (1 + (0.2 * (this.currentLevel - 1))), 1400);
                     
-                    console.log(`Difficulty increased to level ${this.currentLevel} (${difficultyMultiplier}x)`);
-                    console.log(`Parameters: maxEnemies=${this.params.maxEnemies}, spawnInterval=${this.params.spawnInterval}`);
-                    console.log(`Health=${this.params.enemyHealth}, Damage=${this.params.enemyDamage}, Speed=${this.params.enemySpeed}`);
+                    if (window.DEBUG_MODE) {
+                        console.log(`Difficulty increased to level ${this.currentLevel} (${difficultyMultiplier}x)`);
+                        console.log(`Parameters: maxEnemies=${this.params.maxEnemies}, spawnInterval=${this.params.spawnInterval}`);
+                        console.log(`Health=${this.params.enemyHealth}, Damage=${this.params.enemyDamage}, Speed=${this.params.enemySpeed}`);
+                    }
                 }
             }
         };
@@ -1293,7 +1286,7 @@ class Game {
     activateHordeMode() {
         if (this.isHordeActive) return; // Already active
         
-        console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
+        if (window.DEBUG_MODE) console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
         this.isHordeActive = true;
         this.hordeStartTime = performance.now();
         this.hordeSurvivalTime = 0;
@@ -1315,7 +1308,7 @@ class Game {
         
         // Force player to undock if currently docked
         if (this.spaceship && this.spaceship.isDocked) {
-            console.log("Horde mode forcing undock from stargate");
+            if (window.DEBUG_MODE) console.log("Horde mode forcing undock from stargate");
             
             // Undock the ship
             this.spaceship.undock();
@@ -1329,7 +1322,7 @@ class Game {
             // CRITICAL FIX: Explicitly show the HUD after forcing undock
             // Use a short delay to ensure undocking process is complete
             setTimeout(() => {
-                console.log("Horde mode ensuring HUD is visible");
+                if (window.DEBUG_MODE) console.log("Horde mode ensuring HUD is visible");
                 if (this.ui && this.ui.showUI) {
                     this.ui.showUI();
                 }
@@ -1353,7 +1346,7 @@ class Game {
      * Call this when the game is no longer needed to prevent memory leaks
      */
     destroy() {
-        console.log("Cleaning up game resources...");
+        if (window.DEBUG_MODE) console.log("Cleaning up game resources...");
         
         // Cancel animation frame
         if (this.boundAnimate) {
@@ -1462,7 +1455,7 @@ class Game {
         this.camera = null;
         this.fpsBuffer = [];
         
-        console.log("Game resources cleaned up successfully");
+        if (window.DEBUG_MODE) console.log("Game resources cleaned up successfully");
     }
     
     /**
@@ -1500,7 +1493,7 @@ class Game {
         // Add audio mute toggle (M key)
         if (e.key.toLowerCase() === 'm' && this.audio) {
             const isMuted = this.audio.toggleMute();
-            console.log(`Audio ${isMuted ? 'muted' : 'unmuted'}`);
+            if (window.DEBUG_MODE) console.log(`Audio ${isMuted ? 'muted' : 'unmuted'}`);
         }
         
         // Add debug mode toggle (D key + Shift)
@@ -1522,23 +1515,23 @@ class Game {
             // Mobile devices: cap at 60fps for battery life
             if (this.isMobile) {
                 this.frameRateCap = 60;
-                console.log(`Mobile device: capping at 60fps for battery life`);
+                if (window.DEBUG_MODE) console.log(`Mobile device: capping at 60fps for battery life`);
             }
             // High refresh displays: use adaptive approach
             else if (refreshRate > 90) {
                 // For very high refresh rates, use fixed timestep with interpolation
                 this.frameRateCap = 0; // Unlimited with fixed timestep
                 this.fixedDeltaTime = 1/60; // Keep physics at 60Hz
-                console.log(`High refresh display (${refreshRate}Hz): using fixed 60Hz physics with interpolation`);
+                if (window.DEBUG_MODE) console.log(`High refresh display (${refreshRate}Hz): using fixed 60Hz physics with interpolation`);
             }
             else if (refreshRate > 65) {
                 // For moderate high refresh (75-90Hz), cap at refresh rate
                 this.frameRateCap = refreshRate;
-                console.log(`Moderate high refresh (${refreshRate}Hz): capping at monitor rate`);
+                if (window.DEBUG_MODE) console.log(`Moderate high refresh (${refreshRate}Hz): capping at monitor rate`);
             } else {
                 // Standard 60Hz display
                 this.frameRateCap = refreshRate;
-                console.log(`Standard display: matching refresh rate at ${refreshRate}Hz`);
+                if (window.DEBUG_MODE) console.log(`Standard display: matching refresh rate at ${refreshRate}Hz`);
             }
         } else {
             // Manual setting
@@ -1547,11 +1540,11 @@ class Game {
             // Override for mobile if unlimited
             if (this.isMobile && this.frameRateCap === 0) {
                 this.frameRateCap = 60;
-                console.log(`Mobile device: overriding unlimited to 60fps`);
+                if (window.DEBUG_MODE) console.log(`Mobile device: overriding unlimited to 60fps`);
             }
         }
         
-        console.log(`Frame rate configuration: cap=${this.frameRateCap}, fixed timestep=${this.fixedDeltaTime * 1000}ms`);
+        if (window.DEBUG_MODE) console.log(`Frame rate configuration: cap=${this.frameRateCap}, fixed timestep=${this.fixedDeltaTime * 1000}ms`);
     }
     
     /**
@@ -1574,12 +1567,12 @@ class Game {
             const currentQuality = this.ui.settings.settings.graphicalQuality;
             
             if (currentQuality === 'high') {
-                console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to medium`);
+                if (window.DEBUG_MODE) console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to medium`);
                 this.ui.settings.settings.graphicalQuality = 'medium';
                 this.ui.settings.applyGraphicsSettings();
                 this.ui.settings.saveSettings();
             } else if (currentQuality === 'medium') {
-                console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to low`);
+                if (window.DEBUG_MODE) console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to low`);
                 this.ui.settings.settings.graphicalQuality = 'low';
                 this.ui.settings.applyGraphicsSettings();
                 this.ui.settings.saveSettings();
@@ -1593,13 +1586,13 @@ class Game {
         const introPlayed = localStorage.getItem('introPlayed') === 'true';
         
         if (introPlayed) {
-            console.log("Intro already played, starting in docked state");
+            if (window.DEBUG_MODE) console.log("Intro already played, starting in docked state");
             // Only set initial camera position if we're not doing the intro
             this.camera.position.set(0, 1500, 0);
             // Only start docked if we've already seen the intro
             this.startDocked();
         } else {
-            console.log("First time playing, preparing for intro sequence");
+            if (window.DEBUG_MODE) console.log("First time playing, preparing for intro sequence");
             // Make sure ship is docked but DON'T show the UI
             if (this.spaceship && !this.spaceship.isDocked) {
                 this.spaceship.dock();
@@ -1630,7 +1623,7 @@ class Game {
 
 function startGameMainModule() {
     // Add a console message to help debug loading issues
-    console.log("DOM ready, starting game initialization...");
+    if (window.DEBUG_MODE) console.log("DOM ready, starting game initialization...");
     
     // Clear any existing WebGL contexts to ensure clean start
     const canvases = document.querySelectorAll('canvas');
@@ -1649,18 +1642,20 @@ function startGameMainModule() {
 
 function initializeGame() {
     // Initialize the game directly instead of using a loading screen
-    console.log("Creating game instance...");
+    if (window.DEBUG_MODE) console.log("Creating game instance...");
     
     // Initialize the game with error handling
     try {
-        console.log("Checking for THREE module availability...");
-        // Log THREE availability for debugging
-        console.log("THREE available:", typeof THREE !== 'undefined');
+        if (window.DEBUG_MODE) {
+            console.log("Checking for THREE module availability...");
+            // Log THREE availability for debugging
+            console.log("THREE available:", typeof THREE !== 'undefined');
+        }
         
         window.game = new Game(); // Initialize the game
         
         // Preload projectile assets to prevent stutter
-        console.log("Precomputing projectile assets and warming shaders...");
+        if (window.DEBUG_MODE) console.log("Precomputing projectile assets and warming shaders...");
         
         // Create template projectile geometry and materials
         window.game.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
@@ -1682,7 +1677,7 @@ function initializeGame() {
         });
         
         // Precompute trail particle geometries for different sizes
-        console.log("Precomputing trail particle geometries...");
+        if (window.DEBUG_MODE) console.log("Precomputing trail particle geometries...");
         window.game.trailParticleGeometries = [];
         const numPoints = 20; // Match the number in addProjectileTrail
         
@@ -1694,7 +1689,7 @@ function initializeGame() {
         }
         
         // Force shader compilation for better performance
-        console.log("Warming shaders...");
+        if (window.DEBUG_MODE) console.log("Warming shaders...");
         const dummyProjectile = new THREE.Mesh(window.game.projectileGeometry, window.game.projectileMaterial);
         const dummyGlow = new THREE.Mesh(window.game.projectileGlowGeometry, window.game.projectileGlowMaterial);
         dummyProjectile.add(dummyGlow);
@@ -1707,7 +1702,7 @@ function initializeGame() {
         }
         
         // Precompute and warm shaders for explosion and hit effects
-        console.log("Precomputing explosion effect assets...");
+        if (window.DEBUG_MODE) console.log("Precomputing explosion effect assets...");
         
         // Create template explosion particle geometry and materials
         window.game.explosionGeometry = new THREE.SphereGeometry(1, 8, 8);
@@ -1846,7 +1841,7 @@ function initializeGame() {
         // Force shader compilation for all new objects
         window.game.renderer.renderer.compile(window.game.scene, window.game.camera);
         
-        console.log("Cleaning up dummy objects after warming...");
+        if (window.DEBUG_MODE) console.log("Cleaning up dummy objects after warming...");
         
         // Remove dummy explosion container after compilation
         if (window.game && window.game.renderer && typeof window.game.renderer._withGuard === 'function') {
@@ -1863,9 +1858,9 @@ function initializeGame() {
             window.objectPool.release('hitEffect', hitEffect);
         }
         
-        console.log("Precomputed assets and shaders warmed successfully");
+        if (window.DEBUG_MODE) console.log("Precomputed assets and shaders warmed successfully");
         
-        console.log("Game started successfully");
+        if (window.DEBUG_MODE) console.log("Game started successfully");
     } catch (error) {
         console.error("Error starting game:", error);
         

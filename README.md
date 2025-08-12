@@ -1,4 +1,4 @@
-# Asteroid Miner
+# Asteroid Miner v0.6.1
 
 ![Gameplay Screenshot](placeholder.png)  <!-- Add a screenshot later -->
 
@@ -22,7 +22,7 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 *   **VibeVerse Portals (Experimental):** Discover and explore experimental VibeVerse portals. (Confirm if this is a prominent feature to keep).
 *   **Cross-Platform:** Playable on both desktop (keyboard/mouse) and mobile (touch controls).
 *   **Advanced Controller Support:** Full gamepad/controller support with optimized controls, sensitivity adjustment, and responsive aiming.
-*   **Optimized UI Experience:** Clean, unobtrusive targeting system with minimal visual clutter and performance-optimized updates.
+*   **Optimized UI Experience:** Clean, unobtrusive targeting system that only appears when activated (press T), with minimal visual clutter and performance-optimized updates.
 *   **Mini-Game:** Try your luck at Stellar Blackjack aboard the stargate.
 *   **Adaptive Performance:** Optimizes frame rate limits based on your monitor's refresh rate.
 *   **Realistic Volumetric Lighting:** Experience god rays from the sun with options for standard or stylized "Claude Rays" effects.
@@ -182,6 +182,18 @@ These preserved systems and concepts could be more fully implemented or re-activ
 3.  Complex particle effects and debris systems.
 
 For a more detailed technical discussion of these preserved systems and their original design, please refer to `architecture.md`.
+
+## Changelog
+
+### v0.6.1 (Latest)
+- **Fixed:** Targeting HUD now properly starts hidden and only appears when targeting is activated (press T)
+- **Improved:** Mining system respects targeting state for UI display
+
+### v0.6.0
+- **Major Cleanup:** Removed ~20% of unused code while preserving valuable ECS systems
+- **Documentation:** Created ECS_SYSTEMS_INVENTORY.md documenting 5 ready-to-activate systems
+- **Performance:** Wrapped 72+ console.log statements in DEBUG_MODE checks
+- **Architecture:** Clarified hybrid ECS/Module design as intentional
 
 ## Contributing
 

@@ -64,19 +64,16 @@ export class TargetingSystem {
             // Scan for nearby asteroids
             this.scanForAsteroids();
             
-            // Show targeting UI with proper structure
+            // Only show targeting UI if we're actually enabling targeting
             const targetInfoElement = document.getElementById('target-info');
             if (targetInfoElement) {
-                // Don't overwrite the content, just make it visible
                 targetInfoElement.style.display = 'block';
                 targetInfoElement.style.color = '#30cfd0';
                 
-                // Create proper structure if it doesn't exist
-                if (!document.getElementById('target-name')) {
-                    targetInfoElement.innerHTML = `
-                        <div id="target-name">Scanning for targets...</div>
-                        <div id="target-distance"></div>
-                    `;
+                // Update the content to show we're scanning
+                const targetName = document.getElementById('target-name');
+                if (targetName) {
+                    targetName.textContent = 'Scanning for targets...';
                 }
             }
             

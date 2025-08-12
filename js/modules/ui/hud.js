@@ -438,7 +438,7 @@ export class HUD {
         targetInfo.style.border = '1px solid rgba(120, 220, 232, 0.3)';
         targetInfo.style.boxShadow = '0 0 15px rgba(120, 220, 232, 0.2)';  // Match other panels
         targetInfo.style.textAlign = 'center';
-        targetInfo.style.display = 'none';
+        targetInfo.style.display = 'none';  // Start hidden until targeting is activated
         targetInfo.style.zIndex = '999';  // Below notifications but above other HUD elements
         targetInfo.style.fontFamily = '"Rajdhani", "Electrolize", sans-serif';  // Match HUD font
         parent.appendChild(targetInfo);  // Append to main HUD parent, not targetingSystem
@@ -451,6 +451,9 @@ export class HUD {
             <div id="target-name" style="font-weight:600; margin-bottom:5px;">NO TARGET</div>
             <div id="target-distance" style="margin-bottom:0;">DISTANCE: ---</div>
         `;
+        
+        // Ensure it's hidden initially
+        targetInfo.style.display = 'none';
         
         // Laser beam
         const laserBeam = document.createElement('div');

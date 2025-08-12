@@ -476,10 +476,13 @@ export class UI {
             notificationsArea.style.visibility = 'visible';
         }
 
-        // Also show any panels that might have been hidden
+        // Also show any panels that might have been hidden (except target-info which should stay hidden)
         const allPanels = document.querySelectorAll('.ui-panel, .panel, .hud-panel, .status-panel');
         allPanels.forEach(panel => {
-            panel.style.display = 'block';
+            // Don't force target-info to be visible - let targeting system control it
+            if (panel.id !== 'target-info') {
+                panel.style.display = 'block';
+            }
             panel.style.visibility = 'visible';
         });
     }

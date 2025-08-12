@@ -304,12 +304,12 @@ export class CombatDisplay {
         targetHeader.style.marginBottom = '5px';
         targetContainer.appendChild(targetHeader);
         
-        // Target info
+        // Target info for combat display (different from main HUD target-info)
         const targetInfo = document.createElement('div');
-        targetInfo.id = 'target-info';
+        targetInfo.id = 'combat-target-info';  // Changed ID to avoid conflict
         targetInfo.style.fontSize = '12px';
         targetInfo.style.color = '#cccccc';
-        targetInfo.innerHTML = 'No target selected';
+        targetInfo.style.display = 'none';  // Start hidden
         targetContainer.appendChild(targetInfo);
         
         // Target health bar
@@ -712,7 +712,7 @@ export class CombatDisplay {
      * Update target information display
      */
     updateTargetInfo() {
-        const targetInfo = document.getElementById('target-info');
+        const targetInfo = document.getElementById('combat-target-info');  // Use combat-specific ID
         const targetHealthContainer = document.getElementById('target-health-container');
         const targetHealthBar = document.getElementById('target-health-bar');
         const targetShieldContainer = document.getElementById('target-shield-container');
@@ -724,8 +724,11 @@ export class CombatDisplay {
         
         // Check if we have a target
         if (!this.currentTarget || !this.isTargetValid(this.currentTarget)) {
-            // No target or invalid target
-            targetInfo.textContent = 'No target selected';
+            // No target or invalid target - hide it if we were showing combat info
+            // Only hide if it's currently showing combat info (has the enemy div structure)
+            if (targetInfo.innerHTML.includes('State:')) {
+                targetInfo.style.display = 'none';
+            }
             targetHealthContainer.style.display = 'none';
             targetShieldContainer.style.display = 'none';
             return;
@@ -736,7 +739,7 @@ export class CombatDisplay {
         const health = this.currentTarget.getComponent('HealthComponent');
         
         if (!enemyAI || !health) {
-            targetInfo.textContent = 'Target data unavailable';
+            // Don't modify target-info, let targeting system control it
             targetHealthContainer.style.display = 'none';
             targetShieldContainer.style.display = 'none';
             return;
@@ -749,6 +752,7 @@ export class CombatDisplay {
             <div style="color:#ff8000">${faction} ${type}</div>
             <div style="font-size:11px">State: ${enemyAI.currentState.toUpperCase()}</div>
         `;
+        targetInfo.style.display = 'block'; // Show when we have a combat target
         
         // Update health bar
         const healthPercent = health.getHealthPercentage();

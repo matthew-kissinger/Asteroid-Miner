@@ -85,9 +85,12 @@ export class MiningSystem {
                 this.miningSpeed = baseSpeed * efficiency;
                 console.log(`Mining ${resourceType} asteroid with speed: ${this.miningSpeed} (efficiency: ${efficiency}x)`);
                 
-                // Update UI to show targeting info
+                // Update UI to show targeting info ONLY if targeting system is active
+                const targetingSystem = window.gameInstance?.controls?.targetingSystem || window.game?.controls?.targetingSystem;
+                const isTargetingEnabled = targetingSystem && targetingSystem.isLockOnEnabled();
+                
                 const targetInfo = document.getElementById('target-info');
-                if (targetInfo) {
+                if (targetInfo && isTargetingEnabled) {
                     targetInfo.style.display = 'block';
                     
                     // Calculate distance and range status
@@ -156,16 +159,21 @@ export class MiningSystem {
             console.log(`MiningSystem: Distance to asteroid: ${distance}, max range: ${this.miningDistance}`);
             
             if (distance > this.miningDistance) {
-                // Show a message that target is out of range
+                // Show a message that target is out of range ONLY if targeting is active
+                const targetingSystem = window.gameInstance?.controls?.targetingSystem || window.game?.controls?.targetingSystem;
+                const isTargetingEnabled = targetingSystem && targetingSystem.isLockOnEnabled();
+                
                 const targetInfo = document.getElementById('target-info');
-                if (targetInfo) {
+                if (targetInfo && isTargetingEnabled) {
                     targetInfo.textContent = 'TARGET OUT OF RANGE';
                     targetInfo.style.color = '#ff4400';
                     targetInfo.style.display = 'block';
                     
                     // Hide after 2 seconds
                     setTimeout(() => {
-                        targetInfo.style.display = 'none';
+                        if (!targetingSystem || !targetingSystem.isLockOnEnabled()) {
+                            targetInfo.style.display = 'none';
+                        }
                     }, 2000);
                 }
                 console.log("MiningSystem: Target out of range");
