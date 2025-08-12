@@ -1,5 +1,5 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/main-BUhMFtaY.js","assets/three-Cpq8ZWQ0.js","assets/modules-Dn-zqvei.js","assets/core-D1pAqHYH.js"])))=>i.map(i=>d[i]);
-import { G as GLTFLoader, E as EffectComposer, R as RenderPass, U as UnrealBloomPass, S as ShaderPass, F as FXAAShader, C as ColorCorrectionShader, a as FilmShader, V as VignetteShader, W as WebGL, _ as __vitePreload } from "./modules-Dn-zqvei.js";
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/main-DlCIhoWa.js","assets/three-Cpq8ZWQ0.js","assets/modules-CrGegrd5.js","assets/core-D1pAqHYH.js"])))=>i.map(i=>d[i]);
+import { G as GLTFLoader, E as EffectComposer, R as RenderPass, U as UnrealBloomPass, S as ShaderPass, F as FXAAShader, C as ColorCorrectionShader, a as FilmShader, V as VignetteShader, W as WebGL, _ as __vitePreload } from "./modules-CrGegrd5.js";
 import { aO as Controls, g as Vector3, aP as MOUSE, aQ as TOUCH, Q as Quaternion, aR as Spherical, V as Vector2, aS as Ray, aT as Plane, X as MathUtils, aU as THREE } from "./three-Cpq8ZWQ0.js";
 import "./core-D1pAqHYH.js";
 (function polyfill() {
@@ -1076,7 +1076,7 @@ document.addEventListener("DOMContentLoaded", () => {
       overlay.style.transition = "opacity 0.5s ease-out";
       setTimeout(() => overlay.remove(), 600);
       try {
-        await __vitePreload(() => import("./main-BUhMFtaY.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0);
+        await __vitePreload(() => import("./main-DlCIhoWa.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0);
         console.timeEnd("init");
       } catch (err) {
         console.error("Failed to load main game module:", err);
@@ -1101,4 +1101,4 @@ document.addEventListener("DOMContentLoaded", () => {
 export {
   getGlobalPoolRegistry as g
 };
-//# sourceMappingURL=index-DeLDFO0X.js.map
+//# sourceMappingURL=index-B9lmtWuy.js.map

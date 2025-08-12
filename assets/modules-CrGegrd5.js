@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/InstancedRenderer-C288RrBb.js","assets/three-Cpq8ZWQ0.js","assets/core-D1pAqHYH.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/InstancedRenderer-408cPR0X.js","assets/three-Cpq8ZWQ0.js","assets/core-D1pAqHYH.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -11881,6 +11881,7 @@ class MiningSystem {
     this.scene.add(this.miningParticles);
   }
   setTargetAsteroid(asteroid) {
+    var _a, _b, _c, _d;
     try {
       console.log("MiningSystem: setTargetAsteroid called", asteroid);
       if (!asteroid || !asteroid.mesh || !asteroid.mesh.position) {
@@ -11894,8 +11895,10 @@ class MiningSystem {
         const efficiency = this.getMiningEfficiency();
         this.miningSpeed = baseSpeed * efficiency;
         console.log(`Mining ${resourceType} asteroid with speed: ${this.miningSpeed} (efficiency: ${efficiency}x)`);
+        const targetingSystem = ((_b = (_a = window.gameInstance) == null ? void 0 : _a.controls) == null ? void 0 : _b.targetingSystem) || ((_d = (_c = window.game) == null ? void 0 : _c.controls) == null ? void 0 : _d.targetingSystem);
+        const isTargetingEnabled = targetingSystem && targetingSystem.isLockOnEnabled();
         const targetInfo = document.getElementById("target-info");
-        if (targetInfo) {
+        if (targetInfo && isTargetingEnabled) {
           targetInfo.style.display = "block";
           const distance = Math.round(this.spaceship.mesh.position.distanceTo(asteroid.mesh.position));
           const inRange = distance <= this.miningDistance;
@@ -11927,6 +11930,7 @@ class MiningSystem {
     }
   }
   startMining() {
+    var _a, _b, _c, _d;
     try {
       console.log("MiningSystem: startMining called");
       if (!this.targetAsteroid) {
@@ -11944,13 +11948,17 @@ class MiningSystem {
       const distance = this.spaceship.mesh.position.distanceTo(this.targetAsteroid.mesh.position);
       console.log(`MiningSystem: Distance to asteroid: ${distance}, max range: ${this.miningDistance}`);
       if (distance > this.miningDistance) {
+        const targetingSystem = ((_b = (_a = window.gameInstance) == null ? void 0 : _a.controls) == null ? void 0 : _b.targetingSystem) || ((_d = (_c = window.game) == null ? void 0 : _c.controls) == null ? void 0 : _d.targetingSystem);
+        const isTargetingEnabled = targetingSystem && targetingSystem.isLockOnEnabled();
         const targetInfo = document.getElementById("target-info");
-        if (targetInfo) {
+        if (targetInfo && isTargetingEnabled) {
           targetInfo.textContent = "TARGET OUT OF RANGE";
           targetInfo.style.color = "#ff4400";
           targetInfo.style.display = "block";
           setTimeout(() => {
-            targetInfo.style.display = "none";
+            if (!targetingSystem || !targetingSystem.isLockOnEnabled()) {
+              targetInfo.style.display = "none";
+            }
           }, 2e3);
         }
         console.log("MiningSystem: Target out of range");
@@ -12415,11 +12423,9 @@ class TargetingSystem {
       if (targetInfoElement) {
         targetInfoElement.style.display = "block";
         targetInfoElement.style.color = "#30cfd0";
-        if (!document.getElementById("target-name")) {
-          targetInfoElement.innerHTML = `
-                        <div id="target-name">Scanning for targets...</div>
-                        <div id="target-distance"></div>
-                    `;
+        const targetName = document.getElementById("target-name");
+        if (targetName) {
+          targetName.textContent = "Scanning for targets...";
         }
       }
       if (this.nearbyAsteroids.length > 0) {
@@ -14650,6 +14656,7 @@ class HUD {
             <div id="target-name" style="font-weight:600; margin-bottom:5px;">NO TARGET</div>
             <div id="target-distance" style="margin-bottom:0;">DISTANCE: ---</div>
         `;
+    targetInfo.style.display = "none";
     const laserBeam = document.createElement("div");
     laserBeam.id = "laser-beam";
     laserBeam.style.position = "absolute";
@@ -15657,33 +15664,6 @@ class MiningDisplay {
     this.controls = controls;
   }
   setupMiningDisplay() {
-    const targetInfo = document.createElement("div");
-    targetInfo.id = "target-info";
-    targetInfo.style.position = "absolute";
-    targetInfo.style.bottom = "120px";
-    targetInfo.style.left = "50%";
-    targetInfo.style.transform = "translateX(-50%)";
-    targetInfo.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
-    targetInfo.style.padding = "10px 20px";
-    targetInfo.style.borderRadius = "20px";
-    targetInfo.style.border = "1px solid #30cfd0";
-    targetInfo.style.boxShadow = "0 0 10px #30cfd0";
-    targetInfo.style.display = "none";
-    targetInfo.style.textAlign = "center";
-    document.body.appendChild(targetInfo);
-    const targetName = document.createElement("div");
-    targetName.id = "target-name";
-    targetName.textContent = "Asteroid";
-    targetInfo.appendChild(targetName);
-    const targetDistance = document.createElement("div");
-    targetDistance.id = "target-distance";
-    targetDistance.textContent = "Distance: 0 units";
-    targetInfo.appendChild(targetDistance);
-    const miningTime = document.createElement("div");
-    miningTime.id = "mining-time";
-    miningTime.textContent = "Mining time: calculating...";
-    miningTime.style.color = "#ffcc00";
-    targetInfo.appendChild(miningTime);
   }
   update() {
     if (this.controls && this.controls.resources) {
@@ -20665,7 +20645,9 @@ class UI {
     }
     const allPanels = document.querySelectorAll(".ui-panel, .panel, .hud-panel, .status-panel");
     allPanels.forEach((panel) => {
-      panel.style.display = "block";
+      if (panel.id !== "target-info") {
+        panel.style.display = "block";
+      }
       panel.style.visibility = "visible";
     });
   }
@@ -27716,7 +27698,7 @@ class Combat {
       }
       try {
         const { InstancedRenderer } = await __vitePreload(async () => {
-          const { InstancedRenderer: InstancedRenderer2 } = await import("./InstancedRenderer-C288RrBb.js");
+          const { InstancedRenderer: InstancedRenderer2 } = await import("./InstancedRenderer-408cPR0X.js");
           return { InstancedRenderer: InstancedRenderer2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0);
         this.instancedRenderer = new InstancedRenderer(this.world, this.scene);
@@ -28638,4 +28620,4 @@ export {
   Combat as h,
   System as i
 };
-//# sourceMappingURL=modules-Dn-zqvei.js.map
+//# sourceMappingURL=modules-CrGegrd5.js.map

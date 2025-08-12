@@ -2,9 +2,9 @@ var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { U as Group, z as BufferGeometry, B as BufferAttribute, v as MeshStandardMaterial, E as Mesh, av as BoxGeometry, aq as CylinderGeometry, au as SphereGeometry, ad as ShaderMaterial, aj as AdditiveBlending, w as DoubleSide, C as Color, aB as RingGeometry, K as Points, a3 as Texture, s as PointsMaterial, g as Vector3, x as MeshBasicMaterial, aU as THREE } from "./three-Cpq8ZWQ0.js";
-import { g as getAbsolutePath, A as AudioManager, b as Renderer, P as Physics, c as Environment, d as Spaceship, e as UI, f as Controls, h as Combat } from "./modules-Dn-zqvei.js";
+import { g as getAbsolutePath, A as AudioManager, b as Renderer, P as Physics, c as Environment, d as Spaceship, e as UI, f as Controls, h as Combat } from "./modules-CrGegrd5.js";
 import { MessageBus } from "./core-D1pAqHYH.js";
-import { g as getGlobalPoolRegistry } from "./index-DeLDFO0X.js";
+import { g as getGlobalPoolRegistry } from "./index-B9lmtWuy.js";
 class StarDreadnought {
   constructor(scene) {
     this.scene = scene;
@@ -1816,31 +1816,31 @@ class Game {
       }
       if (e.key.toLowerCase() === "m" && this.audio) {
         const isMuted = this.audio.toggleMute();
-        console.log(`Audio ${isMuted ? "muted" : "unmuted"}`);
+        if (window.DEBUG_MODE) console.log(`Audio ${isMuted ? "muted" : "unmuted"}`);
       }
       if (e.key.toLowerCase() === "d" && e.shiftKey) {
         this.toggleDebugMode();
       }
     });
-    console.log("Initializing game...");
+    if (window.DEBUG_MODE) console.log("Initializing game...");
     window.game = this;
     window.mainMessageBus = new MessageBus();
     window.mainMessageBus.subscribe("game.over", this.gameOver.bind(this));
     try {
-      console.log("Creating audio manager...");
+      if (window.DEBUG_MODE) console.log("Creating audio manager...");
       this.audio = new AudioManager();
-      console.log("Creating renderer...");
+      if (window.DEBUG_MODE) console.log("Creating renderer...");
       this.renderer = new Renderer();
-      console.log("Renderer created, getting scene...");
+      if (window.DEBUG_MODE) console.log("Renderer created, getting scene...");
       this.scene = this.renderer.scene;
       this.camera = this.renderer.camera;
-      console.log("Scene and camera references obtained");
+      if (window.DEBUG_MODE) console.log("Scene and camera references obtained");
       this.scene.camera = this.camera;
-      console.log("Initializing essential components...");
+      if (window.DEBUG_MODE) console.log("Initializing essential components...");
       this.physics = new Physics(this.scene);
       this.physics.setCamera(this.camera);
       this.environment = new Environment(this.scene);
-      console.log("Creating spaceship...");
+      if (window.DEBUG_MODE) console.log("Creating spaceship...");
       this.spaceship = new Spaceship(this.scene);
       this.physics.setSpaceship(this.spaceship);
       this.environment.setSpaceship(this.spaceship);
@@ -1848,7 +1848,7 @@ class Game {
       this.ui.setAudio(this.audio);
       this.controls = new Controls(this.spaceship, this.physics, this.environment, this.ui);
       this.ui.setControls(this.controls);
-      console.log("Initializing settings...");
+      if (window.DEBUG_MODE) console.log("Initializing settings...");
       this.ui.initializeSettings(this);
       this.isGameOver = false;
       this.lastUpdateTime = performance.now();
@@ -1874,7 +1874,7 @@ class Game {
       this.fixedDeltaTime = 1 / 60;
       this.fpsBuffer = [];
       this.fpsBufferSize = 15;
-      console.log("Initializing difficulty manager...");
+      if (window.DEBUG_MODE) console.log("Initializing difficulty manager...");
       this.initializeDifficultyManager();
       this.setupEventHandlers();
       this.boundAnimate = this.animate.bind(this);
@@ -1888,26 +1888,26 @@ class Game {
   // Initialize game in sequence, showing start screen first and loading non-essentials after
   async initializeGameSequence() {
     try {
-      console.log("Starting game initialization sequence...");
+      if (window.DEBUG_MODE) console.log("Starting game initialization sequence...");
       await new Promise((resolve) => setTimeout(resolve, 100));
       if (this.audio && this.audio.audioContext && this.audio.audioContext.state === "suspended") {
         try {
           this.audio.resumeAudioContext();
         } catch (e) {
-          console.log("Audio context couldn't be resumed yet, will try again after user interaction");
+          if (window.DEBUG_MODE) console.log("Audio context couldn't be resumed yet, will try again after user interaction");
         }
       }
       if (this.ui && this.ui.startScreen) {
-        console.log("Showing start screen");
+        if (window.DEBUG_MODE) console.log("Showing start screen");
         this.ui.startScreen.show();
       } else {
         console.error("Start screen not found, falling back to default behavior");
         this.fallbackToDefaultBehavior();
       }
-      console.log("Starting game loop with warm-up frames");
+      if (window.DEBUG_MODE) console.log("Starting game loop with warm-up frames");
       requestAnimationFrame(this.boundAnimate);
       this.initializeRemainingSystemsAsync();
-      console.log("Game initialization sequence completed successfully");
+      if (window.DEBUG_MODE) console.log("Game initialization sequence completed successfully");
     } catch (error) {
       console.error("Error during game initialization sequence:", error);
       if (this.ui && this.ui.showError) {
@@ -1921,16 +1921,16 @@ class Game {
   async initializeRemainingSystemsAsync() {
     try {
       this.loadAudioAsync();
-      console.log("Initializing combat module asynchronously...");
+      if (window.DEBUG_MODE) console.log("Initializing combat module asynchronously...");
       if (!this.combat) {
         this.combat = new Combat(this.scene, this.spaceship);
         if (this.combat.world) {
-          console.log("Combat ECS world successfully created");
+          if (window.DEBUG_MODE) console.log("Combat ECS world successfully created");
         } else {
-          console.log("Waiting for combat ECS world to initialize...");
+          if (window.DEBUG_MODE) console.log("Waiting for combat ECS world to initialize...");
           setTimeout(() => {
             if (this.combat.world && this.combat.playerEntity) {
-              console.log("Combat ECS world and player entity initialized after delay");
+              if (window.DEBUG_MODE) console.log("Combat ECS world and player entity initialized after delay");
             } else {
               console.warn("Combat ECS world or player entity not available after delay, recreating...");
               if (this.combat.createPlayerReferenceEntity) {
@@ -1952,9 +1952,9 @@ class Game {
   async loadAudioAsync() {
     try {
       if (this.audio) {
-        console.log("Initializing audio system asynchronously...");
+        if (window.DEBUG_MODE) console.log("Initializing audio system asynchronously...");
         this.audio.initialize().then(() => {
-          console.log("Audio system initialization complete");
+          if (window.DEBUG_MODE) console.log("Audio system initialization complete");
         }).catch((error) => {
           console.error("Error initializing audio:", error);
         });
@@ -1965,7 +1965,7 @@ class Game {
   }
   // Pre-warm only the most essential shaders needed for immediate gameplay
   preWarmBasicShaders() {
-    console.log("Pre-warming essential shaders...");
+    if (window.DEBUG_MODE) console.log("Pre-warming essential shaders...");
     this.projectileGeometry = new SphereGeometry(1.8, 12, 12);
     this.projectileMaterial = new MeshStandardMaterial({
       color: 65535,
@@ -1978,11 +1978,11 @@ class Game {
     this.scene.add(dummyProjectile);
     this.renderer.renderer.compile(this.scene, this.camera);
     this.renderer._withGuard(() => this.scene.remove(dummyProjectile));
-    console.log("Essential shaders pre-warmed");
+    if (window.DEBUG_MODE) console.log("Essential shaders pre-warmed");
   }
   // Initialize object pools for commonly created objects
   initializeObjectPools() {
-    console.log("Initializing object pools...");
+    if (window.DEBUG_MODE) console.log("Initializing object pools...");
     window.objectPool.createPool("hitEffect", () => {
       if (!this.hitEffectGeometry) {
         this.hitEffectGeometry = new SphereGeometry(1, 8, 8);
@@ -2138,7 +2138,7 @@ class Game {
         }
       };
     }, 10, 50);
-    console.log("Object pools initialized");
+    if (window.DEBUG_MODE) console.log("Object pools initialized");
   }
   startDocked() {
     if (this.spaceship) {
@@ -2149,7 +2149,7 @@ class Game {
     setTimeout(() => {
       if (this.controls && this.controls.dockingSystem) {
         this.controls.dockingSystem.dockWithStargate();
-        console.log("Stargate UI shown");
+        if (window.DEBUG_MODE) console.log("Stargate UI shown");
       } else {
         console.error("Controls or dockingSystem not available");
       }
@@ -2159,7 +2159,7 @@ class Game {
    * Initialize the intro sequence
    */
   initIntroSequence() {
-    console.log("Initializing intro sequence...");
+    if (window.DEBUG_MODE) console.log("Initializing intro sequence...");
     this.introSequence = new IntroSequence(
       this.scene,
       this.camera,
@@ -2168,7 +2168,7 @@ class Game {
     );
     this.originalCameraPosition = this.camera.position.clone();
     this.originalCameraRotation = this.camera.rotation.clone();
-    console.log("Intro sequence initialized");
+    if (window.DEBUG_MODE) console.log("Intro sequence initialized");
   }
   /**
    * Start the intro sequence
@@ -2177,13 +2177,13 @@ class Game {
     if (!this.introSequence) {
       this.initIntroSequence();
     }
-    console.log("Starting intro sequence...");
+    if (window.DEBUG_MODE) console.log("Starting intro sequence...");
     this.introSequenceActive = true;
     if (this.combat && this.combat.world && this.combat.enemySystem) {
-      console.log("Freezing all enemies for intro sequence");
+      if (window.DEBUG_MODE) console.log("Freezing all enemies for intro sequence");
       this.combat.enemySystem.freezeAllEnemies();
     } else if (window.game && window.game.ecsWorld && window.game.ecsWorld.enemySystem) {
-      console.log("Freezing all enemies via global reference for intro sequence");
+      if (window.DEBUG_MODE) console.log("Freezing all enemies via global reference for intro sequence");
       window.game.ecsWorld.enemySystem.freezeAllEnemies();
     }
     this.camera.position.set(0, 6e3, 12e3);
@@ -2192,7 +2192,7 @@ class Game {
       this.controls.inputHandler.enabled = false;
     }
     if (this.ui && this.ui.stargateInterface) {
-      console.log("Explicitly hiding stargate UI before intro sequence");
+      if (window.DEBUG_MODE) console.log("Explicitly hiding stargate UI before intro sequence");
       this.ui.stargateInterface.hideStargateUI();
     }
     if (this.ui) {
@@ -2209,39 +2209,39 @@ class Game {
    * Handle completion of the intro sequence
    */
   completeIntroSequence() {
-    console.log("Intro sequence completed - final phase");
+    if (window.DEBUG_MODE) console.log("Intro sequence completed - final phase");
     if (this.combat && this.combat.world && this.combat.enemySystem) {
-      console.log("Unfreezing all enemies after intro sequence");
+      if (window.DEBUG_MODE) console.log("Unfreezing all enemies after intro sequence");
       this.combat.enemySystem.unfreezeAllEnemies();
     } else if (window.game && window.game.ecsWorld && window.game.ecsWorld.enemySystem) {
-      console.log("Unfreezing all enemies via global reference after intro sequence");
+      if (window.DEBUG_MODE) console.log("Unfreezing all enemies via global reference after intro sequence");
       window.game.ecsWorld.enemySystem.unfreezeAllEnemies();
     }
     if (this.ui && this.ui.stargateInterface) {
-      console.log("Explicitly hiding stargate UI after intro sequence");
+      if (window.DEBUG_MODE) console.log("Explicitly hiding stargate UI after intro sequence");
       this.ui.stargateInterface.hideStargateUI();
     }
     this.introSequenceActive = false;
     if (this.ui) {
-      console.log("Showing game UI elements after intro completion");
+      if (window.DEBUG_MODE) console.log("Showing game UI elements after intro completion");
       this.ui.showUI();
     }
     if (this.spaceship && this.spaceship.mesh) {
       this.spaceship.mesh.visible = true;
       if (this.spaceship.isDocked) {
-        console.log("Forcing undocked state in completeIntroSequence");
+        if (window.DEBUG_MODE) console.log("Forcing undocked state in completeIntroSequence");
         this.spaceship.isDocked = false;
       }
     }
     if (this.controls && this.controls.inputHandler) {
-      console.log("Re-enabling player controls");
+      if (window.DEBUG_MODE) console.log("Re-enabling player controls");
       this.controls.inputHandler.enabled = true;
     }
     localStorage.setItem("introPlayed", "true");
     if (window.mainMessageBus) {
       window.mainMessageBus.publish("intro.completed", {});
     }
-    console.log("Game starting after intro sequence");
+    if (window.DEBUG_MODE) console.log("Game starting after intro sequence");
   }
   setupEventHandlers() {
     window.addEventListener("resize", this.handleResize);
@@ -2297,7 +2297,7 @@ class Game {
     } else if (this.combat && !this.combat.updatePlayerReference) {
       console.warn("Combat module does not have updatePlayerReference method");
       if (this.combat.createPlayerReferenceEntity && !this.combat.playerEntity) {
-        console.log("Creating player entity directly since updatePlayerReference is not available");
+        if (window.DEBUG_MODE) console.log("Creating player entity directly since updatePlayerReference is not available");
         this.combat.createPlayerReferenceEntity();
       }
     }
@@ -2365,7 +2365,7 @@ class Game {
   }
   gameOver(message) {
     if (this.isGameOver) return;
-    console.log("Game over:", message);
+    if (window.DEBUG_MODE) console.log("Game over:", message);
     this.isGameOver = true;
     if (this.audio) {
       this.audio.playSound("explosion");
@@ -2409,7 +2409,7 @@ class Game {
         this.frameStartTime = performance.now();
         this.lastUpdateTime = performance.now();
         this.performanceStable = true;
-        console.log(`Warm-up complete, starting game loop`);
+        if (window.DEBUG_MODE) console.log(`Warm-up complete, starting game loop`);
       }
       requestAnimationFrame(this.boundAnimate);
       return;
@@ -2504,7 +2504,7 @@ class Game {
     requestAnimationFrame(this.boundAnimate);
   }
   pause() {
-    console.log("Game paused");
+    if (window.DEBUG_MODE) console.log("Game paused");
     if (this.audio) {
       this.audio.muted = true;
       for (const sound of Object.values(this.audio.sounds)) {
@@ -2516,7 +2516,7 @@ class Game {
     }
   }
   resume() {
-    console.log("Game resumed");
+    if (window.DEBUG_MODE) console.log("Game resumed");
     this.lastUpdateTime = performance.now();
     if (this.audio && !this.audio.muted) {
       for (const sound of Object.values(this.audio.sounds)) {
@@ -2529,9 +2529,9 @@ class Game {
   }
   // Create a fallback for the initOptimizedECS method that is causing errors
   initOptimizedECS() {
-    console.log("initOptimizedECS called - This is a placeholder implementation");
+    if (window.DEBUG_MODE) console.log("initOptimizedECS called - This is a placeholder implementation");
     if (this.world && typeof this.world.getSystem !== "function") {
-      console.log("Adding getSystem method to World class to fix compatibility issues");
+      if (window.DEBUG_MODE) console.log("Adding getSystem method to World class to fix compatibility issues");
       this.world.getSystem = function(systemType) {
         if (this.systemManager && typeof this.systemManager.getSystem === "function") {
           return this.systemManager.getSystem(systemType);
@@ -2567,7 +2567,7 @@ class Game {
     }
     window.playIntro = () => {
       if (this.startIntroSequence) {
-        console.log("Manually triggering intro sequence");
+        if (window.DEBUG_MODE) console.log("Manually triggering intro sequence");
         this.startIntroSequence();
         return "Playing intro sequence...";
       }
@@ -2600,9 +2600,11 @@ class Game {
           this.params.enemyHealth = Math.floor(20 * difficultyMultiplier);
           this.params.enemyDamage = Math.floor(15 * difficultyMultiplier);
           this.params.enemySpeed = Math.min(700 * (1 + 0.2 * (this.currentLevel - 1)), 1400);
-          console.log(`Difficulty increased to level ${this.currentLevel} (${difficultyMultiplier}x)`);
-          console.log(`Parameters: maxEnemies=${this.params.maxEnemies}, spawnInterval=${this.params.spawnInterval}`);
-          console.log(`Health=${this.params.enemyHealth}, Damage=${this.params.enemyDamage}, Speed=${this.params.enemySpeed}`);
+          if (window.DEBUG_MODE) {
+            console.log(`Difficulty increased to level ${this.currentLevel} (${difficultyMultiplier}x)`);
+            console.log(`Parameters: maxEnemies=${this.params.maxEnemies}, spawnInterval=${this.params.spawnInterval}`);
+            console.log(`Health=${this.params.enemyHealth}, Damage=${this.params.enemyDamage}, Speed=${this.params.enemySpeed}`);
+          }
         }
       }
     };
@@ -2612,7 +2614,7 @@ class Game {
    */
   activateHordeMode() {
     if (this.isHordeActive) return;
-    console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
+    if (window.DEBUG_MODE) console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
     this.isHordeActive = true;
     this.hordeStartTime = performance.now();
     this.hordeSurvivalTime = 0;
@@ -2626,14 +2628,14 @@ class Game {
       this.ui.showNotification("HORDE MODE ACTIVATED - SURVIVE!", 5e3);
     }
     if (this.spaceship && this.spaceship.isDocked) {
-      console.log("Horde mode forcing undock from stargate");
+      if (window.DEBUG_MODE) console.log("Horde mode forcing undock from stargate");
       this.spaceship.undock();
       window.mainMessageBus.publish("player.requestUndock", {
         forced: true,
         reason: "horde_mode_activation"
       });
       setTimeout(() => {
-        console.log("Horde mode ensuring HUD is visible");
+        if (window.DEBUG_MODE) console.log("Horde mode ensuring HUD is visible");
         if (this.ui && this.ui.showUI) {
           this.ui.showUI();
         }
@@ -2655,7 +2657,7 @@ class Game {
    * Call this when the game is no longer needed to prevent memory leaks
    */
   destroy() {
-    console.log("Cleaning up game resources...");
+    if (window.DEBUG_MODE) console.log("Cleaning up game resources...");
     if (this.boundAnimate) {
       cancelAnimationFrame(this.boundAnimate);
       this.boundAnimate = null;
@@ -2732,7 +2734,7 @@ class Game {
     this.scene = null;
     this.camera = null;
     this.fpsBuffer = [];
-    console.log("Game resources cleaned up successfully");
+    if (window.DEBUG_MODE) console.log("Game resources cleaned up successfully");
   }
   /**
    * Apply frame rate settings based on detected refresh rate and user preferences
@@ -2744,26 +2746,26 @@ class Game {
     if (settings.frameRateCap === "auto") {
       if (this.isMobile) {
         this.frameRateCap = 60;
-        console.log(`Mobile device: capping at 60fps for battery life`);
+        if (window.DEBUG_MODE) console.log(`Mobile device: capping at 60fps for battery life`);
       } else if (refreshRate > 90) {
         this.frameRateCap = 0;
         this.fixedDeltaTime = 1 / 60;
-        console.log(`High refresh display (${refreshRate}Hz): using fixed 60Hz physics with interpolation`);
+        if (window.DEBUG_MODE) console.log(`High refresh display (${refreshRate}Hz): using fixed 60Hz physics with interpolation`);
       } else if (refreshRate > 65) {
         this.frameRateCap = refreshRate;
-        console.log(`Moderate high refresh (${refreshRate}Hz): capping at monitor rate`);
+        if (window.DEBUG_MODE) console.log(`Moderate high refresh (${refreshRate}Hz): capping at monitor rate`);
       } else {
         this.frameRateCap = refreshRate;
-        console.log(`Standard display: matching refresh rate at ${refreshRate}Hz`);
+        if (window.DEBUG_MODE) console.log(`Standard display: matching refresh rate at ${refreshRate}Hz`);
       }
     } else {
       this.frameRateCap = parseInt(settings.frameRateCap) || 0;
       if (this.isMobile && this.frameRateCap === 0) {
         this.frameRateCap = 60;
-        console.log(`Mobile device: overriding unlimited to 60fps`);
+        if (window.DEBUG_MODE) console.log(`Mobile device: overriding unlimited to 60fps`);
       }
     }
-    console.log(`Frame rate configuration: cap=${this.frameRateCap}, fixed timestep=${this.fixedDeltaTime * 1e3}ms`);
+    if (window.DEBUG_MODE) console.log(`Frame rate configuration: cap=${this.frameRateCap}, fixed timestep=${this.fixedDeltaTime * 1e3}ms`);
   }
   /**
    * Monitor performance and auto-adjust settings if needed
@@ -2779,12 +2781,12 @@ class Game {
     if (performanceRatio < 0.85) {
       const currentQuality = this.ui.settings.settings.graphicalQuality;
       if (currentQuality === "high") {
-        console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to medium`);
+        if (window.DEBUG_MODE) console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to medium`);
         this.ui.settings.settings.graphicalQuality = "medium";
         this.ui.settings.applyGraphicsSettings();
         this.ui.settings.saveSettings();
       } else if (currentQuality === "medium") {
-        console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to low`);
+        if (window.DEBUG_MODE) console.log(`Performance low (${Math.round(avgFPS)}fps), reducing quality to low`);
         this.ui.settings.settings.graphicalQuality = "low";
         this.ui.settings.applyGraphicsSettings();
         this.ui.settings.saveSettings();
@@ -2795,11 +2797,11 @@ class Game {
   fallbackToDefaultBehavior() {
     const introPlayed = localStorage.getItem("introPlayed") === "true";
     if (introPlayed) {
-      console.log("Intro already played, starting in docked state");
+      if (window.DEBUG_MODE) console.log("Intro already played, starting in docked state");
       this.camera.position.set(0, 1500, 0);
       this.startDocked();
     } else {
-      console.log("First time playing, preparing for intro sequence");
+      if (window.DEBUG_MODE) console.log("First time playing, preparing for intro sequence");
       if (this.spaceship && !this.spaceship.isDocked) {
         this.spaceship.dock();
       }
@@ -2836,7 +2838,7 @@ class Game {
   };
 })();
 function startGameMainModule() {
-  console.log("DOM ready, starting game initialization...");
+  if (window.DEBUG_MODE) console.log("DOM ready, starting game initialization...");
   const canvases = document.querySelectorAll("canvas");
   canvases.forEach((canvas) => {
     const gl = canvas.getContext("webgl") || canvas.getContext("webgl2");
@@ -2849,12 +2851,14 @@ function startGameMainModule() {
   }, 50);
 }
 function initializeGame() {
-  console.log("Creating game instance...");
+  if (window.DEBUG_MODE) console.log("Creating game instance...");
   try {
-    console.log("Checking for THREE module availability...");
-    console.log("THREE available:", typeof THREE !== "undefined");
+    if (window.DEBUG_MODE) {
+      console.log("Checking for THREE module availability...");
+      console.log("THREE available:", typeof THREE !== "undefined");
+    }
     window.game = new Game();
-    console.log("Precomputing projectile assets and warming shaders...");
+    if (window.DEBUG_MODE) console.log("Precomputing projectile assets and warming shaders...");
     window.game.projectileGeometry = new SphereGeometry(1.8, 12, 12);
     window.game.projectileMaterial = new MeshStandardMaterial({
       color: 65535,
@@ -2870,7 +2874,7 @@ function initializeGame() {
       opacity: 0.4,
       blending: AdditiveBlending
     });
-    console.log("Precomputing trail particle geometries...");
+    if (window.DEBUG_MODE) console.log("Precomputing trail particle geometries...");
     window.game.trailParticleGeometries = [];
     const numPoints = 20;
     for (let i = 0; i < numPoints; i++) {
@@ -2879,7 +2883,7 @@ function initializeGame() {
       const particleGeometry = new SphereGeometry(size, 8, 8);
       window.game.trailParticleGeometries.push(particleGeometry);
     }
-    console.log("Warming shaders...");
+    if (window.DEBUG_MODE) console.log("Warming shaders...");
     const dummyProjectile = new Mesh(window.game.projectileGeometry, window.game.projectileMaterial);
     const dummyGlow = new Mesh(window.game.projectileGlowGeometry, window.game.projectileGlowMaterial);
     dummyProjectile.add(dummyGlow);
@@ -2888,7 +2892,7 @@ function initializeGame() {
     } else {
       window.game.scene.add(dummyProjectile);
     }
-    console.log("Precomputing explosion effect assets...");
+    if (window.DEBUG_MODE) console.log("Precomputing explosion effect assets...");
     window.game.explosionGeometry = new SphereGeometry(1, 8, 8);
     window.game.explosionMaterial = new MeshBasicMaterial({
       color: 16733440,
@@ -2992,7 +2996,7 @@ function initializeGame() {
       }
     }
     window.game.renderer.renderer.compile(window.game.scene, window.game.camera);
-    console.log("Cleaning up dummy objects after warming...");
+    if (window.DEBUG_MODE) console.log("Cleaning up dummy objects after warming...");
     if (window.game && window.game.renderer && typeof window.game.renderer._withGuard === "function") {
       window.game.renderer._withGuard(() => window.game.scene.remove(dummyExplosionContainer));
     } else {
@@ -3004,8 +3008,8 @@ function initializeGame() {
     for (const hitEffect of dummyHitEffects) {
       window.objectPool.release("hitEffect", hitEffect);
     }
-    console.log("Precomputed assets and shaders warmed successfully");
-    console.log("Game started successfully");
+    if (window.DEBUG_MODE) console.log("Precomputed assets and shaders warmed successfully");
+    if (window.DEBUG_MODE) console.log("Game started successfully");
   } catch (error) {
     console.error("Error starting game:", error);
     const errorMessage = document.createElement("div");
@@ -3041,4 +3045,4 @@ if (document.readyState === "loading") {
 } else {
   startGameMainModule();
 }
-//# sourceMappingURL=main-BUhMFtaY.js.map
+//# sourceMappingURL=main-DlCIhoWa.js.map
