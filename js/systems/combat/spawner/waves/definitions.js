@@ -14,6 +14,60 @@ export const BASE_ENEMY_CONFIG = {
 };
 
 /**
+ * Enemy subtype configurations - Three distinct drone variants
+ */
+export const ENEMY_SUBTYPES = {
+    STANDARD: {
+        id: 'standard',
+        name: 'Standard Spectral Drone',
+        health: 20,
+        damage: 15,
+        speed: 700,
+        sizeScale: 1.0,
+        collisionRadius: 50,
+        spiralAmplitude: 150,
+        spiralFrequency: 2.0,
+        spawnWeight: 60, // 60% spawn chance
+        // Visual properties
+        color: { main: 0x00FFFF, emissive: { r: 0, g: 1, b: 1 } },
+        emissiveIntensity: 3.0,
+        shaderType: 'pulsingCore'
+    },
+    HEAVY: {
+        id: 'heavy',
+        name: 'Heavy Spectral Drone',
+        health: 60,
+        damage: 30,
+        speed: 400,
+        sizeScale: 1.5,
+        collisionRadius: 75,
+        spiralAmplitude: 100,
+        spiralFrequency: 1.0,
+        spawnWeight: 15, // 15% spawn chance
+        // Visual properties
+        color: { main: 0xFF6600, emissive: { r: 1, g: 0.4, b: 0 } },
+        emissiveIntensity: 4.0,
+        shaderType: 'hexagonShield'
+    },
+    SWIFT: {
+        id: 'swift',
+        name: 'Swift Spectral Drone',
+        health: 10,
+        damage: 10,
+        speed: 1200,
+        sizeScale: 0.8,
+        collisionRadius: 40,
+        spiralAmplitude: 200,
+        spiralFrequency: 3.0,
+        spawnWeight: 25, // 25% spawn chance
+        // Visual properties
+        color: { main: 0x66FF00, emissive: { r: 0.4, g: 1, b: 0 } },
+        emissiveIntensity: 3.5,
+        shaderType: 'speedBlur'
+    }
+};
+
+/**
  * Enemy type configurations
  */
 export const ENEMY_TYPES = {
@@ -21,14 +75,9 @@ export const ENEMY_TYPES = {
         faction: 'spectrals',
         type: 'drone',
         baseConfig: { ...BASE_ENEMY_CONFIG },
-        visualVariants: 4, // 0: Normal, 1: Damaged, 2: Elite, 3: Shielded
-        sizeVariation: { min: 0.8, max: 1.6 },
+        subtypes: ENEMY_SUBTYPES,
         baseSize: 80,
-        speedVariation: { min: 0.7, max: 1.3 },
-        amplitudeVariation: { min: 0.8, max: 1.2 },
-        frequencyVariation: { min: 0.9, max: 1.1 },
-        isDroneLike: true,
-        collisionRadius: 50
+        isDroneLike: true
     }
 };
 
@@ -79,19 +128,19 @@ export const MAX_ENEMY_COUNTS = {
 };
 
 /**
- * Color palette for enemy visual variants
+ * Bright color palette for enhanced visibility (deprecated - use subtype colors)
  */
 export const ENEMY_COLOR_PALETTE = [
-    { main: 0x00ccff, emissive: { r: 0, g: 0.533, b: 1 } },      // Blue/cyan
-    { main: 0x8866ff, emissive: { r: 0.4, g: 0.2, b: 1 } },     // Purple/blue
-    { main: 0x00ffcc, emissive: { r: 0, g: 0.733, b: 0.6 } },   // Teal/green
-    { main: 0xff3366, emissive: { r: 0.8, g: 0.067, b: 0.267 } }, // Red/pink
-    { main: 0xffaa00, emissive: { r: 0.8, g: 0.533, b: 0 } },   // Orange/gold
-    { main: 0x66ff33, emissive: { r: 0.267, g: 0.8, b: 0.067 } }, // Lime/green
-    { main: 0xff99ff, emissive: { r: 0.8, g: 0.6, b: 0.8 } },   // Pink/magenta
-    { main: 0xffff33, emissive: { r: 0.8, g: 0.8, b: 0.067 } }, // Yellow
-    { main: 0x3366ff, emissive: { r: 0.067, g: 0.267, b: 0.8 } }, // Deep blue
-    { main: 0xff3333, emissive: { r: 0.8, g: 0.067, b: 0.067 } }  // Deep red
+    { main: 0x00FFFF, emissive: { r: 0, g: 1, b: 1 } },         // Bright cyan
+    { main: 0xFF00FF, emissive: { r: 1, g: 0, b: 1 } },         // Bright magenta
+    { main: 0x00FF00, emissive: { r: 0, g: 1, b: 0 } },         // Bright green
+    { main: 0xFFFF00, emissive: { r: 1, g: 1, b: 0 } },         // Bright yellow
+    { main: 0xFF6600, emissive: { r: 1, g: 0.4, b: 0 } },       // Bright orange
+    { main: 0x00FFAA, emissive: { r: 0, g: 1, b: 0.67 } },      // Bright teal
+    { main: 0xFF00AA, emissive: { r: 1, g: 0, b: 0.67 } },      // Bright pink
+    { main: 0xAAFF00, emissive: { r: 0.67, g: 1, b: 0 } },      // Bright lime
+    { main: 0xAA00FF, emissive: { r: 0.67, g: 0, b: 1 } },      // Bright purple
+    { main: 0xFFAA00, emissive: { r: 1, g: 0.67, b: 0 } }       // Bright amber
 ];
 
 /**
@@ -134,12 +183,40 @@ export const VISUAL_VARIANTS = {
 };
 
 /**
- * Get a random color from the palette
+ * Get a random enemy subtype based on spawn weights
+ * @returns {Object} Enemy subtype configuration
+ */
+export function getRandomEnemySubtype() {
+    const totalWeight = Object.values(ENEMY_SUBTYPES).reduce((sum, type) => sum + type.spawnWeight, 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const subtype of Object.values(ENEMY_SUBTYPES)) {
+        random -= subtype.spawnWeight;
+        if (random <= 0) {
+            return subtype;
+        }
+    }
+    
+    return ENEMY_SUBTYPES.STANDARD; // Fallback
+}
+
+/**
+ * Get enemy subtype by ID
+ * @param {string} subtypeId - The subtype ID
+ * @returns {Object} Enemy subtype configuration
+ */
+export function getEnemySubtype(subtypeId) {
+    return ENEMY_SUBTYPES[subtypeId.toUpperCase()] || ENEMY_SUBTYPES.STANDARD;
+}
+
+/**
+ * Get a random color from the palette (deprecated - use subtype colors)
  * @returns {Object} Color configuration with main and emissive properties
  */
 export function getRandomEnemyColor() {
-    const colorIndex = Math.floor(Math.random() * ENEMY_COLOR_PALETTE.length);
-    return ENEMY_COLOR_PALETTE[colorIndex];
+    // Now returns color from a random subtype for backward compatibility
+    const subtype = getRandomEnemySubtype();
+    return subtype.color;
 }
 
 /**
@@ -154,9 +231,11 @@ export function getVisualVariant(variantId = 0) {
 }
 
 /**
- * Generate random visual variant ID
- * @returns {number} Random variant ID (0-3)
+ * Generate random visual variant ID (deprecated - use getRandomEnemySubtype)
+ * @returns {number} Random variant ID (0-2 for backward compatibility)
  */
 export function getRandomVisualVariant() {
-    return Math.floor(Math.random() * 4);
+    // Map to new subtype system for backward compatibility
+    const subtype = getRandomEnemySubtype();
+    return subtype.id === 'standard' ? 0 : (subtype.id === 'heavy' ? 1 : 2);
 }

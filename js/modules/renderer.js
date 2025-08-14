@@ -47,7 +47,7 @@ export class Renderer {
         this.setupRenderer();
         
         // Initialize submodules
-        this.lightingManager = new LightingManager(this.scene);
+        this.lightingManager = new LightingManager(this.scene, this.renderer, this.camera);
         this.postProcessingManager = new PostProcessingManager(this.renderer, this.scene, this.camera);
         this.sceneApiManager = new SceneApiManager(this.scene);
         this.renderHelpers = new RenderHelpers(this.scene);
@@ -57,6 +57,9 @@ export class Renderer {
         this.lightingManager.setupLighting();
         this.postProcessingManager.setupPostProcessing();
         this.setupResizeHandler();
+        
+        // Store reference for sun to access
+        this.scene.lightingManager = this.lightingManager;
         
         // Interpolation alpha provided by main
         this.renderAlpha = 0;
@@ -111,6 +114,11 @@ export class Renderer {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        // Update lighting manager's post-processing
+        if (this.lightingManager) {
+            this.lightingManager.handleResize();
+        }
         
         // Update composer size if it exists
         if (this.composer) {

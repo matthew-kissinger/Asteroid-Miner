@@ -4,7 +4,7 @@
 
 import { SpectralDroneCreator } from './enemies/spectralDrone.js';
 import { MeshGeneration } from './enemies/meshGeneration.js';
-import { getRandomVisualVariant } from '../waves/definitions.js';
+import { getRandomEnemySubtype } from '../waves/definitions.js';
 
 /**
  * Factory for creating enemy entities with all required components
@@ -25,17 +25,28 @@ export class EnemyFactory {
      * @param {Object} poolManager - Enemy pool manager
      * @param {Set} enemies - Active enemies tracking set
      * @param {number} maxEnemies - Maximum enemy count
-     * @param {Object} enemyConfig - Current enemy configuration
+     * @param {Object} enemyConfig - Current enemy configuration (ignored, using subtype)
+     * @param {string} subtypeId - Optional specific subtype to create
      * @returns {Entity|null} The created entity or null if failed
      */
-    createSpectralDrone(position, poolManager, enemies, maxEnemies, enemyConfig) {
-        const entity = this.spectralDroneCreator.createSpectralDrone(position, poolManager, enemies, maxEnemies, enemyConfig);
+    createSpectralDrone(position, poolManager, enemies, maxEnemies, enemyConfig, subtypeId = null) {
+        // Get random subtype if not specified
+        const subtype = subtypeId ? { id: subtypeId } : getRandomEnemySubtype();
+        
+        // Create entity with subtype-specific stats
+        const entity = this.spectralDroneCreator.createSpectralDrone(
+            position, 
+            poolManager, 
+            enemies, 
+            maxEnemies, 
+            subtype
+        );
         
         if (entity) {
-            // Add visual variant and setup mesh
-            const visualVariant = getRandomVisualVariant();
-            entity.visualVariant = visualVariant;
-            this.meshGeneration.setupMeshComponent(entity);
+            // Store subtype on entity for later reference
+            entity.subtype = subtype.id;
+            // Setup mesh with subtype-specific shader
+            this.meshGeneration.setupMeshComponent(entity, subtype.id);
         }
         
         return entity;

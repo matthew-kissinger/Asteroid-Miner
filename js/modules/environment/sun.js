@@ -38,7 +38,9 @@ export class Sun {
         this.sun.add(outerCoronaMesh);
         
         // Initialize subsystems
-        this.lighting = new SunLighting(this.scene, this.sun);
+        // Get lighting manager from scene if available
+        const lightingManager = this.scene.lightingManager || null;
+        this.lighting = new SunLighting(this.scene, this.sun, lightingManager);
         this.flares = new SunFlares(this.scene, this.sun);
     }
     

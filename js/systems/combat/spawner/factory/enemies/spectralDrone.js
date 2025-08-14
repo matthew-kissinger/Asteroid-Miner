@@ -7,7 +7,7 @@ import { HealthComponent } from '../../../../../components/combat/healthComponen
 import { EnemyAIComponent } from '../../../../../components/combat/enemyAI.js';
 import { MeshComponent } from '../../../../../components/rendering/mesh.js';
 import { RigidbodyComponent } from '../../../../../components/physics/rigidbody.js';
-import { ENEMY_TYPES } from '../../waves/definitions.js';
+import { ENEMY_TYPES, getEnemySubtype } from '../../waves/definitions.js';
 
 export class SpectralDroneCreator {
     constructor(world) {
@@ -20,10 +20,10 @@ export class SpectralDroneCreator {
      * @param {Object} poolManager Enemy pool manager
      * @param {Set} enemies Active enemies tracking set
      * @param {number} maxEnemies Maximum enemy count
-     * @param {Object} enemyConfig Current enemy configuration
+     * @param {Object} subtype Enemy subtype configuration
      * @returns {Entity|null} The created entity or null if failed
      */
-    createSpectralDrone(position, poolManager, enemies, maxEnemies, enemyConfig) {
+    createSpectralDrone(position, poolManager, enemies, maxEnemies, subtype) {
         console.log("Creating spectral drone...");
         
         if (enemies.size >= maxEnemies) {
@@ -43,7 +43,12 @@ export class SpectralDroneCreator {
         }
         
         this.cleanEntityState(entity);
-        this.setupEntityComponents(entity, position, enemyConfig);
+        
+        // Get full subtype config if only ID was passed
+        const fullSubtype = typeof subtype === 'string' ? getEnemySubtype(subtype) : 
+                          (subtype.id ? getEnemySubtype(subtype.id) : subtype);
+        
+        this.setupEntityComponents(entity, position, fullSubtype);
         
         enemies.add(entity.id);
         this.registerWithCombatSystem(entity);
@@ -79,51 +84,25 @@ export class SpectralDroneCreator {
      * Setup all components for the entity
      * @param {Entity} entity Entity to setup
      * @param {THREE.Vector3} position Spawn position
-     * @param {Object} enemyConfig Enemy configuration
+     * @param {Object} subtype Enemy subtype configuration
      */
-    setupEntityComponents(entity, position, enemyConfig) {
+    setupEntityComponents(entity, position, subtype) {
         const enemyType = ENEMY_TYPES.SPECTRAL_DRONE;
-        const variations = this.generateEnemyVariations(enemyConfig, enemyType);
         
-        this.setupTransformComponent(entity, position, enemyType, variations);
-        this.setupHealthComponent(entity, enemyConfig);
-        this.setupAIComponent(entity, enemyConfig, variations);
-        this.setupPhysicsComponent(entity, enemyType);
+        // Store subtype on entity
+        entity.subtype = subtype.id;
+        
+        this.setupTransformComponent(entity, position, enemyType, subtype);
+        this.setupHealthComponent(entity, subtype);
+        this.setupAIComponent(entity, subtype);
+        this.setupPhysicsComponent(entity, subtype);
     }
 
-    /**
-     * Generate enemy variations
-     * @param {Object} enemyConfig Base enemy configuration
-     * @param {Object} enemyType Enemy type definition
-     * @returns {Object} Generated variations
-     */
-    generateEnemyVariations(enemyConfig, enemyType) {
-        const sizeVariation = enemyType.sizeVariation.min + 
-            Math.random() * (enemyType.sizeVariation.max - enemyType.sizeVariation.min);
-        const finalSize = enemyType.baseSize * sizeVariation;
-        
-        const rotationOffset = {
-            x: (Math.random() - 0.5) * 0.2,
-            y: (Math.random() - 0.5) * 0.2,
-            z: (Math.random() - 0.5) * 0.2
-        };
-        
-        return {
-            amplitude: enemyConfig.spiralAmplitude * 
-                (enemyType.amplitudeVariation.min + Math.random() * (enemyType.amplitudeVariation.max - enemyType.amplitudeVariation.min)),
-            frequency: enemyConfig.spiralFrequency * 
-                (enemyType.frequencyVariation.min + Math.random() * (enemyType.frequencyVariation.max - enemyType.frequencyVariation.min)),
-            speed: enemyConfig.speed * 
-                (enemyType.speedVariation.min + Math.random() * (enemyType.speedVariation.max - enemyType.speedVariation.min)),
-            size: finalSize,
-            rotationOffset
-        };
-    }
 
     /**
      * Setup transform component
      */
-    setupTransformComponent(entity, position, enemyType, variations) {
+    setupTransformComponent(entity, position, enemyType, subtype) {
         let transform = entity.getComponent(TransformComponent);
         
         if (!transform) {
@@ -133,24 +112,28 @@ export class SpectralDroneCreator {
             transform.position.copy(position);
         }
         
-        transform.scale.set(variations.size, variations.size, variations.size);
-        transform.rotation.x = variations.rotationOffset.x;
-        transform.rotation.y = variations.rotationOffset.y;
-        transform.rotation.z = variations.rotationOffset.z;
+        // Apply subtype-specific scale
+        const baseSize = enemyType.baseSize * (subtype.sizeScale || 1.0);
+        transform.scale.set(baseSize, baseSize, baseSize);
+        
+        // Random rotation offset
+        transform.rotation.x = (Math.random() - 0.5) * 0.2;
+        transform.rotation.y = (Math.random() - 0.5) * 0.2;
+        transform.rotation.z = (Math.random() - 0.5) * 0.2;
         transform.needsUpdate = true;
     }
 
     /**
      * Setup health component
      */
-    setupHealthComponent(entity, enemyConfig) {
+    setupHealthComponent(entity, subtype) {
         let health = entity.getComponent(HealthComponent);
         if (!health) {
-            health = new HealthComponent(enemyConfig.health, 0);
+            health = new HealthComponent(subtype.health, 0);
             entity.addComponent(health);
         } else {
-            health.maxHealth = enemyConfig.health;
-            health.health = enemyConfig.health;
+            health.maxHealth = subtype.health;
+            health.health = subtype.health;
             health.isDestroyed = false;
         }
     }
@@ -158,7 +141,7 @@ export class SpectralDroneCreator {
     /**
      * Setup AI component
      */
-    setupAIComponent(entity, enemyConfig, variations) {
+    setupAIComponent(entity, subtype) {
         const enemyType = ENEMY_TYPES.SPECTRAL_DRONE;
         
         let enemyAI = entity.getComponent(EnemyAIComponent);
@@ -166,11 +149,12 @@ export class SpectralDroneCreator {
             const config = {
                 faction: enemyType.faction,
                 type: enemyType.type,
-                health: enemyConfig.health,
-                damage: enemyConfig.damage,
-                speed: variations.speed,
-                spiralAmplitude: variations.amplitude,
-                spiralFrequency: variations.frequency,
+                subtype: subtype.id,
+                health: subtype.health,
+                damage: subtype.damage,
+                speed: subtype.speed,
+                spiralAmplitude: subtype.spiralAmplitude,
+                spiralFrequency: subtype.spiralFrequency,
                 isDroneLike: enemyType.isDroneLike
             };
             enemyAI = new EnemyAIComponent(config);
@@ -178,10 +162,11 @@ export class SpectralDroneCreator {
         } else {
             enemyAI.faction = enemyType.faction;
             enemyAI.type = enemyType.type;
-            enemyAI.damage = enemyConfig.damage;
-            enemyAI.speed = variations.speed;
-            enemyAI.spiralAmplitude = variations.amplitude;
-            enemyAI.spiralFrequency = variations.frequency;
+            enemyAI.subtype = subtype.id;
+            enemyAI.damage = subtype.damage;
+            enemyAI.speed = subtype.speed;
+            enemyAI.spiralAmplitude = subtype.spiralAmplitude;
+            enemyAI.spiralFrequency = subtype.spiralFrequency;
             enemyAI.isDroneLike = enemyType.isDroneLike;
             enemyAI.enabled = true;
         }
@@ -190,19 +175,19 @@ export class SpectralDroneCreator {
     /**
      * Setup physics component
      */
-    setupPhysicsComponent(entity, enemyType) {
+    setupPhysicsComponent(entity, subtype) {
         let rigidbody = entity.getComponent(RigidbodyComponent);
         if (!rigidbody) {
             rigidbody = new RigidbodyComponent(1);
             rigidbody.useGravity = false;
             rigidbody.drag = 0.1;
             rigidbody.shape = 'sphere';
-            rigidbody.collisionRadius = enemyType.collisionRadius;
+            rigidbody.collisionRadius = subtype.collisionRadius;
             entity.addComponent(rigidbody);
         } else {
             rigidbody.isFrozen = false;
             rigidbody.velocity.set(0, 0, 0);
-            rigidbody.collisionRadius = enemyType.collisionRadius;
+            rigidbody.collisionRadius = subtype.collisionRadius;
         }
         
         const transform = entity.getComponent(TransformComponent);

@@ -16,6 +16,7 @@ export class EnemyAIComponent extends Component {
         // Store the type of enemy
         this.faction = config.faction || 'spectrals';
         this.type = config.type || 'drone';
+        this.subtype = config.subtype || 'standard'; // standard, heavy, or swift
         
         // Detection and engagement ranges
         this.detectionRange = config.detectionRange || 2500;
@@ -187,15 +188,27 @@ export class EnemyAIComponent extends Component {
         // Cache this direction for calculations
         this.lastDirection.copy(baseDirection);
         
-        // DIFFERENT MOVEMENT PATTERNS BASED ON FACTION/TYPE
+        // DIFFERENT MOVEMENT PATTERNS BASED ON SUBTYPE
         
-        // Special movement for spectral drones - spiral pattern
+        // Special movement for spectral drones based on subtype
         if (this.faction === 'spectrals' && this.type === 'drone') {
-            // Check if we should use drone-like movement
-            if (this.isDroneLike) {
-                this.applyDroneLikeMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime);
-            } else {
-                this.applySpectralDroneMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+            // Choose movement pattern based on subtype
+            switch (this.subtype) {
+                case 'heavy':
+                    this.applyHeavyDroneMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+                    break;
+                case 'swift':
+                    this.applySwiftDroneMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+                    break;
+                case 'standard':
+                default:
+                    // Standard drones use existing movement patterns
+                    if (this.isDroneLike) {
+                        this.applyDroneLikeMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+                    } else {
+                        this.applySpectralDroneMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+                    }
+                    break;
             }
         } else {
             // Standard kamikaze movement for other enemies
@@ -510,5 +523,98 @@ export class EnemyAIComponent extends Component {
         
         // Update the Euler angles to match the quaternion
         transform.rotation.setFromQuaternion(transform.quaternion);
+    }
+    
+    /**
+     * Apply heavy drone movement - Direct approach with tank-like behavior
+     * @param {TransformComponent} transform This entity's transform
+     * @param {TransformComponent} playerTransform Player's transform
+     * @param {THREE.Vector3} baseDirection Base direction to player
+     * @param {number} distanceToPlayer Distance to player
+     * @param {number} deltaTime Delta time for frame
+     */
+    applyHeavyDroneMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime) {
+        // Heavy drones move slowly but steadily
+        const movement = baseDirection.clone();
+        
+        // Minimal evasion - just slight wobble
+        const wobbleAmount = Math.sin(this.timeAlive * 1.5) * 0.1;
+        const perpendicular = new THREE.Vector3(-baseDirection.z, 0, baseDirection.x);
+        perpendicular.multiplyScalar(wobbleAmount);
+        movement.add(perpendicular);
+        
+        // Apply separation force with reduced influence for heavy drones
+        const separationInfluence = 0.2; // Less responsive to separation
+        movement.add(this.separationForce.clone().multiplyScalar(separationInfluence));
+        movement.normalize();
+        
+        // Update position
+        const speed = this.speed * deltaTime;
+        transform.position.add(movement.multiplyScalar(speed));
+        
+        // Look at player with slight anticipation
+        const lookTarget = playerTransform.position.clone();
+        transform.lookAt(lookTarget);
+        
+        // Store direction for other systems
+        this.lastDirection.copy(movement);
+    }
+    
+    /**
+     * Apply swift drone movement - Evasive zigzag with hit-and-run tactics
+     * @param {TransformComponent} transform This entity's transform
+     * @param {TransformComponent} playerTransform Player's transform
+     * @param {THREE.Vector3} baseDirection Base direction to player
+     * @param {number} distanceToPlayer Distance to player
+     * @param {number} deltaTime Delta time for frame
+     */
+    applySwiftDroneMovement(transform, playerTransform, baseDirection, distanceToPlayer, deltaTime) {
+        // Swift drones move very fast with erratic patterns
+        const movement = baseDirection.clone();
+        
+        // Extreme evasive maneuvers
+        const zigzagAmplitude = 0.5;
+        const zigzagFrequency = 8.0;
+        const zigzag = Math.sin(this.timeAlive * zigzagFrequency) * zigzagAmplitude;
+        const perpendicular = new THREE.Vector3(-baseDirection.z, 0, baseDirection.x);
+        perpendicular.multiplyScalar(zigzag);
+        
+        // Add vertical evasion
+        const verticalDodge = Math.cos(this.timeAlive * 10) * 0.3;
+        perpendicular.y = verticalDodge;
+        
+        movement.add(perpendicular);
+        
+        // High separation influence for nimble avoidance
+        const separationInfluence = 0.8;
+        movement.add(this.separationForce.clone().multiplyScalar(separationInfluence));
+        movement.normalize();
+        
+        // Hit-and-run behavior
+        if (distanceToPlayer < 200) {
+            // When close, strafe around the player
+            const strafeAngle = this.timeAlive * 5;
+            const strafeDirection = new THREE.Vector3(
+                Math.cos(strafeAngle),
+                0,
+                Math.sin(strafeAngle)
+            );
+            movement.lerp(strafeDirection, 0.3);
+        }
+        
+        // Update position
+        const speed = this.speed * deltaTime;
+        transform.position.add(movement.multiplyScalar(speed));
+        
+        // Rapid rotation changes with banking effect
+        const lookTarget = playerTransform.position.clone();
+        lookTarget.add(perpendicular.multiplyScalar(10)); // Look ahead of zigzag
+        transform.lookAt(lookTarget);
+        
+        // Add banking effect
+        transform.rotation.z = zigzag * 0.5;
+        
+        // Store direction
+        this.lastDirection.copy(movement);
     }
 }

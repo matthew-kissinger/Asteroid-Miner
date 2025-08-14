@@ -45,7 +45,6 @@ export class ObjectPools {
             window.objectPool.createPool('hitEffect', () => {
                 const material = new THREE.MeshBasicMaterial({
                     color: 0xff5500,
-                    emissive: 0xff5500,
                     transparent: true,
                     opacity: 0.8
                 });
@@ -83,7 +82,6 @@ export class ObjectPools {
             const particleGeometry = new THREE.SphereGeometry(0.5, 4, 4);
             const particleMaterial = new THREE.MeshBasicMaterial({
                 color: 0xff5500,
-                emissive: 0xff5500,
                 transparent: true
             });
             

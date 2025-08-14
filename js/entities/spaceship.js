@@ -164,36 +164,46 @@ export function createAsteroid(world, position, resourceType, size, scene) {
     // Update geometry normals
     asteroidGeometry.computeVertexNormals();
     
-    // Select material based on resource type
+    // Use MeshPhongMaterial for better light response
     let material;
     switch (resourceType) {
         case 'iron':
             material = new THREE.MeshPhongMaterial({ 
-                color: 0xA19D94, 
-                shininess: 10,
+                color: 0xA19D94,
+                specular: 0x222222,
+                shininess: 30,
+                emissive: 0x050505,
+                emissiveIntensity: 0.02,
                 flatShading: true
             });
             break;
         case 'gold':
             material = new THREE.MeshPhongMaterial({ 
-                color: 0xFFD700, 
+                color: 0xFFD700,
+                specular: 0xFFFFAA,
                 shininess: 100,
-                flatShading: true,
-                emissive: 0x553300,
-                emissiveIntensity: 0.2
+                emissive: 0x110500,
+                emissiveIntensity: 0.05,
+                flatShading: true
             });
             break;
         case 'platinum':
             material = new THREE.MeshPhongMaterial({ 
-                color: 0xE5E4E2, 
+                color: 0xE5E4E2,
+                specular: 0xFFFFFF,
                 shininess: 150,
-                flatShading: true,
-                specular: 0xEEEEEE
+                emissive: 0x0a0a0a,
+                emissiveIntensity: 0.03,
+                flatShading: true
             });
             break;
         default:
             material = new THREE.MeshPhongMaterial({ 
-                color: 0xCCCCCC, 
+                color: 0x8A8A8A,
+                specular: 0x111111,
+                shininess: 20,
+                emissive: 0x050505,
+                emissiveIntensity: 0.02,
                 flatShading: true 
             });
     }

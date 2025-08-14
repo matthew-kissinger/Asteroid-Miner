@@ -27,12 +27,11 @@ export class PlanetMaterials {
             
             return new THREE.MeshStandardMaterial({
                 map: customTexture,
-                roughness: 0.7,
-                metalness: 0.2,
+                roughness: 0.5,
+                metalness: 0.0,
                 flatShading: false,
-                emissive: new THREE.Color(planet.color || 0xffffff),
-                emissiveIntensity: 0.2,
-                emissiveMap: customTexture
+                emissive: new THREE.Color(planet.color || 0x222222),
+                emissiveIntensity: 0.3
             });
         }
 
@@ -41,89 +40,81 @@ export class PlanetMaterials {
             case "Mercury":
                 return new THREE.MeshStandardMaterial({
                     map: planetTextures.mercury,
-                    roughness: 0.7,
-                    metalness: 0.2,
+                    roughness: 0.95,
+                    metalness: 0.0,
                     flatShading: false,
-                    emissive: new THREE.Color(0x555555),
-                    emissiveIntensity: 0.2,
-                    emissiveMap: planetTextures.mercury
+                    emissive: new THREE.Color(0x2a2a2a),
+                    emissiveIntensity: 0.15
                 });
                 
             case "Venus":
                 return new THREE.MeshStandardMaterial({
                     map: planetTextures.venus.surface,
-                    roughness: 0.6,
-                    metalness: 0.1,
+                    roughness: 0.85,
+                    metalness: 0.0,
                     flatShading: false,
-                    emissive: new THREE.Color(0xe6cc9c),
-                    emissiveIntensity: 0.25,
-                    emissiveMap: planetTextures.venus.surface
+                    emissive: new THREE.Color(0x443322),
+                    emissiveIntensity: 0.2
                 });
                 
             case "Earth":
                 return new THREE.MeshStandardMaterial({
                     map: planetTextures.earth,
-                    roughness: 0.5,
-                    metalness: 0.1,
+                    roughness: 0.75,
+                    metalness: 0.0,
                     flatShading: false,
-                    emissive: new THREE.Color(0x4169e1),
-                    emissiveIntensity: 0.2,
-                    emissiveMap: planetTextures.earth
+                    emissive: new THREE.Color(0x112233),
+                    emissiveIntensity: 0.18
                 });
                 
             case "Mars":
                 return new THREE.MeshStandardMaterial({
                     map: planetTextures.mars,
-                    roughness: 0.7,
-                    metalness: 0.1,
+                    roughness: 0.9,
+                    metalness: 0.0,
                     flatShading: false,
-                    emissive: new THREE.Color(0xc65d45),
-                    emissiveIntensity: 0.25,
-                    emissiveMap: planetTextures.mars
+                    emissive: new THREE.Color(0x442211),
+                    emissiveIntensity: 0.18
                 });
                 
             case "Jupiter":
                 return new THREE.MeshStandardMaterial({
                     map: planetTextures.jupiter,
-                    roughness: 0.5,
+                    roughness: 0.8,
                     metalness: 0.0,
                     flatShading: false,
-                    emissive: new THREE.Color(0xd6b27e),
-                    emissiveIntensity: 0.2,
-                    emissiveMap: planetTextures.jupiter
+                    emissive: new THREE.Color(0x332211),
+                    emissiveIntensity: 0.15
                 });
                 
             case "Saturn":
                 return new THREE.MeshStandardMaterial({
                     map: planetTextures.saturn.surface,
-                    roughness: 0.6,
-                    metalness: 0.1,
+                    roughness: 0.85,
+                    metalness: 0.0,
                     flatShading: false,
-                    emissive: new THREE.Color(0xf0e5c9),
-                    emissiveIntensity: 0.2,
-                    emissiveMap: planetTextures.saturn.surface
+                    emissive: new THREE.Color(0x332211),
+                    emissiveIntensity: 0.15
                 });
                 
             case "Uranus":
                 return new THREE.MeshStandardMaterial({
                     map: planetTextures.uranus,
-                    roughness: 0.5,
+                    roughness: 0.85,
                     metalness: 0.0,
                     flatShading: false,
-                    emissive: new THREE.Color(0x88bbcc),
-                    emissiveIntensity: 0.25,
-                    emissiveMap: planetTextures.uranus
+                    emissive: new THREE.Color(0x112233),
+                    emissiveIntensity: 0.14
                 });
                 
             case "Neptune":
                 return new THREE.MeshStandardMaterial({
                     map: planetTextures.neptune,
-                    roughness: 0.5,
+                    roughness: 0.85,
                     metalness: 0.0,
                     flatShading: false,
-                    emissive: new THREE.Color(0x5fa3db),
-                    emissiveIntensity: 0.25,
-                    emissiveMap: planetTextures.neptune
+                    emissive: new THREE.Color(0x112244),
+                    emissiveIntensity: 0.14
                 });
                 
             default:
@@ -131,13 +122,12 @@ export class PlanetMaterials {
                 const textureIndex = Math.floor(Math.random() * proceduralTextures.length);
                 return new THREE.MeshStandardMaterial({
                     map: proceduralTextures[textureIndex],
-                    roughness: 0.6,
-                    metalness: 0.2,
+                    roughness: 0.85,
+                    metalness: 0.0,
                     color: new THREE.Color(planet.color),
                     flatShading: false,
-                    emissive: new THREE.Color(planet.color),
-                    emissiveIntensity: 0.3,
-                    emissiveMap: proceduralTextures[textureIndex]
+                    emissive: new THREE.Color(0x222222),
+                    emissiveIntensity: 0.15
                 });
         }
     }

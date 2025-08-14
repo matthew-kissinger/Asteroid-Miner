@@ -5,14 +5,16 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshComponent } from '../../../../../components/rendering/mesh.js';
-import { getRandomEnemyColor, getVisualVariant, getRandomVisualVariant } from '../../waves/definitions.js';
+import { getEnemySubtype } from '../../waves/definitions.js';
 
 export class MeshGeneration {
     constructor(world) {
         this.world = world;
         this.modelCache = {};
+        this.materialCache = {}; // Cache materials to reuse them
         this.currentEntity = null;
         this.loadModels();
+        this.initializeMaterials(); // Pre-create all materials
     }
 
     /**
@@ -54,25 +56,127 @@ export class MeshGeneration {
      * @param {THREE.Object3D} model The loaded model
      */
     applyGlobalModelEffects(model) {
+        // Model will get proper shader material when created
+        // Just ensure it's visible
         model.traverse((child) => {
-            if (child.isMesh && child.material) {
-                if (child.material.emissive !== undefined) {
-                    child.material.emissive = new THREE.Color(0x0088ff);
-                    child.material.emissiveIntensity = 2.0;
-                } else if (child.material.isMeshBasicMaterial) {
-                    child.material.color = new THREE.Color(0x00aaff);
-                }
+            if (child.isMesh) {
+                child.visible = true;
             }
         });
+    }
+    
+    /**
+     * Pre-create and cache all materials and geometry for performance
+     */
+    initializeMaterials() {
+        console.log("Pre-creating enemy materials and geometry...");
+        
+        // Cache geometry that will be reused
+        this.geometryCache = {
+            body: new THREE.OctahedronGeometry(2, 0),
+            wing: new THREE.BoxGeometry(4, 0.2, 1),
+            shield: new THREE.SphereGeometry(3, 8, 6)
+        };
+        
+        // Create simplified, performant materials for each subtype
+        const subtypes = ['standard', 'heavy', 'swift'];
+        
+        subtypes.forEach(subtypeId => {
+            const subtype = subtypeId === 'standard' ? 
+                { color: { main: 0x00FFFF, emissive: { r: 0, g: 1, b: 1 } }, emissiveIntensity: 2.5 } :
+                subtypeId === 'heavy' ?
+                { color: { main: 0xFF6600, emissive: { r: 1, g: 0.4, b: 0 } }, emissiveIntensity: 3.0 } :
+                { color: { main: 0x66FF00, emissive: { r: 0.4, g: 1, b: 0 } }, emissiveIntensity: 2.8 };
+            
+            // Use simpler MeshPhongMaterial with emissive for performance
+            this.materialCache[subtypeId] = new THREE.MeshPhongMaterial({
+                color: subtype.color.main,
+                emissive: new THREE.Color(subtype.color.emissive.r, subtype.color.emissive.g, subtype.color.emissive.b),
+                emissiveIntensity: subtype.emissiveIntensity,
+                shininess: 100,
+                transparent: true,
+                opacity: 0.95,
+                side: THREE.DoubleSide
+            });
+        });
+        
+        // Warm up materials and geometry by creating temporary meshes
+        this.warmupMaterials();
+    }
+    
+    /**
+     * Warmup materials to precompile shaders
+     */
+    warmupMaterials() {
+        console.log("Warming up enemy materials (precompiling shaders)...");
+        
+        // Delay warmup until scene is ready
+        setTimeout(() => {
+            // Create a temporary mesh for each material to force shader compilation
+            const tempGroup = new THREE.Group();
+            
+            Object.keys(this.materialCache).forEach(subtypeId => {
+                const tempMesh = new THREE.Mesh(this.geometryCache.body, this.materialCache[subtypeId]);
+                tempGroup.add(tempMesh);
+            });
+            
+            // Add to scene temporarily to force compilation
+            if (this.world && this.world.scene) {
+                // Use renderer facade if available
+                if (window.game && window.game.renderer && window.game.renderer.add) {
+                    window.game.renderer.add(tempGroup);
+                } else if (this.world.scene.add) {
+                    this.world.scene.add(tempGroup);
+                }
+                
+                // Try to force compilation if renderer supports it
+                try {
+                    if (window.game && window.game.renderer) {
+                        // The actual THREE.js renderer is at game.renderer.renderer
+                        const threeRenderer = window.game.renderer.renderer;
+                        const camera = window.game.camera || window.game.renderer.camera || this.world.scene.camera;
+                        
+                        if (threeRenderer && camera) {
+                            // Check if compile method exists (THREE.js r152+)
+                            if (typeof threeRenderer.compile === 'function') {
+                                threeRenderer.compile(this.world.scene, camera);
+                            } else {
+                                // Fallback: just render a frame to compile shaders
+                                threeRenderer.render(this.world.scene, camera);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log("Could not force shader compilation, will compile on first use:", e.message);
+                }
+                
+                // Remove after a frame
+                setTimeout(() => {
+                    if (tempGroup && tempGroup.parent) {
+                        tempGroup.parent.remove(tempGroup);
+                    }
+                    // Dispose of temp meshes but keep materials and geometry
+                    if (tempGroup.children) {
+                        while (tempGroup.children.length > 0) {
+                            const child = tempGroup.children[0];
+                            tempGroup.remove(child);
+                            // Don't dispose materials or geometry - we're caching those!
+                        }
+                    }
+                    console.log("Material warmup complete");
+                }, 100);
+            }
+        }, 1000); // Wait 1 second for everything to be initialized
     }
 
     /**
      * Setup mesh component for entity
      * @param {Entity} entity Entity to setup
+     * @param {string} subtypeId Enemy subtype ID
      */
-    setupMeshComponent(entity) {
+    setupMeshComponent(entity, subtypeId = null) {
         this.currentEntity = entity;
-        const mesh = this.createSpectralDroneMesh();
+        const mesh = this.createSpectralDroneMesh(subtypeId);
         this.currentEntity = null;
         
         this.cleanupOldMeshComponent(entity);
@@ -92,208 +196,125 @@ export class MeshGeneration {
 
     /**
      * Create spectral drone mesh
+     * @param {string} subtypeId Enemy subtype ID
      * @returns {Object} Mesh object
      */
-    createSpectralDroneMesh() {
+    createSpectralDroneMesh(subtypeId = null) {
         console.log("Creating spectral drone mesh...");
         
+        // Get subtype configuration
+        const subtype = subtypeId ? getEnemySubtype(subtypeId) : 
+                       (this.currentEntity && this.currentEntity.subtype ? 
+                        getEnemySubtype(this.currentEntity.subtype) : 
+                        getEnemySubtype('standard'));
+        
         if (!this.modelCache.enemyDrone) {
-            return this.createFallbackMesh();
+            return this.createFallbackMesh(subtype);
         }
         
         const model = this.modelCache.enemyDrone.clone();
-        const visualVariant = this.currentEntity ? this.currentEntity.visualVariant || 0 : 0;
-        
-        this.applyVisualEffects(model, visualVariant);
+        this.applySubtypeEffects(model, subtype);
         
         return { model, isGLTF: true };
     }
 
     /**
      * Create fallback mesh when GLB model isn't available
+     * @param {Object} subtype Enemy subtype configuration
      * @returns {Object} Fallback mesh object
      */
-    createFallbackMesh() {
-        console.warn("Enemy model not loaded - creating stylized fallback enemy");
-        
+    createFallbackMesh(subtype) {
         const group = new THREE.Group();
         
-        const bodyGeometry = new THREE.OctahedronGeometry(2, 0);
-        const bodyMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0x00ffff,
-            emissive: 0x0088ff,
-            emissiveIntensity: 1.5,
-            transparent: true,
-            opacity: 0.9
-        });
-        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        // Use cached geometry and material for performance
+        const bodyMaterial = this.materialCache[subtype.id] || this.materialCache['standard'];
+        const body = new THREE.Mesh(this.geometryCache.body, bodyMaterial);
         group.add(body);
         
-        const wingGeometry = new THREE.BoxGeometry(4, 0.2, 1);
-        const wingMaterial = new THREE.MeshPhongMaterial({
-            color: 0x8888ff,
-            emissive: 0x4444ff,
-            emissiveIntensity: 1.0
-        });
+        // Use cached geometry and reuse the same material for wings
+        const wingMaterial = bodyMaterial;
         
-        const wing1 = new THREE.Mesh(wingGeometry, wingMaterial);
+        const wing1 = new THREE.Mesh(this.geometryCache.wing, wingMaterial);
         wing1.rotation.z = Math.PI / 6;
         group.add(wing1);
         
-        const wing2 = new THREE.Mesh(wingGeometry, wingMaterial);
+        const wing2 = new THREE.Mesh(this.geometryCache.wing, wingMaterial);
         wing2.rotation.z = -Math.PI / 6;
         group.add(wing2);
         
-        group.scale.set(1.5, 1.5, 1.5);
+        // Apply subtype-specific scale
+        const scale = 1.5 * (subtype.sizeScale || 1.0);
+        group.scale.set(scale, scale, scale);
         
         return group;
     }
 
     /**
-     * Apply visual effects based on variant
+     * Apply visual effects based on subtype
      * @param {THREE.Object3D} model Model to apply effects to
-     * @param {number} visualVariant Visual variant ID
+     * @param {Object} subtype Enemy subtype configuration
      */
-    applyVisualEffects(model, visualVariant) {
-        const selectedColor = getRandomEnemyColor();
-        const variantConfig = getVisualVariant(visualVariant);
+    applySubtypeEffects(model, subtype) {
+        // Use cached material instead of creating new shader
+        const material = this.materialCache[subtype.id] || this.materialCache['standard'];
         
-        let emissiveIntensity = this.calculateEmissiveIntensity(variantConfig);
-        let opacity = variantConfig.opacity;
-        
-        this.applyVariantColorEffects(selectedColor, variantConfig);
-        
+        // Apply cached material to all meshes in the model
         model.traverse((child) => {
-            if (child.isMesh && child.material) {
-                child.material = child.material.clone();
-                child.material.color = new THREE.Color(selectedColor.main);
-                child.material.emissive = new THREE.Color(selectedColor.emissive.r, selectedColor.emissive.g, selectedColor.emissive.b);
-                child.material.emissiveIntensity = emissiveIntensity;
-                
-                if (opacity < 1.0) {
-                    child.material.transparent = true;
-                    child.material.opacity = opacity;
-                }
-                
-                if (variantConfig.additionalEffects) {
-                    this.applyAdditionalEffects(child.material);
-                }
+            if (child.isMesh) {
+                // Use the cached material
+                child.material = material;
             }
         });
         
-        if (variantConfig.haloEffect) {
-            this.addHaloEffect(model, selectedColor);
-        }
+        // Apply scale based on subtype
+        const scale = subtype.sizeScale || 1.0;
+        model.scale.multiplyScalar(scale);
         
-        if (variantConfig.shieldEffect) {
-            this.addShieldEffect(model);
+        // Add subtype-specific effects
+        if (subtype.id === 'heavy') {
+            this.addHeavyDroneEffects(model, subtype);
+        } else if (subtype.id === 'swift') {
+            this.addSwiftDroneEffects(model, subtype);
+        } else {
+            this.addStandardDroneEffects(model, subtype);
         }
     }
 
     /**
-     * Calculate emissive intensity based on variant
+     * Add effects for standard drones
      */
-    calculateEmissiveIntensity(variantConfig) {
-        if (variantConfig.name === 'damaged') {
-            return variantConfig.emissiveIntensity.base + 
-                (Math.sin(Date.now() * 0.01) * variantConfig.emissiveIntensity.flicker);
-        } else if (variantConfig.name === 'elite') {
-            return variantConfig.emissiveIntensity.base + 
-                (Math.sin(Date.now() * 0.003) * variantConfig.emissiveIntensity.pulse);
-        } else if (variantConfig.emissiveIntensity.min !== undefined) {
-            return variantConfig.emissiveIntensity.min + 
-                Math.random() * (variantConfig.emissiveIntensity.max - variantConfig.emissiveIntensity.min);
-        }
-        
-        return variantConfig.emissiveIntensity;
+    addStandardDroneEffects(model, subtype) {
+        // Skip point lights - they're expensive
+        // The emissive material provides enough glow
     }
-
+    
     /**
-     * Apply color effects based on variant
+     * Add effects for heavy drones
      */
-    applyVariantColorEffects(selectedColor, variantConfig) {
-        if (variantConfig.colorMultiplier) {
-            selectedColor.emissive.r *= variantConfig.colorMultiplier;
-            selectedColor.emissive.g *= variantConfig.colorMultiplier;
-            selectedColor.emissive.b *= variantConfig.colorMultiplier;
-        }
-        
-        if (variantConfig.shimmerEffect) {
-            const shieldPhase = Date.now() * 0.001;
-            const shimmerValue = 0.8 + (Math.sin(shieldPhase) * 0.2);
-            selectedColor.emissive.r *= shimmerValue;
-            selectedColor.emissive.g *= 1 + (1 - shimmerValue);
-            selectedColor.emissive.b *= 1 + (Math.cos(shieldPhase) * 0.2);
-        }
-    }
-
-    /**
-     * Apply additional material effects for elite enemies
-     */
-    applyAdditionalEffects(material) {
-        if (material.shininess !== undefined) {
-            material.shininess = 100;
-        }
-        
-        if (material.envMapIntensity !== undefined) {
-            material.envMapIntensity = 0.8;
-        }
-    }
-
-    /**
-     * Add halo effect for elite enemies
-     */
-    addHaloEffect(model, selectedColor) {
-        try {
-            const haloGeometry = new THREE.RingGeometry(1.2, 1.5, 16);
-            const haloMaterial = new THREE.MeshBasicMaterial({
-                color: selectedColor.main,
+    addHeavyDroneEffects(model, subtype) {
+        // Add simple shield visual using cached geometry
+        // Cache shield material if not already cached
+        if (!this.materialCache['shield_' + subtype.id]) {
+            this.materialCache['shield_' + subtype.id] = new THREE.MeshBasicMaterial({
+                color: subtype.color.main,
                 transparent: true,
-                opacity: 0.6,
-                side: THREE.DoubleSide,
-                blending: THREE.AdditiveBlending
+                opacity: 0.15,
+                side: THREE.DoubleSide
             });
-            
-            const halo = new THREE.Mesh(haloGeometry, haloMaterial);
-            halo.rotation.x = Math.PI / 2;
-            model.add(halo);
-            
-            halo.userData.update = function(delta) {
-                halo.rotation.z += delta * 0.5;
-                const pulseScale = 1 + 0.2 * Math.sin(Date.now() * 0.002);
-                halo.scale.set(pulseScale, pulseScale, pulseScale);
-            };
-        } catch (error) {
-            console.error("Failed to create elite halo effect:", error);
         }
+        const shield = new THREE.Mesh(this.geometryCache.shield, this.materialCache['shield_' + subtype.id]);
+        model.add(shield);
+        // Skip point light for performance
+    }
+    
+    /**
+     * Add effects for swift drones
+     */
+    addSwiftDroneEffects(model, subtype) {
+        // Skip particle trails and point lights for performance
+        // The high emissive and movement provides enough visual distinction
     }
 
-    /**
-     * Add shield effect for shielded enemies
-     */
-    addShieldEffect(model) {
-        try {
-            const shieldGeometry = new THREE.SphereGeometry(1.1, 16, 12);
-            const shieldMaterial = new THREE.MeshBasicMaterial({
-                color: 0xaaddff,
-                transparent: true,
-                opacity: 0.3,
-                side: THREE.DoubleSide,
-                blending: THREE.AdditiveBlending
-            });
-            
-            const shield = new THREE.Mesh(shieldGeometry, shieldMaterial);
-            model.add(shield);
-            
-            shield.userData.update = function(delta) {
-                const pulseScale = 1 + 0.05 * Math.sin(Date.now() * 0.003);
-                shield.scale.set(pulseScale, pulseScale, pulseScale);
-                shield.material.opacity = 0.2 + 0.1 * Math.sin(Date.now() * 0.002);
-            };
-        } catch (error) {
-            console.error("Failed to create shield effect:", error);
-        }
-    }
 
     /**
      * Clean up old mesh component
