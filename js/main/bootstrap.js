@@ -17,14 +17,11 @@ export async function startGameMainModule() {
             }, 100);
         }
 
-        if (window.DEBUG_MODE) console.log("Starting game main module...");
 
         // Initialize the game
         window.game = new (await import('../main.js')).Game();
 
-        if (window.DEBUG_MODE) console.log("Game started successfully");
     } catch (error) {
-        console.error("Error starting game:", error);
         
         // Show error message to user
         const errorMessage = document.createElement('div');

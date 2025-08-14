@@ -9,7 +9,6 @@ export class ObjectPools {
     
     // Pre-warm only the most essential shaders needed for immediate gameplay
     preWarmBasicShaders() {
-        if (window.DEBUG_MODE) console.log("Pre-warming essential shaders...");
         
         // Create template projectile geometry and materials
         this.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
@@ -33,11 +32,9 @@ export class ObjectPools {
         // Remove dummy object after compilation
         this.game.renderer._withGuard(() => this.game.scene.remove(dummyProjectile));
         
-        if (window.DEBUG_MODE) console.log("Essential shaders pre-warmed");
     }
     
     initializeObjectPools() {
-        if (window.DEBUG_MODE) console.log("Initializing object pools...");
         
         try {
             // Initialize hit effect pool
@@ -201,7 +198,6 @@ export class ObjectPools {
                 };
             }, 5, 20);
             
-            if (window.DEBUG_MODE) console.log("Object pools initialized");
         } catch (error) {
             console.error("Error initializing object pools:", error);
         }

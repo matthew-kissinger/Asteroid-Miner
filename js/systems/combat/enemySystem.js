@@ -67,15 +67,12 @@ export class EnemySystem extends System {
         // Start continuous monitoring for spawn health
         this.spawnMonitoring.startSpawnMonitoring(this);
         
-        console.log("Enemy system initialized with 60-second spawn delay and faster spawn rate");
         
         // Make skip delay function globally available for testing
         if (typeof window !== 'undefined') {
             window.skipEnemyDelay = () => {
-                console.log("[DEBUG] Skipping enemy spawn delay from console command");
                 this.spawner.skipInitialDelay();
             };
-            console.log("Use window.skipEnemyDelay() to skip the initial spawn delay for testing");
         }
     }
     
@@ -100,7 +97,6 @@ export class EnemySystem extends System {
      * @param {number} deltaTime Time since last update in seconds
      */
     update(deltaTime) {
-        console.log(`[ENEMY_SYSTEM] Update called with deltaTime: ${deltaTime.toFixed(3)}`);
         
         // Sync docking state and skip processing if docked
         this.dockingManager.syncGlobalDockingState(
@@ -140,7 +136,6 @@ export class EnemySystem extends System {
         
         // STRICT ENFORCEMENT: If we're over the limit, force destroy excess enemies
         if (this.enemies.size > this.maxEnemies) {
-            console.warn(`ENFORCING ENEMY LIMIT: Current count ${this.enemies.size} exceeds limit of ${this.maxEnemies}`);
             this.lifecycle.enforceEnemyLimit(this.enemies, this.maxEnemies, 
                 (entity) => this.poolManager.returnEnemyToPool(entity, this.enemies));
         }
@@ -150,18 +145,14 @@ export class EnemySystem extends System {
         
         // Debug logging - show current enemy count and spawn timer (disabled to reduce console spam)
         // if (this.spawnTimer > this.spawnInterval * 0.9 || this.enemies.size === 0) {
-        //     console.log(`Spawn status: ${this.enemies.size}/${this.maxEnemies} enemies, timer: ${this.spawnTimer.toFixed(1)}/${this.spawnInterval} seconds`);
         // }
         
         // Update spawn timer and try to spawn new enemies
-        console.log(`[ENEMY_SYSTEM] Calling spawner.update with deltaTime: ${deltaTime.toFixed(3)}`);
         const spawnResult = this.spawner.update(deltaTime, this.enemies, this.maxEnemies, (spawnPoint) => {
-            console.log(`[ENEMY_SYSTEM] Spawn callback triggered for position: ${spawnPoint.x.toFixed(1)}, ${spawnPoint.y.toFixed(1)}, ${spawnPoint.z.toFixed(1)}`);
             return this.spawnSpectralDrone(spawnPoint);
         });
         
         if (spawnResult) {
-            console.log(`[ENEMY_SYSTEM] Spawner returned successful spawn result`);
         }
         
         // FAILSAFE: Check for spawn system problems
@@ -191,7 +182,6 @@ export class EnemySystem extends System {
         // Check if the destroyed entity is one of our enemies
         const entity = message.entity;
         if (!entity) {
-            console.warn("Entity destroyed event received but no entity in message!");
             return;
         }
         
@@ -204,12 +194,10 @@ export class EnemySystem extends System {
         // IMPROVED CHECK: Look for either entity.hasTag('enemy') OR entity.id in this.enemies
         // This ensures we catch all cases where an enemy is destroyed
         if ((entity.hasTag && entity.hasTag('enemy')) || isTrackedEnemy) {
-            console.log(`Enemy destroyed: ${entityId}`);
             
             // FIRST: Remove from tracking immediately to prevent double-processing
             if (isTrackedEnemy) {
                 this.enemies.delete(entityId);
-                console.log(`Removed entity ${entityId} from enemies tracking`);
             }
             
             // TRAIL CLEANUP: Ensure any trails are properly removed
@@ -245,9 +233,7 @@ export class EnemySystem extends System {
                     
                     // Remove the component from the entity
                     entity.removeComponent('TrailComponent');
-                    console.log(`Cleaned up trail component for destroyed enemy ${entityId}`);
                 } catch (error) {
-                    console.error(`Error cleaning up trail for entity ${entityId}:`, error);
                 }
             }
             
@@ -260,7 +246,6 @@ export class EnemySystem extends System {
                         meshComponent.mesh.parent.remove(meshComponent.mesh);
                     }
                 } catch (error) {
-                    console.error(`Error cleaning up mesh for entity ${entityId}:`, error);
                 }
             }
             
@@ -268,11 +253,9 @@ export class EnemySystem extends System {
             this.enemiesDestroyed++;
             
             // Log remaining enemies
-            console.log(`Enemy ${entityId} destroyed. Enemies remaining: ${this.enemies.size}/${this.maxEnemies}`);
             
             // ENSURE PROPER CLEANUP: Make sure entity doesn't have enemy tag
             if (entity.hasTag && entity.hasTag('enemy')) {
-                console.log(`Explicitly removing 'enemy' tag from destroyed entity ${entityId}`);
                 entity.removeTag('enemy');
             }
             
@@ -280,9 +263,7 @@ export class EnemySystem extends System {
             let isInPool = false;
             for (let i = 0; i < this.poolManager.enemyPool.length; i++) {
                 if (this.poolManager.enemyPool[i] && this.poolManager.enemyPool[i].id === entityId) {
-                    console.warn(`CRITICAL ERROR: Destroyed entity ${entityId} is already in the pool!`);
                     this.poolManager.enemyPool.splice(i, 1);
-                    console.log(`Removed entity ${entityId} from pool to prevent double-pooling`);
                     isInPool = true;
                     break;
                 }
@@ -292,19 +273,16 @@ export class EnemySystem extends System {
             if (!isInPool) {
                 // Return the entity to the pool
                 this.poolManager.returnEnemyToPool(entity, this.enemies);
-                console.log(`Returned enemy ${entityId} to pool`);
             }
             
             // Force spawn point regeneration after several enemies have been destroyed
             if (this.enemiesDestroyed % 5 === 0) {
-                console.log("Regenerating spawn points after multiple enemy destructions");
                 this.spawner.generateSpawnPoints();
             }
             
             // CRITICAL: If this was the last enemy, make sure to reset the spawn timer
             // to avoid long waits for the next enemy
             if (this.enemies.size === 0) {
-                console.log("All enemies destroyed - accelerating next spawn");
                 // Set the timer to be almost at the spawn interval
                 this.spawnTimer = Math.max(this.spawnTimer, this.spawnInterval * 0.8);
                 // Update spawn monitoring
@@ -326,7 +304,6 @@ export class EnemySystem extends System {
         // Clean up any tracked enemies
         this.enemies.clear();
         
-        console.log("Enemy system disabled");
     }
     
     

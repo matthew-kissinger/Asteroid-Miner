@@ -28,24 +28,20 @@ export class HealthComponent extends Component {
         this.isDestroyed = false;
         this.isInvulnerable = false;
         
-        console.log(`Created health component with ${maxHealth} max health and ${maxShield} max shield`);
     }
     
     // Add an onAttached method to subscribe to health sync events
     onAttached() {
         // Only subscribe for player entities
         if (this.entity && this.entity.hasTag && this.entity.hasTag('player')) {
-            console.log("HealthComponent attached to player entity - subscribing to sync events");
             
             // Subscribe to health sync events on the message bus
             if (this.entity.world && this.entity.world.messageBus) {
                 this.entity.world.messageBus.subscribe('player.syncHealth', this.handleSyncHealth.bind(this));
                 this.entity.world.messageBus.subscribe('player.undocked', this.handleSyncHealth.bind(this));
-                console.log("Subscribed to player.syncHealth and player.undocked events");
             } else if (window.mainMessageBus) {
                 window.mainMessageBus.subscribe('player.syncHealth', this.handleSyncHealth.bind(this));
                 window.mainMessageBus.subscribe('player.undocked', this.handleSyncHealth.bind(this));
-                console.log("Subscribed to player.syncHealth and player.undocked events via mainMessageBus");
             }
         }
     }
@@ -57,55 +53,39 @@ export class HealthComponent extends Component {
             return;
         }
         
-        console.log("HealthComponent received syncHealth event:", message);
         
         // CRITICAL FIX: The message from MessageBus has a nested data property
         // Extract the actual sync data from the message
         const data = message.data || message;
         
-        console.log("Extracted sync data:", data);
         
         // Update shield values if provided
         if (data.shield !== undefined) {
             const oldShield = this.shield;
             
             // SHIELD SYNC: Add additional logging to debug shield sync issues
-            console.log(`SHIELD SYNC: HealthComponent shield was ${oldShield}, spaceship shield is ${data.shield}`);
             
             // Set shield value from spaceship
             this.shield = data.shield;
             
-            console.log(`Updated shield: ${oldShield} → ${this.shield}`);
-        } else {
-            console.warn("Shield value not provided in sync data");
         }
         
         if (data.maxShield !== undefined) {
             const oldMaxShield = this.maxShield;
             this.maxShield = data.maxShield;
-            console.log(`Updated maxShield: ${oldMaxShield} → ${this.maxShield}`);
-        } else {
-            console.warn("MaxShield value not provided in sync data");
         }
         
         // Update health values if provided
         if (data.hull !== undefined) {
             const oldHealth = this.health;
             this.health = data.hull;
-            console.log(`Updated health: ${oldHealth} → ${this.health}`);
-        } else {
-            console.warn("Hull value not provided in sync data");
         }
         
         if (data.maxHull !== undefined) {
             const oldMaxHealth = this.maxHealth;
             this.maxHealth = data.maxHull;
-            console.log(`Updated maxHealth: ${oldMaxHealth} → ${this.maxHealth}`);
-        } else {
-            console.warn("MaxHull value not provided in sync data");
         }
         
-        console.log(`HealthComponent synced: Health ${this.health}/${this.maxHealth}, Shield ${this.shield}/${this.maxShield}`);
     }
     
     /**
@@ -116,13 +96,9 @@ export class HealthComponent extends Component {
      * @returns {object} Damage result with actual damage dealt
      */
     applyDamage(amount, type = 'projectile', source = null) {
-        // Debug logging
-        console.log(`HealthComponent: Applying ${amount} damage of type ${type} to entity ${this.entity ? this.entity.id : 'unknown'}`);
-        console.log(`Current health: ${this.health}/${this.maxHealth}, Shield: ${this.shield}/${this.maxShield}`);
         
         // Check if entity can be damaged
         if (this.isDestroyed || this.isInvulnerable) {
-            console.log("Entity is destroyed or invulnerable, damage not applied");
             return { damageApplied: 0, shieldDamage: 0, healthDamage: 0, destroyed: false };
         }
         
@@ -174,13 +150,10 @@ export class HealthComponent extends Component {
                 
                 // Additional check for player entity - publish game over event
                 if (this.entity.hasTag && this.entity.hasTag('player')) {
-                    console.log("PLAYER HEALTH COMPONENT DESTROYED - TRIGGERING GAME OVER");
                     
-                    console.log("HealthComponent: Initiating game over sequence");
                     
                     // Use direct world message bus
                     if (this.entity && this.entity.world && this.entity.world.messageBus) {
-                        console.log("HealthComponent: Publishing game.over via world.messageBus");
                         this.entity.world.messageBus.publish('game.over', {
                             reason: "You were pwned by a space alien!",
                             source: "health"
@@ -189,13 +162,10 @@ export class HealthComponent extends Component {
                         // Import MessageBus to use the static method if needed
                         import('../../core/messageBus.js').then(module => {
                             const MessageBus = module.MessageBus;
-                            console.log("HealthComponent: Using MessageBus.triggerGameOver");
                             
                             // Use the static method for handling
                             MessageBus.triggerGameOver("You were pwned by a space alien!", "health");
-                        }).catch(err => {
-                            console.error("Error importing MessageBus:", err);
-                        });
+                        }).catch(err => {});
                     }
                 }
             }
@@ -213,9 +183,6 @@ export class HealthComponent extends Component {
             });
         }
         
-        // More debug logging 
-        console.log(`After damage: Health: ${this.health}/${this.maxHealth}, Shield: ${this.shield}/${this.maxShield}`);
-        console.log(`Entity destroyed: ${this.isDestroyed}`);
         
         return {
             damageApplied: resistedAmount,
@@ -322,7 +289,6 @@ export class HealthComponent extends Component {
         this.maxHealth *= multiplier;
         this.health = this.maxHealth; // Full heal on upgrade
         
-        console.log(`Upgraded health from ${oldMax.toFixed(1)} to ${this.maxHealth.toFixed(1)}`);
         
         // Notify upgrade
         if (this.entity && this.entity.world) {
@@ -345,8 +311,6 @@ export class HealthComponent extends Component {
      * @returns {object} New shield stats
      */
     upgradeShield(multiplier = 1.5) {
-        console.log(`===== SHIELD UPGRADE INITIATED =====`);
-        console.log(`Current shield values - Max: ${this.maxShield}, Current: ${this.shield}`);
         
         const oldMax = this.maxShield;
         const oldShield = this.shield;
@@ -357,9 +321,6 @@ export class HealthComponent extends Component {
         // Full recharge on upgrade - this is the original behavior
         this.shield = this.maxShield;
         
-        console.log(`Upgraded shield from ${oldMax.toFixed(1)} to ${this.maxShield.toFixed(1)}`);
-        console.log(`Current shield value changed from ${oldShield.toFixed(1)} to ${this.shield.toFixed(1)}`);
-        console.log(`===== SHIELD UPGRADE COMPLETED =====`);
         
         // Notify upgrade
         if (this.entity && this.entity.world) {

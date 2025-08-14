@@ -20,7 +20,6 @@ export class World {
         // If we created a new message bus, make it accessible globally
         if (!messageBus && !window.mainMessageBus) {
             window.mainMessageBus = this.messageBus;
-            console.log("World: Set this.messageBus as window.mainMessageBus");
         }
         
         // Create managers
@@ -73,9 +72,7 @@ export class World {
         if (window.DEBUG_MODE && this.time % 5 < this.deltaTime) {
             // Get all entities from entity manager using values from the map
             const entities = Array.from(this.entityManager.entities.values());
-            console.log(`World update - ${entities.length} entities active`);
             const entitiesWithMesh = this.getEntitiesWithComponents(['MeshComponent']);
-            console.log(`Entities with mesh: ${entitiesWithMesh.length}`);
         }
     }
     

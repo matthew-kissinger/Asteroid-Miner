@@ -63,7 +63,6 @@ export class Spaceship {
         // Initialize specialized modules
         this._initializeModules();
         
-        console.log("Creating spaceship...");
         this.createSpaceship();
         
         // Initialize trail effects after spaceship mesh is created
@@ -74,7 +73,6 @@ export class Spaceship {
             this.mesh.visible = false;
         }
         
-        console.log("Spaceship created successfully (docked state)");
     }
 
     /**

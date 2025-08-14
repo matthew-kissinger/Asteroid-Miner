@@ -22,7 +22,6 @@ import * as THREE from 'three';
 
 export class Combat {
     constructor(scene, spaceship) {
-        console.log("Initializing combat system");
         this.scene = scene;
         this.spaceship = spaceship;
         this.projectiles = [];
@@ -68,12 +67,10 @@ export class Combat {
             trailParticleGeometries: window.game.trailParticleGeometries,
             tracerGeometry: window.game.tracerGeometry
         });
-        console.log("Initialized ProjectilePoolManager for object pooling with pre-warmed assets");
         
         // Initialize ECS world for advanced combat systems
         this.initializeECSWorld();
         
-        console.log("Combat systems initialized");
     }
     
     // Material and geometry initialization moved to EffectsManager
@@ -84,7 +81,6 @@ export class Combat {
      */
     async initializeECSWorld() {
         try {
-            console.log("[COMBAT] Starting ECS world initialization...");
             
             // Use world setup module
             this.world = await this.worldSetup.initializeECSWorld(this.scene, this.spaceship);
@@ -92,9 +88,7 @@ export class Combat {
             // Continue with full world setup
             await this.setupECSWorld();
             
-            console.log("[COMBAT] ECS world initialization complete");
         } catch (error) {
-            console.error("[COMBAT] Error initializing ECS world:", error);
         }
     }
     
@@ -104,7 +98,6 @@ export class Combat {
     async setupECSWorld() {
         // Skip if world was already set up
         if (this.worldSetup.isWorldInitialized()) {
-            console.log("[COMBAT] World already initialized, skipping setup");
             return;
         }
         
@@ -135,10 +128,7 @@ export class Combat {
             // Mark world as initialized
             this.worldSetup.setWorldInitialized();
             
-            console.log("[COMBAT] ECS combat systems registered and initialization process completed");
         } catch (error) {
-            console.error("[COMBAT] Error during world setup:", error);
-            console.error("[COMBAT] Stack trace:", error.stack);
         }
     }
     
@@ -192,7 +182,6 @@ export class Combat {
                 }
             }
         } else if (!this.world) {
-            console.log(`[COMBAT] No ECS world available for update`);
         }
     }
     
@@ -258,9 +247,7 @@ export class Combat {
                 if (projectile.userData && projectile.userData.entityId && this.world) {
                     try {
                         this.world.destroyEntity(projectile.userData.entityId);
-                        console.log(`Removed expired projectile entity ${projectile.userData.entityId}`);
                     } catch (error) {
-                        console.error("Error removing projectile entity:", error);
                     }
                 }
                 
@@ -280,7 +267,6 @@ export class Combat {
      */
     setFiring(isFiring) {
         this.isFiring = isFiring;
-        console.log(`Particle cannon firing state changed: ${isFiring}`);
     }
     
     /**
@@ -429,7 +415,6 @@ export class Combat {
         // Clear the tracking array
         this.projectiles = [];
         
-        console.log("All projectiles cleared and returned to the pool");
     }
     
     // Aiming tracer creation moved to EffectsManager
@@ -451,7 +436,6 @@ export class Combat {
      * Clean up all pools, geometries, and other resources
      */
     dispose() {
-        console.log("Disposing Combat module resources...");
         
         // Clear all active projectiles
         this.clearAllProjectiles();
@@ -478,7 +462,6 @@ export class Combat {
         // Mark as disposed
         this.disposed = true;
         
-        console.log("Combat module resources disposed");
     }
 
     // Renderer facade helpers moved to EffectsManager
@@ -498,5 +481,5 @@ export class Combat {
 // This is unlikely given typical class structure but added for robustness
 // if (typeof Combat !== 'undefined' && Combat.prototype.addProjectileTrail) {
 // delete Combat.prototype.addProjectileTrail;
-//     console.log("Dynamically removed addProjectileTrail from Combat prototype if it existed.");
+;
 // }

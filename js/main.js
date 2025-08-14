@@ -19,7 +19,6 @@ export class Game {
         // Initialize globals first
         initializeGlobals();
         
-        if (window.DEBUG_MODE) console.log("Initializing game...");
         
         // Make game instance globally accessible for emergency access
         window.game = this;
@@ -70,8 +69,7 @@ export class Game {
             this.startupSequence.initializeGameSequence();
             
         } catch (error) {
-            console.error("Error in game initialization:", error);
-            throw error;
+                throw error;
         }
     }
     
@@ -106,7 +104,6 @@ export class Game {
     
     initializeDifficultyManager() {
         // Compatibility method - difficulty manager is now initialized in constructor
-        if (window.DEBUG_MODE) console.log("Difficulty manager already initialized");
     }
     
     activateHordeMode() {
@@ -197,14 +194,11 @@ export class Game {
             try {
                 this.combat.updatePlayerReference();
             } catch (error) {
-                console.warn("Error updating player reference:", error);
             }
         } else if (this.combat && !this.combat.updatePlayerReference) {
-            console.warn("Combat module does not have updatePlayerReference method");
             
             // Try to initialize player entity directly if method is missing
             if (this.combat.createPlayerReferenceEntity && !this.combat.playerEntity) {
-                if (window.DEBUG_MODE) console.log("Creating player entity directly since updatePlayerReference is not available");
                 this.combat.createPlayerReferenceEntity();
             }
         }
@@ -287,14 +281,11 @@ function startGameMainModule() {
             }, 100);
         }
 
-        if (window.DEBUG_MODE) console.log("Starting game main module...");
 
         // Create game instance (globals initialized in constructor)
         window.game = new Game();
 
-        if (window.DEBUG_MODE) console.log("Game started successfully");
     } catch (error) {
-        console.error("Error starting game:", error);
         
         // Show error message to user
         const errorMessage = document.createElement('div');

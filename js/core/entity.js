@@ -136,14 +136,11 @@ export class Entity {
                 // Verify tag was added to tag index map
                 if (!this.world.entityManager.entitiesByTag.has(tag) || 
                     !this.world.entityManager.entitiesByTag.get(tag).includes(this)) {
-                    console.error(`Failed to register entity ${this.id} with tag '${tag}' in entity manager!`);
-                    
                     // Force add entity to tag map as fallback
                     if (!this.world.entityManager.entitiesByTag.has(tag)) {
                         this.world.entityManager.entitiesByTag.set(tag, []);
                     }
                     this.world.entityManager.entitiesByTag.get(tag).push(this);
-                    console.log(`Manually fixed tag registration for entity ${this.id} with tag '${tag}'`);
                 }
             }
         }
@@ -213,22 +210,18 @@ export class Entity {
         let cacheInconsistent = false;
         
         if (tag === 'enemy' && this._isEnemy !== hasTag) {
-            console.warn(`Tag cache inconsistency for entity ${this.id}: _isEnemy=${this._isEnemy}, actual=Set{${Array.from(this.tags)}}`);
             this._isEnemy = hasTag; // Fix the cache
             cacheInconsistent = true;
         } 
         else if (tag === 'player' && this._isPlayer !== hasTag) {
-            console.warn(`Tag cache inconsistency for entity ${this.id}: _isPlayer=${this._isPlayer}, actual=Set{${Array.from(this.tags)}}`);
             this._isPlayer = hasTag; // Fix the cache
             cacheInconsistent = true;
         } 
         else if (tag === 'projectile' && this._isProjectile !== hasTag) {
-            console.warn(`Tag cache inconsistency for entity ${this.id}: _isProjectile=${this._isProjectile}, actual=Set{${Array.from(this.tags)}}`);
             this._isProjectile = hasTag; // Fix the cache
             cacheInconsistent = true;
         }
         else if (tag === 'pooled' && this._isPooled !== hasTag) {
-            console.warn(`Tag cache inconsistency for entity ${this.id}: _isPooled=${this._isPooled}, actual=Set{${Array.from(this.tags)}}`);
             this._isPooled = hasTag; // Fix the cache
             cacheInconsistent = true;
         }

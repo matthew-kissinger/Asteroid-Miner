@@ -25,7 +25,6 @@ window.THREE.WebGL = ThreeImports.WebGL;
 window.__vite_compat = {
   resolveImport(path) {
     // This will be used to help resolve imports in the original code
-    console.log(`Resolving import: ${path}`);
     return path;
   }
 };
@@ -106,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Track loading progress and update UI
   loadingManager.onStart = function (url, itemsLoaded, itemsTotal) {
-    console.log(`Started loading: ${url} (${itemsLoaded}/${itemsTotal})`);
   };
 
   loadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
@@ -116,12 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   loadingManager.onError = function (url) {
-    console.warn(`There was an error loading ${url}`);
   };
 
   // Once everything is loaded we fade out the overlay and launch the game
   loadingManager.onLoad = async function () {
-    console.log('All critical assets loaded. Initializing game…');
     text.textContent = 'Initializing…';
     bar.style.width = '100%';
 
@@ -134,9 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Dynamically import the main game module now that assets are ready
       try {
         await import('js/main.js');
-        console.timeEnd('init');
       } catch (err) {
-        console.error('Failed to load main game module:', err);
       }
     }, 200);
   };
@@ -158,7 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Pre-load enemy model (not strictly visible at start but avoids hitch later)
   const gltfLoader = new window.THREE.GLTFLoader(loadingManager);
   gltfLoader.load('assets/enemy.glb', () => {
-    console.log('Pre-loaded enemy.glb');
   });
 });
 

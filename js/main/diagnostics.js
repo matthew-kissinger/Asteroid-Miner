@@ -26,7 +26,6 @@ export class Diagnostics {
         // Add debug command for performance monitoring
         window.togglePerf = () => {
             window.__perf.enabled = !window.__perf.enabled;
-            if (window.DEBUG_MODE) console.log("Performance monitoring:", window.__perf.enabled ? "enabled" : "disabled");
             
             if (window.__perf.enabled) {
                 // Initialize performance monitor if needed
@@ -59,8 +58,7 @@ export class Diagnostics {
         // Add global debug command to trigger intro sequence
         window.playIntro = () => {
             if (this.game.startupSequence && this.game.startupSequence.startIntroSequence) {
-                if (window.DEBUG_MODE) console.log("Manually triggering intro sequence");
-                this.game.startupSequence.startIntroSequence();
+                    this.game.startupSequence.startIntroSequence();
                 return "Playing intro sequence...";
             }
             return "Intro sequence not available";
@@ -138,17 +136,5 @@ export class Diagnostics {
             return "ECS world not available";
         };
         
-        if (window.DEBUG_MODE) {
-            console.log("Debug commands available:");
-            console.log("- toggleDebug(): Toggle debug mode");
-            console.log("- setFPSLimit(limit): Set FPS cap (0 for unlimited)");
-            console.log("- togglePerf(): Toggle performance monitoring");
-            console.log("- playIntro(): Play intro sequence");
-            console.log("- gameState(): Show current game state");
-            console.log("- startHorde(): Activate horde mode");
-            console.log("- memStats(): Show memory statistics");
-            console.log("- poolStats(name?): Show object pool statistics");
-            console.log("- entityCount(): Show entity and system counts");
-        }
     }
 }

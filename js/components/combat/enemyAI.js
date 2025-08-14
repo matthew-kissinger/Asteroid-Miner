@@ -45,7 +45,6 @@ export class EnemyAIComponent extends Component {
         this.separationInfluence = config.separationInfluence || 0.3; // How much separation affects movement (0-1)
         this.separationForce = new THREE.Vector3(); // Store the last calculated separation force
         
-        console.log(`Created ${this.faction} ${this.type} enemy AI with detection range ${this.detectionRange}`);
     }
     
     /**
@@ -125,7 +124,6 @@ export class EnemyAIComponent extends Component {
         // METHOD 6: Check for spaceship in scene
         if (!player && window.game && window.game.spaceship && window.game.spaceship.mesh) {
             // Create a temporary entity if needed
-            console.log("No player entity found, but found spaceship - will use position directly");
             
             // Use the spaceship as the target without an actual entity
             // We'll create a minimal object with the necessary properties
@@ -146,9 +144,6 @@ export class EnemyAIComponent extends Component {
         // If still no player, we can't proceed
         if (!player) {
             // Only show error message occasionally to avoid console spam
-            if (Math.random() < 0.01) { // Show error roughly once per 100 frames
-                console.error("No player entity found by any method! Enemy cannot move.");
-            }
             return;
         }
         
@@ -171,14 +166,12 @@ export class EnemyAIComponent extends Component {
             if (player.position) {
                 playerTransform = player;
             } else {
-                console.warn("Player found but missing transform component!");
                 return;
             }
         }
         
         // Log that we found the player (only once)
         if (!this.playerFound) {
-            console.log(`ENEMY FOUND PLAYER TARGET! Player position: ${playerTransform.position.x.toFixed(1)}, ${playerTransform.position.y.toFixed(1)}, ${playerTransform.position.z.toFixed(1)}`);
             this.playerFound = true;
         }
         
@@ -212,14 +205,12 @@ export class EnemyAIComponent extends Component {
         
         // Check for kamikaze attack condition (same for all enemies)
         if (distanceToPlayer < 75) { // Collision distance
-            console.log("ENEMY KAMIKAZE ATTACK!");
             
             // Get player health component
             const playerHealth = player.getComponent(HealthComponent);
             if (playerHealth) {
                 // Use the configured damage value instead of calculating from player's health
                 playerHealth.applyDamage(this.damage, 'collision', this.entity);
-                console.log(`Enemy collided with player! Applied ${this.damage} damage to player entity health component`);
                 
                 // CRITICAL FIX: Also update the spaceship object directly to ensure damage is reflected
                 if (window.game && window.game.spaceship) {
@@ -238,7 +229,6 @@ export class EnemyAIComponent extends Component {
                         spaceship.hull -= this.damage;
                     }
                     
-                    console.log(`Applied ${this.damage} damage directly to spaceship: Hull=${spaceship.hull}, Shield=${spaceship.shield}`);
                     
                     // Check for game over condition
                     if (spaceship.hull <= 0 && !spaceship.isDestroyed) {
@@ -286,7 +276,6 @@ export class EnemyAIComponent extends Component {
                     
                     // Actually destroy the entity via world
                     entityWorld.destroyEntity(entityId);
-                    console.log(`Enemy entity ${entityId} self-destructed after kamikaze attack`);
                 }
             }
         }

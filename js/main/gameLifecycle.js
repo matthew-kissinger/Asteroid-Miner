@@ -23,7 +23,6 @@ export class GameLifecycle {
         
         this.game.isGameOver = true;
         
-        if (window.DEBUG_MODE) console.log("Game Over:", reason);
         
         // Stop the game loop
         if (this.game.boundAnimate) {
@@ -54,7 +53,6 @@ export class GameLifecycle {
     
     cleanup() {
         // Basic cleanup when game ends
-        if (window.DEBUG_MODE) console.log("Cleaning up game state...");
         
         // Clear pools
         if (window.objectPool && window.objectPool.clearAllPools) {
@@ -72,7 +70,6 @@ export class GameLifecycle {
      * Call this when the game is no longer needed to prevent memory leaks
      */
     destroy() {
-        if (window.DEBUG_MODE) console.log("Cleaning up game resources...");
         
         // Destroy game loop
         if (this.game.gameLoop) {
@@ -135,6 +132,5 @@ export class GameLifecycle {
         // Clear global references
         window.game = null;
         
-        if (window.DEBUG_MODE) console.log("Game cleanup complete");
     }
 }

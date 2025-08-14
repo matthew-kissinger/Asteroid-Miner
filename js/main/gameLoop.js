@@ -48,7 +48,6 @@ export class GameLoop {
                 this.frameStartTime = performance.now();
                 this.lastUpdateTime = performance.now();
                 this.performanceStable = true;
-                if (window.DEBUG_MODE) console.log(`Warm-up complete, starting game loop`);
             }
             
             // Continue warm-up
@@ -176,7 +175,6 @@ export class GameLoop {
     
     setFrameRateCap(cap) {
         this.frameRateCap = cap;
-        if (window.DEBUG_MODE) console.log(`Frame rate cap set to: ${cap > 0 ? cap + ' FPS' : 'Unlimited'}`);
     }
     
     applyFrameRateSettings() {
@@ -193,7 +191,6 @@ export class GameLoop {
                 this.detectRefreshRate().then(rate => {
                     if (rate && rate > 0) {
                         this.setFrameRateCap(rate);
-                        if (window.DEBUG_MODE) console.log(`Auto-detected refresh rate: ${rate} Hz`);
                     }
                 });
             } else {

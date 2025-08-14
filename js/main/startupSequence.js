@@ -12,7 +12,6 @@ export class StartupSequence {
     // Initialize game in sequence, showing start screen first and loading non-essentials after
     async initializeGameSequence() {
         try {
-            if (window.DEBUG_MODE) console.log("Starting game initialization sequence...");
             
             // Add a small delay to let browser stabilize after page load
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -22,29 +21,23 @@ export class StartupSequence {
                 try {
                     this.game.audio.resumeAudioContext();
                 } catch (e) {
-                    if (window.DEBUG_MODE) console.log("Audio context couldn't be resumed yet, will try again after user interaction");
                 }
             }
             
             // Show the start screen immediately
             if (this.game.ui && this.game.ui.startScreen) {
-                if (window.DEBUG_MODE) console.log("Showing start screen");
                 this.game.ui.startScreen.show();
             } else {
-                console.error("Start screen not found, falling back to default behavior");
                 this.fallbackToDefaultBehavior();
             }
             
             // Start game loop with warm-up frames
-            if (window.DEBUG_MODE) console.log("Starting game loop with warm-up frames");
             requestAnimationFrame(this.game.boundAnimate);
             
             // Initialize remaining systems in the background after start screen is shown
             this.initializeRemainingSystemsAsync();
             
-            if (window.DEBUG_MODE) console.log("Game initialization sequence completed successfully");
         } catch (error) {
-            console.error("Error during game initialization sequence:", error);
             
             // Show error in UI if possible
             if (this.game.ui && this.game.ui.showError) {
@@ -62,20 +55,16 @@ export class StartupSequence {
             this.loadAudioAsync();
             
             // Initialize combat systems asynchronously
-            if (window.DEBUG_MODE) console.log("Initializing combat module asynchronously...");
             if (!this.game.combat) {
                 const { Combat } = await import('../modules/combat.js');
                 this.game.combat = new Combat(this.game.scene, this.game.spaceship);
                 
                 // Ensure the ECS world in combat is properly initialized
                 if (this.game.combat.world) {
-                    if (window.DEBUG_MODE) console.log("Combat ECS world successfully created");
                 } else {
-                    if (window.DEBUG_MODE) console.log("Waiting for combat ECS world to initialize...");
                     // Add a check to ensure the player entity exists
                     setTimeout(() => {
                         if (this.game.combat.world && this.game.combat.playerEntity) {
-                            if (window.DEBUG_MODE) console.log("Combat ECS world and player entity initialized after delay");
                         } else {
                             console.warn("Combat ECS world or player entity not available after delay, recreating...");
                             if (this.game.combat.createPlayerReferenceEntity) {
@@ -94,7 +83,6 @@ export class StartupSequence {
                 this.game.preWarmBasicShaders();
             }, 100);
         } catch (error) {
-            console.error("Error initializing remaining systems:", error);
         }
     }
     
@@ -103,15 +91,11 @@ export class StartupSequence {
         try {
             if (this.game.audio) {
                 // Initialize audio in the background
-                if (window.DEBUG_MODE) console.log("Initializing audio system asynchronously...");
                 this.game.audio.initialize().then(() => {
-                    if (window.DEBUG_MODE) console.log("Audio system initialization complete");
                 }).catch(error => {
-                    console.error("Error initializing audio:", error);
                 });
             }
         } catch (error) {
-            console.error("Error loading audio:", error);
         }
     }
     
@@ -122,7 +106,6 @@ export class StartupSequence {
     
     initIntroSequence() {
         // Initialize the intro sequence module
-        if (window.DEBUG_MODE) console.log("Initializing intro sequence module...");
         this.introSequence = new IntroSequence(
             this.game.scene,
             this.game.camera,
@@ -141,13 +124,11 @@ export class StartupSequence {
             this.initIntroSequence();
         }
         
-        if (window.DEBUG_MODE) console.log("Starting intro sequence");
         this.introSequenceActive = true;
         this.game.introSequenceActive = true;
         
         // Disable all enemies during intro sequence
         if (this.game.combat && this.game.combat.world && this.game.combat.world.enemySystem) {
-            if (window.DEBUG_MODE) console.log("Freezing all enemies for intro sequence");
             this.game.combat.world.enemySystem.freezeAllEnemies();
         }
         
@@ -182,7 +163,6 @@ export class StartupSequence {
     }
     
     completeIntroSequence() {
-        if (window.DEBUG_MODE) console.log("Completing intro sequence");
         this.introSequenceActive = false;
         this.game.introSequenceActive = false;
         
@@ -191,7 +171,6 @@ export class StartupSequence {
         
         // Re-enable enemies after intro
         if (this.game.combat && this.game.combat.world && this.game.combat.world.enemySystem) {
-            if (window.DEBUG_MODE) console.log("Unfreezing enemies after intro sequence");
             this.game.combat.world.enemySystem.unfreezeAllEnemies();
         }
         
@@ -236,6 +215,5 @@ export class StartupSequence {
             window.mainMessageBus.publish('intro.completed', {});
         }
         
-        if (window.DEBUG_MODE) console.log("Game starting after intro sequence");
     }
 }
