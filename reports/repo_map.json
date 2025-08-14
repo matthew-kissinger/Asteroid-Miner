@@ -27,7 +27,7 @@
   "js": {
     "name": "js",
     "path": "js",
-    "files": 124,
+    "files": 125,
     "children": [
       {
         "name": "components",
@@ -175,6 +175,11 @@
           {
             "name": "docking",
             "path": "js/systems/docking",
+            "files": 1
+          },
+          {
+            "name": "effects",
+            "path": "js/systems/effects",
             "files": 1
           },
           {

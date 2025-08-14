@@ -10,9 +10,9 @@ js/modules/renderer/shaders.js,createClaudeRayShader,80
 js/modules/intro/audio/soundEffects.js,createShipArrivalSound,74
 js/main/globals.js,initializeObjectPoolFacade,71
 js/modules/trail.js,createExhaustBeam,64
-js/main/bootstrap.js,startGameMainModule,60
-js/main.js,startGameMainModule,60
 js/main/globals.js,initializeGlobals,58
+js/main/bootstrap.js,startGameMainModule,57
+js/main.js,startGameMainModule,57
 js/modules/ui/components/blackjack/eventHandlers.js,keyHandler,57
 js/modules/audio/mobile/enabler.js,forceAudioResume,54
 js/modules/spaceship/model/shipModel.js,createCurvedWing,44
@@ -32,6 +32,8 @@ js/modules/controls/mining/visualEffects.js,animateParticles,24
 js/modules/ui/components/combat/animations.js,animate,23
 js/systems/combat/spawner/factory/enemies/meshGeneration.js,tryLoadModel,23
 js/utils/pathUtils.js,getAbsolutePath,23
+js/modules/combat/effects/explosionEffects.js,animate,21
+js/systems/effects/explosionHandler.js,animate,21
 js/modules/controls/dockingSystem.js,handleUndock,20
 js/systems/deployables/deploymentSystem.js,animate,20
 js/main/globals.js,initializeVectorPool,19

@@ -149,7 +149,8 @@
     "js/systems/rendering/visualEffectsSystem.js",
     "js/systems/rendering/trailSystem.js",
     "js/systems/weapons/deployableLaserSystem.js",
-    "js/systems/deployables/deploymentSystem.js"
+    "js/systems/deployables/deploymentSystem.js",
+    "js/systems/effects/explosionHandler.js"
   ],
   "js/modules/combat/worldSetup.js": [
     "js/core/world.js"
@@ -632,8 +633,7 @@
     "js/systems/combat/enemy/behaviors/separationBehavior.js",
     "js/systems/combat/enemy/state/difficultyScaling.js",
     "js/systems/combat/enemy/state/dockingManager.js",
-    "js/systems/combat/enemy/updates/spawnMonitoring.js",
-    "js/systems/combat/enemy/updates/initialSpawning.js"
+    "js/systems/combat/enemy/updates/spawnMonitoring.js"
   ],
   "js/systems/combat/spawner/enemySpawner.js": [
     "js/systems/combat/spawner/waves/progression.js",
@@ -659,6 +659,7 @@
     "js/systems/combat/spawner/waves/definitions.js"
   ],
   "js/systems/combat/spawner/formations/builder.js": [
+    "js/components/transform.js",
     "js/systems/combat/spawner/formations/patterns.js"
   ],
   "js/systems/combat/spawner/formations/patterns.js": [],
@@ -671,6 +672,9 @@
     "js/core/system.js"
   ],
   "js/systems/docking/dockingSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/effects/explosionHandler.js": [
     "js/core/system.js"
   ],
   "js/systems/entity/healthSystem.js": [
