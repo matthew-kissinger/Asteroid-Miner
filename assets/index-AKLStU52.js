@@ -1,7 +1,7 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/main-DlCIhoWa.js","assets/three-Cpq8ZWQ0.js","assets/modules-CrGegrd5.js","assets/core-D1pAqHYH.js"])))=>i.map(i=>d[i]);
-import { G as GLTFLoader, E as EffectComposer, R as RenderPass, U as UnrealBloomPass, S as ShaderPass, F as FXAAShader, C as ColorCorrectionShader, a as FilmShader, V as VignetteShader, W as WebGL, _ as __vitePreload } from "./modules-CrGegrd5.js";
-import { aO as Controls, g as Vector3, aP as MOUSE, aQ as TOUCH, Q as Quaternion, aR as Spherical, V as Vector2, aS as Ray, aT as Plane, X as MathUtils, aU as THREE } from "./three-Cpq8ZWQ0.js";
-import "./core-D1pAqHYH.js";
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/main-CjoPqmLB.js","assets/core-CQR7b8gS.js","assets/modules-BnzCGJKr.js","assets/three-l6xBJAGV.js"])))=>i.map(i=>d[i]);
+import { G as GLTFLoader, E as EffectComposer, R as RenderPass, U as UnrealBloomPass, S as ShaderPass, F as FXAAShader, C as ColorCorrectionShader, a as FilmShader, V as VignetteShader, W as WebGL, _ as __vitePreload } from "./modules-BnzCGJKr.js";
+import { aO as Controls, g as Vector3, aP as MOUSE, aQ as TOUCH, Q as Quaternion, aR as Spherical, V as Vector2, aS as Ray, aT as Plane, X as MathUtils, aU as THREE } from "./three-l6xBJAGV.js";
+import "./core-CQR7b8gS.js";
 (function polyfill() {
   const relList = document.createElement("link").relList;
   if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -983,7 +983,6 @@ window.THREE.VignetteShader = VignetteShader;
 window.THREE.WebGL = WebGL;
 window.__vite_compat = {
   resolveImport(path) {
-    console.log(`Resolving import: ${path}`);
     return path;
   }
 };
@@ -1057,7 +1056,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.body.appendChild(overlay);
   const loadingManager = window.THREE.DefaultLoadingManager;
   loadingManager.onStart = function(url, itemsLoaded, itemsTotal) {
-    console.log(`Started loading: ${url} (${itemsLoaded}/${itemsTotal})`);
   };
   loadingManager.onProgress = function(url, itemsLoaded, itemsTotal) {
     const percent = Math.round(itemsLoaded / itemsTotal * 100);
@@ -1065,10 +1063,8 @@ document.addEventListener("DOMContentLoaded", () => {
     bar.style.width = `${percent}%`;
   };
   loadingManager.onError = function(url) {
-    console.warn(`There was an error loading ${url}`);
   };
   loadingManager.onLoad = async function() {
-    console.log("All critical assets loaded. Initializing game…");
     text.textContent = "Initializing…";
     bar.style.width = "100%";
     setTimeout(async () => {
@@ -1076,10 +1072,8 @@ document.addEventListener("DOMContentLoaded", () => {
       overlay.style.transition = "opacity 0.5s ease-out";
       setTimeout(() => overlay.remove(), 600);
       try {
-        await __vitePreload(() => import("./main-DlCIhoWa.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0);
-        console.timeEnd("init");
+        await __vitePreload(() => import("./main-CjoPqmLB.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0);
       } catch (err) {
-        console.error("Failed to load main game module:", err);
       }
     }, 200);
   };
@@ -1095,10 +1089,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }));
   const gltfLoader = new window.THREE.GLTFLoader(loadingManager);
   gltfLoader.load("assets/enemy.glb", () => {
-    console.log("Pre-loaded enemy.glb");
   });
 });
 export {
   getGlobalPoolRegistry as g
 };
-//# sourceMappingURL=index-B9lmtWuy.js.map
+//# sourceMappingURL=index-AKLStU52.js.map

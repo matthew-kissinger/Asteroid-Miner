@@ -53,11 +53,7 @@ class MessageBus {
     window.messageRegistry.add(this);
     if (!window.mainMessageBus) {
       window.mainMessageBus = this;
-      console.log("MessageBus: Set this instance as window.mainMessageBus");
-    } else if (window.mainMessageBus !== this) {
-      console.log("MessageBus: This instance will forward game.over events to window.mainMessageBus");
     }
-    console.log("MessageBus: New instance created and added to registry");
   }
   /**
    * Register a listener for a message type
@@ -128,37 +124,20 @@ class MessageBus {
     if (this.highFrequencyTypes.has(messageType)) {
       return this.fastPublish(messageType, data);
     }
-    const criticalMessages = ["entity.created", "entity.destroyed", "component.added", "component.removed", "game.over"];
-    if (criticalMessages.includes(messageType)) {
-      console.log(`MessageBus: Publishing ${messageType}`, data);
-    }
     if (messageType === "game.over") {
       if (window.mainMessageBus && window.mainMessageBus !== this) {
-        console.log(`MessageBus: Forwarding game.over event to window.mainMessageBus`);
         window.mainMessageBus.publish(messageType, data);
         return;
       }
       if (!this.listeners.has(messageType)) {
-        console.error(`MessageBus: No listeners found for '${messageType}' event!`);
-        console.log(`MessageBus: Registered event types:`, Array.from(this.listeners.keys()));
-        console.trace("MessageBus: This is where the game.over event was published from");
         if (window.game) {
-          console.log("MessageBus: window.game exists:", window.game);
-          console.log("MessageBus: window.game.messageBus exists:", window.game.messageBus);
-          console.log("MessageBus: Directly calling window.game.gameOver as an emergency measure");
           window.game.gameOver(data.reason || "Unknown reason");
-        } else {
-          console.error("MessageBus: window.game does not exist - critical issue");
         }
         return;
-      } else {
-        const listeners = this.listeners.get(messageType);
-        console.log(`MessageBus: Found ${listeners.length} listeners for '${messageType}' event`);
       }
     }
     if (!this.listeners.has(messageType)) return;
     if (this.dispatching) {
-      console.log(`MessageBus: Already dispatching, queueing ${messageType} message`);
       this.queuedMessages.push({ type: messageType, data });
       return;
     }
@@ -167,20 +146,12 @@ class MessageBus {
       const listeners = this.listeners.get(messageType);
       listeners.forEach((listener, index) => {
         try {
-          if (messageType === "game.over") {
-            console.log(`MessageBus: Calling listener #${index + 1} for game.over event`);
-          }
           listener.callback.call(listener.context, {
             type: messageType,
             data,
             timestamp: Date.now()
           });
-          if (messageType === "game.over") {
-            console.log(`MessageBus: Listener #${index + 1} for game.over event completed successfully`);
-          }
         } catch (error) {
-          console.error(`Error in message listener #${index + 1} (${messageType}):`, error);
-          console.error("Error stack:", error.stack);
         }
       });
     } finally {
@@ -211,33 +182,21 @@ class MessageBus {
    * @param {string} source Source of the game over event
    */
   static triggerGameOver(reason, source) {
-    console.log("MessageBus.triggerGameOver called:", reason, "from", source);
     let messageBusToUse = null;
     if (window.mainMessageBus) {
-      console.log("MessageBus: Using window.mainMessageBus for game over");
       messageBusToUse = window.mainMessageBus;
     } else if (window.game && window.game.messageBus) {
-      console.log("MessageBus: Using window.game.messageBus for game over");
       messageBusToUse = window.game.messageBus;
     }
     if (messageBusToUse) {
-      console.log("MessageBus: Publishing game.over event");
-      if (messageBusToUse.listeners.has("game.over")) {
-        const listeners = messageBusToUse.listeners.get("game.over");
-        console.log(`MessageBus: Found ${listeners.length} game.over listeners`);
-      } else {
-        console.warn("MessageBus: No game.over listeners found before publishing");
-      }
       messageBusToUse.publish("game.over", {
         reason,
         source
       });
-    } else {
-      console.error("MessageBus: No message bus instance found for game over!");
     }
   }
 }
 export {
   MessageBus
 };
-//# sourceMappingURL=core-D1pAqHYH.js.map
+//# sourceMappingURL=core-CQR7b8gS.js.map

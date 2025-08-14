@@ -1,6 +1,6 @@
-import { i as System } from "./modules-CrGegrd5.js";
-import { au as SphereGeometry, x as MeshBasicMaterial, I as InstancedMesh, O as Object3D } from "./three-Cpq8ZWQ0.js";
-import "./core-D1pAqHYH.js";
+import { h as System } from "./modules-BnzCGJKr.js";
+import { an as SphereGeometry, x as MeshBasicMaterial, I as InstancedMesh, O as Object3D } from "./three-l6xBJAGV.js";
+import "./core-CQR7b8gS.js";
 class InstancedRenderer extends System {
   constructor(world, scene) {
     super(world);
@@ -95,4 +95,4 @@ class InstancedRenderer extends System {
 export {
   InstancedRenderer
 };
-//# sourceMappingURL=InstancedRenderer-408cPR0X.js.map
+//# sourceMappingURL=InstancedRenderer-BF_LO-uX.js.map
