@@ -1,9 +1,9 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/InstancedRenderer-BF_LO-uX.js","assets/three-l6xBJAGV.js","assets/core-CQR7b8gS.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/InstancedRenderer-6YWyCoVq.js","assets/three-BPefaS9B.js","assets/core-CQR7b8gS.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { MessageBus } from "./core-CQR7b8gS.js";
-import { T as TrianglesDrawMode, a as TriangleFanDrawMode, b as TriangleStripDrawMode, L as Loader, c as LoaderUtils, F as FileLoader, M as MeshPhysicalMaterial, V as Vector2, C as Color, d as LinearSRGBColorSpace, S as SRGBColorSpace, e as SpotLight, P as PointLight, D as DirectionalLight, f as Matrix4, g as Vector3, I as InstancedMesh, Q as Quaternion, h as InstancedBufferAttribute, O as Object3D, i as TextureLoader, j as ImageBitmapLoader, B as BufferAttribute, k as InterleavedBuffer, l as LinearMipmapLinearFilter, N as NearestMipmapLinearFilter, m as LinearMipmapNearestFilter, n as NearestMipmapNearestFilter, o as LinearFilter, p as NearestFilter, R as RepeatWrapping, q as MirroredRepeatWrapping, r as ClampToEdgeWrapping, s as PointsMaterial, t as Material, u as LineBasicMaterial, v as MeshStandardMaterial, w as DoubleSide, x as MeshBasicMaterial, y as PropertyBinding, z as BufferGeometry, A as SkinnedMesh, E as Mesh, G as LineSegments, H as Line, J as LineLoop, K as Points, U as Group, W as PerspectiveCamera, X as MathUtils, Y as OrthographicCamera, Z as Skeleton, _ as AnimationClip, $ as Bone, a0 as InterpolateDiscrete, a1 as InterpolateLinear, a2 as InterleavedBufferAttribute, a3 as Texture, a4 as VectorKeyframeTrack, a5 as NumberKeyframeTrack, a6 as QuaternionKeyframeTrack, a7 as ColorManagement, a8 as FrontSide, a9 as Interpolant, aa as Box3, ab as Sphere, ac as Float32BufferAttribute, ad as ShaderMaterial, ae as UniformsUtils, af as WebGLRenderTarget, ag as HalfFloatType, ah as NoBlending, ai as Clock, aj as AdditiveBlending, ak as Euler, al as BoxGeometry, am as Raycaster, an as SphereGeometry, ao as OctahedronGeometry, ap as MeshPhongMaterial, aq as RingGeometry, ar as Frustum, as as CylinderGeometry, at as TorusGeometry, au as Scene, av as AmbientLight, aw as HemisphereLight, ax as WebGLRenderer, ay as PCFSoftShadowMap, az as ACESFilmicToneMapping, aA as ConeGeometry, aB as BackSide, aC as Sprite, aD as SpriteMaterial, aE as CameraHelper, aF as CircleGeometry, aG as IcosahedronGeometry, aH as TetrahedronGeometry, aI as CanvasTexture, aJ as PlaneGeometry, aK as DodecahedronGeometry, aL as CubicBezierCurve3, aM as EdgesGeometry, aN as PCFShadowMap } from "./three-l6xBJAGV.js";
+import { T as TrianglesDrawMode, a as TriangleFanDrawMode, b as TriangleStripDrawMode, L as Loader, c as LoaderUtils, F as FileLoader, M as MeshPhysicalMaterial, V as Vector2, C as Color, d as LinearSRGBColorSpace, S as SRGBColorSpace, e as SpotLight, P as PointLight, D as DirectionalLight, f as Matrix4, g as Vector3, I as InstancedMesh, Q as Quaternion, h as InstancedBufferAttribute, O as Object3D, i as TextureLoader, j as ImageBitmapLoader, B as BufferAttribute, k as InterleavedBuffer, l as LinearMipmapLinearFilter, N as NearestMipmapLinearFilter, m as LinearMipmapNearestFilter, n as NearestMipmapNearestFilter, o as LinearFilter, p as NearestFilter, R as RepeatWrapping, q as MirroredRepeatWrapping, r as ClampToEdgeWrapping, s as PointsMaterial, t as Material, u as LineBasicMaterial, v as MeshStandardMaterial, w as DoubleSide, x as MeshBasicMaterial, y as PropertyBinding, z as BufferGeometry, A as SkinnedMesh, E as Mesh, G as LineSegments, H as Line, J as LineLoop, K as Points, U as Group, W as PerspectiveCamera, X as MathUtils, Y as OrthographicCamera, Z as Skeleton, _ as AnimationClip, $ as Bone, a0 as InterpolateDiscrete, a1 as InterpolateLinear, a2 as InterleavedBufferAttribute, a3 as Texture, a4 as VectorKeyframeTrack, a5 as NumberKeyframeTrack, a6 as QuaternionKeyframeTrack, a7 as ColorManagement, a8 as FrontSide, a9 as Interpolant, aa as Box3, ab as Sphere, ac as Float32BufferAttribute, ad as ShaderMaterial, ae as UniformsUtils, af as WebGLRenderTarget, ag as HalfFloatType, ah as NoBlending, ai as Clock, aj as AdditiveBlending, ak as Euler, al as BoxGeometry, am as Raycaster, an as SphereGeometry, ao as OctahedronGeometry, ap as MeshPhongMaterial, aq as Frustum, ar as CylinderGeometry, as as TorusGeometry, at as Scene, au as ACESFilmicToneMapping, av as PCFSoftShadowMap, aw as HemisphereLight, ax as WebGLRenderer, ay as ConeGeometry, az as BackSide, aA as Sprite, aB as SpriteMaterial, aC as RingGeometry, aD as CircleGeometry, aE as IcosahedronGeometry, aF as TetrahedronGeometry, aG as CanvasTexture, aH as PlaneGeometry, aI as DodecahedronGeometry, aJ as CubicBezierCurve3, aK as EdgesGeometry, aL as PCFShadowMap } from "./three-BPefaS9B.js";
 const scriptRel = "modulepreload";
 const assetsURL = function(dep) {
   return "/Asteroid-Miner/" + dep;
@@ -6475,6 +6475,7 @@ class EnemyAIComponent extends Component {
     super();
     this.faction = config.faction || "spectrals";
     this.type = config.type || "drone";
+    this.subtype = config.subtype || "standard";
     this.detectionRange = config.detectionRange || 2500;
     this.damage = config.damage || 25;
     this.speed = config.speed || 1e3;
@@ -6585,10 +6586,21 @@ class EnemyAIComponent extends Component {
     ).normalize();
     this.lastDirection.copy(baseDirection);
     if (this.faction === "spectrals" && this.type === "drone") {
-      if (this.isDroneLike) {
-        this.applyDroneLikeMovement(transform2, playerTransform, baseDirection, distanceToPlayer, deltaTime);
-      } else {
-        this.applySpectralDroneMovement(transform2, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+      switch (this.subtype) {
+        case "heavy":
+          this.applyHeavyDroneMovement(transform2, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+          break;
+        case "swift":
+          this.applySwiftDroneMovement(transform2, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+          break;
+        case "standard":
+        default:
+          if (this.isDroneLike) {
+            this.applyDroneLikeMovement(transform2, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+          } else {
+            this.applySpectralDroneMovement(transform2, playerTransform, baseDirection, distanceToPlayer, deltaTime);
+          }
+          break;
       }
     } else {
       transform2.position.add(baseDirection.multiplyScalar(this.speed * deltaTime));
@@ -6748,6 +6760,67 @@ class EnemyAIComponent extends Component {
     const tiltQuaternion = new Quaternion().setFromAxisAngle(forward, tiltAngle);
     transform2.quaternion.multiply(tiltQuaternion);
     transform2.rotation.setFromQuaternion(transform2.quaternion);
+  }
+  /**
+   * Apply heavy drone movement - Direct approach with tank-like behavior
+   * @param {TransformComponent} transform This entity's transform
+   * @param {TransformComponent} playerTransform Player's transform
+   * @param {THREE.Vector3} baseDirection Base direction to player
+   * @param {number} distanceToPlayer Distance to player
+   * @param {number} deltaTime Delta time for frame
+   */
+  applyHeavyDroneMovement(transform2, playerTransform, baseDirection, distanceToPlayer, deltaTime) {
+    const movement = baseDirection.clone();
+    const wobbleAmount = Math.sin(this.timeAlive * 1.5) * 0.1;
+    const perpendicular = new Vector3(-baseDirection.z, 0, baseDirection.x);
+    perpendicular.multiplyScalar(wobbleAmount);
+    movement.add(perpendicular);
+    const separationInfluence = 0.2;
+    movement.add(this.separationForce.clone().multiplyScalar(separationInfluence));
+    movement.normalize();
+    const speed = this.speed * deltaTime;
+    transform2.position.add(movement.multiplyScalar(speed));
+    const lookTarget = playerTransform.position.clone();
+    transform2.lookAt(lookTarget);
+    this.lastDirection.copy(movement);
+  }
+  /**
+   * Apply swift drone movement - Evasive zigzag with hit-and-run tactics
+   * @param {TransformComponent} transform This entity's transform
+   * @param {TransformComponent} playerTransform Player's transform
+   * @param {THREE.Vector3} baseDirection Base direction to player
+   * @param {number} distanceToPlayer Distance to player
+   * @param {number} deltaTime Delta time for frame
+   */
+  applySwiftDroneMovement(transform2, playerTransform, baseDirection, distanceToPlayer, deltaTime) {
+    const movement = baseDirection.clone();
+    const zigzagAmplitude = 0.5;
+    const zigzagFrequency = 8;
+    const zigzag = Math.sin(this.timeAlive * zigzagFrequency) * zigzagAmplitude;
+    const perpendicular = new Vector3(-baseDirection.z, 0, baseDirection.x);
+    perpendicular.multiplyScalar(zigzag);
+    const verticalDodge = Math.cos(this.timeAlive * 10) * 0.3;
+    perpendicular.y = verticalDodge;
+    movement.add(perpendicular);
+    const separationInfluence = 0.8;
+    movement.add(this.separationForce.clone().multiplyScalar(separationInfluence));
+    movement.normalize();
+    if (distanceToPlayer < 200) {
+      const strafeAngle = this.timeAlive * 5;
+      const strafeDirection = new Vector3(
+        Math.cos(strafeAngle),
+        0,
+        Math.sin(strafeAngle)
+      );
+      movement.lerp(strafeDirection, 0.3);
+    }
+    const speed = this.speed * deltaTime;
+    transform2.position.add(movement.multiplyScalar(speed));
+    const lookTarget = playerTransform.position.clone();
+    lookTarget.add(perpendicular.multiplyScalar(10));
+    transform2.lookAt(lookTarget);
+    transform2.rotation.z = zigzag * 0.5;
+    this.lastDirection.copy(movement);
   }
 }
 class EnemyPoolManager {
@@ -7057,92 +7130,82 @@ const BASE_ENEMY_CONFIG = {
   spiralAmplitude: 150,
   spiralFrequency: 2
 };
+const ENEMY_SUBTYPES = {
+  STANDARD: {
+    id: "standard",
+    name: "Standard Spectral Drone",
+    health: 20,
+    damage: 15,
+    speed: 700,
+    sizeScale: 1,
+    collisionRadius: 50,
+    spiralAmplitude: 150,
+    spiralFrequency: 2,
+    spawnWeight: 60,
+    // 60% spawn chance
+    // Visual properties
+    color: { main: 65535, emissive: { r: 0, g: 1, b: 1 } },
+    emissiveIntensity: 3,
+    shaderType: "pulsingCore"
+  },
+  HEAVY: {
+    id: "heavy",
+    name: "Heavy Spectral Drone",
+    health: 60,
+    damage: 30,
+    speed: 400,
+    sizeScale: 1.5,
+    collisionRadius: 75,
+    spiralAmplitude: 100,
+    spiralFrequency: 1,
+    spawnWeight: 15,
+    // 15% spawn chance
+    // Visual properties
+    color: { main: 16737792, emissive: { r: 1, g: 0.4, b: 0 } },
+    emissiveIntensity: 4,
+    shaderType: "hexagonShield"
+  },
+  SWIFT: {
+    id: "swift",
+    name: "Swift Spectral Drone",
+    health: 10,
+    damage: 10,
+    speed: 1200,
+    sizeScale: 0.8,
+    collisionRadius: 40,
+    spiralAmplitude: 200,
+    spiralFrequency: 3,
+    spawnWeight: 25,
+    // 25% spawn chance
+    // Visual properties
+    color: { main: 6749952, emissive: { r: 0.4, g: 1, b: 0 } },
+    emissiveIntensity: 3.5,
+    shaderType: "speedBlur"
+  }
+};
 const ENEMY_TYPES = {
   SPECTRAL_DRONE: {
     faction: "spectrals",
     type: "drone",
     baseConfig: { ...BASE_ENEMY_CONFIG },
-    visualVariants: 4,
-    // 0: Normal, 1: Damaged, 2: Elite, 3: Shielded
-    sizeVariation: { min: 0.8, max: 1.6 },
+    subtypes: ENEMY_SUBTYPES,
     baseSize: 80,
-    speedVariation: { min: 0.7, max: 1.3 },
-    amplitudeVariation: { min: 0.8, max: 1.2 },
-    frequencyVariation: { min: 0.9, max: 1.1 },
-    isDroneLike: true,
-    collisionRadius: 50
+    isDroneLike: true
   }
 };
-const ENEMY_COLOR_PALETTE = [
-  { main: 52479, emissive: { r: 0, g: 0.533, b: 1 } },
-  // Blue/cyan
-  { main: 8939263, emissive: { r: 0.4, g: 0.2, b: 1 } },
-  // Purple/blue
-  { main: 65484, emissive: { r: 0, g: 0.733, b: 0.6 } },
-  // Teal/green
-  { main: 16724838, emissive: { r: 0.8, g: 0.067, b: 0.267 } },
-  // Red/pink
-  { main: 16755200, emissive: { r: 0.8, g: 0.533, b: 0 } },
-  // Orange/gold
-  { main: 6750003, emissive: { r: 0.267, g: 0.8, b: 0.067 } },
-  // Lime/green
-  { main: 16751103, emissive: { r: 0.8, g: 0.6, b: 0.8 } },
-  // Pink/magenta
-  { main: 16777011, emissive: { r: 0.8, g: 0.8, b: 0.067 } },
-  // Yellow
-  { main: 3368703, emissive: { r: 0.067, g: 0.267, b: 0.8 } },
-  // Deep blue
-  { main: 16724787, emissive: { r: 0.8, g: 0.067, b: 0.067 } }
-  // Deep red
-];
-const VISUAL_VARIANTS = {
-  NORMAL: {
-    id: 0,
-    name: "normal",
-    emissiveIntensity: { min: 1, max: 1.5 },
-    opacity: 1,
-    additionalEffects: false
-  },
-  DAMAGED: {
-    id: 1,
-    name: "damaged",
-    emissiveIntensity: { base: 0.5, flicker: 0.3 },
-    // Flickering effect
-    opacity: 0.85,
-    colorMultiplier: 0.7,
-    additionalEffects: false
-  },
-  ELITE: {
-    id: 2,
-    name: "elite",
-    emissiveIntensity: { base: 2, pulse: 0.5 },
-    // Pulsing effect
-    opacity: 1,
-    colorMultiplier: 1.2,
-    additionalEffects: true,
-    haloEffect: true
-  },
-  SHIELDED: {
-    id: 3,
-    name: "shielded",
-    emissiveIntensity: 1.5,
-    opacity: 1,
-    shimmerEffect: true,
-    shieldEffect: true,
-    additionalEffects: false
+function getRandomEnemySubtype() {
+  const totalWeight = Object.values(ENEMY_SUBTYPES).reduce((sum, type) => sum + type.spawnWeight, 0);
+  let random = Math.random() * totalWeight;
+  for (const subtype of Object.values(ENEMY_SUBTYPES)) {
+    random -= subtype.spawnWeight;
+    if (random <= 0) {
+      return subtype;
+    }
   }
-};
-function getRandomEnemyColor() {
-  const colorIndex = Math.floor(Math.random() * ENEMY_COLOR_PALETTE.length);
-  return ENEMY_COLOR_PALETTE[colorIndex];
+  return ENEMY_SUBTYPES.STANDARD;
 }
-function getVisualVariant(variantId = 0) {
-  const variants = Object.values(VISUAL_VARIANTS);
-  const variant = variants.find((v) => v.id === variantId);
-  return variant || VISUAL_VARIANTS.NORMAL;
-}
-function getRandomVisualVariant() {
-  return Math.floor(Math.random() * 4);
+function getEnemySubtype(subtypeId) {
+  return ENEMY_SUBTYPES[subtypeId.toUpperCase()] || ENEMY_SUBTYPES.STANDARD;
 }
 class DifficultyProgression {
   constructor() {
@@ -7786,10 +7849,10 @@ class SpectralDroneCreator {
    * @param {Object} poolManager Enemy pool manager
    * @param {Set} enemies Active enemies tracking set
    * @param {number} maxEnemies Maximum enemy count
-   * @param {Object} enemyConfig Current enemy configuration
+   * @param {Object} subtype Enemy subtype configuration
    * @returns {Entity|null} The created entity or null if failed
    */
-  createSpectralDrone(position, poolManager, enemies, maxEnemies, enemyConfig) {
+  createSpectralDrone(position, poolManager, enemies, maxEnemies, subtype) {
     console.log("Creating spectral drone...");
     if (enemies.size >= maxEnemies) {
       console.warn(`SPAWN BLOCKED: Already at maximum enemies (${enemies.size}/${maxEnemies})`);
@@ -7805,7 +7868,8 @@ class SpectralDroneCreator {
       return null;
     }
     this.cleanEntityState(entity);
-    this.setupEntityComponents(entity, position, enemyConfig);
+    const fullSubtype = typeof subtype === "string" ? getEnemySubtype(subtype) : subtype.id ? getEnemySubtype(subtype.id) : subtype;
+    this.setupEntityComponents(entity, position, fullSubtype);
     enemies.add(entity.id);
     this.registerWithCombatSystem(entity);
     console.log(`Created spectral drone at position: x=${position.x.toFixed(0)}, y=${position.y.toFixed(0)}, z=${position.z.toFixed(0)}`);
@@ -7835,42 +7899,20 @@ class SpectralDroneCreator {
    * Setup all components for the entity
    * @param {Entity} entity Entity to setup
    * @param {THREE.Vector3} position Spawn position
-   * @param {Object} enemyConfig Enemy configuration
+   * @param {Object} subtype Enemy subtype configuration
    */
-  setupEntityComponents(entity, position, enemyConfig) {
+  setupEntityComponents(entity, position, subtype) {
     const enemyType = ENEMY_TYPES.SPECTRAL_DRONE;
-    const variations = this.generateEnemyVariations(enemyConfig, enemyType);
-    this.setupTransformComponent(entity, position, enemyType, variations);
-    this.setupHealthComponent(entity, enemyConfig);
-    this.setupAIComponent(entity, enemyConfig, variations);
-    this.setupPhysicsComponent(entity, enemyType);
-  }
-  /**
-   * Generate enemy variations
-   * @param {Object} enemyConfig Base enemy configuration
-   * @param {Object} enemyType Enemy type definition
-   * @returns {Object} Generated variations
-   */
-  generateEnemyVariations(enemyConfig, enemyType) {
-    const sizeVariation = enemyType.sizeVariation.min + Math.random() * (enemyType.sizeVariation.max - enemyType.sizeVariation.min);
-    const finalSize = enemyType.baseSize * sizeVariation;
-    const rotationOffset = {
-      x: (Math.random() - 0.5) * 0.2,
-      y: (Math.random() - 0.5) * 0.2,
-      z: (Math.random() - 0.5) * 0.2
-    };
-    return {
-      amplitude: enemyConfig.spiralAmplitude * (enemyType.amplitudeVariation.min + Math.random() * (enemyType.amplitudeVariation.max - enemyType.amplitudeVariation.min)),
-      frequency: enemyConfig.spiralFrequency * (enemyType.frequencyVariation.min + Math.random() * (enemyType.frequencyVariation.max - enemyType.frequencyVariation.min)),
-      speed: enemyConfig.speed * (enemyType.speedVariation.min + Math.random() * (enemyType.speedVariation.max - enemyType.speedVariation.min)),
-      size: finalSize,
-      rotationOffset
-    };
+    entity.subtype = subtype.id;
+    this.setupTransformComponent(entity, position, enemyType, subtype);
+    this.setupHealthComponent(entity, subtype);
+    this.setupAIComponent(entity, subtype);
+    this.setupPhysicsComponent(entity, subtype);
   }
   /**
    * Setup transform component
    */
-  setupTransformComponent(entity, position, enemyType, variations) {
+  setupTransformComponent(entity, position, enemyType, subtype) {
     let transform2 = entity.getComponent(TransformComponent);
     if (!transform2) {
       transform2 = new TransformComponent(position.clone());
@@ -7878,41 +7920,43 @@ class SpectralDroneCreator {
     } else {
       transform2.position.copy(position);
     }
-    transform2.scale.set(variations.size, variations.size, variations.size);
-    transform2.rotation.x = variations.rotationOffset.x;
-    transform2.rotation.y = variations.rotationOffset.y;
-    transform2.rotation.z = variations.rotationOffset.z;
+    const baseSize = enemyType.baseSize * (subtype.sizeScale || 1);
+    transform2.scale.set(baseSize, baseSize, baseSize);
+    transform2.rotation.x = (Math.random() - 0.5) * 0.2;
+    transform2.rotation.y = (Math.random() - 0.5) * 0.2;
+    transform2.rotation.z = (Math.random() - 0.5) * 0.2;
     transform2.needsUpdate = true;
   }
   /**
    * Setup health component
    */
-  setupHealthComponent(entity, enemyConfig) {
+  setupHealthComponent(entity, subtype) {
     let health = entity.getComponent(HealthComponent);
     if (!health) {
-      health = new HealthComponent(enemyConfig.health, 0);
+      health = new HealthComponent(subtype.health, 0);
       entity.addComponent(health);
     } else {
-      health.maxHealth = enemyConfig.health;
-      health.health = enemyConfig.health;
+      health.maxHealth = subtype.health;
+      health.health = subtype.health;
       health.isDestroyed = false;
     }
   }
   /**
    * Setup AI component
    */
-  setupAIComponent(entity, enemyConfig, variations) {
+  setupAIComponent(entity, subtype) {
     const enemyType = ENEMY_TYPES.SPECTRAL_DRONE;
     let enemyAI = entity.getComponent(EnemyAIComponent);
     if (!enemyAI) {
       const config = {
         faction: enemyType.faction,
         type: enemyType.type,
-        health: enemyConfig.health,
-        damage: enemyConfig.damage,
-        speed: variations.speed,
-        spiralAmplitude: variations.amplitude,
-        spiralFrequency: variations.frequency,
+        subtype: subtype.id,
+        health: subtype.health,
+        damage: subtype.damage,
+        speed: subtype.speed,
+        spiralAmplitude: subtype.spiralAmplitude,
+        spiralFrequency: subtype.spiralFrequency,
         isDroneLike: enemyType.isDroneLike
       };
       enemyAI = new EnemyAIComponent(config);
@@ -7920,10 +7964,11 @@ class SpectralDroneCreator {
     } else {
       enemyAI.faction = enemyType.faction;
       enemyAI.type = enemyType.type;
-      enemyAI.damage = enemyConfig.damage;
-      enemyAI.speed = variations.speed;
-      enemyAI.spiralAmplitude = variations.amplitude;
-      enemyAI.spiralFrequency = variations.frequency;
+      enemyAI.subtype = subtype.id;
+      enemyAI.damage = subtype.damage;
+      enemyAI.speed = subtype.speed;
+      enemyAI.spiralAmplitude = subtype.spiralAmplitude;
+      enemyAI.spiralFrequency = subtype.spiralFrequency;
       enemyAI.isDroneLike = enemyType.isDroneLike;
       enemyAI.enabled = true;
     }
@@ -7931,19 +7976,19 @@ class SpectralDroneCreator {
   /**
    * Setup physics component
    */
-  setupPhysicsComponent(entity, enemyType) {
+  setupPhysicsComponent(entity, subtype) {
     let rigidbody = entity.getComponent(RigidbodyComponent);
     if (!rigidbody) {
       rigidbody = new RigidbodyComponent(1);
       rigidbody.useGravity = false;
       rigidbody.drag = 0.1;
       rigidbody.shape = "sphere";
-      rigidbody.collisionRadius = enemyType.collisionRadius;
+      rigidbody.collisionRadius = subtype.collisionRadius;
       entity.addComponent(rigidbody);
     } else {
       rigidbody.isFrozen = false;
       rigidbody.velocity.set(0, 0, 0);
-      rigidbody.collisionRadius = enemyType.collisionRadius;
+      rigidbody.collisionRadius = subtype.collisionRadius;
     }
     const transform2 = entity.getComponent(TransformComponent);
     if (transform2 && rigidbody) {
@@ -7967,8 +8012,10 @@ class MeshGeneration {
   constructor(world) {
     this.world = world;
     this.modelCache = {};
+    this.materialCache = {};
     this.currentEntity = null;
     this.loadModels();
+    this.initializeMaterials();
   }
   /**
    * Pre-load all enemy models
@@ -8006,23 +8053,91 @@ class MeshGeneration {
    */
   applyGlobalModelEffects(model) {
     model.traverse((child) => {
-      if (child.isMesh && child.material) {
-        if (child.material.emissive !== void 0) {
-          child.material.emissive = new Color(35071);
-          child.material.emissiveIntensity = 2;
-        } else if (child.material.isMeshBasicMaterial) {
-          child.material.color = new Color(43775);
-        }
+      if (child.isMesh) {
+        child.visible = true;
       }
     });
   }
   /**
+   * Pre-create and cache all materials and geometry for performance
+   */
+  initializeMaterials() {
+    console.log("Pre-creating enemy materials and geometry...");
+    this.geometryCache = {
+      body: new OctahedronGeometry(2, 0),
+      wing: new BoxGeometry(4, 0.2, 1),
+      shield: new SphereGeometry(3, 8, 6)
+    };
+    const subtypes = ["standard", "heavy", "swift"];
+    subtypes.forEach((subtypeId) => {
+      const subtype = subtypeId === "standard" ? { color: { main: 65535, emissive: { r: 0, g: 1, b: 1 } }, emissiveIntensity: 2.5 } : subtypeId === "heavy" ? { color: { main: 16737792, emissive: { r: 1, g: 0.4, b: 0 } }, emissiveIntensity: 3 } : { color: { main: 6749952, emissive: { r: 0.4, g: 1, b: 0 } }, emissiveIntensity: 2.8 };
+      this.materialCache[subtypeId] = new MeshPhongMaterial({
+        color: subtype.color.main,
+        emissive: new Color(subtype.color.emissive.r, subtype.color.emissive.g, subtype.color.emissive.b),
+        emissiveIntensity: subtype.emissiveIntensity,
+        shininess: 100,
+        transparent: true,
+        opacity: 0.95,
+        side: DoubleSide
+      });
+    });
+    this.warmupMaterials();
+  }
+  /**
+   * Warmup materials to precompile shaders
+   */
+  warmupMaterials() {
+    console.log("Warming up enemy materials (precompiling shaders)...");
+    setTimeout(() => {
+      const tempGroup = new Group();
+      Object.keys(this.materialCache).forEach((subtypeId) => {
+        const tempMesh = new Mesh(this.geometryCache.body, this.materialCache[subtypeId]);
+        tempGroup.add(tempMesh);
+      });
+      if (this.world && this.world.scene) {
+        if (window.game && window.game.renderer && window.game.renderer.add) {
+          window.game.renderer.add(tempGroup);
+        } else if (this.world.scene.add) {
+          this.world.scene.add(tempGroup);
+        }
+        try {
+          if (window.game && window.game.renderer) {
+            const threeRenderer = window.game.renderer.renderer;
+            const camera = window.game.camera || window.game.renderer.camera || this.world.scene.camera;
+            if (threeRenderer && camera) {
+              if (typeof threeRenderer.compile === "function") {
+                threeRenderer.compile(this.world.scene, camera);
+              } else {
+                threeRenderer.render(this.world.scene, camera);
+              }
+            }
+          }
+        } catch (e) {
+          console.log("Could not force shader compilation, will compile on first use:", e.message);
+        }
+        setTimeout(() => {
+          if (tempGroup && tempGroup.parent) {
+            tempGroup.parent.remove(tempGroup);
+          }
+          if (tempGroup.children) {
+            while (tempGroup.children.length > 0) {
+              const child = tempGroup.children[0];
+              tempGroup.remove(child);
+            }
+          }
+          console.log("Material warmup complete");
+        }, 100);
+      }
+    }, 1e3);
+  }
+  /**
    * Setup mesh component for entity
    * @param {Entity} entity Entity to setup
+   * @param {string} subtypeId Enemy subtype ID
    */
-  setupMeshComponent(entity) {
+  setupMeshComponent(entity, subtypeId = null) {
     this.currentEntity = entity;
-    const mesh = this.createSpectralDroneMesh();
+    const mesh = this.createSpectralDroneMesh(subtypeId);
     this.currentEntity = null;
     this.cleanupOldMeshComponent(entity);
     let meshComponent;
@@ -8037,172 +8152,86 @@ class MeshGeneration {
   }
   /**
    * Create spectral drone mesh
+   * @param {string} subtypeId Enemy subtype ID
    * @returns {Object} Mesh object
    */
-  createSpectralDroneMesh() {
+  createSpectralDroneMesh(subtypeId = null) {
     console.log("Creating spectral drone mesh...");
+    const subtype = subtypeId ? getEnemySubtype(subtypeId) : this.currentEntity && this.currentEntity.subtype ? getEnemySubtype(this.currentEntity.subtype) : getEnemySubtype("standard");
     if (!this.modelCache.enemyDrone) {
-      return this.createFallbackMesh();
+      return this.createFallbackMesh(subtype);
     }
     const model = this.modelCache.enemyDrone.clone();
-    const visualVariant = this.currentEntity ? this.currentEntity.visualVariant || 0 : 0;
-    this.applyVisualEffects(model, visualVariant);
+    this.applySubtypeEffects(model, subtype);
     return { model, isGLTF: true };
   }
   /**
    * Create fallback mesh when GLB model isn't available
+   * @param {Object} subtype Enemy subtype configuration
    * @returns {Object} Fallback mesh object
    */
-  createFallbackMesh() {
-    console.warn("Enemy model not loaded - creating stylized fallback enemy");
+  createFallbackMesh(subtype) {
     const group = new Group();
-    const bodyGeometry = new OctahedronGeometry(2, 0);
-    const bodyMaterial = new MeshPhongMaterial({
-      color: 65535,
-      emissive: 35071,
-      emissiveIntensity: 1.5,
-      transparent: true,
-      opacity: 0.9
-    });
-    const body = new Mesh(bodyGeometry, bodyMaterial);
+    const bodyMaterial = this.materialCache[subtype.id] || this.materialCache["standard"];
+    const body = new Mesh(this.geometryCache.body, bodyMaterial);
     group.add(body);
-    const wingGeometry = new BoxGeometry(4, 0.2, 1);
-    const wingMaterial = new MeshPhongMaterial({
-      color: 8947967,
-      emissive: 4474111,
-      emissiveIntensity: 1
-    });
-    const wing1 = new Mesh(wingGeometry, wingMaterial);
+    const wingMaterial = bodyMaterial;
+    const wing1 = new Mesh(this.geometryCache.wing, wingMaterial);
     wing1.rotation.z = Math.PI / 6;
     group.add(wing1);
-    const wing2 = new Mesh(wingGeometry, wingMaterial);
+    const wing2 = new Mesh(this.geometryCache.wing, wingMaterial);
     wing2.rotation.z = -Math.PI / 6;
     group.add(wing2);
-    group.scale.set(1.5, 1.5, 1.5);
+    const scale = 1.5 * (subtype.sizeScale || 1);
+    group.scale.set(scale, scale, scale);
     return group;
   }
   /**
-   * Apply visual effects based on variant
+   * Apply visual effects based on subtype
    * @param {THREE.Object3D} model Model to apply effects to
-   * @param {number} visualVariant Visual variant ID
+   * @param {Object} subtype Enemy subtype configuration
    */
-  applyVisualEffects(model, visualVariant) {
-    const selectedColor = getRandomEnemyColor();
-    const variantConfig = getVisualVariant(visualVariant);
-    let emissiveIntensity = this.calculateEmissiveIntensity(variantConfig);
-    let opacity = variantConfig.opacity;
-    this.applyVariantColorEffects(selectedColor, variantConfig);
+  applySubtypeEffects(model, subtype) {
+    const material = this.materialCache[subtype.id] || this.materialCache["standard"];
     model.traverse((child) => {
-      if (child.isMesh && child.material) {
-        child.material = child.material.clone();
-        child.material.color = new Color(selectedColor.main);
-        child.material.emissive = new Color(selectedColor.emissive.r, selectedColor.emissive.g, selectedColor.emissive.b);
-        child.material.emissiveIntensity = emissiveIntensity;
-        if (opacity < 1) {
-          child.material.transparent = true;
-          child.material.opacity = opacity;
-        }
-        if (variantConfig.additionalEffects) {
-          this.applyAdditionalEffects(child.material);
-        }
+      if (child.isMesh) {
+        child.material = material;
       }
     });
-    if (variantConfig.haloEffect) {
-      this.addHaloEffect(model, selectedColor);
-    }
-    if (variantConfig.shieldEffect) {
-      this.addShieldEffect(model);
-    }
-  }
-  /**
-   * Calculate emissive intensity based on variant
-   */
-  calculateEmissiveIntensity(variantConfig) {
-    if (variantConfig.name === "damaged") {
-      return variantConfig.emissiveIntensity.base + Math.sin(Date.now() * 0.01) * variantConfig.emissiveIntensity.flicker;
-    } else if (variantConfig.name === "elite") {
-      return variantConfig.emissiveIntensity.base + Math.sin(Date.now() * 3e-3) * variantConfig.emissiveIntensity.pulse;
-    } else if (variantConfig.emissiveIntensity.min !== void 0) {
-      return variantConfig.emissiveIntensity.min + Math.random() * (variantConfig.emissiveIntensity.max - variantConfig.emissiveIntensity.min);
-    }
-    return variantConfig.emissiveIntensity;
-  }
-  /**
-   * Apply color effects based on variant
-   */
-  applyVariantColorEffects(selectedColor, variantConfig) {
-    if (variantConfig.colorMultiplier) {
-      selectedColor.emissive.r *= variantConfig.colorMultiplier;
-      selectedColor.emissive.g *= variantConfig.colorMultiplier;
-      selectedColor.emissive.b *= variantConfig.colorMultiplier;
-    }
-    if (variantConfig.shimmerEffect) {
-      const shieldPhase = Date.now() * 1e-3;
-      const shimmerValue = 0.8 + Math.sin(shieldPhase) * 0.2;
-      selectedColor.emissive.r *= shimmerValue;
-      selectedColor.emissive.g *= 1 + (1 - shimmerValue);
-      selectedColor.emissive.b *= 1 + Math.cos(shieldPhase) * 0.2;
+    const scale = subtype.sizeScale || 1;
+    model.scale.multiplyScalar(scale);
+    if (subtype.id === "heavy") {
+      this.addHeavyDroneEffects(model, subtype);
+    } else if (subtype.id === "swift") {
+      this.addSwiftDroneEffects(model, subtype);
+    } else {
+      this.addStandardDroneEffects(model, subtype);
     }
   }
   /**
-   * Apply additional material effects for elite enemies
+   * Add effects for standard drones
    */
-  applyAdditionalEffects(material) {
-    if (material.shininess !== void 0) {
-      material.shininess = 100;
-    }
-    if (material.envMapIntensity !== void 0) {
-      material.envMapIntensity = 0.8;
-    }
+  addStandardDroneEffects(model, subtype) {
   }
   /**
-   * Add halo effect for elite enemies
+   * Add effects for heavy drones
    */
-  addHaloEffect(model, selectedColor) {
-    try {
-      const haloGeometry = new RingGeometry(1.2, 1.5, 16);
-      const haloMaterial = new MeshBasicMaterial({
-        color: selectedColor.main,
+  addHeavyDroneEffects(model, subtype) {
+    if (!this.materialCache["shield_" + subtype.id]) {
+      this.materialCache["shield_" + subtype.id] = new MeshBasicMaterial({
+        color: subtype.color.main,
         transparent: true,
-        opacity: 0.6,
-        side: DoubleSide,
-        blending: AdditiveBlending
+        opacity: 0.15,
+        side: DoubleSide
       });
-      const halo = new Mesh(haloGeometry, haloMaterial);
-      halo.rotation.x = Math.PI / 2;
-      model.add(halo);
-      halo.userData.update = function(delta) {
-        halo.rotation.z += delta * 0.5;
-        const pulseScale = 1 + 0.2 * Math.sin(Date.now() * 2e-3);
-        halo.scale.set(pulseScale, pulseScale, pulseScale);
-      };
-    } catch (error) {
-      console.error("Failed to create elite halo effect:", error);
     }
+    const shield = new Mesh(this.geometryCache.shield, this.materialCache["shield_" + subtype.id]);
+    model.add(shield);
   }
   /**
-   * Add shield effect for shielded enemies
+   * Add effects for swift drones
    */
-  addShieldEffect(model) {
-    try {
-      const shieldGeometry = new SphereGeometry(1.1, 16, 12);
-      const shieldMaterial = new MeshBasicMaterial({
-        color: 11197951,
-        transparent: true,
-        opacity: 0.3,
-        side: DoubleSide,
-        blending: AdditiveBlending
-      });
-      const shield = new Mesh(shieldGeometry, shieldMaterial);
-      model.add(shield);
-      shield.userData.update = function(delta) {
-        const pulseScale = 1 + 0.05 * Math.sin(Date.now() * 3e-3);
-        shield.scale.set(pulseScale, pulseScale, pulseScale);
-        shield.material.opacity = 0.2 + 0.1 * Math.sin(Date.now() * 2e-3);
-      };
-    } catch (error) {
-      console.error("Failed to create shield effect:", error);
-    }
+  addSwiftDroneEffects(model, subtype) {
   }
   /**
    * Clean up old mesh component
@@ -8266,15 +8295,22 @@ class EnemyFactory {
    * @param {Object} poolManager - Enemy pool manager
    * @param {Set} enemies - Active enemies tracking set
    * @param {number} maxEnemies - Maximum enemy count
-   * @param {Object} enemyConfig - Current enemy configuration
+   * @param {Object} enemyConfig - Current enemy configuration (ignored, using subtype)
+   * @param {string} subtypeId - Optional specific subtype to create
    * @returns {Entity|null} The created entity or null if failed
    */
-  createSpectralDrone(position, poolManager, enemies, maxEnemies, enemyConfig) {
-    const entity = this.spectralDroneCreator.createSpectralDrone(position, poolManager, enemies, maxEnemies, enemyConfig);
+  createSpectralDrone(position, poolManager, enemies, maxEnemies, enemyConfig, subtypeId = null) {
+    const subtype = subtypeId ? { id: subtypeId } : getRandomEnemySubtype();
+    const entity = this.spectralDroneCreator.createSpectralDrone(
+      position,
+      poolManager,
+      enemies,
+      maxEnemies,
+      subtype
+    );
     if (entity) {
-      const visualVariant = getRandomVisualVariant();
-      entity.visualVariant = visualVariant;
-      this.meshGeneration.setupMeshComponent(entity);
+      entity.subtype = subtype.id;
+      this.meshGeneration.setupMeshComponent(entity, subtype.id);
     }
     return entity;
   }
@@ -10972,7 +11008,7 @@ class SystemRegistrar {
       }
       try {
         const { InstancedRenderer } = await __vitePreload(async () => {
-          const { InstancedRenderer: InstancedRenderer2 } = await import("./InstancedRenderer-BF_LO-uX.js");
+          const { InstancedRenderer: InstancedRenderer2 } = await import("./InstancedRenderer-6YWyCoVq.js");
           return { InstancedRenderer: InstancedRenderer2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0);
         this.registeredSystems.instancedRenderer = new InstancedRenderer(world, scene);
@@ -12248,2354 +12284,22 @@ class CombatLogic {
     }
   }
 }
-class ObjectPool {
-  /**
-   * Create a new ObjectPool
-   * @param {Function} createFn - Factory function to create new instances
-   * @param {Function} resetFn - Function to reset an object to its initial state
-   * @param {number} initialSize - Initial size of the pool
-   * @param {number} expandSize - Number of objects to add when the pool is empty
-   */
-  constructor(createFn, resetFn, initialSize = 20, expandSize = 10) {
-    this.createFn = createFn;
-    this.resetFn = resetFn;
-    this.expandSize = expandSize;
-    this.pool = [];
-    this.active = /* @__PURE__ */ new Set();
-    this._hits = 0;
-    this._misses = 0;
-    this.expand(initialSize);
-    console.log(`ObjectPool created with ${initialSize} objects`);
-  }
-  /**
-   * Get an object from the pool or create a new one if the pool is empty
-   * @returns {Object} An object from the pool
-   */
-  get() {
-    let object;
-    if (this.pool.length === 0) {
-      console.log(`Pool empty, expanding by ${this.expandSize} objects`);
-      this.expand(this.expandSize);
-      this._misses++;
-    }
-    object = this.pool.pop();
-    this._hits++;
-    this.active.add(object);
-    if (window.__perf) {
-      const prev = window.__perf.pools || { hits: 0, misses: 0 };
-      window.__perf.pools = {
-        hits: (prev.hits || 0) + 1,
-        misses: prev.misses || 0
-      };
-    }
-    return object;
-  }
-  /**
-   * Return an object to the pool
-   * @param {Object} object - Object to return to the pool
-   */
-  release(object) {
-    if (!this.active.has(object)) {
-      return;
-    }
-    this.resetFn(object);
-    this.active.delete(object);
-    this.pool.push(object);
-  }
-  /**
-   * Expand the pool by creating new objects
-   * @param {number} count - Number of objects to add to the pool
-   */
-  expand(count) {
-    for (let i = 0; i < count; i++) {
-      const object = this.createFn();
-      this.pool.push(object);
-    }
-    if (window.__perf) {
-      const prev = window.__perf.pools || { hits: 0, misses: 0 };
-      window.__perf.pools = {
-        hits: prev.hits || 0,
-        misses: (prev.misses || 0) + count
-      };
-    }
-  }
-  /**
-   * Get the number of available objects in the pool
-   * @returns {number} Count of available objects
-   */
-  availableCount() {
-    return this.pool.length;
-  }
-  /**
-   * Get the number of active objects from this pool
-   * @returns {number} Count of active objects
-   */
-  activeCount() {
-    return this.active.size;
-  }
-  /**
-   * Release all active objects back to the pool
-   */
-  releaseAll() {
-    const activeObjects = Array.from(this.active);
-    for (const object of activeObjects) {
-      this.release(object);
-    }
-  }
-  /**
-   * Clear the pool and dispose all objects
-   * @param {Function} disposeFn - Function to dispose an object
-   */
-  dispose(disposeFn) {
-    if (disposeFn) {
-      for (const object of this.active) {
-        disposeFn(object);
-      }
-      for (const object of this.pool) {
-        disposeFn(object);
-      }
-    }
-    this.active.clear();
-    this.pool = [];
-  }
-}
-class LaserProjectilePool {
-  /**
-   * Create a new LaserProjectilePool
-   * @param {object} sharedAssets - Shared geometries and materials
-   * @param {function} addToScene - Function to add objects to scene
-   * @param {function} removeFromParent - Function to remove objects from parent
-   */
-  constructor(sharedAssets, addToScene, removeFromParent) {
-    this.sharedAssets = sharedAssets;
-    this._addToScene = addToScene;
-    this._removeFromParent = removeFromParent;
-    this.initializePool();
-  }
-  /**
-   * Initialize the laser projectile pool
-   */
-  initializePool() {
-    this.pool = new ObjectPool(
-      // Create function
-      () => this.createLaserProjectile(),
-      // Reset function
-      (projectile) => this.resetLaserProjectile(projectile),
-      30,
-      // Initial size - lasers are common
-      10
-      // Expand size
-    );
-  }
-  /**
-   * Create a new laser projectile
-   * @returns {THREE.Mesh} A laser projectile mesh
-   */
-  createLaserProjectile() {
-    const projectile = new Mesh(
-      this.sharedAssets.projectileGeometry,
-      this.sharedAssets.projectileMaterial.clone()
-    );
-    const glowMesh = new Mesh(
-      this.sharedAssets.projectileGlowGeometry,
-      this.sharedAssets.projectileGlowMaterial.clone()
-    );
-    projectile.material.color.setHex(65535);
-    projectile.material.emissive.setHex(17476);
-    glowMesh.material.color.setHex(65535);
-    glowMesh.material.opacity = 0.8;
-    glowMesh.scale.set(1.5, 1.5, 1.5);
-    projectile.add(glowMesh);
-    projectile.userData = {
-      isProjectile: true,
-      projectileType: "laser",
-      active: false,
-      pooled: true,
-      glowMesh,
-      speed: 2e3,
-      // High speed for lasers
-      damage: 25,
-      penetration: true,
-      // Lasers can penetrate
-      energyDrain: 15
-    };
-    return projectile;
-  }
-  /**
-   * Reset a laser projectile to initial state
-   * @param {THREE.Mesh} projectile - The projectile to reset
-   */
-  resetLaserProjectile(projectile) {
-    projectile.position.set(0, 0, 0);
-    projectile.rotation.set(0, 0, 0);
-    projectile.scale.set(1, 1, 1);
-    projectile.visible = false;
-    projectile.material.color.setHex(65535);
-    projectile.material.emissive.setHex(17476);
-    projectile.material.opacity = 1;
-    if (projectile.userData.glowMesh) {
-      projectile.userData.glowMesh.material.opacity = 0.8;
-      projectile.userData.glowMesh.scale.set(1.5, 1.5, 1.5);
-    }
-    projectile.userData.active = false;
-    projectile.userData.creationTime = 0;
-    projectile.userData.entityId = null;
-    projectile.userData.trail = null;
-    projectile.userData.trailParticles = null;
-    projectile.userData.target = null;
-    projectile.userData.firedBy = null;
-  }
-  /**
-   * Get a laser projectile from the pool
-   * @returns {THREE.Mesh} A laser projectile mesh
-   */
-  get() {
-    const projectile = this.pool.get();
-    projectile.visible = true;
-    projectile.userData.active = true;
-    projectile.userData.creationTime = performance.now();
-    if (!projectile.parent) {
-      this._addToScene(projectile);
-    }
-    return projectile;
-  }
-  /**
-   * Release a laser projectile back to the pool
-   * @param {THREE.Mesh} projectile - The projectile to release
-   */
-  release(projectile) {
-    if (!projectile || !projectile.userData || !projectile.userData.isProjectile || projectile.userData.projectileType !== "laser") {
-      return;
-    }
-    if (projectile.parent) {
-      this._removeFromParent(projectile);
-    }
-    this.pool.release(projectile);
-  }
-  /**
-   * Get count of available projectiles in pool
-   * @returns {number} Available count
-   */
-  availableCount() {
-    return this.pool.availableCount();
-  }
-  /**
-   * Get count of active projectiles
-   * @returns {number} Active count
-   */
-  activeCount() {
-    return this.pool.activeCount();
-  }
-  /**
-   * Get all active laser projectiles
-   * @returns {Set} Set of active projectiles
-   */
-  getActive() {
-    return this.pool.active;
-  }
-  /**
-   * Dispose the laser projectile pool
-   * @param {function} disposeFn - Custom dispose function
-   */
-  dispose(disposeFn) {
-    this.pool.dispose((projectile) => {
-      if (projectile.parent) {
-        this._removeFromParent(projectile);
-      }
-      if (projectile.material) {
-        projectile.material.dispose();
-      }
-      if (projectile.userData.glowMesh && projectile.userData.glowMesh.material) {
-        projectile.userData.glowMesh.material.dispose();
-      }
-      if (disposeFn) {
-        disposeFn(projectile);
-      }
-    });
-  }
-}
-class MissileProjectilePool {
-  /**
-   * Create a new MissileProjectilePool
-   * @param {object} sharedAssets - Shared geometries and materials
-   * @param {function} addToScene - Function to add objects to scene
-   * @param {function} removeFromParent - Function to remove objects from parent
-   */
-  constructor(sharedAssets, addToScene, removeFromParent) {
-    this.sharedAssets = sharedAssets;
-    this._addToScene = addToScene;
-    this._removeFromParent = removeFromParent;
-    this.initializePool();
-  }
-  /**
-   * Initialize the missile projectile pool
-   */
-  initializePool() {
-    this.pool = new ObjectPool(
-      // Create function
-      () => this.createMissileProjectile(),
-      // Reset function
-      (projectile) => this.resetMissileProjectile(projectile),
-      20,
-      // Initial size - missiles less common than lasers
-      8
-      // Expand size
-    );
-  }
-  /**
-   * Create a new missile projectile
-   * @returns {THREE.Mesh} A missile projectile mesh
-   */
-  createMissileProjectile() {
-    const projectile = new Mesh(
-      this.sharedAssets.projectileGeometry,
-      this.sharedAssets.projectileMaterial.clone()
-    );
-    const glowMesh = new Mesh(
-      this.sharedAssets.projectileGlowGeometry,
-      this.sharedAssets.projectileGlowMaterial.clone()
-    );
-    projectile.material.color.setHex(16729088);
-    projectile.material.emissive.setHex(4460800);
-    glowMesh.material.color.setHex(16737792);
-    glowMesh.material.opacity = 0.7;
-    glowMesh.scale.set(1.2, 1.2, 2);
-    projectile.scale.set(1.3, 1.3, 1.8);
-    projectile.add(glowMesh);
-    projectile.userData = {
-      isProjectile: true,
-      projectileType: "missile",
-      active: false,
-      pooled: true,
-      glowMesh,
-      speed: 800,
-      // Slower than lasers but guided
-      damage: 75,
-      aoeRadius: 100,
-      // Area of effect damage
-      guidance: true,
-      // Can track targets
-      fuelTime: 5e3,
-      // 5 seconds of fuel
-      explosionRadius: 120
-    };
-    return projectile;
-  }
-  /**
-   * Reset a missile projectile to initial state
-   * @param {THREE.Mesh} projectile - The projectile to reset
-   */
-  resetMissileProjectile(projectile) {
-    projectile.position.set(0, 0, 0);
-    projectile.rotation.set(0, 0, 0);
-    projectile.scale.set(1.3, 1.3, 1.8);
-    projectile.visible = false;
-    projectile.material.color.setHex(16729088);
-    projectile.material.emissive.setHex(4460800);
-    projectile.material.opacity = 1;
-    if (projectile.userData.glowMesh) {
-      projectile.userData.glowMesh.material.opacity = 0.7;
-      projectile.userData.glowMesh.scale.set(1.2, 1.2, 2);
-    }
-    projectile.userData.active = false;
-    projectile.userData.creationTime = 0;
-    projectile.userData.entityId = null;
-    projectile.userData.trail = null;
-    projectile.userData.trailParticles = null;
-    projectile.userData.target = null;
-    projectile.userData.firedBy = null;
-    projectile.userData.fuelRemaining = projectile.userData.fuelTime;
-    projectile.userData.guidanceActive = true;
-    projectile.userData.hasExploded = false;
-  }
-  /**
-   * Get a missile projectile from the pool
-   * @returns {THREE.Mesh} A missile projectile mesh
-   */
-  get() {
-    const projectile = this.pool.get();
-    projectile.visible = true;
-    projectile.userData.active = true;
-    projectile.userData.creationTime = performance.now();
-    projectile.userData.fuelRemaining = projectile.userData.fuelTime;
-    projectile.userData.guidanceActive = true;
-    projectile.userData.hasExploded = false;
-    if (!projectile.parent) {
-      this._addToScene(projectile);
-    }
-    return projectile;
-  }
-  /**
-   * Release a missile projectile back to the pool
-   * @param {THREE.Mesh} projectile - The projectile to release
-   */
-  release(projectile) {
-    if (!projectile || !projectile.userData || !projectile.userData.isProjectile || projectile.userData.projectileType !== "missile") {
-      return;
-    }
-    if (projectile.parent) {
-      this._removeFromParent(projectile);
-    }
-    this.pool.release(projectile);
-  }
-  /**
-   * Update missile-specific behavior (fuel consumption, guidance)
-   * @param {THREE.Mesh} projectile - The missile to update
-   * @param {number} deltaTime - Time since last update
-   */
-  updateMissile(projectile, deltaTime) {
-    if (!projectile.userData.active) return;
-    projectile.userData.fuelRemaining -= deltaTime;
-    if (projectile.userData.fuelRemaining <= 0) {
-      projectile.userData.guidanceActive = false;
-      if (projectile.userData.glowMesh) {
-        projectile.userData.glowMesh.material.opacity *= 0.95;
-      }
-    }
-    if (projectile.userData.glowMesh && projectile.userData.fuelRemaining > 0) {
-      const fuelRatio = projectile.userData.fuelRemaining / projectile.userData.fuelTime;
-      projectile.userData.glowMesh.material.opacity = 0.7 * fuelRatio;
-    }
-  }
-  /**
-   * Get count of available projectiles in pool
-   * @returns {number} Available count
-   */
-  availableCount() {
-    return this.pool.availableCount();
-  }
-  /**
-   * Get count of active projectiles
-   * @returns {number} Active count
-   */
-  activeCount() {
-    return this.pool.activeCount();
-  }
-  /**
-   * Get all active missile projectiles
-   * @returns {Set} Set of active projectiles
-   */
-  getActive() {
-    return this.pool.active;
-  }
-  /**
-   * Dispose the missile projectile pool
-   * @param {function} disposeFn - Custom dispose function
-   */
-  dispose(disposeFn) {
-    this.pool.dispose((projectile) => {
-      if (projectile.parent) {
-        this._removeFromParent(projectile);
-      }
-      if (projectile.material) {
-        projectile.material.dispose();
-      }
-      if (projectile.userData.glowMesh && projectile.userData.glowMesh.material) {
-        projectile.userData.glowMesh.material.dispose();
-      }
-      if (disposeFn) {
-        disposeFn(projectile);
-      }
-    });
-  }
-}
-class PlasmaProjectilePool {
-  /**
-   * Create a new PlasmaProjectilePool
-   * @param {object} sharedAssets - Shared geometries and materials
-   * @param {function} addToScene - Function to add objects to scene
-   * @param {function} removeFromParent - Function to remove objects from parent
-   */
-  constructor(sharedAssets, addToScene, removeFromParent) {
-    this.sharedAssets = sharedAssets;
-    this._addToScene = addToScene;
-    this._removeFromParent = removeFromParent;
-    this.initializePool();
-  }
-  /**
-   * Initialize the plasma projectile pool
-   */
-  initializePool() {
-    this.pool = new ObjectPool(
-      // Create function
-      () => this.createPlasmaProjectile(),
-      // Reset function
-      (projectile) => this.resetPlasmaProjectile(projectile),
-      25,
-      // Initial size - medium usage
-      8
-      // Expand size
-    );
-  }
-  /**
-   * Create a new plasma projectile
-   * @returns {THREE.Mesh} A plasma projectile mesh
-   */
-  createPlasmaProjectile() {
-    const projectile = new Mesh(
-      this.sharedAssets.projectileGeometry,
-      this.sharedAssets.projectileMaterial.clone()
-    );
-    const glowMesh = new Mesh(
-      this.sharedAssets.projectileGlowGeometry,
-      this.sharedAssets.projectileGlowMaterial.clone()
-    );
-    projectile.material.color.setHex(8913151);
-    projectile.material.emissive.setHex(4456584);
-    glowMesh.material.color.setHex(11141375);
-    glowMesh.material.opacity = 0.9;
-    glowMesh.scale.set(1.3, 1.3, 1.3);
-    projectile.scale.set(1.1, 1.1, 1.2);
-    projectile.add(glowMesh);
-    projectile.userData = {
-      isProjectile: true,
-      projectileType: "plasma",
-      active: false,
-      pooled: true,
-      glowMesh,
-      speed: 1200,
-      // Medium speed
-      damage: 40,
-      empEffect: true,
-      // Electromagnetic pulse
-      energyDrain: 20,
-      pulsePhase: 0,
-      // For pulsing animation
-      chargeLevel: 1
-    };
-    return projectile;
-  }
-  /**
-   * Reset a plasma projectile to initial state
-   * @param {THREE.Mesh} projectile - The projectile to reset
-   */
-  resetPlasmaProjectile(projectile) {
-    projectile.position.set(0, 0, 0);
-    projectile.rotation.set(0, 0, 0);
-    projectile.scale.set(1.1, 1.1, 1.2);
-    projectile.visible = false;
-    projectile.material.color.setHex(8913151);
-    projectile.material.emissive.setHex(4456584);
-    projectile.material.opacity = 1;
-    if (projectile.userData.glowMesh) {
-      projectile.userData.glowMesh.material.opacity = 0.9;
-      projectile.userData.glowMesh.scale.set(1.3, 1.3, 1.3);
-    }
-    projectile.userData.active = false;
-    projectile.userData.creationTime = 0;
-    projectile.userData.entityId = null;
-    projectile.userData.trail = null;
-    projectile.userData.trailParticles = null;
-    projectile.userData.target = null;
-    projectile.userData.firedBy = null;
-    projectile.userData.pulsePhase = 0;
-    projectile.userData.chargeLevel = 1;
-  }
-  /**
-   * Get a plasma projectile from the pool
-   * @returns {THREE.Mesh} A plasma projectile mesh
-   */
-  get() {
-    const projectile = this.pool.get();
-    projectile.visible = true;
-    projectile.userData.active = true;
-    projectile.userData.creationTime = performance.now();
-    projectile.userData.pulsePhase = 0;
-    projectile.userData.chargeLevel = 1;
-    if (!projectile.parent) {
-      this._addToScene(projectile);
-    }
-    return projectile;
-  }
-  /**
-   * Release a plasma projectile back to the pool
-   * @param {THREE.Mesh} projectile - The projectile to release
-   */
-  release(projectile) {
-    if (!projectile || !projectile.userData || !projectile.userData.isProjectile || projectile.userData.projectileType !== "plasma") {
-      return;
-    }
-    if (projectile.parent) {
-      this._removeFromParent(projectile);
-    }
-    this.pool.release(projectile);
-  }
-  /**
-   * Update plasma-specific behavior (pulsing, charge decay)
-   * @param {THREE.Mesh} projectile - The plasma to update
-   * @param {number} deltaTime - Time since last update
-   */
-  updatePlasma(projectile, deltaTime) {
-    if (!projectile.userData.active) return;
-    const time = performance.now() * 1e-3;
-    projectile.userData.pulsePhase = time * 4;
-    const age = time * 1e3 - projectile.userData.creationTime;
-    const maxAge = 3e3;
-    projectile.userData.chargeLevel = Math.max(0, 1 - age / maxAge);
-    if (projectile.userData.glowMesh) {
-      const pulse = 0.5 + 0.5 * Math.sin(projectile.userData.pulsePhase);
-      const chargeModifier = projectile.userData.chargeLevel;
-      projectile.userData.glowMesh.material.opacity = 0.9 * pulse * chargeModifier;
-      const scale = 1.3 + 0.2 * pulse * chargeModifier;
-      projectile.userData.glowMesh.scale.set(scale, scale, scale);
-    }
-    if (projectile.material) {
-      const fadeIntensity = 0.5 + 0.5 * projectile.userData.chargeLevel;
-      projectile.material.opacity = fadeIntensity;
-    }
-  }
-  /**
-   * Get count of available projectiles in pool
-   * @returns {number} Available count
-   */
-  availableCount() {
-    return this.pool.availableCount();
-  }
-  /**
-   * Get count of active projectiles
-   * @returns {number} Active count
-   */
-  activeCount() {
-    return this.pool.activeCount();
-  }
-  /**
-   * Get all active plasma projectiles
-   * @returns {Set} Set of active projectiles
-   */
-  getActive() {
-    return this.pool.active;
-  }
-  /**
-   * Dispose the plasma projectile pool
-   * @param {function} disposeFn - Custom dispose function
-   */
-  dispose(disposeFn) {
-    this.pool.dispose((projectile) => {
-      if (projectile.parent) {
-        this._removeFromParent(projectile);
-      }
-      if (projectile.material) {
-        projectile.material.dispose();
-      }
-      if (projectile.userData.glowMesh && projectile.userData.glowMesh.material) {
-        projectile.userData.glowMesh.material.dispose();
-      }
-      if (disposeFn) {
-        disposeFn(projectile);
-      }
-    });
-  }
-}
-class BulletProjectilePool {
-  /**
-   * Create a new BulletProjectilePool
-   * @param {object} sharedAssets - Shared geometries and materials
-   * @param {function} addToScene - Function to add objects to scene
-   * @param {function} removeFromParent - Function to remove objects from parent
-   */
-  constructor(sharedAssets, addToScene, removeFromParent) {
-    this.sharedAssets = sharedAssets;
-    this._addToScene = addToScene;
-    this._removeFromParent = removeFromParent;
-    this.initializePool();
-  }
-  /**
-   * Initialize the bullet projectile pool
-   */
-  initializePool() {
-    this.pool = new ObjectPool(
-      // Create function
-      () => this.createBulletProjectile(),
-      // Reset function
-      (projectile) => this.resetBulletProjectile(projectile),
-      40,
-      // Initial size - bullets very common
-      15
-      // Expand size
-    );
-  }
-  /**
-   * Create a new bullet projectile
-   * @returns {THREE.Mesh} A bullet projectile mesh
-   */
-  createBulletProjectile() {
-    const projectile = new Mesh(
-      this.sharedAssets.projectileGeometry,
-      this.sharedAssets.projectileMaterial.clone()
-    );
-    const glowMesh = new Mesh(
-      this.sharedAssets.projectileGlowGeometry,
-      this.sharedAssets.projectileGlowMaterial.clone()
-    );
-    projectile.material.color.setHex(16768256);
-    projectile.material.emissive.setHex(3351040);
-    projectile.material.metalness = 0.8;
-    projectile.material.roughness = 0.2;
-    glowMesh.material.color.setHex(16772676);
-    glowMesh.material.opacity = 0.4;
-    glowMesh.scale.set(0.8, 0.8, 0.8);
-    projectile.scale.set(0.7, 0.7, 1.5);
-    projectile.add(glowMesh);
-    projectile.userData = {
-      isProjectile: true,
-      projectileType: "bullet",
-      active: false,
-      pooled: true,
-      glowMesh,
-      speed: 2500,
-      // Very high speed
-      damage: 15,
-      kinetic: true,
-      // Physical impact
-      energyDrain: 2,
-      // Very low energy cost
-      penetration: false,
-      ricochet: true
-      // Can ricochet off surfaces
-    };
-    return projectile;
-  }
-  /**
-   * Reset a bullet projectile to initial state
-   * @param {THREE.Mesh} projectile - The projectile to reset
-   */
-  resetBulletProjectile(projectile) {
-    projectile.position.set(0, 0, 0);
-    projectile.rotation.set(0, 0, 0);
-    projectile.scale.set(0.7, 0.7, 1.5);
-    projectile.visible = false;
-    projectile.material.color.setHex(16768256);
-    projectile.material.emissive.setHex(3351040);
-    projectile.material.opacity = 1;
-    projectile.material.metalness = 0.8;
-    projectile.material.roughness = 0.2;
-    if (projectile.userData.glowMesh) {
-      projectile.userData.glowMesh.material.opacity = 0.4;
-      projectile.userData.glowMesh.scale.set(0.8, 0.8, 0.8);
-    }
-    projectile.userData.active = false;
-    projectile.userData.creationTime = 0;
-    projectile.userData.entityId = null;
-    projectile.userData.trail = null;
-    projectile.userData.trailParticles = null;
-    projectile.userData.target = null;
-    projectile.userData.firedBy = null;
-    projectile.userData.ricochetCount = 0;
-    projectile.userData.spinRate = Math.random() * 0.1 + 0.05;
-  }
-  /**
-   * Get a bullet projectile from the pool
-   * @returns {THREE.Mesh} A bullet projectile mesh
-   */
-  get() {
-    const projectile = this.pool.get();
-    projectile.visible = true;
-    projectile.userData.active = true;
-    projectile.userData.creationTime = performance.now();
-    projectile.userData.ricochetCount = 0;
-    projectile.userData.spinRate = Math.random() * 0.1 + 0.05;
-    if (!projectile.parent) {
-      this._addToScene(projectile);
-    }
-    return projectile;
-  }
-  /**
-   * Release a bullet projectile back to the pool
-   * @param {THREE.Mesh} projectile - The projectile to release
-   */
-  release(projectile) {
-    if (!projectile || !projectile.userData || !projectile.userData.isProjectile || projectile.userData.projectileType !== "bullet") {
-      return;
-    }
-    if (projectile.parent) {
-      this._removeFromParent(projectile);
-    }
-    this.pool.release(projectile);
-  }
-  /**
-   * Update bullet-specific behavior (spinning, ricochet effects)
-   * @param {THREE.Mesh} projectile - The bullet to update
-   * @param {number} deltaTime - Time since last update
-   */
-  updateBullet(projectile, deltaTime) {
-    if (!projectile.userData.active) return;
-    projectile.rotation.z += projectile.userData.spinRate * deltaTime * 0.01;
-    const age = performance.now() - projectile.userData.creationTime;
-    const maxAge = 2e3;
-    const ageFactor = Math.max(0, 1 - age / maxAge);
-    if (projectile.userData.glowMesh) {
-      projectile.userData.glowMesh.material.opacity = 0.4 * ageFactor;
-    }
-    if (projectile.material) {
-      projectile.material.metalness = 0.8 * ageFactor;
-    }
-  }
-  /**
-   * Handle bullet ricochet logic
-   * @param {THREE.Mesh} projectile - The bullet that ricocheted
-   * @param {THREE.Vector3} newDirection - New direction after ricochet
-   * @returns {boolean} True if ricochet was successful, false if bullet should be destroyed
-   */
-  handleRicochet(projectile, newDirection) {
-    if (!projectile.userData.ricochet) return false;
-    projectile.userData.ricochetCount++;
-    if (projectile.userData.ricochetCount > 3) {
-      return false;
-    }
-    const damageReduction = 0.7;
-    const speedReduction = 0.8;
-    projectile.userData.damage *= damageReduction;
-    projectile.userData.speed *= speedReduction;
-    if (projectile.userData.glowMesh) {
-      projectile.userData.glowMesh.material.color.setHex(16746496);
-      projectile.userData.glowMesh.material.opacity = 0.8;
-    }
-    return true;
-  }
-  /**
-   * Get count of available projectiles in pool
-   * @returns {number} Available count
-   */
-  availableCount() {
-    return this.pool.availableCount();
-  }
-  /**
-   * Get count of active projectiles
-   * @returns {number} Active count
-   */
-  activeCount() {
-    return this.pool.activeCount();
-  }
-  /**
-   * Get all active bullet projectiles
-   * @returns {Set} Set of active projectiles
-   */
-  getActive() {
-    return this.pool.active;
-  }
-  /**
-   * Dispose the bullet projectile pool
-   * @param {function} disposeFn - Custom dispose function
-   */
-  dispose(disposeFn) {
-    this.pool.dispose((projectile) => {
-      if (projectile.parent) {
-        this._removeFromParent(projectile);
-      }
-      if (projectile.material) {
-        projectile.material.dispose();
-      }
-      if (projectile.userData.glowMesh && projectile.userData.glowMesh.material) {
-        projectile.userData.glowMesh.material.dispose();
-      }
-      if (disposeFn) {
-        disposeFn(projectile);
-      }
-    });
-  }
-}
-class TrailEffectsPool {
-  /**
-   * Create a new TrailEffectsPool
-   * @param {object} sharedAssets - Shared geometries and materials
-   * @param {function} addToScene - Function to add objects to scene
-   * @param {function} removeFromParent - Function to remove objects from parent
-   */
-  constructor(sharedAssets, addToScene, removeFromParent) {
-    this.sharedAssets = sharedAssets;
-    this._addToScene = addToScene;
-    this._removeFromParent = removeFromParent;
-    this.initializePools();
-  }
-  /**
-   * Initialize trail container and particle pools
-   */
-  initializePools() {
-    this.trailContainerPool = new ObjectPool(
-      // Create function
-      () => this.createTrailContainer(),
-      // Reset function
-      (trailContainer) => this.resetTrailContainer(trailContainer),
-      30,
-      // Initial size
-      10
-      // Expand size
-    );
-    this.trailParticlePool = new ObjectPool(
-      // Create function
-      () => this.createTrailParticle(),
-      // Reset function
-      (particle) => this.resetTrailParticle(particle),
-      600,
-      // Initial size (20 trails * 30 particles per trail)
-      100
-      // Expand size
-    );
-  }
-  /**
-   * Create a new trail container
-   * @returns {THREE.Object3D} A trail container
-   */
-  createTrailContainer() {
-    const trailContainer = new Object3D();
-    trailContainer.userData = {
-      isTrail: true,
-      active: false,
-      pooled: true,
-      particles: [],
-      maxParticles: 30,
-      particleLifetime: 1e3,
-      // 1 second
-      emissionRate: 50
-      // particles per second
-    };
-    return trailContainer;
-  }
-  /**
-   * Reset a trail container to initial state
-   * @param {THREE.Object3D} trailContainer - The container to reset
-   */
-  resetTrailContainer(trailContainer) {
-    trailContainer.position.set(0, 0, 0);
-    trailContainer.rotation.set(0, 0, 0);
-    trailContainer.visible = false;
-    trailContainer.userData.active = false;
-    trailContainer.userData.parentProjectile = null;
-    trailContainer.userData.lastEmissionTime = 0;
-    trailContainer.userData.particles = [];
-  }
-  /**
-   * Create a new trail particle
-   * @returns {THREE.Mesh} A trail particle mesh
-   */
-  createTrailParticle() {
-    const particle = new Mesh(
-      this.sharedAssets.trailParticleGeometries[0],
-      this.sharedAssets.trailParticleMaterial.clone()
-    );
-    particle.userData = {
-      isTrailParticle: true,
-      active: false,
-      pooled: true,
-      sizeIndex: 0,
-      initialOffset: new Vector3(),
-      birthTime: 0,
-      lifetime: 1e3,
-      velocity: new Vector3()
-    };
-    return particle;
-  }
-  /**
-   * Reset a trail particle to initial state
-   * @param {THREE.Mesh} particle - The particle to reset
-   */
-  resetTrailParticle(particle) {
-    particle.position.set(0, 0, 0);
-    particle.visible = false;
-    particle.material.opacity = 0.9;
-    particle.userData.active = false;
-    particle.userData.sizeIndex = 0;
-    particle.userData.initialOffset.set(0, 0, 0);
-    particle.userData.initialOpacity = 0.9;
-    particle.userData.birthTime = 0;
-    particle.userData.velocity.set(0, 0, 0);
-  }
-  /**
-   * Get a trail container from the pool
-   * @returns {THREE.Object3D} A trail container
-   */
-  getTrailContainer() {
-    const trailContainer = this.trailContainerPool.get();
-    trailContainer.visible = true;
-    trailContainer.userData.active = true;
-    trailContainer.userData.lastEmissionTime = performance.now();
-    return trailContainer;
-  }
-  /**
-   * Get a trail particle from the pool
-   * @param {number} sizeIndex - Index of the size to use
-   * @returns {THREE.Mesh} A trail particle mesh
-   */
-  getTrailParticle(sizeIndex = 0) {
-    const particle = this.trailParticlePool.get();
-    particle.visible = true;
-    particle.userData.active = true;
-    particle.userData.sizeIndex = sizeIndex;
-    particle.userData.birthTime = performance.now();
-    if (sizeIndex >= 0 && sizeIndex < this.sharedAssets.trailParticleGeometries.length) {
-      particle.geometry = this.sharedAssets.trailParticleGeometries[sizeIndex];
-    }
-    return particle;
-  }
-  /**
-   * Create a trail for a projectile
-   * @param {THREE.Mesh} projectile - The projectile to attach trail to
-   * @param {object} options - Trail configuration options
-   * @returns {THREE.Object3D} The trail container
-   */
-  createTrailForProjectile(projectile, options = {}) {
-    const trail = this.getTrailContainer();
-    const defaultOptions = {
-      maxParticles: 30,
-      particleLifetime: 1e3,
-      emissionRate: 50,
-      color: 16777215,
-      opacity: 0.9
-    };
-    const config = { ...defaultOptions, ...options };
-    if (projectile.userData.projectileType) {
-      switch (projectile.userData.projectileType) {
-        case "laser":
-          config.color = 65535;
-          config.particleLifetime = 500;
-          config.emissionRate = 80;
-          break;
-        case "missile":
-          config.color = 16737792;
-          config.particleLifetime = 1500;
-          config.emissionRate = 60;
-          config.maxParticles = 40;
-          break;
-        case "plasma":
-          config.color = 11141375;
-          config.particleLifetime = 800;
-          config.emissionRate = 70;
-          break;
-        case "bullet":
-          config.color = 16772676;
-          config.particleLifetime = 300;
-          config.emissionRate = 30;
-          config.maxParticles = 15;
-          break;
-      }
-    }
-    trail.userData.maxParticles = config.maxParticles;
-    trail.userData.particleLifetime = config.particleLifetime;
-    trail.userData.emissionRate = config.emissionRate;
-    trail.userData.trailColor = config.color;
-    trail.userData.trailOpacity = config.opacity;
-    trail.userData.parentProjectile = projectile;
-    projectile.add(trail);
-    projectile.userData.trail = trail;
-    return trail;
-  }
-  /**
-   * Update all active trail effects
-   * @param {number} deltaTime - Time since last update
-   */
-  updateTrails(deltaTime) {
-    const currentTime = performance.now();
-    for (const trail of this.trailContainerPool.active) {
-      this.updateTrailContainer(trail, deltaTime, currentTime);
-    }
-    for (const particle of this.trailParticlePool.active) {
-      this.updateTrailParticle(particle, deltaTime, currentTime);
-    }
-  }
-  /**
-   * Update a single trail container
-   * @param {THREE.Object3D} trail - The trail to update
-   * @param {number} deltaTime - Time since last update
-   * @param {number} currentTime - Current timestamp
-   */
-  updateTrailContainer(trail, deltaTime, currentTime) {
-    if (!trail.userData.active) return;
-    const projectile = trail.userData.parentProjectile;
-    if (projectile && projectile.userData.active) {
-      const timeSinceLastEmission = currentTime - trail.userData.lastEmissionTime;
-      const emissionInterval = 1e3 / trail.userData.emissionRate;
-      if (timeSinceLastEmission >= emissionInterval && trail.userData.particles.length < trail.userData.maxParticles) {
-        this.emitTrailParticle(trail);
-        trail.userData.lastEmissionTime = currentTime;
-      }
-    }
-  }
-  /**
-   * Update a single trail particle
-   * @param {THREE.Mesh} particle - The particle to update
-   * @param {number} deltaTime - Time since last update
-   * @param {number} currentTime - Current timestamp
-   */
-  updateTrailParticle(particle, deltaTime, currentTime) {
-    if (!particle.userData.active) return;
-    const age = currentTime - particle.userData.birthTime;
-    const lifeProgress = age / particle.userData.lifetime;
-    if (lifeProgress >= 1) {
-      this.releaseTrailParticle(particle);
-      return;
-    }
-    const opacity = particle.userData.initialOpacity * (1 - lifeProgress);
-    particle.material.opacity = opacity;
-    const scale = 1 - lifeProgress * 0.5;
-    particle.scale.set(scale, scale, scale);
-    if (particle.userData.velocity.length() > 0) {
-      particle.position.add(particle.userData.velocity.clone().multiplyScalar(deltaTime * 1e-3));
-    }
-  }
-  /**
-   * Emit a new trail particle
-   * @param {THREE.Object3D} trail - The trail container
-   */
-  emitTrailParticle(trail) {
-    const sizeIndex = Math.floor(Math.random() * this.sharedAssets.trailParticleGeometries.length);
-    const particle = this.getTrailParticle(sizeIndex);
-    const randomOffset = new Vector3(
-      (Math.random() - 0.5) * 20,
-      (Math.random() - 0.5) * 20,
-      (Math.random() - 0.5) * 20
-    );
-    particle.position.copy(randomOffset);
-    particle.material.color.setHex(trail.userData.trailColor || 16777215);
-    particle.userData.initialOpacity = trail.userData.trailOpacity || 0.9;
-    particle.userData.lifetime = trail.userData.particleLifetime || 1e3;
-    particle.userData.velocity.set(
-      (Math.random() - 0.5) * 50,
-      (Math.random() - 0.5) * 50,
-      (Math.random() - 0.5) * 50
-    );
-    trail.add(particle);
-    trail.userData.particles.push(particle);
-  }
-  /**
-   * Release a trail container back to the pool
-   * @param {THREE.Object3D} trail - The trail container to release
-   */
-  releaseTrail(trail) {
-    if (!trail || !trail.userData || !trail.userData.isTrail) {
-      return;
-    }
-    if (trail.userData.particles) {
-      for (const particle of trail.userData.particles) {
-        if (particle) {
-          trail.remove(particle);
-          this.releaseTrailParticle(particle);
-        }
-      }
-    }
-    trail.userData.particles = [];
-    this.trailContainerPool.release(trail);
-  }
-  /**
-   * Release a trail particle back to the pool
-   * @param {THREE.Mesh} particle - The trail particle to release
-   */
-  releaseTrailParticle(particle) {
-    if (!particle || !particle.userData || !particle.userData.isTrailParticle) {
-      return;
-    }
-    if (particle.parent) {
-      particle.parent.remove(particle);
-    }
-    this.trailParticlePool.release(particle);
-  }
-  /**
-   * Get count statistics for debugging
-   * @returns {object} Pool statistics
-   */
-  getStats() {
-    return {
-      trailContainers: {
-        available: this.trailContainerPool.availableCount(),
-        active: this.trailContainerPool.activeCount()
-      },
-      trailParticles: {
-        available: this.trailParticlePool.availableCount(),
-        active: this.trailParticlePool.activeCount()
-      }
-    };
-  }
-  /**
-   * Dispose the trail effects pools
-   * @param {function} disposeFn - Custom dispose function
-   */
-  dispose(disposeFn) {
-    this.trailContainerPool.dispose((trail) => {
-      if (trail.parent) {
-        this._removeFromParent(trail);
-      }
-      if (disposeFn) {
-        disposeFn(trail);
-      }
-    });
-    this.trailParticlePool.dispose((particle) => {
-      if (particle.parent) {
-        this._removeFromParent(particle);
-      }
-      if (particle.material) {
-        particle.material.dispose();
-      }
-      if (disposeFn) {
-        disposeFn(particle);
-      }
-    });
-  }
-}
-class ExplosionFactory {
-  constructor(sharedAssets) {
-    this.sharedAssets = sharedAssets;
-  }
-  /**
-   * Create a new explosion effect
-   * @returns {THREE.Points} An explosion particle system
-   */
-  createExplosion() {
-    const particleCount = 200;
-    const geometry = new BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      const i3 = i * 3;
-      positions[i3] = (Math.random() - 0.5) * 100;
-      positions[i3 + 1] = (Math.random() - 0.5) * 100;
-      positions[i3 + 2] = (Math.random() - 0.5) * 100;
-    }
-    geometry.setAttribute("position", new BufferAttribute(positions, 3));
-    const material = this.sharedAssets.explosionParticleMaterial.clone();
-    const explosion = new Points(geometry, material);
-    explosion.userData = {
-      isExplosion: true,
-      effectType: "explosion",
-      active: false,
-      pooled: true,
-      startTime: 0,
-      duration: 1e3,
-      // Default duration
-      particleCount,
-      initialPositions: positions.slice()
-      // Store initial positions
-    };
-    return explosion;
-  }
-  /**
-   * Reset explosion to initial state
-   * @param {THREE.Points} explosion - The explosion to reset
-   */
-  resetExplosion(explosion) {
-    explosion.position.set(0, 0, 0);
-    explosion.visible = false;
-    explosion.material.opacity = 1;
-    explosion.material.color.setHex(16737792);
-    explosion.userData.active = false;
-    explosion.userData.startTime = 0;
-    explosion.userData.duration = 1e3;
-    const positions = explosion.geometry.attributes.position.array;
-    const initialPositions = explosion.userData.initialPositions;
-    for (let i = 0; i < positions.length; i++) {
-      positions[i] = initialPositions[i];
-    }
-    explosion.geometry.attributes.position.needsUpdate = true;
-  }
-  /**
-   * Update all active explosions
-   * @param {Array} activeExplosions - Array of active explosion objects
-   * @param {Function} releaseCallback - Function to call when explosion should be released
-   */
-  updateExplosions(activeExplosions, releaseCallback) {
-    for (const explosion of activeExplosions) {
-      const elapsed = Date.now() - explosion.userData.startTime;
-      const duration = explosion.userData.duration;
-      const progress = elapsed / duration;
-      if (progress >= 1) {
-        releaseCallback(explosion);
-      } else {
-        const positions = explosion.geometry.attributes.position.array;
-        const initialPositions = explosion.userData.initialPositions;
-        const particleCount = explosion.userData.particleCount;
-        for (let i = 0; i < particleCount; i++) {
-          const i3 = i * 3;
-          const expansionFactor = 1 + progress * 5;
-          positions[i3] = initialPositions[i3] * expansionFactor;
-          positions[i3 + 1] = initialPositions[i3 + 1] * expansionFactor;
-          positions[i3 + 2] = initialPositions[i3 + 2] * expansionFactor;
-        }
-        explosion.geometry.attributes.position.needsUpdate = true;
-        explosion.material.opacity = 1 - progress;
-      }
-    }
-  }
-}
-class SparkFactory {
-  constructor(sharedAssets) {
-    this.sharedAssets = sharedAssets;
-  }
-  /**
-   * Create a spark effect for impacts
-   * @returns {THREE.Points} A spark particle system
-   */
-  createSparkEffect() {
-    const particleCount = 50;
-    const geometry = new BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      const i3 = i * 3;
-      const angle = Math.random() * Math.PI * 2;
-      const elevation = Math.random() * Math.PI * 0.3;
-      const distance = Math.random() * 50 + 10;
-      positions[i3] = Math.cos(angle) * Math.cos(elevation) * distance;
-      positions[i3 + 1] = Math.sin(elevation) * distance;
-      positions[i3 + 2] = Math.sin(angle) * Math.cos(elevation) * distance;
-    }
-    geometry.setAttribute("position", new BufferAttribute(positions, 3));
-    const material = this.sharedAssets.explosionParticleMaterial.clone();
-    material.color.setHex(16772608);
-    material.size = 2;
-    const spark = new Points(geometry, material);
-    spark.userData = {
-      isSpark: true,
-      effectType: "spark",
-      active: false,
-      pooled: true,
-      startTime: 0,
-      duration: 500,
-      // Short duration for sparks
-      particleCount,
-      initialPositions: positions.slice()
-    };
-    return spark;
-  }
-  /**
-   * Reset spark effect to initial state
-   * @param {THREE.Points} spark - The spark effect to reset
-   */
-  resetSparkEffect(spark) {
-    spark.position.set(0, 0, 0);
-    spark.visible = false;
-    spark.material.opacity = 1;
-    spark.material.color.setHex(16772608);
-    spark.userData.active = false;
-    spark.userData.startTime = 0;
-    spark.userData.duration = 500;
-    const positions = spark.geometry.attributes.position.array;
-    const initialPositions = spark.userData.initialPositions;
-    for (let i = 0; i < positions.length; i++) {
-      positions[i] = initialPositions[i];
-    }
-    spark.geometry.attributes.position.needsUpdate = true;
-  }
-  /**
-   * Update all active spark effects
-   * @param {Array} activeSparks - Array of active spark objects
-   * @param {Function} releaseCallback - Function to call when spark should be released
-   */
-  updateSparks(activeSparks, releaseCallback) {
-    for (const spark of activeSparks) {
-      const elapsed = Date.now() - spark.userData.startTime;
-      const duration = spark.userData.duration;
-      const progress = elapsed / duration;
-      if (progress >= 1) {
-        releaseCallback(spark);
-      } else {
-        const positions = spark.geometry.attributes.position.array;
-        const initialPositions = spark.userData.initialPositions;
-        const particleCount = spark.userData.particleCount;
-        for (let i = 0; i < particleCount; i++) {
-          const i3 = i * 3;
-          const extension = 1 + progress * 3;
-          positions[i3] = initialPositions[i3] * extension;
-          positions[i3 + 1] = initialPositions[i3 + 1] * extension;
-          positions[i3 + 2] = initialPositions[i3 + 2] * extension;
-        }
-        spark.geometry.attributes.position.needsUpdate = true;
-        spark.material.opacity = 1 - progress;
-      }
-    }
-  }
-}
-class DebrisFactory {
-  constructor() {
-  }
-  /**
-   * Create debris effect for impacts
-   * @returns {THREE.Group} A debris group
-   */
-  createDebrisEffect() {
-    const debris = new Group();
-    const pieceCount = 8;
-    for (let i = 0; i < pieceCount; i++) {
-      const geometry = new BoxGeometry(2, 2, 2);
-      const material = new MeshBasicMaterial({
-        color: 6710886,
-        transparent: true,
-        opacity: 0.8
-      });
-      const piece = new Mesh(geometry, material);
-      piece.position.set(
-        (Math.random() - 0.5) * 20,
-        (Math.random() - 0.5) * 20,
-        (Math.random() - 0.5) * 20
-      );
-      piece.rotation.set(
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2
-      );
-      piece.userData = {
-        initialPosition: piece.position.clone(),
-        initialRotation: piece.rotation.clone(),
-        velocity: new Vector3(
-          (Math.random() - 0.5) * 200,
-          (Math.random() - 0.5) * 200,
-          (Math.random() - 0.5) * 200
-        ),
-        angularVelocity: new Vector3(
-          (Math.random() - 0.5) * 0.1,
-          (Math.random() - 0.5) * 0.1,
-          (Math.random() - 0.5) * 0.1
-        )
-      };
-      debris.add(piece);
-    }
-    debris.userData = {
-      isDebris: true,
-      effectType: "debris",
-      active: false,
-      pooled: true,
-      startTime: 0,
-      duration: 2e3,
-      // 2 seconds for debris
-      pieces: debris.children
-    };
-    return debris;
-  }
-  /**
-   * Reset debris effect to initial state
-   * @param {THREE.Group} debris - The debris effect to reset
-   */
-  resetDebrisEffect(debris) {
-    debris.position.set(0, 0, 0);
-    debris.visible = false;
-    debris.userData.active = false;
-    debris.userData.startTime = 0;
-    debris.userData.duration = 2e3;
-    for (const piece of debris.children) {
-      piece.position.copy(piece.userData.initialPosition);
-      piece.rotation.copy(piece.userData.initialRotation);
-      piece.material.opacity = 0.8;
-      piece.scale.set(1, 1, 1);
-    }
-  }
-  /**
-   * Update all active debris effects
-   * @param {Array} activeDebris - Array of active debris objects
-   * @param {Function} releaseCallback - Function to call when debris should be released
-   */
-  updateDebris(activeDebris, releaseCallback) {
-    for (const debris of activeDebris) {
-      const elapsed = Date.now() - debris.userData.startTime;
-      const duration = debris.userData.duration;
-      const progress = elapsed / duration;
-      if (progress >= 1) {
-        releaseCallback(debris);
-      } else {
-        for (const piece of debris.children) {
-          piece.position.add(
-            piece.userData.velocity.clone().multiplyScalar(1e-3 * 16)
-            // Approximate 60fps deltaTime
-          );
-          piece.rotation.x += piece.userData.angularVelocity.x * 16 * 0.01;
-          piece.rotation.y += piece.userData.angularVelocity.y * 16 * 0.01;
-          piece.rotation.z += piece.userData.angularVelocity.z * 16 * 0.01;
-          piece.material.opacity = 0.8 * (1 - progress);
-          const scale = 1 - progress * 0.5;
-          piece.scale.set(scale, scale, scale);
-        }
-      }
-    }
-  }
-}
-class ImpactTypeHandler {
-  constructor() {
-  }
-  /**
-   * Create an impact effect based on projectile type
-   * @param {THREE.Vector3} position - Impact position
-   * @param {string} projectileType - Type of projectile that impacted
-   * @param {object} options - Effect options
-   * @param {object} pools - Object containing the different effect pools
-   * @returns {object} Created effects
-   */
-  createImpactEffect(position, projectileType = "bullet", options = {}, pools = {}) {
-    const effects = {};
-    const { explosionPool, sparkPool, debrisPool } = pools;
-    switch (projectileType) {
-      case "missile":
-        if (explosionPool) {
-          effects.explosion = this._getExplosion(explosionPool, position, 1500);
-          effects.explosion.material.color.setHex(16729088);
-          effects.explosion.scale.set(2, 2, 2);
-        }
-        break;
-      case "laser":
-        if (sparkPool) {
-          effects.spark = this._getSparkEffect(sparkPool, position, 300);
-          effects.spark.material.color.setHex(65535);
-        }
-        break;
-      case "plasma":
-        if (explosionPool) {
-          effects.explosion = this._getExplosion(explosionPool, position, 800);
-          effects.explosion.material.color.setHex(8913151);
-        }
-        if (sparkPool) {
-          effects.spark = this._getSparkEffect(sparkPool, position, 400);
-          effects.spark.material.color.setHex(11141375);
-        }
-        break;
-      case "bullet":
-      default:
-        if (sparkPool) {
-          effects.spark = this._getSparkEffect(sparkPool, position, 200);
-        }
-        if (debrisPool) {
-          effects.debris = this._getDebrisEffect(debrisPool, position, 1500);
-        }
-        break;
-    }
-    return effects;
-  }
-  /**
-   * Helper method to get explosion from pool
-   * @private
-   */
-  _getExplosion(explosionPool, position, duration) {
-    const explosion = explosionPool.get();
-    explosion.position.copy(position);
-    explosion.visible = true;
-    explosion.userData.active = true;
-    explosion.userData.startTime = Date.now();
-    explosion.userData.duration = duration;
-    return explosion;
-  }
-  /**
-   * Helper method to get spark effect from pool
-   * @private
-   */
-  _getSparkEffect(sparkPool, position, duration) {
-    const spark = sparkPool.get();
-    spark.position.copy(position);
-    spark.visible = true;
-    spark.userData.active = true;
-    spark.userData.startTime = Date.now();
-    spark.userData.duration = duration;
-    return spark;
-  }
-  /**
-   * Helper method to get debris effect from pool
-   * @private
-   */
-  _getDebrisEffect(debrisPool, position, duration) {
-    const debris = debrisPool.get();
-    debris.position.copy(position);
-    debris.visible = true;
-    debris.userData.active = true;
-    debris.userData.startTime = Date.now();
-    debris.userData.duration = duration;
-    return debris;
-  }
-}
-class ImpactEffectsPool {
-  /**
-   * Create a new ImpactEffectsPool
-   * @param {object} sharedAssets - Shared geometries and materials
-   * @param {function} addToScene - Function to add objects to scene
-   * @param {function} removeFromParent - Function to remove objects from parent
-   */
-  constructor(sharedAssets, addToScene, removeFromParent) {
-    this.sharedAssets = sharedAssets;
-    this._addToScene = addToScene;
-    this._removeFromParent = removeFromParent;
-    this.explosionFactory = new ExplosionFactory(sharedAssets);
-    this.sparkFactory = new SparkFactory(sharedAssets);
-    this.debrisFactory = new DebrisFactory();
-    this.impactTypeHandler = new ImpactTypeHandler();
-    this.initializePools();
-  }
-  /**
-   * Initialize impact effect pools
-   */
-  initializePools() {
-    this.explosionPool = new ObjectPool(
-      // Create function
-      () => this.createExplosion(),
-      // Reset function
-      (explosion) => this.resetExplosion(explosion),
-      10,
-      // Initial size
-      5
-      // Expand size
-    );
-    this.sparkPool = new ObjectPool(
-      // Create function
-      () => this.createSparkEffect(),
-      // Reset function
-      (spark) => this.resetSparkEffect(spark),
-      20,
-      // Initial size
-      8
-      // Expand size
-    );
-    this.debrisPool = new ObjectPool(
-      // Create function
-      () => this.createDebrisEffect(),
-      // Reset function
-      (debris) => this.resetDebrisEffect(debris),
-      15,
-      // Initial size
-      6
-      // Expand size
-    );
-  }
-  /**
-   * Create a new explosion effect
-   * @returns {THREE.Points} An explosion particle system
-   */
-  createExplosion() {
-    return this.explosionFactory.createExplosion();
-  }
-  /**
-   * Reset explosion to initial state
-   * @param {THREE.Points} explosion - The explosion to reset
-   */
-  resetExplosion(explosion) {
-    this.explosionFactory.resetExplosion(explosion);
-  }
-  /**
-   * Create a spark effect for impacts
-   * @returns {THREE.Points} A spark particle system
-   */
-  createSparkEffect() {
-    return this.sparkFactory.createSparkEffect();
-  }
-  /**
-   * Reset spark effect to initial state
-   * @param {THREE.Points} spark - The spark effect to reset
-   */
-  resetSparkEffect(spark) {
-    this.sparkFactory.resetSparkEffect(spark);
-  }
-  /**
-   * Create debris effect for impacts
-   * @returns {THREE.Group} A debris group
-   */
-  createDebrisEffect() {
-    return this.debrisFactory.createDebrisEffect();
-  }
-  /**
-   * Reset debris effect to initial state
-   * @param {THREE.Group} debris - The debris effect to reset
-   */
-  resetDebrisEffect(debris) {
-    this.debrisFactory.resetDebrisEffect(debris);
-  }
-  /**
-   * Create an impact effect based on projectile type
-   * @param {THREE.Vector3} position - Impact position
-   * @param {string} projectileType - Type of projectile that impacted
-   * @param {object} options - Effect options
-   * @returns {object} Created effects
-   */
-  createImpactEffect(position, projectileType = "bullet", options = {}) {
-    const pools = {
-      explosionPool: this.explosionPool,
-      sparkPool: this.sparkPool,
-      debrisPool: this.debrisPool
-    };
-    const effects = this.impactTypeHandler.createImpactEffect(position, projectileType, options, pools);
-    Object.values(effects).forEach((effect) => {
-      if (effect && !effect.parent) {
-        this._addToScene(effect);
-      }
-    });
-    return effects;
-  }
-  /**
-   * Get an explosion effect from the pool
-   * @param {THREE.Vector3} position - Position for the explosion
-   * @param {number} duration - Duration of the explosion in milliseconds
-   * @returns {THREE.Points} An explosion effect
-   */
-  getExplosion(position, duration = 1e3) {
-    const explosion = this.explosionPool.get();
-    explosion.position.copy(position);
-    explosion.visible = true;
-    explosion.userData.active = true;
-    explosion.userData.startTime = Date.now();
-    explosion.userData.duration = duration;
-    if (!explosion.parent) {
-      this._addToScene(explosion);
-    }
-    return explosion;
-  }
-  /**
-   * Get a spark effect from the pool
-   * @param {THREE.Vector3} position - Position for the spark effect
-   * @param {number} duration - Duration of the effect in milliseconds
-   * @returns {THREE.Points} A spark effect
-   */
-  getSparkEffect(position, duration = 500) {
-    const spark = this.sparkPool.get();
-    spark.position.copy(position);
-    spark.visible = true;
-    spark.userData.active = true;
-    spark.userData.startTime = Date.now();
-    spark.userData.duration = duration;
-    if (!spark.parent) {
-      this._addToScene(spark);
-    }
-    return spark;
-  }
-  /**
-   * Get a debris effect from the pool
-   * @param {THREE.Vector3} position - Position for the debris effect
-   * @param {number} duration - Duration of the effect in milliseconds
-   * @returns {THREE.Group} A debris effect
-   */
-  getDebrisEffect(position, duration = 2e3) {
-    const debris = this.debrisPool.get();
-    debris.position.copy(position);
-    debris.visible = true;
-    debris.userData.active = true;
-    debris.userData.startTime = Date.now();
-    debris.userData.duration = duration;
-    if (!debris.parent) {
-      this._addToScene(debris);
-    }
-    return debris;
-  }
-  /**
-   * Update all active impact effects
-   * @param {number} deltaTime - Time since last update
-   */
-  updateEffects(deltaTime) {
-    this.updateExplosions(deltaTime);
-    this.updateSparks(deltaTime);
-    this.updateDebris(deltaTime);
-  }
-  /**
-   * Update all active explosions
-   * @param {number} deltaTime - Time since last update
-   */
-  updateExplosions(deltaTime) {
-    this.explosionFactory.updateExplosions(this.explosionPool.active, (explosion) => this.releaseExplosion(explosion));
-  }
-  /**
-   * Update all active spark effects
-   * @param {number} deltaTime - Time since last update
-   */
-  updateSparks(deltaTime) {
-    this.sparkFactory.updateSparks(this.sparkPool.active, (spark) => this.releaseSparkEffect(spark));
-  }
-  /**
-   * Update all active debris effects
-   * @param {number} deltaTime - Time since last update
-   */
-  updateDebris(deltaTime) {
-    this.debrisFactory.updateDebris(this.debrisPool.active, (debris) => this.releaseDebrisEffect(debris));
-  }
-  /**
-   * Release effects back to pools
-   */
-  releaseExplosion(explosion) {
-    if (explosion.parent) {
-      this._removeFromParent(explosion);
-    }
-    this.explosionPool.release(explosion);
-  }
-  releaseSparkEffect(spark) {
-    if (spark.parent) {
-      this._removeFromParent(spark);
-    }
-    this.sparkPool.release(spark);
-  }
-  releaseDebrisEffect(debris) {
-    if (debris.parent) {
-      this._removeFromParent(debris);
-    }
-    this.debrisPool.release(debris);
-  }
-  /**
-   * Dispose all impact effect pools
-   */
-  dispose() {
-    this.explosionPool.dispose((explosion) => {
-      if (explosion.parent) this._removeFromParent(explosion);
-      if (explosion.material) explosion.material.dispose();
-      if (explosion.geometry) explosion.geometry.dispose();
-    });
-    this.sparkPool.dispose((spark) => {
-      if (spark.parent) this._removeFromParent(spark);
-      if (spark.material) spark.material.dispose();
-      if (spark.geometry) spark.geometry.dispose();
-    });
-    this.debrisPool.dispose((debris) => {
-      if (debris.parent) this._removeFromParent(debris);
-      for (const piece of debris.children) {
-        if (piece.material) piece.material.dispose();
-        if (piece.geometry) piece.geometry.dispose();
-      }
-    });
-  }
-}
-class MuzzleFlashPool {
-  /**
-   * Create a new MuzzleFlashPool
-   * @param {object} sharedAssets - Shared geometries and materials
-   * @param {function} addToScene - Function to add objects to scene
-   * @param {function} removeFromParent - Function to remove objects from parent
-   */
-  constructor(sharedAssets, addToScene, removeFromParent) {
-    this.sharedAssets = sharedAssets;
-    this._addToScene = addToScene;
-    this._removeFromParent = removeFromParent;
-    this.initializePool();
-  }
-  /**
-   * Initialize the muzzle flash pool
-   */
-  initializePool() {
-    this.pool = new ObjectPool(
-      // Create function
-      () => this.createMuzzleFlash(),
-      // Reset function
-      (muzzleFlash) => this.resetMuzzleFlash(muzzleFlash),
-      20,
-      // Initial size
-      5
-      // Expand size
-    );
-  }
-  /**
-   * Create a new muzzle flash effect
-   * @returns {THREE.Mesh} A muzzle flash mesh
-   */
-  createMuzzleFlash() {
-    const muzzleFlash = new Mesh(
-      this.sharedAssets.muzzleFlashGeometry,
-      this.sharedAssets.muzzleFlashMaterial.clone()
-    );
-    muzzleFlash.userData = {
-      isMuzzleFlash: true,
-      effectType: "muzzleFlash",
-      active: false,
-      pooled: true,
-      startTime: 0,
-      flashLight: null,
-      weaponType: "generic",
-      burstDuration: 70,
-      // Default burst duration
-      initialPosition: new Vector3(),
-      direction: new Vector3()
-    };
-    const flashLight = new PointLight(65535, 200, 10, 2);
-    flashLight.visible = false;
-    this._addToScene(flashLight);
-    muzzleFlash.userData.flashLight = flashLight;
-    return muzzleFlash;
-  }
-  /**
-   * Reset a muzzle flash to initial state
-   * @param {THREE.Mesh} muzzleFlash - The muzzle flash to reset
-   */
-  resetMuzzleFlash(muzzleFlash) {
-    muzzleFlash.position.set(0, 0, 0);
-    muzzleFlash.rotation.set(0, 0, 0);
-    muzzleFlash.scale.set(1, 1, 1);
-    muzzleFlash.visible = false;
-    muzzleFlash.material.opacity = 0.7;
-    muzzleFlash.material.color.setHex(65535);
-    const flashLight = muzzleFlash.userData.flashLight;
-    if (flashLight) {
-      flashLight.position.set(0, 0, 0);
-      flashLight.intensity = 200;
-      flashLight.color.setHex(65535);
-      flashLight.visible = false;
-    }
-    muzzleFlash.userData.active = false;
-    muzzleFlash.userData.startTime = 0;
-    muzzleFlash.userData.weaponType = "generic";
-    muzzleFlash.userData.burstDuration = 70;
-    muzzleFlash.userData.initialPosition.set(0, 0, 0);
-    muzzleFlash.userData.direction.set(0, 0, 1);
-  }
-  /**
-   * Get a muzzle flash from the pool
-   * @param {string} weaponType - Type of weapon firing
-   * @param {THREE.Vector3} position - Position of the muzzle
-   * @param {THREE.Vector3} direction - Direction of firing
-   * @returns {THREE.Mesh} A muzzle flash mesh
-   */
-  getMuzzleFlash(weaponType = "generic", position = null, direction = null) {
-    const muzzleFlash = this.pool.get();
-    muzzleFlash.visible = true;
-    muzzleFlash.userData.active = true;
-    muzzleFlash.userData.startTime = performance.now();
-    muzzleFlash.userData.weaponType = weaponType;
-    if (position) {
-      muzzleFlash.position.copy(position);
-      muzzleFlash.userData.initialPosition.copy(position);
-    }
-    if (direction) {
-      muzzleFlash.userData.direction.copy(direction).normalize();
-      muzzleFlash.lookAt(position.clone().add(direction));
-    }
-    this.configureFlashForWeapon(muzzleFlash, weaponType);
-    const flashLight = muzzleFlash.userData.flashLight;
-    if (flashLight) {
-      flashLight.position.copy(muzzleFlash.position);
-      flashLight.visible = true;
-      this.configureLightForWeapon(flashLight, weaponType);
-    }
-    if (!muzzleFlash.parent) {
-      this._addToScene(muzzleFlash);
-    }
-    return muzzleFlash;
-  }
-  /**
-   * Configure muzzle flash appearance based on weapon type
-   * @param {THREE.Mesh} muzzleFlash - The muzzle flash to configure
-   * @param {string} weaponType - Type of weapon
-   */
-  configureFlashForWeapon(muzzleFlash, weaponType) {
-    switch (weaponType) {
-      case "laser":
-        muzzleFlash.material.color.setHex(65535);
-        muzzleFlash.scale.set(0.8, 0.8, 1.5);
-        muzzleFlash.userData.burstDuration = 50;
-        break;
-      case "missile":
-        muzzleFlash.material.color.setHex(16729088);
-        muzzleFlash.scale.set(1.5, 1.5, 2);
-        muzzleFlash.userData.burstDuration = 120;
-        break;
-      case "plasma":
-        muzzleFlash.material.color.setHex(8913151);
-        muzzleFlash.scale.set(1.2, 1.2, 1.8);
-        muzzleFlash.userData.burstDuration = 80;
-        break;
-      case "bullet":
-        muzzleFlash.material.color.setHex(16755200);
-        muzzleFlash.scale.set(0.6, 0.6, 1);
-        muzzleFlash.userData.burstDuration = 40;
-        break;
-      default:
-        muzzleFlash.material.color.setHex(16777215);
-        muzzleFlash.scale.set(1, 1, 1);
-        muzzleFlash.userData.burstDuration = 70;
-        break;
-    }
-    muzzleFlash.material.opacity = 0.7;
-  }
-  /**
-   * Configure point light based on weapon type
-   * @param {THREE.PointLight} light - The light to configure
-   * @param {string} weaponType - Type of weapon
-   */
-  configureLightForWeapon(light, weaponType) {
-    switch (weaponType) {
-      case "laser":
-        light.color.setHex(65535);
-        light.intensity = 150;
-        light.distance = 8;
-        break;
-      case "missile":
-        light.color.setHex(16737792);
-        light.intensity = 300;
-        light.distance = 15;
-        break;
-      case "plasma":
-        light.color.setHex(11141375);
-        light.intensity = 250;
-        light.distance = 12;
-        break;
-      case "bullet":
-        light.color.setHex(16768256);
-        light.intensity = 100;
-        light.distance = 6;
-        break;
-      default:
-        light.color.setHex(16777215);
-        light.intensity = 200;
-        light.distance = 10;
-        break;
-    }
-  }
-  /**
-   * Update all active muzzle flashes
-   * @param {number} deltaTime - Time since last update
-   */
-  updateMuzzleFlashes(deltaTime) {
-    for (const muzzleFlash of this.pool.active) {
-      const elapsed = performance.now() - muzzleFlash.userData.startTime;
-      const burstDuration = muzzleFlash.userData.burstDuration;
-      const progress = elapsed / burstDuration;
-      if (progress >= 1) {
-        this.release(muzzleFlash);
-      } else {
-        this.updateMuzzleFlashAnimation(muzzleFlash, progress, deltaTime);
-      }
-    }
-  }
-  /**
-   * Update individual muzzle flash animation
-   * @param {THREE.Mesh} muzzleFlash - The muzzle flash to update
-   * @param {number} progress - Animation progress (0-1)
-   * @param {number} deltaTime - Time since last update
-   */
-  updateMuzzleFlashAnimation(muzzleFlash, progress, deltaTime) {
-    const travelProgress = Math.min(progress * 2.5, 1);
-    const travelDistance = 300;
-    if (muzzleFlash.userData.initialPosition && muzzleFlash.userData.direction) {
-      const newPosition = muzzleFlash.userData.initialPosition.clone().add(
-        muzzleFlash.userData.direction.clone().multiplyScalar(travelDistance * travelProgress)
-      );
-      muzzleFlash.position.copy(newPosition);
-      if (muzzleFlash.userData.flashLight) {
-        muzzleFlash.userData.flashLight.position.copy(newPosition);
-      }
-    }
-    muzzleFlash.material.opacity = 0.7 * (1 - progress);
-    if (muzzleFlash.userData.flashLight) {
-      const baseIntensity = this.getBaseLightIntensity(muzzleFlash.userData.weaponType);
-      muzzleFlash.userData.flashLight.intensity = baseIntensity * (1 - progress * 3);
-    }
-    const stretchFactor = 1 + progress * 1.5;
-    const currentScale = muzzleFlash.scale.clone();
-    muzzleFlash.scale.set(currentScale.x, currentScale.y, currentScale.z * stretchFactor);
-    const flicker = 0.9 + 0.1 * Math.sin(performance.now() * 0.02);
-    muzzleFlash.material.opacity *= flicker;
-  }
-  /**
-   * Get base light intensity for weapon type
-   * @param {string} weaponType - Type of weapon
-   * @returns {number} Base intensity
-   */
-  getBaseLightIntensity(weaponType) {
-    switch (weaponType) {
-      case "laser":
-        return 150;
-      case "missile":
-        return 300;
-      case "plasma":
-        return 250;
-      case "bullet":
-        return 100;
-      default:
-        return 200;
-    }
-  }
-  /**
-   * Release a muzzle flash back to the pool
-   * @param {THREE.Mesh} muzzleFlash - The muzzle flash to release
-   */
-  release(muzzleFlash) {
-    if (!muzzleFlash || !muzzleFlash.userData || !muzzleFlash.userData.isMuzzleFlash) {
-      return;
-    }
-    const flashLight = muzzleFlash.userData.flashLight;
-    if (flashLight) {
-      flashLight.visible = false;
-    }
-    if (muzzleFlash.parent) {
-      this._removeFromParent(muzzleFlash);
-    }
-    this.pool.release(muzzleFlash);
-  }
-  /**
-   * Get count of available muzzle flashes in pool
-   * @returns {number} Available count
-   */
-  availableCount() {
-    return this.pool.availableCount();
-  }
-  /**
-   * Get count of active muzzle flashes
-   * @returns {number} Active count
-   */
-  activeCount() {
-    return this.pool.activeCount();
-  }
-  /**
-   * Get all active muzzle flashes
-   * @returns {Set} Set of active muzzle flashes
-   */
-  getActive() {
-    return this.pool.active;
-  }
-  /**
-   * Dispose the muzzle flash pool
-   * @param {function} disposeFn - Custom dispose function
-   */
-  dispose(disposeFn) {
-    this.pool.dispose((muzzleFlash) => {
-      if (muzzleFlash.parent) {
-        this._removeFromParent(muzzleFlash);
-      }
-      if (muzzleFlash.userData.flashLight) {
-        if (muzzleFlash.userData.flashLight.parent) {
-          muzzleFlash.userData.flashLight.parent.remove(muzzleFlash.userData.flashLight);
-        }
-      }
-      if (muzzleFlash.material) {
-        muzzleFlash.material.dispose();
-      }
-      if (disposeFn) {
-        disposeFn(muzzleFlash);
-      }
-    });
-  }
-}
-class ProjectilePoolManager {
-  constructor(scene, sharedAssets) {
-    this.scene = scene;
-    this.sharedAssets = sharedAssets;
-    Object.assign(this, sharedAssets);
-    this.populateWindowGameWithSharedAssets();
-    this.initializePools();
-    console.log("ProjectilePoolManager initialized using pre-warmed shared assets and specialized pools");
-  }
-  populateWindowGameWithSharedAssets() {
-    if (!window.game) window.game = {};
-    Object.assign(window.game, this.sharedAssets);
-  }
-  initializePools() {
-    const addToScene = (object) => this._addToScene(object);
-    const removeFromParent = (object) => this._removeFromParent(object);
-    this.laserPool = new LaserProjectilePool(this.sharedAssets, addToScene, removeFromParent);
-    this.missilePool = new MissileProjectilePool(this.sharedAssets, addToScene, removeFromParent);
-    this.plasmaPool = new PlasmaProjectilePool(this.sharedAssets, addToScene, removeFromParent);
-    this.bulletPool = new BulletProjectilePool(this.sharedAssets, addToScene, removeFromParent);
-    this.trailEffects = new TrailEffectsPool(this.sharedAssets, addToScene, removeFromParent);
-    this.impactEffects = new ImpactEffectsPool(this.sharedAssets, addToScene, removeFromParent);
-    this.muzzleFlashEffects = new MuzzleFlashPool(this.sharedAssets, addToScene, removeFromParent);
-    this.initializeTracerPool();
-    this.createLegacyProjectilePool();
-  }
-  initializeTracerPool() {
-    this.tracerPool = new ObjectPool(
-      () => {
-        const tracer = new Line(this.tracerGeometry.clone(), this.tracerLineMaterial.clone());
-        tracer.userData = { isTracer: true, active: false, pooled: true, startTime: 0 };
-        return tracer;
-      },
-      (tracer) => {
-        tracer.position.set(0, 0, 0);
-        tracer.visible = false;
-        tracer.material.opacity = 0.6;
-        tracer.userData.active = false;
-        tracer.userData.startTime = 0;
-      },
-      20,
-      5
-    );
-  }
-  createLegacyProjectilePool() {
-    this.projectilePool = {
-      get: () => this.bulletPool.get(),
-      release: (projectile) => {
-        const type = projectile.userData && projectile.userData.projectileType || "bullet";
-        this.releaseProjectile(projectile, type);
-      },
-      active: /* @__PURE__ */ new Set(),
-      availableCount: () => this.bulletPool.availableCount(),
-      activeCount: () => this.getAllActiveProjectiles().size
-    };
-  }
-  // Factory Pattern - Get projectile by type
-  getProjectile(type = "bullet") {
-    switch (type.toLowerCase()) {
-      case "laser":
-        return this.laserPool.get();
-      case "missile":
-        return this.missilePool.get();
-      case "plasma":
-        return this.plasmaPool.get();
-      case "bullet":
-      default:
-        return this.bulletPool.get();
-    }
-  }
-  // Effect factory methods
-  getMuzzleFlash(weaponType = "generic", position = null, direction = null) {
-    return this.muzzleFlashEffects.getMuzzleFlash(weaponType, position, direction);
-  }
-  getTrailContainer() {
-    return this.trailEffects.getTrailContainer();
-  }
-  getTrailParticle(sizeIndex = 0) {
-    return this.trailEffects.getTrailParticle(sizeIndex);
-  }
-  getTracer() {
-    const tracer = this.tracerPool.get();
-    tracer.visible = true;
-    tracer.userData.active = true;
-    tracer.userData.startTime = performance.now();
-    if (!tracer.parent) this._addToScene(tracer);
-    return tracer;
-  }
-  getExplosion(position, duration = 1e3) {
-    return this.impactEffects.getExplosion(position, duration);
-  }
-  createImpactEffect(position, projectileType = "bullet", options = {}) {
-    return this.impactEffects.createImpactEffect(position, projectileType, options);
-  }
-  createTrailForProjectile(projectile, options = {}) {
-    return this.trailEffects.createTrailForProjectile(projectile, options);
-  }
-  // Release methods - delegate to appropriate pools
-  releaseProjectile(projectile, type = null) {
-    if (!projectile || !projectile.userData || !projectile.userData.isProjectile) return;
-    const projectileType = type || projectile.userData.projectileType || "bullet";
-    if (projectile.userData.trail) {
-      this.releaseTrail(projectile.userData.trail);
-      projectile.remove(projectile.userData.trail);
-      projectile.userData.trail = null;
-      projectile.userData.trailParticles = null;
-    }
-    switch (projectileType.toLowerCase()) {
-      case "laser":
-        this.laserPool.release(projectile);
-        break;
-      case "missile":
-        this.missilePool.release(projectile);
-        break;
-      case "plasma":
-        this.plasmaPool.release(projectile);
-        break;
-      case "bullet":
-      default:
-        this.bulletPool.release(projectile);
-        break;
-    }
-  }
-  releaseMuzzleFlash(muzzleFlash) {
-    this.muzzleFlashEffects.release(muzzleFlash);
-  }
-  releaseTrail(trail) {
-    this.trailEffects.releaseTrail(trail);
-  }
-  releaseTrailParticle(particle) {
-    this.trailEffects.releaseTrailParticle(particle);
-  }
-  releaseExplosion(explosion) {
-    this.impactEffects.releaseExplosion(explosion);
-  }
-  releaseTracer(tracer) {
-    if (!tracer || !tracer.userData || !tracer.userData.isTracer) return;
-    if (tracer.parent) this._removeFromParent(tracer);
-    this.tracerPool.release(tracer);
-  }
-  // Get all active projectiles from all pools
-  getAllActiveProjectiles() {
-    const allActive = /* @__PURE__ */ new Set();
-    [this.laserPool, this.missilePool, this.plasmaPool, this.bulletPool].forEach((pool) => {
-      pool.getActive().forEach((p) => allActive.add(p));
-    });
-    this.projectilePool.active = allActive;
-    return allActive;
-  }
-  // Update all active objects from the pools
-  update(deltaTime) {
-    this.missilePool.getActive().forEach((missile) => this.missilePool.updateMissile(missile, deltaTime));
-    this.plasmaPool.getActive().forEach((plasma) => this.plasmaPool.updatePlasma(plasma, deltaTime));
-    this.bulletPool.getActive().forEach((bullet) => this.bulletPool.updateBullet(bullet, deltaTime));
-    this.muzzleFlashEffects.updateMuzzleFlashes(deltaTime);
-    this.trailEffects.updateTrails(deltaTime);
-    this.impactEffects.updateEffects(deltaTime);
-    this.updateTracers(deltaTime);
-  }
-  updateTracers(deltaTime) {
-    for (const tracer of this.tracerPool.active) {
-      const opacity = Math.max(0, tracer.material.opacity - 1.5 * 0.016);
-      if (opacity <= 0) {
-        this.releaseTracer(tracer);
-      } else {
-        tracer.material.opacity = opacity;
-      }
-    }
-  }
-  // Dispose all pools and shared assets
-  dispose() {
-    [this.projectileGeometry, this.projectileGlowGeometry, this.muzzleFlashGeometry, this.tracerGeometry].forEach((geo) => geo && geo.dispose());
-    if (this.trailParticleGeometries) {
-      this.trailParticleGeometries.forEach((geo) => geo && geo.dispose());
-    }
-    [
-      this.projectileMaterial,
-      this.projectileGlowMaterial,
-      this.trailParticleMaterial,
-      this.muzzleFlashMaterial,
-      this.tracerLineMaterial
-    ].forEach((mat) => mat && mat.dispose());
-    [this.laserPool, this.missilePool, this.plasmaPool, this.bulletPool].forEach((pool) => pool && pool.dispose());
-    [this.trailEffects, this.impactEffects, this.muzzleFlashEffects].forEach((pool) => pool && pool.dispose());
-    if (this.tracerPool) {
-      this.tracerPool.dispose((tracer) => {
-        if (tracer.parent) this._removeFromParent(tracer);
-        if (tracer.material) tracer.material.dispose();
-      });
-    }
-    console.log("ProjectilePoolManager disposed all pools and shared assets");
-  }
-  // Renderer facade helpers
-  _getRenderer() {
-    return window.game && window.game.renderer || null;
-  }
-  _addToScene(object) {
-    const renderer = this._getRenderer();
-    if (renderer && renderer._withGuard) {
-      renderer._withGuard(() => renderer.add(object));
-    } else if (this.scene && this.scene.add) {
-      this.scene.add(object);
-    }
-  }
-  _removeFromScene(object) {
-    const renderer = this._getRenderer();
-    if (renderer && renderer._withGuard) {
-      renderer._withGuard(() => this.scene.remove(object));
-    } else if (this.scene && this.scene.remove) {
-      this.scene.remove(object);
-    }
-  }
-  _removeFromParent(object) {
-    if (!object || !object.parent) return;
-    if (object.parent === this.scene) {
-      this._removeFromScene(object);
-    } else if (object.parent.remove) {
-      object.parent.remove(object);
-    }
-  }
-}
 class Combat {
   constructor(scene, spaceship) {
     this.scene = scene;
     this.spaceship = spaceship;
-    this.projectiles = [];
-    this.projectileLifetime = 2e3;
     this.fireRate = 3;
-    this.projectileSpeed = 3e4;
     this.lastFireTime = 0;
     this.aimingSpread = 0.05;
     this.isFiring = false;
     this.cooldown = 1e3 / this.fireRate;
-    this.projectileDamage = 20;
+    this.particleCannonDamage = 20;
     this.worldSetup = new WorldSetup();
     this.systemRegistrar = new SystemRegistrar();
     this.eventManager = new EventManager();
     this.effectsManager = new EffectsManager(scene);
     this.aiSpawnerManager = new AISpawnerManager();
     this.combatLogic = new CombatLogic(this.effectsManager, this.eventManager, this.aiSpawnerManager);
-    this.poolManager = new ProjectilePoolManager(scene, {
-      projectileMaterial: this.effectsManager.getMaterial("projectile"),
-      projectileGlowMaterial: this.effectsManager.getMaterial("projectileGlow"),
-      trailParticleMaterial: this.effectsManager.getMaterial("trailParticle"),
-      muzzleFlashMaterial: this.effectsManager.getMaterial("muzzleFlash"),
-      tracerLineMaterial: this.effectsManager.getMaterial("tracerLine"),
-      explosionParticleMaterial: this.effectsManager.getMaterial("explosionParticle"),
-      projectileGeometry: window.game.projectileGeometry,
-      projectileGlowGeometry: window.game.projectileGlowGeometry,
-      muzzleFlashGeometry: window.game.muzzleFlashGeometry,
-      trailParticleGeometries: window.game.trailParticleGeometries,
-      tracerGeometry: window.game.tracerGeometry
-    });
     this.initializeECSWorld();
   }
   // Material and geometry initialization moved to EffectsManager
@@ -14633,7 +12337,7 @@ class Combat {
   }
   // Player entity creation moved to WorldSetup module
   /**
-   * Update all projectiles and handle firing logic
+   * Update combat systems and handle firing logic
    * @param {number} deltaTime Time since last update in seconds
    */
   update(deltaTime) {
@@ -14641,11 +12345,7 @@ class Combat {
     const introActive = window.game && window.game.introSequenceActive;
     this.updatePlayerReference();
     this.updateSpaceshipHealth();
-    this.updateProjectiles(deltaTime);
     this.effectsManager.updateTracers(deltaTime);
-    if (this.poolManager) {
-      this.poolManager.update(deltaTime);
-    }
     if (this.isFiring && !this.spaceship.isDocked) {
       this.fireParticleCannon();
     }
@@ -14674,44 +12374,6 @@ class Combat {
     this.worldSetup.updateSpaceshipHealth(this.spaceship);
   }
   /**
-   * Update all projectile positions
-   * @param {number} deltaTime Time since last update in seconds
-   */
-  updateProjectiles(deltaTime) {
-    for (let i = this.projectiles.length - 1; i >= 0; i--) {
-      const projectile = this.projectiles[i];
-      projectile.position.add(projectile.velocity.clone().multiplyScalar(deltaTime));
-      if (projectile.userData && projectile.userData.entityId && this.world) {
-        const entity = this.world.getEntity(projectile.userData.entityId);
-        if (entity) {
-          if (typeof entity.update === "function") {
-            entity.update(deltaTime);
-          } else {
-            const transform2 = entity.getComponent("TransformComponent");
-            if (transform2) {
-              transform2.position.copy(projectile.position);
-              transform2.needsUpdate = true;
-            }
-            const rigidbody = entity.getComponent("RigidbodyComponent");
-            if (rigidbody) {
-              rigidbody.velocity.copy(projectile.velocity);
-            }
-          }
-        }
-      }
-      if (performance.now() - projectile.userData.creationTime > this.projectileLifetime) {
-        if (projectile.userData && projectile.userData.entityId && this.world) {
-          try {
-            this.world.destroyEntity(projectile.userData.entityId);
-          } catch (error) {
-          }
-        }
-        this.poolManager.releaseProjectile(projectile);
-        this.projectiles.splice(i, 1);
-      }
-    }
-  }
-  /**
    * Set firing state for the particle cannon
    * @param {boolean} isFiring Whether the cannon should be firing
    */
@@ -14725,7 +12387,7 @@ class Combat {
    * @param {boolean} isVisible Whether the explosion should be visible
    */
   createExplosionEffect(position, duration = 1e3, isVisible = true) {
-    return this.effectsManager.createExplosionEffect(position, duration, isVisible, this.poolManager);
+    return this.effectsManager.createExplosionEffect(position, duration, isVisible, null);
   }
   // Tracer update logic moved to EffectsManager
   /**
@@ -14743,7 +12405,7 @@ class Combat {
     this.aiSpawnerManager.unregisterEnemy(enemyId);
   }
   /**
-   * Fire the particle cannon, creating two projectiles
+   * Fire the particle cannon with instant raycast damage
    */
   fireParticleCannon() {
     const result = this.combatLogic.fireParticleCannon(
@@ -14751,7 +12413,7 @@ class Combat {
       this.spaceship,
       this.world,
       this.playerEntity,
-      this.projectileDamage,
+      this.particleCannonDamage,
       this.lastFireTime,
       this.cooldown
     );
@@ -14759,73 +12421,15 @@ class Combat {
     return result.success;
   }
   /**
-   * Create a single projectile
-   * @param {THREE.Vector3} position Spawn position
-   * @param {THREE.Vector3} direction Direction vector
-   */
-  createProjectile(position, direction) {
-    const projectile = this.poolManager.getProjectile();
-    projectile.position.copy(position);
-    projectile.visible = true;
-    const cylinderDefaultDirection = new Vector3(0, 1, 0);
-    const quaternion = new Quaternion();
-    quaternion.setFromUnitVectors(cylinderDefaultDirection, direction);
-    projectile.quaternion.copy(quaternion);
-    projectile.velocity = direction.clone().multiplyScalar(this.projectileSpeed);
-    projectile.userData.isPlayerProjectile = true;
-    projectile.userData.sourceId = "player";
-    projectile.userData.damage = this.projectileDamage;
-    this.effectsManager.addProjectileTrail(projectile, direction, this.poolManager);
-    if (!projectile.parent) {
-      this.scene.add(projectile);
-    }
-    projectile.userData.creationTime = performance.now();
-    this.projectiles.push(projectile);
-    if (this.world && this.world.optimizedProjectiles) {
-      try {
-        this.world.optimizedProjectiles.register(projectile);
-      } catch {
-      }
-    }
-    return projectile;
-  }
-  /**
    * Enable or disable all combat systems
    * @param {boolean} enabled Whether combat systems should be enabled
    */
   setEnabled(enabled) {
-    if (!enabled) {
-      this.clearAllProjectiles();
-    }
     this.systemRegistrar.setSystemsEnabled(enabled);
-  }
-  // Instant tracer creation moved to EffectsManager
-  // Projectile trail logic moved to EffectsManager
-  /**
-   * Clear all active projectiles
-   */
-  clearAllProjectiles() {
-    for (const projectile of this.projectiles) {
-      if (this.world && this.world.optimizedProjectiles) {
-        try {
-          this.world.optimizedProjectiles.unregister(projectile);
-        } catch {
-        }
-      }
-      if (projectile.userData && projectile.userData.entityId && this.world) {
-        try {
-          this.world.destroyEntity(projectile.userData.entityId);
-        } catch (error) {
-          console.error("Error removing projectile entity:", error);
-        }
-      }
-      this.poolManager.releaseProjectile(projectile);
-    }
-    this.projectiles = [];
   }
   // Aiming tracer creation moved to EffectsManager
   createAimingTracer(startPosition, direction, distance = 3e3) {
-    return this.effectsManager.createAimingTracer(startPosition, direction, distance, this.poolManager);
+    return this.effectsManager.createAimingTracer(startPosition, direction, distance, null);
   }
   /**
    * Create a laser burst effect that travels forward with the projectile
@@ -14833,18 +12437,13 @@ class Combat {
    * @param {THREE.Vector3} direction Direction the effect should travel
    */
   createMuzzleFlash(position, direction) {
-    return this.effectsManager.createMuzzleFlash(position, direction, this.poolManager);
+    return this.effectsManager.createMuzzleFlash(position, direction, null);
   }
   /**
    * Dispose Combat module resources
    * Clean up all pools, geometries, and other resources
    */
   dispose() {
-    this.clearAllProjectiles();
-    if (this.poolManager) {
-      this.poolManager.dispose();
-      this.poolManager = null;
-    }
     if (this.effectsManager) {
       this.effectsManager.dispose();
     }
@@ -14884,48 +12483,196 @@ function getAbsolutePath(relativePath) {
   return relativePath;
 }
 class LightingManager {
-  constructor(scene) {
+  constructor(scene, renderer, camera) {
     this.scene = scene;
+    this.renderer = renderer;
+    this.camera = camera;
+    this.sunLight = null;
     this.ambientLight = null;
-    this.directionalLight = null;
+    this.rimLight = null;
     this.fillLight = null;
-    this.hemisphereLight = null;
-    this.ambientPointLight = null;
+    this.config = {
+      // Sun light - primary illumination
+      sun: {
+        color: 16777215,
+        // Pure white sun
+        intensity: 3,
+        // Moderate intensity with new lighting model
+        position: new Vector3(1, 0.5, 0.5).normalize()
+        // Direction vector
+      },
+      // Ambient - increased for better visibility
+      ambient: {
+        skyColor: 3158085,
+        // Slightly brighter blue space
+        groundColor: 1381664,
+        // Dark blue
+        intensity: 0.6
+        // More visible ambient
+      },
+      // Rim light - edge definition from opposite side
+      rim: {
+        color: 4482730,
+        // Blue rim light
+        intensity: 0.5,
+        // Subtle rim
+        position: new Vector3(-1, -0.3, -0.5).normalize()
+      },
+      // Fill light - subtle shadow fill
+      fill: {
+        color: 3359846,
+        // Dark blue fill
+        intensity: 0.3,
+        // Very subtle
+        position: new Vector3(0.5, -0.5, 1).normalize()
+      },
+      // Shadows
+      shadows: {
+        mapSize: 4096,
+        radius: 2,
+        blurSamples: 25,
+        bias: -1e-4,
+        normalBias: 0.02,
+        frustumSize: 1e4,
+        // Large enough for nearby objects
+        near: 0.5,
+        far: 5e4
+      },
+      // Tone mapping
+      toneMapping: {
+        exposure: 1,
+        type: ACESFilmicToneMapping
+      }
+    };
   }
   setupLighting() {
-    this.ambientLight = new AmbientLight(4210768, 1);
+    this.renderer.useLegacyLights = false;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
+    this.renderer.shadowMap.autoUpdate = true;
+    this.renderer.toneMapping = this.config.toneMapping.type;
+    this.renderer.toneMappingExposure = this.config.toneMapping.exposure;
+    this.renderer.outputColorSpace = SRGBColorSpace;
+    this.sunLight = new DirectionalLight(
+      this.config.sun.color,
+      this.config.sun.intensity * Math.PI
+      // Multiply by PI for physically correct
+    );
+    this.sunLight.position.set(0, 0, 0);
+    this.sunLight.target.position.set(1e4, 5e3, 5e3);
+    this.sunLight.castShadow = true;
+    this.sunLight.shadow.mapSize.width = this.config.shadows.mapSize;
+    this.sunLight.shadow.mapSize.height = this.config.shadows.mapSize;
+    const d = this.config.shadows.frustumSize;
+    this.sunLight.shadow.camera.left = -d;
+    this.sunLight.shadow.camera.right = d;
+    this.sunLight.shadow.camera.top = d;
+    this.sunLight.shadow.camera.bottom = -d;
+    this.sunLight.shadow.camera.near = this.config.shadows.near;
+    this.sunLight.shadow.camera.far = this.config.shadows.far;
+    this.sunLight.shadow.bias = this.config.shadows.bias;
+    this.sunLight.shadow.normalBias = this.config.shadows.normalBias;
+    this.sunLight.shadow.radius = this.config.shadows.radius;
+    this.sunLight.shadow.blurSamples = this.config.shadows.blurSamples;
+    this.scene.add(this.sunLight);
+    this.scene.add(this.sunLight.target);
+    this.ambientLight = new HemisphereLight(
+      this.config.ambient.skyColor,
+      this.config.ambient.groundColor,
+      this.config.ambient.intensity * Math.PI
+    );
     this.scene.add(this.ambientLight);
-    this.directionalLight = new DirectionalLight(16777184, 2);
-    this.directionalLight.position.set(1, 0.5, 1).normalize();
-    this.directionalLight.castShadow = true;
-    this.directionalLight.shadow.mapSize.width = 2048;
-    this.directionalLight.shadow.mapSize.height = 2048;
-    this.directionalLight.shadow.camera.near = 0.5;
-    this.directionalLight.shadow.camera.far = 500;
-    this.directionalLight.shadow.bias = -5e-4;
-    this.scene.add(this.directionalLight);
-    this.fillLight = new DirectionalLight(11193599, 0.3);
-    this.fillLight.position.set(-1, -0.3, -1).normalize();
+    this.rimLight = new DirectionalLight(
+      this.config.rim.color,
+      this.config.rim.intensity * Math.PI
+    );
+    this.rimLight.position.set(-1e4, -3e3, -5e3);
+    this.scene.add(this.rimLight);
+    this.fillLight = new DirectionalLight(
+      this.config.fill.color,
+      this.config.fill.intensity * Math.PI
+    );
+    this.fillLight.position.set(5e3, -5e3, 1e4);
     this.scene.add(this.fillLight);
-    this.hemisphereLight = new HemisphereLight(6316176, 1052704, 0.4);
-    this.scene.add(this.hemisphereLight);
-    this.ambientPointLight = new PointLight(16777215, 1.2, 1200, 2);
-    this.ambientPointLight.position.set(0, 500, 0);
-    this.scene.add(this.ambientPointLight);
+    console.log("Lighting setup complete with physically correct lights");
   }
   /**
-   * Adjust scene lighting based on current ray type
-   * Standard god rays need more ambient light to prevent planets from being too dark
+   * Update sun light direction based on sun position
+   * For DirectionalLight, we need to set the direction, not just position
    */
-  adjustLightingForRayType(useClaudeRays) {
-    if (!this.ambientLight) return;
-    if (useClaudeRays) {
-      this.ambientLight.intensity = 1;
+  updateSunPosition(sunWorldPosition) {
+    if (!this.sunLight) return;
+    if (this.camera) {
+      const sunToCamera = new Vector3().subVectors(this.camera.position, sunWorldPosition);
+      const lightPosition = sunWorldPosition.clone().sub(sunToCamera.normalize().multiplyScalar(5e4));
+      this.sunLight.position.copy(lightPosition);
+      this.sunLight.target.position.copy(this.camera.position);
     } else {
-      this.ambientLight.intensity = 1.8;
+      this.sunLight.position.set(-1e4, 5e3, -5e3);
+      this.sunLight.target.position.set(0, 0, 0);
+    }
+    this.sunLight.target.updateMatrixWorld();
+  }
+  /**
+   * Adjust lighting intensity
+   */
+  adjustLightingIntensity(factor = 1) {
+    const clampedFactor = MathUtils.clamp(factor, 0.5, 2);
+    if (this.sunLight) {
+      this.sunLight.intensity = this.config.sun.intensity * Math.PI * clampedFactor;
     }
   }
+  /**
+   * Update exposure based on camera position
+   */
+  updateExposure(cameraPosition) {
+    this.renderer.toneMappingExposure = this.config.toneMapping.exposure;
+  }
+  /**
+   * Adjust for volumetric ray type (backward compatibility)
+   */
+  adjustLightingForRayType(useClaudeRays) {
+    if (this.ambientLight) {
+      this.ambientLight.intensity = this.config.ambient.intensity * Math.PI;
+    }
+  }
+  /**
+   * Set shadow quality
+   */
+  setShadowQuality(quality) {
+    const sizes = {
+      low: 2048,
+      medium: 4096,
+      high: 8192,
+      ultra: 16384
+    };
+    const size = sizes[quality] || 4096;
+    if (this.sunLight && this.sunLight.shadow) {
+      this.sunLight.shadow.mapSize.width = size;
+      this.sunLight.shadow.mapSize.height = size;
+      if (this.sunLight.shadow.map) {
+        this.sunLight.shadow.map.dispose();
+        this.sunLight.shadow.map = null;
+      }
+    }
+  }
+  /**
+   * Handle window resize
+   */
+  handleResize() {
+  }
   dispose() {
+    if (this.sunLight && this.sunLight.shadow && this.sunLight.shadow.map) {
+      this.sunLight.shadow.map.dispose();
+    }
+    [this.sunLight, this.ambientLight, this.rimLight, this.fillLight].forEach((light) => {
+      if (light) {
+        if (light.target) {
+          this.scene.remove(light.target);
+        }
+        this.scene.remove(light);
+      }
+    });
   }
 }
 function createVolumetricLightShader() {
@@ -15776,7 +13523,7 @@ class Renderer {
     this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1;
     this.setupRenderer();
-    this.lightingManager = new LightingManager(this.scene);
+    this.lightingManager = new LightingManager(this.scene, this.renderer, this.camera);
     this.postProcessingManager = new PostProcessingManager(this.renderer, this.scene, this.camera);
     this.sceneApiManager = new SceneApiManager(this.scene);
     this.renderHelpers = new RenderHelpers(this.scene);
@@ -15784,6 +13531,7 @@ class Renderer {
     this.lightingManager.setupLighting();
     this.postProcessingManager.setupPostProcessing();
     this.setupResizeHandler();
+    this.scene.lightingManager = this.lightingManager;
     this.renderAlpha = 0;
     console.log("Enhanced renderer initialized successfully");
   }
@@ -15819,6 +13567,9 @@ class Renderer {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    if (this.lightingManager) {
+      this.lightingManager.handleResize();
+    }
     if (this.composer) {
       this.composer.setSize(window.innerWidth, window.innerHeight);
       try {
@@ -18009,98 +15760,91 @@ class SunFlares {
   }
 }
 class SunLighting {
-  constructor(scene, sunGroup) {
+  constructor(scene, sunGroup, lightingManager) {
     this.scene = scene;
     this.sunGroup = sunGroup;
-    this.baseLightIntensity = 2e5;
-    this.sunFlickerIntensity = 1;
-    this.sunFlickerDirection = 0.02;
+    this.lightingManager = lightingManager;
+    this.config = {
+      // Point light for actual sun illumination
+      pointLight: {
+        intensity: 3e3,
+        // High intensity for space scene
+        distance: 1e5,
+        // Very long range
+        decay: 2
+      },
+      // Flicker parameters for realism
+      flicker: {
+        intensity: 1,
+        direction: 0.01,
+        minIntensity: 0.95,
+        maxIntensity: 1.05,
+        speed: 0.015
+      }
+    };
+    this.sunFlickerIntensity = this.config.flicker.intensity;
+    this.sunFlickerDirection = this.config.flicker.direction;
     this.createLights();
   }
   createLights() {
-    this.sunLight = new PointLight(16775920, 2e5, 1e5, 2);
-    this.sunGroup.add(this.sunLight);
-    this.sunDirectionalLight = new DirectionalLight(16775920, 1.5);
-    this.sunDirectionalLight.position.set(0, 0, 0);
-    this.sunDirectionalLight.castShadow = true;
-    this.sunDirectionalLight.shadow.mapSize.width = 4096;
-    this.sunDirectionalLight.shadow.mapSize.height = 4096;
-    this.sunDirectionalLight.shadow.camera.near = 1e3;
-    this.sunDirectionalLight.shadow.camera.far = 1e5;
-    this.sunDirectionalLight.shadow.camera.left = -5e4;
-    this.sunDirectionalLight.shadow.camera.right = 5e4;
-    this.sunDirectionalLight.shadow.camera.top = 5e4;
-    this.sunDirectionalLight.shadow.camera.bottom = -5e4;
-    this.sunDirectionalLight.shadow.bias = -5e-5;
-    this.sunDirectionalLight.shadow.normalBias = 0.02;
-    this.sunDirectionalLight.shadow.radius = 2;
-    if (this.scene && this.scene.renderer) {
-      this.scene.renderer.shadowMap.type = PCFSoftShadowMap;
-    }
-    this.sunGroup.add(this.sunDirectionalLight);
-    this.shadowHelper = null;
+    this.sunPointLight = new PointLight(
+      16775920,
+      this.config.pointLight.intensity,
+      this.config.pointLight.distance,
+      this.config.pointLight.decay
+    );
+    this.sunGroup.add(this.sunPointLight);
   }
   updateForStarType(starType, color, temperature, lightIntensityMultiplier = 1) {
-    if (this.sunLight) {
-      this.sunLight.color.setHex(color);
-      this.sunLight.intensity = (2e5 + temperature / 1e4 * 2e5) * lightIntensityMultiplier;
-      this.sunLight._intensityMultiplier = lightIntensityMultiplier;
+    if (this.sunPointLight) {
+      this.sunPointLight.color.setHex(color);
+      const baseIntensity = this.config.pointLight.intensity;
+      const tempFactor = temperature / 3e4;
+      this.sunPointLight.intensity = baseIntensity * (0.8 + tempFactor * 0.4) * lightIntensityMultiplier;
+      this.sunPointLight._intensityMultiplier = lightIntensityMultiplier;
+    }
+    if (this.lightingManager && this.lightingManager.sunLight) {
+      const blendedColor = new Color(color);
+      const warmWhite = new Color(16774640);
+      blendedColor.lerp(warmWhite, 0.5);
+      this.lightingManager.sunLight.color.copy(blendedColor);
     }
   }
   update(deltaTime, camera, sunType) {
-    this.sunFlickerIntensity += this.sunFlickerDirection;
-    if (this.sunFlickerIntensity > 1.2) {
-      this.sunFlickerIntensity = 1.2;
-      this.sunFlickerDirection = -Math.random() * 0.03;
-    } else if (this.sunFlickerIntensity < 0.9) {
-      this.sunFlickerIntensity = 0.9;
-      this.sunFlickerDirection = Math.random() * 0.03;
+    this.sunFlickerIntensity += this.sunFlickerDirection * this.config.flicker.speed;
+    if (this.sunFlickerIntensity > this.config.flicker.maxIntensity) {
+      this.sunFlickerIntensity = this.config.flicker.maxIntensity;
+      this.sunFlickerDirection = -Math.random() * this.config.flicker.speed;
+    } else if (this.sunFlickerIntensity < this.config.flicker.minIntensity) {
+      this.sunFlickerIntensity = this.config.flicker.minIntensity;
+      this.sunFlickerDirection = Math.random() * this.config.flicker.speed;
     }
-    if (this.sunLight) {
-      const intensityMultiplier = this.sunLight._intensityMultiplier || 1;
-      const baseIntensity = this.baseLightIntensity + (sunType === "G" ? 3e4 : sunType === "O" || sunType === "B" ? 1e5 : sunType === "M" ? 1e4 : 5e4);
-      let viewDependentMultiplier = 1;
+    if (this.sunPointLight) {
+      const intensityMultiplier = this.sunPointLight._intensityMultiplier || 1;
+      const baseIntensity = this.config.pointLight.intensity;
+      const typeBonus = sunType === "G" ? 1.1 : sunType === "O" || sunType === "B" ? 1.3 : sunType === "M" ? 0.9 : 1;
+      this.sunPointLight.intensity = baseIntensity * this.sunFlickerIntensity * intensityMultiplier * typeBonus;
+    }
+    if (this.lightingManager) {
+      this.lightingManager.updateSunPosition(this.sunGroup.position);
+      if (this.lightingManager.sunLight) {
+        const baseIntensity = this.lightingManager.config.sun.intensity;
+        this.lightingManager.sunLight.intensity = baseIntensity * this.sunFlickerIntensity;
+      }
       if (camera) {
-        const viewVector = new Vector3().subVectors(
-          camera.position,
-          this.sunGroup.position
-        ).normalize();
-        const cameraNormal = new Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-        const angleToCam = viewVector.dot(cameraNormal);
-        if (angleToCam > 0.8) {
-          viewDependentMultiplier = 0.5 + (1 - angleToCam) * 0.5;
-        }
+        this.lightingManager.updateExposure(camera.position);
       }
-      this.sunLight.intensity = baseIntensity * this.sunFlickerIntensity * intensityMultiplier * viewDependentMultiplier;
-    }
-    if (this.sunDirectionalLight && camera) {
-      const cameraPos = camera.position.clone();
-      const sunToCam = cameraPos.clone().sub(this.sunGroup.position).normalize();
-      const lightPos = sunToCam.clone().multiplyScalar(-15e3).add(this.sunGroup.position);
-      this.sunDirectionalLight.position.copy(lightPos);
-      this.sunDirectionalLight.target.position.copy(this.sunGroup.position);
-      if (!this.sunDirectionalLight.target.parent) {
-        this.scene.add(this.sunDirectionalLight.target);
-      }
-      const camDistanceToSun = cameraPos.distanceTo(this.sunGroup.position);
-      const shadowSize = Math.max(5e4, camDistanceToSun * 2);
-      this.sunDirectionalLight.shadow.camera.left = -shadowSize;
-      this.sunDirectionalLight.shadow.camera.right = shadowSize;
-      this.sunDirectionalLight.shadow.camera.top = shadowSize;
-      this.sunDirectionalLight.shadow.camera.bottom = -shadowSize;
-      this.sunDirectionalLight.shadow.camera.updateProjectionMatrix();
-      this.sunDirectionalLight.intensity = 1.5 * this.sunFlickerIntensity;
     }
   }
   toggleShadowHelper(enabled) {
-    if (this.shadowHelper && this.shadowHelper.parent) {
-      this.shadowHelper.parent.remove(this.shadowHelper);
-      this.shadowHelper = null;
+    if (enabled && this.lightingManager && this.lightingManager.sunLight) {
+      console.log("Shadow debugging should be enabled through the main LightingManager");
     }
-    if (enabled && this.sunDirectionalLight && this.scene) {
-      this.shadowHelper = new CameraHelper(this.sunDirectionalLight.shadow.camera);
-      this.scene.add(this.shadowHelper);
-      console.log("Shadow camera helper enabled - showing sun shadow frustum");
+  }
+  dispose() {
+    if (this.sunPointLight) {
+      this.sunGroup.remove(this.sunPointLight);
+      this.sunPointLight.dispose();
     }
   }
 }
@@ -18128,7 +15872,8 @@ class Sun {
     this.outerCoronaMaterial = SunShaders.createOuterCoronaMaterial();
     const outerCoronaMesh = new Mesh(outerCoronaGeometry, this.outerCoronaMaterial);
     this.sun.add(outerCoronaMesh);
-    this.lighting = new SunLighting(this.scene, this.sun);
+    const lightingManager = this.scene.lightingManager || null;
+    this.lighting = new SunLighting(this.scene, this.sun, lightingManager);
     this.flares = new SunFlares(this.scene, this.sun);
   }
   // Update sun based on star type (O, B, A, F, G, K, M)
@@ -18428,106 +16173,96 @@ class PlanetMaterials {
       customTexture.colorSpace = SRGBColorSpace;
       return new MeshStandardMaterial({
         map: customTexture,
-        roughness: 0.7,
-        metalness: 0.2,
+        roughness: 0.5,
+        metalness: 0,
         flatShading: false,
-        emissive: new Color(planet.color || 16777215),
-        emissiveIntensity: 0.2,
-        emissiveMap: customTexture
+        emissive: new Color(planet.color || 2236962),
+        emissiveIntensity: 0.3
       });
     }
     switch (planet.name) {
       case "Mercury":
         return new MeshStandardMaterial({
           map: planetTextures.mercury,
-          roughness: 0.7,
-          metalness: 0.2,
+          roughness: 0.95,
+          metalness: 0,
           flatShading: false,
-          emissive: new Color(5592405),
-          emissiveIntensity: 0.2,
-          emissiveMap: planetTextures.mercury
+          emissive: new Color(2763306),
+          emissiveIntensity: 0.15
         });
       case "Venus":
         return new MeshStandardMaterial({
           map: planetTextures.venus.surface,
-          roughness: 0.6,
-          metalness: 0.1,
+          roughness: 0.85,
+          metalness: 0,
           flatShading: false,
-          emissive: new Color(15125660),
-          emissiveIntensity: 0.25,
-          emissiveMap: planetTextures.venus.surface
+          emissive: new Color(4469538),
+          emissiveIntensity: 0.2
         });
       case "Earth":
         return new MeshStandardMaterial({
           map: planetTextures.earth,
-          roughness: 0.5,
-          metalness: 0.1,
+          roughness: 0.75,
+          metalness: 0,
           flatShading: false,
-          emissive: new Color(4286945),
-          emissiveIntensity: 0.2,
-          emissiveMap: planetTextures.earth
+          emissive: new Color(1122867),
+          emissiveIntensity: 0.18
         });
       case "Mars":
         return new MeshStandardMaterial({
           map: planetTextures.mars,
-          roughness: 0.7,
-          metalness: 0.1,
+          roughness: 0.9,
+          metalness: 0,
           flatShading: false,
-          emissive: new Color(13000005),
-          emissiveIntensity: 0.25,
-          emissiveMap: planetTextures.mars
+          emissive: new Color(4465169),
+          emissiveIntensity: 0.18
         });
       case "Jupiter":
         return new MeshStandardMaterial({
           map: planetTextures.jupiter,
-          roughness: 0.5,
+          roughness: 0.8,
           metalness: 0,
           flatShading: false,
-          emissive: new Color(14070398),
-          emissiveIntensity: 0.2,
-          emissiveMap: planetTextures.jupiter
+          emissive: new Color(3351057),
+          emissiveIntensity: 0.15
         });
       case "Saturn":
         return new MeshStandardMaterial({
           map: planetTextures.saturn.surface,
-          roughness: 0.6,
-          metalness: 0.1,
+          roughness: 0.85,
+          metalness: 0,
           flatShading: false,
-          emissive: new Color(15787465),
-          emissiveIntensity: 0.2,
-          emissiveMap: planetTextures.saturn.surface
+          emissive: new Color(3351057),
+          emissiveIntensity: 0.15
         });
       case "Uranus":
         return new MeshStandardMaterial({
           map: planetTextures.uranus,
-          roughness: 0.5,
+          roughness: 0.85,
           metalness: 0,
           flatShading: false,
-          emissive: new Color(8960972),
-          emissiveIntensity: 0.25,
-          emissiveMap: planetTextures.uranus
+          emissive: new Color(1122867),
+          emissiveIntensity: 0.14
         });
       case "Neptune":
         return new MeshStandardMaterial({
           map: planetTextures.neptune,
-          roughness: 0.5,
+          roughness: 0.85,
           metalness: 0,
           flatShading: false,
-          emissive: new Color(6267867),
-          emissiveIntensity: 0.25,
-          emissiveMap: planetTextures.neptune
+          emissive: new Color(1122884),
+          emissiveIntensity: 0.14
         });
       default:
         const textureIndex = Math.floor(Math.random() * proceduralTextures.length);
         return new MeshStandardMaterial({
           map: proceduralTextures[textureIndex],
-          roughness: 0.6,
-          metalness: 0.2,
+          roughness: 0.85,
+          metalness: 0,
           color: new Color(planet.color),
           flatShading: false,
-          emissive: new Color(planet.color),
-          emissiveIntensity: 0.3,
-          emissiveMap: proceduralTextures[textureIndex]
+          emissive: new Color(2236962),
+          emissiveIntensity: 0.15
         });
     }
   }
@@ -38479,4 +36214,4 @@ export {
   System as h,
   combat as i
 };
-//# sourceMappingURL=modules-BnzCGJKr.js.map
+//# sourceMappingURL=modules-BUUuAvZs.js.map

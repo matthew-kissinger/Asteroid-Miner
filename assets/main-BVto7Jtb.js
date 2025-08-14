@@ -1,11 +1,11 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/modules-BnzCGJKr.js","assets/core-CQR7b8gS.js","assets/three-l6xBJAGV.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/modules-BUUuAvZs.js","assets/core-CQR7b8gS.js","assets/three-BPefaS9B.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { MessageBus } from "./core-CQR7b8gS.js";
-import { g as getAbsolutePath, _ as __vitePreload, A as AudioManager, b as Renderer, P as Physics, c as Environment, d as Spaceship, e as UI, f as Controls } from "./modules-BnzCGJKr.js";
-import { aU as THREE, g as Vector3, z as BufferGeometry, B as BufferAttribute, v as MeshStandardMaterial, E as Mesh, al as BoxGeometry, as as CylinderGeometry, an as SphereGeometry, ad as ShaderMaterial, aj as AdditiveBlending, K as Points, a3 as Texture, w as DoubleSide, C as Color, aq as RingGeometry, U as Group, s as PointsMaterial, ak as Euler, x as MeshBasicMaterial } from "./three-l6xBJAGV.js";
-import { g as getGlobalPoolRegistry } from "./index-AKLStU52.js";
+import { g as getAbsolutePath, _ as __vitePreload, A as AudioManager, b as Renderer, P as Physics, c as Environment, d as Spaceship, e as UI, f as Controls } from "./modules-BUUuAvZs.js";
+import { aS as THREE, g as Vector3, z as BufferGeometry, B as BufferAttribute, v as MeshStandardMaterial, E as Mesh, al as BoxGeometry, ar as CylinderGeometry, an as SphereGeometry, ad as ShaderMaterial, aj as AdditiveBlending, K as Points, a3 as Texture, w as DoubleSide, C as Color, aC as RingGeometry, U as Group, s as PointsMaterial, ak as Euler, x as MeshBasicMaterial } from "./three-BPefaS9B.js";
+import { g as getGlobalPoolRegistry } from "./index-DliE-3WW.js";
 window.DEBUG_MODE = false;
 function initializeGlobals() {
   if (!window.THREE) {
@@ -2068,7 +2068,7 @@ class StartupSequence {
       this.loadAudioAsync();
       if (!this.game.combat) {
         const { Combat } = await __vitePreload(async () => {
-          const { Combat: Combat2 } = await import("./modules-BnzCGJKr.js").then((n) => n.i);
+          const { Combat: Combat2 } = await import("./modules-BUUuAvZs.js").then((n) => n.i);
           return { Combat: Combat2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0);
         this.game.combat = new Combat(this.game.scene, this.game.spaceship);
@@ -2647,7 +2647,6 @@ class ObjectPools {
       window.objectPool.createPool("hitEffect", () => {
         const material = new MeshBasicMaterial({
           color: 16733440,
-          emissive: 16733440,
           transparent: true,
           opacity: 0.8
         });
@@ -2676,7 +2675,6 @@ class ObjectPools {
       const particleGeometry = new SphereGeometry(0.5, 4, 4);
       const particleMaterial = new MeshBasicMaterial({
         color: 16733440,
-        emissive: 16733440,
         transparent: true
       });
       window.objectPool.createPool("particle", () => {
@@ -3202,4 +3200,4 @@ if (document.readyState === "loading") {
 export {
   Game
 };
-//# sourceMappingURL=main-CjoPqmLB.js.map
+//# sourceMappingURL=main-BVto7Jtb.js.map
