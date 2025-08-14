@@ -1,0 +1,723 @@
+{
+  "js/components/combat/enemyAI.js": [
+    "js/core/component.js",
+    "js/components/transform.js",
+    "js/components/combat/healthComponent.js"
+  ],
+  "js/components/combat/healthComponent.js": [
+    "js/core/component.js"
+  ],
+  "js/components/mining/mineable.js": [
+    "js/core/component.js"
+  ],
+  "js/components/physics/rigidbody.js": [
+    "js/core/component.js"
+  ],
+  "js/components/rendering/mesh.js": [
+    "js/core/component.js"
+  ],
+  "js/components/rendering/trail.js": [
+    "js/core/component.js"
+  ],
+  "js/components/spaceship/cargo.js": [
+    "js/core/component.js"
+  ],
+  "js/components/spaceship/deployableLaser.js": [
+    "js/core/component.js"
+  ],
+  "js/components/spaceship/miningLaser.js": [
+    "js/core/component.js"
+  ],
+  "js/components/spaceship/pickupable.js": [
+    "js/core/component.js"
+  ],
+  "js/components/spaceship/shipState.js": [
+    "js/core/component.js"
+  ],
+  "js/components/spaceship/thruster.js": [
+    "js/core/component.js"
+  ],
+  "js/components/transform.js": [
+    "js/core/component.js"
+  ],
+  "js/core/component.js": [],
+  "js/core/difficultyManager.js": [],
+  "js/core/entity.js": [],
+  "js/core/EntityIndex.js": [],
+  "js/core/entityManager.js": [
+    "js/core/entity.js"
+  ],
+  "js/core/events.js": [],
+  "js/core/messageBus.js": [
+    "js/core/events.js"
+  ],
+  "js/core/optimized/OptimizedProjectileStore.js": [],
+  "js/core/spatial/SpatialHash.js": [],
+  "js/core/system.js": [],
+  "js/core/systemManager.js": [],
+  "js/core/world.js": [
+    "js/core/entityManager.js",
+    "js/core/systemManager.js",
+    "js/core/messageBus.js",
+    "js/core/spatial/SpatialHash.js",
+    "js/core/EntityIndex.js"
+  ],
+  "js/entities/spaceship.js": [
+    "js/components/transform.js",
+    "js/components/physics/rigidbody.js",
+    "js/components/rendering/mesh.js",
+    "js/components/spaceship/thruster.js",
+    "js/components/spaceship/miningLaser.js",
+    "js/components/spaceship/cargo.js"
+  ],
+  "js/main/audioUpdater.js": [],
+  "js/main/bootstrap.js": [],
+  "js/main/diagnostics.js": [
+    "js/modules/debug/perfOverlay.js"
+  ],
+  "js/main/difficultyManager.js": [],
+  "js/main/gameInitializer.js": [
+    "js/modules/renderer.js",
+    "js/modules/spaceship.js",
+    "js/modules/physics.js",
+    "js/modules/environment.js",
+    "js/modules/controls.js",
+    "js/modules/ui.js",
+    "js/modules/audio/audio.js"
+  ],
+  "js/main/gameLifecycle.js": [],
+  "js/main/gameLoop.js": [],
+  "js/main/globals.js": [
+    "js/core/messageBus.js",
+    "js/modules/pooling/PoolRegistry.js"
+  ],
+  "js/main/hordeMode.js": [],
+  "js/main/objectPools.js": [],
+  "js/main/startupSequence.js": [
+    "js/modules/introSequence.js"
+  ],
+  "js/main.js": [
+    "js/modules/combat.js",
+    "js/main/globals.js",
+    "js/main/startupSequence.js",
+    "js/main/gameLoop.js",
+    "js/main/diagnostics.js",
+    "js/main/gameInitializer.js",
+    "js/main/objectPools.js",
+    "js/main/difficultyManager.js",
+    "js/main/hordeMode.js",
+    "js/main/audioUpdater.js",
+    "js/main/gameLifecycle.js"
+  ],
+  "js/modules/audio/audio.js": [
+    "js/modules/audio/core/context.js",
+    "js/modules/audio/core/loader.js",
+    "js/modules/audio/music/playlist.js",
+    "js/modules/audio/music/player.js",
+    "js/modules/audio/effects/soundPlayer.js",
+    "js/modules/audio/mobile/enabler.js"
+  ],
+  "js/modules/audio/core/context.js": [],
+  "js/modules/audio/core/loader.js": [
+    "js/utils/pathUtils.js"
+  ],
+  "js/modules/audio/effects/soundPlayer.js": [],
+  "js/modules/audio/mobile/enabler.js": [],
+  "js/modules/audio/music/player.js": [],
+  "js/modules/audio/music/playlist.js": [
+    "js/utils/pathUtils.js"
+  ],
+  "js/modules/combat/aiAndSpawners.js": [],
+  "js/modules/combat/combatLogic.js": [],
+  "js/modules/combat/combatManager.js": [],
+  "js/modules/combat/effects/explosionEffects.js": [],
+  "js/modules/combat/effects/geometryManager.js": [],
+  "js/modules/combat/effects/materialManager.js": [],
+  "js/modules/combat/effects/projectileEffects.js": [],
+  "js/modules/combat/effects.js": [
+    "js/modules/combat/effects/explosionEffects.js",
+    "js/modules/combat/effects/materialManager.js",
+    "js/modules/combat/effects/geometryManager.js",
+    "js/modules/combat/effects/projectileEffects.js"
+  ],
+  "js/modules/combat/events.js": [],
+  "js/modules/combat/registerSystems.js": [
+    "js/systems/combat/combatSystem.js",
+    "js/systems/combat/enemySystem.js",
+    "js/systems/rendering/renderSystem.js",
+    "js/systems/physics/collisionSystem.js",
+    "js/systems/rendering/visualEffectsSystem.js",
+    "js/systems/rendering/trailSystem.js",
+    "js/systems/weapons/deployableLaserSystem.js",
+    "js/systems/deployables/deploymentSystem.js"
+  ],
+  "js/modules/combat/worldSetup.js": [
+    "js/core/world.js"
+  ],
+  "js/modules/combat.js": [
+    "js/modules/combat/worldSetup.js",
+    "js/modules/combat/registerSystems.js",
+    "js/modules/combat/events.js",
+    "js/modules/combat/effects.js",
+    "js/modules/combat/aiAndSpawners.js",
+    "js/modules/combat/combatLogic.js",
+    "js/modules/pooling/ProjectilePoolManager.js"
+  ],
+  "js/modules/controls/docking/dockingLogic.js": [],
+  "js/modules/controls/docking/proximityDetector.js": [],
+  "js/modules/controls/docking/uiIntegration.js": [],
+  "js/modules/controls/dockingSystem.js": [
+    "js/modules/controls/docking/proximityDetector.js",
+    "js/modules/controls/docking/dockingLogic.js",
+    "js/modules/controls/docking/uiIntegration.js"
+  ],
+  "js/modules/controls/gamepadHandler.js": [],
+  "js/modules/controls/inputHandler.js": [],
+  "js/modules/controls/mining/laserControl.js": [],
+  "js/modules/controls/mining/resourceExtraction.js": [],
+  "js/modules/controls/mining/targetValidation.js": [],
+  "js/modules/controls/mining/uiUpdates.js": [],
+  "js/modules/controls/mining/visualEffects.js": [],
+  "js/modules/controls/miningSystem.js": [
+    "js/modules/controls/mining/laserControl.js",
+    "js/modules/controls/mining/targetValidation.js",
+    "js/modules/controls/mining/resourceExtraction.js",
+    "js/modules/controls/mining/uiUpdates.js",
+    "js/modules/controls/mining/visualEffects.js"
+  ],
+  "js/modules/controls/targetingSystem.js": [],
+  "js/modules/controls/touch/actions/miningHandler.js": [],
+  "js/modules/controls/touch/actions/systemActions.js": [],
+  "js/modules/controls/touch/actions/weaponHandler.js": [],
+  "js/modules/controls/touch/input/gestureDetector.js": [],
+  "js/modules/controls/touch/input/joystickHandler.js": [],
+  "js/modules/controls/touch/touchControls.js": [
+    "js/modules/controls/touch/ui/joystickZones.js",
+    "js/modules/controls/touch/ui/actionButtons.js",
+    "js/modules/controls/touch/input/joystickHandler.js",
+    "js/modules/controls/touch/input/gestureDetector.js",
+    "js/modules/controls/touch/actions/miningHandler.js",
+    "js/modules/controls/touch/actions/weaponHandler.js",
+    "js/modules/controls/touch/actions/systemActions.js"
+  ],
+  "js/modules/controls/touch/ui/actionButtons.js": [],
+  "js/modules/controls/touch/ui/joystickZones.js": [],
+  "js/modules/controls/touchControls.js": [
+    "js/modules/controls/touch/touchControls.js"
+  ],
+  "js/modules/controls.js": [
+    "js/modules/controls/inputHandler.js",
+    "js/modules/controls/gamepadHandler.js",
+    "js/modules/controls/miningSystem.js",
+    "js/modules/controls/targetingSystem.js",
+    "js/modules/controls/dockingSystem.js",
+    "js/modules/controls/touchControls.js",
+    "js/utils/mobileDetector.js"
+  ],
+  "js/modules/debug/perfOverlay.js": [],
+  "js/modules/environment/anomalies/anomalyRegistry.js": [
+    "js/modules/environment/anomalies/vortex.js",
+    "js/modules/environment/anomalies/crystalCluster.js",
+    "js/modules/environment/anomalies/nebulaNexus.js",
+    "js/modules/environment/anomalies/quantumFlux.js",
+    "js/modules/environment/anomalies/darkMatter.js"
+  ],
+  "js/modules/environment/anomalies/crystalCluster.js": [],
+  "js/modules/environment/anomalies/darkMatter.js": [],
+  "js/modules/environment/anomalies/nebulaNexus.js": [],
+  "js/modules/environment/anomalies/quantumFlux.js": [],
+  "js/modules/environment/anomalies/vortex.js": [],
+  "js/modules/environment/asteroidBelt.js": [],
+  "js/modules/environment/core/regionManager.js": [],
+  "js/modules/environment/core/sceneInitializer.js": [
+    "js/modules/environment/skybox.js",
+    "js/modules/environment/sun.js",
+    "js/modules/environment/planets.js",
+    "js/modules/environment/stargate.js",
+    "js/modules/environment/starSystemGenerator.js"
+  ],
+  "js/modules/environment/core/systemTransitionManager.js": [],
+  "js/modules/environment/dreadnought/starDreadnought.js": [
+    "js/modules/environment/dreadnought/structure/hull.js",
+    "js/modules/environment/dreadnought/structure/bridge.js",
+    "js/modules/environment/dreadnought/systems/engines.js",
+    "js/modules/environment/dreadnought/systems/weapons.js",
+    "js/modules/environment/dreadnought/teleporter/beam.js",
+    "js/modules/environment/dreadnought/teleporter/particles.js",
+    "js/modules/environment/dreadnought/teleporter/controller.js"
+  ],
+  "js/modules/environment/dreadnought/structure/bridge.js": [],
+  "js/modules/environment/dreadnought/structure/hull.js": [],
+  "js/modules/environment/dreadnought/systems/engines.js": [],
+  "js/modules/environment/dreadnought/systems/weapons.js": [],
+  "js/modules/environment/dreadnought/teleporter/beam.js": [],
+  "js/modules/environment/dreadnought/teleporter/controller.js": [
+    "js/modules/environment/dreadnought/teleporter/particles.js"
+  ],
+  "js/modules/environment/dreadnought/teleporter/particles.js": [],
+  "js/modules/environment/generator/systemConfig.js": [],
+  "js/modules/environment/generator/systemFactory.js": [
+    "js/modules/environment/generator/systemConfig.js",
+    "js/modules/environment/generator/systemNames.js",
+    "js/modules/environment/generator/systemUtils.js"
+  ],
+  "js/modules/environment/generator/systemNames.js": [],
+  "js/modules/environment/generator/systemUtils.js": [
+    "js/modules/environment/generator/systemConfig.js"
+  ],
+  "js/modules/environment/planets/planetFactory.js": [
+    "js/modules/environment/planets/planetMaterials.js"
+  ],
+  "js/modules/environment/planets/planetGenerator.js": [],
+  "js/modules/environment/planets/planetMaterials.js": [
+    "js/modules/environment/planets/planetTextures.js"
+  ],
+  "js/modules/environment/planets/planetTextures.js": [],
+  "js/modules/environment/planets.js": [
+    "js/modules/environment/planets/planetGenerator.js",
+    "js/modules/environment/planets/planetFactory.js"
+  ],
+  "js/modules/environment/portalRim.js": [
+    "js/core/events.js"
+  ],
+  "js/modules/environment/skybox.js": [],
+  "js/modules/environment/spaceAnomalies.js": [
+    "js/modules/environment/anomalies/anomalyRegistry.js"
+  ],
+  "js/modules/environment/starDreadnought.js": [],
+  "js/modules/environment/stargate.js": [],
+  "js/modules/environment/starSystemGenerator.js": [
+    "js/modules/environment/generator/systemFactory.js",
+    "js/modules/environment/generator/systemUtils.js"
+  ],
+  "js/modules/environment/sun/sunFlares.js": [],
+  "js/modules/environment/sun/sunLighting.js": [],
+  "js/modules/environment/sun/sunShaders.js": [],
+  "js/modules/environment/sun.js": [
+    "js/modules/environment/sun/sunShaders.js",
+    "js/modules/environment/sun/sunFlares.js",
+    "js/modules/environment/sun/sunLighting.js"
+  ],
+  "js/modules/environment/systemTransition.js": [],
+  "js/modules/environment/vibeVersePortals.js": [],
+  "js/modules/environment.js": [
+    "js/modules/environment/core/sceneInitializer.js",
+    "js/modules/environment/core/regionManager.js",
+    "js/modules/environment/core/systemTransitionManager.js",
+    "js/modules/environment/asteroidBelt.js",
+    "js/modules/environment/systemTransition.js",
+    "js/modules/ui/customSystemCreator.js",
+    "js/modules/environment/vibeVersePortals.js",
+    "js/modules/environment/spaceAnomalies.js"
+  ],
+  "js/modules/game/eventHandlers.js": [],
+  "js/modules/game/helpers.js": [],
+  "js/modules/game/initialization.js": [
+    "js/modules/renderer.js",
+    "js/modules/spaceship.js",
+    "js/modules/physics.js",
+    "js/modules/environment.js",
+    "js/modules/controls.js",
+    "js/modules/ui.js",
+    "js/modules/combat/combatManager.js",
+    "js/modules/combat.js",
+    "js/modules/audio/audio.js",
+    "js/core/messageBus.js"
+  ],
+  "js/modules/game/lifecycle.js": [],
+  "js/modules/game/stateManager.js": [],
+  "js/modules/game/systemCoordinator.js": [],
+  "js/modules/game.js": [
+    "js/modules/game/initialization.js",
+    "js/modules/game/stateManager.js",
+    "js/modules/game/systemCoordinator.js",
+    "js/modules/game/lifecycle.js",
+    "js/modules/game/eventHandlers.js",
+    "js/modules/game/helpers.js"
+  ],
+  "js/modules/intro/animation/arrivalPhase.js": [],
+  "js/modules/intro/animation/departurePhase.js": [],
+  "js/modules/intro/audio/dialogueManager.js": [
+    "js/utils/pathUtils.js"
+  ],
+  "js/modules/intro/audio/soundEffects.js": [],
+  "js/modules/intro/effects/portalEffect.js": [],
+  "js/modules/intro/ui/dialogueSystem.js": [
+    "js/modules/intro/audio/dialogueManager.js"
+  ],
+  "js/modules/introSequence.js": [
+    "js/modules/environment/starDreadnought.js",
+    "js/modules/intro/audio/soundEffects.js",
+    "js/modules/intro/audio/dialogueManager.js",
+    "js/modules/intro/effects/portalEffect.js",
+    "js/modules/intro/ui/dialogueSystem.js",
+    "js/modules/intro/animation/arrivalPhase.js",
+    "js/modules/intro/animation/departurePhase.js"
+  ],
+  "js/modules/physics.js": [],
+  "js/modules/pooling/ObjectPool.js": [],
+  "js/modules/pooling/PoolRegistry.js": [],
+  "js/modules/pooling/ProjectilePoolManager.js": [
+    "js/modules/pooling/projectiles/types/laser.js",
+    "js/modules/pooling/projectiles/types/missile.js",
+    "js/modules/pooling/projectiles/types/plasma.js",
+    "js/modules/pooling/projectiles/types/bullet.js",
+    "js/modules/pooling/projectiles/effects/trails.js",
+    "js/modules/pooling/projectiles/effects/impacts.js",
+    "js/modules/pooling/projectiles/effects/muzzleFlash.js",
+    "js/modules/pooling/ObjectPool.js"
+  ],
+  "js/modules/pooling/projectiles/effects/impacts/debrisFactory.js": [],
+  "js/modules/pooling/projectiles/effects/impacts/explosionFactory.js": [],
+  "js/modules/pooling/projectiles/effects/impacts/impactTypeHandler.js": [],
+  "js/modules/pooling/projectiles/effects/impacts/sparkFactory.js": [],
+  "js/modules/pooling/projectiles/effects/impacts.js": [
+    "js/modules/pooling/ObjectPool.js",
+    "js/modules/pooling/projectiles/effects/impacts/explosionFactory.js",
+    "js/modules/pooling/projectiles/effects/impacts/sparkFactory.js",
+    "js/modules/pooling/projectiles/effects/impacts/debrisFactory.js",
+    "js/modules/pooling/projectiles/effects/impacts/impactTypeHandler.js"
+  ],
+  "js/modules/pooling/projectiles/effects/muzzleFlash.js": [
+    "js/modules/pooling/ObjectPool.js"
+  ],
+  "js/modules/pooling/projectiles/effects/trails.js": [
+    "js/modules/pooling/ObjectPool.js"
+  ],
+  "js/modules/pooling/projectiles/types/bullet.js": [
+    "js/modules/pooling/ObjectPool.js"
+  ],
+  "js/modules/pooling/projectiles/types/laser.js": [
+    "js/modules/pooling/ObjectPool.js"
+  ],
+  "js/modules/pooling/projectiles/types/missile.js": [
+    "js/modules/pooling/ObjectPool.js"
+  ],
+  "js/modules/pooling/projectiles/types/plasma.js": [
+    "js/modules/pooling/ObjectPool.js"
+  ],
+  "js/modules/renderer/helpers.js": [],
+  "js/modules/renderer/lighting.js": [],
+  "js/modules/renderer/post.js": [
+    "js/modules/renderer/shaders.js"
+  ],
+  "js/modules/renderer/sceneApi.js": [],
+  "js/modules/renderer/shaders.js": [],
+  "js/modules/renderer/volumetricLighting.js": [],
+  "js/modules/renderer.js": [
+    "js/modules/renderer/lighting.js",
+    "js/modules/renderer/post.js",
+    "js/modules/renderer/sceneApi.js",
+    "js/modules/renderer/helpers.js",
+    "js/modules/renderer/volumetricLighting.js"
+  ],
+  "js/modules/spaceship/effects/visualEffects.js": [],
+  "js/modules/spaceship/model/shipModel.js": [],
+  "js/modules/spaceship/spaceship.js": [
+    "js/modules/trail.js",
+    "js/modules/spaceship/model/shipModel.js",
+    "js/modules/spaceship/systems/upgrades.js",
+    "js/modules/spaceship/systems/docking.js",
+    "js/modules/spaceship/systems/services.js",
+    "js/modules/spaceship/effects/visualEffects.js",
+    "js/modules/spaceship/sync/healthSync.js"
+  ],
+  "js/modules/spaceship/sync/healthSync.js": [],
+  "js/modules/spaceship/systems/docking.js": [],
+  "js/modules/spaceship/systems/services.js": [],
+  "js/modules/spaceship/systems/upgrades.js": [],
+  "js/modules/spaceship.js": [],
+  "js/modules/trail.js": [],
+  "js/modules/ui/blackjackGame.js": [
+    "js/utils/mobileDetector.js",
+    "js/modules/ui/components/blackjack/gameView.js",
+    "js/modules/ui/components/blackjack/cardDeck.js",
+    "js/modules/ui/components/blackjack/gameLogic.js",
+    "js/modules/ui/components/blackjack/animations.js",
+    "js/modules/ui/components/blackjack/betting.js",
+    "js/modules/ui/components/blackjack/eventHandlers.js"
+  ],
+  "js/modules/ui/combatDisplay.js": [
+    "js/modules/ui/components/combat/styles.js",
+    "js/modules/ui/components/combat/indicators.js",
+    "js/modules/ui/components/combat/enemyDisplay.js",
+    "js/modules/ui/components/combat/weaponDisplay.js",
+    "js/modules/ui/components/combat/animations.js",
+    "js/modules/ui/components/combat/eventHandlers.js",
+    "js/modules/ui/components/combat/helpers.js"
+  ],
+  "js/modules/ui/components/blackjack/animations.js": [],
+  "js/modules/ui/components/blackjack/betting.js": [],
+  "js/modules/ui/components/blackjack/cardDeck.js": [],
+  "js/modules/ui/components/blackjack/eventHandlers.js": [],
+  "js/modules/ui/components/blackjack/gameLogic.js": [],
+  "js/modules/ui/components/blackjack/gameView.js": [
+    "js/modules/ui/components/blackjack/styles.js"
+  ],
+  "js/modules/ui/components/blackjack/styles.js": [],
+  "js/modules/ui/components/combat/animations.js": [],
+  "js/modules/ui/components/combat/enemyDisplay.js": [],
+  "js/modules/ui/components/combat/eventHandlers.js": [],
+  "js/modules/ui/components/combat/helpers.js": [],
+  "js/modules/ui/components/combat/indicators.js": [],
+  "js/modules/ui/components/combat/styles.js": [],
+  "js/modules/ui/components/combat/weaponDisplay.js": [],
+  "js/modules/ui/components/customSystem/eventHandlers.js": [],
+  "js/modules/ui/components/customSystem/formView.js": [],
+  "js/modules/ui/components/customSystem/helpers.js": [],
+  "js/modules/ui/components/customSystem/preview.js": [],
+  "js/modules/ui/components/customSystem/styles.js": [],
+  "js/modules/ui/components/customSystem/systemData.js": [],
+  "js/modules/ui/components/customSystem/validation.js": [],
+  "js/modules/ui/components/hud/displays.js": [
+    "js/modules/ui/components/hud/styles.js"
+  ],
+  "js/modules/ui/components/hud/eventHandlers.js": [
+    "js/modules/ui/components/hud/styles.js"
+  ],
+  "js/modules/ui/components/hud/helpers.js": [],
+  "js/modules/ui/components/hud/minimap.js": [
+    "js/modules/ui/components/hud/styles.js"
+  ],
+  "js/modules/ui/components/hud/notifications.js": [
+    "js/modules/ui/components/hud/styles.js"
+  ],
+  "js/modules/ui/components/hud/statusIndicators.js": [
+    "js/modules/ui/components/hud/styles.js"
+  ],
+  "js/modules/ui/components/hud/styles.js": [],
+  "js/modules/ui/components/settings/audioSettings.js": [],
+  "js/modules/ui/components/settings/eventHandlers.js": [],
+  "js/modules/ui/components/settings/graphicsSettings.js": [],
+  "js/modules/ui/components/settings/helpers.js": [],
+  "js/modules/ui/components/settings/persistence.js": [],
+  "js/modules/ui/components/settings/settingsView.js": [],
+  "js/modules/ui/components/settings/styles.js": [],
+  "js/modules/ui/components/stargate/eventHandlers.js": [],
+  "js/modules/ui/components/stargate/helpers.js": [],
+  "js/modules/ui/components/stargate/missions.js": [],
+  "js/modules/ui/components/stargate/systemsView.js": [],
+  "js/modules/ui/components/stargate/terminal/commands/handlers.js": [],
+  "js/modules/ui/components/stargate/terminal/commands/parser.js": [],
+  "js/modules/ui/components/stargate/terminal/content/ascii.js": [],
+  "js/modules/ui/components/stargate/terminal/content/messages.js": [],
+  "js/modules/ui/components/stargate/terminal/display/effects.js": [],
+  "js/modules/ui/components/stargate/terminal/display/screen.js": [],
+  "js/modules/ui/components/stargate/terminal/input/keyboard.js": [],
+  "js/modules/ui/components/stargate/terminalView.js": [
+    "js/modules/ui/components/stargate/terminal/display/screen.js",
+    "js/modules/ui/components/stargate/terminal/display/effects.js",
+    "js/modules/ui/components/stargate/terminal/commands/parser.js",
+    "js/modules/ui/components/stargate/terminal/commands/handlers.js",
+    "js/modules/ui/components/stargate/terminal/content/messages.js",
+    "js/modules/ui/components/stargate/terminal/content/ascii.js",
+    "js/modules/ui/components/stargate/terminal/input/keyboard.js"
+  ],
+  "js/modules/ui/components/stargate/tradingView.js": [],
+  "js/modules/ui/components/stargate/upgrades.js": [],
+  "js/modules/ui/controlsMenu.js": [],
+  "js/modules/ui/customSystemCreator.js": [
+    "js/modules/utils/apiClient.js",
+    "js/modules/ui/components/customSystem/styles.js",
+    "js/modules/ui/components/customSystem/validation.js",
+    "js/modules/ui/components/customSystem/systemData.js",
+    "js/modules/ui/components/customSystem/formView.js",
+    "js/modules/ui/components/customSystem/preview.js",
+    "js/modules/ui/components/customSystem/eventHandlers.js",
+    "js/modules/ui/components/customSystem/helpers.js"
+  ],
+  "js/modules/ui/gameOverScreen.js": [
+    "js/utils/pathUtils.js"
+  ],
+  "js/modules/ui/hud.js": [
+    "js/modules/ui/components/hud/styles.js",
+    "js/modules/ui/components/hud/displays.js",
+    "js/modules/ui/components/hud/notifications.js",
+    "js/modules/ui/components/hud/minimap.js",
+    "js/modules/ui/components/hud/statusIndicators.js",
+    "js/modules/ui/components/hud/eventHandlers.js",
+    "js/modules/ui/components/hud/helpers.js"
+  ],
+  "js/modules/ui/miningDisplay.js": [],
+  "js/modules/ui/mobileHUD.js": [],
+  "js/modules/ui/settings.js": [
+    "js/utils/mobileDetector.js",
+    "js/modules/ui/components/settings/styles.js",
+    "js/modules/ui/components/settings/audioSettings.js",
+    "js/modules/ui/components/settings/graphicsSettings.js",
+    "js/modules/ui/components/settings/settingsView.js",
+    "js/modules/ui/components/settings/persistence.js",
+    "js/modules/ui/components/settings/eventHandlers.js",
+    "js/modules/ui/components/settings/helpers.js"
+  ],
+  "js/modules/ui/stargateInterface.js": [
+    "js/utils/mobileDetector.js",
+    "js/modules/ui/components/stargate/terminalView.js",
+    "js/modules/ui/components/stargate/systemsView.js",
+    "js/modules/ui/components/stargate/tradingView.js",
+    "js/modules/ui/components/stargate/upgrades.js",
+    "js/modules/ui/components/stargate/missions.js",
+    "js/modules/ui/components/stargate/eventHandlers.js",
+    "js/modules/ui/components/stargate/helpers.js"
+  ],
+  "js/modules/ui/starmap/canvasRenderer.js": [],
+  "js/modules/ui/starmap/dataManager.js": [],
+  "js/modules/ui/starmap/navigationLogic.js": [],
+  "js/modules/ui/starmap/uiCreator.js": [],
+  "js/modules/ui/starMap.js": [
+    "js/utils/mobileDetector.js",
+    "js/modules/ui/starmap/canvasRenderer.js",
+    "js/modules/ui/starmap/navigationLogic.js",
+    "js/modules/ui/starmap/dataManager.js",
+    "js/modules/ui/starmap/uiCreator.js"
+  ],
+  "js/modules/ui/startScreen.js": [],
+  "js/modules/ui/targetingUI.js": [],
+  "js/modules/ui.js": [
+    "js/modules/ui/hud.js",
+    "js/modules/ui/mobileHUD.js",
+    "js/modules/ui/miningDisplay.js",
+    "js/modules/ui/targetingUI.js",
+    "js/modules/ui/stargateInterface.js",
+    "js/modules/ui/gameOverScreen.js",
+    "js/modules/ui/controlsMenu.js",
+    "js/modules/ui/starMap.js",
+    "js/modules/ui/blackjackGame.js",
+    "js/modules/ui/settings.js",
+    "js/modules/ui/startScreen.js",
+    "js/utils/memoryManager.js",
+    "js/utils/mobileDetector.js"
+  ],
+  "js/modules/utils/apiClient.js": [],
+  "js/systems/combat/combatSystem.js": [
+    "js/core/system.js",
+    "js/components/combat/healthComponent.js",
+    "js/components/transform.js",
+    "js/components/physics/rigidbody.js",
+    "js/components/rendering/mesh.js",
+    "js/utils/memoryManager.js"
+  ],
+  "js/systems/combat/enemy/behaviors/separationBehavior.js": [
+    "js/components/transform.js",
+    "js/components/physics/rigidbody.js",
+    "js/components/combat/enemyAI.js"
+  ],
+  "js/systems/combat/enemy/state/difficultyScaling.js": [],
+  "js/systems/combat/enemy/state/dockingManager.js": [],
+  "js/systems/combat/enemy/updates/initialSpawning.js": [],
+  "js/systems/combat/enemy/updates/spawnMonitoring.js": [],
+  "js/systems/combat/enemyLifecycle.js": [
+    "js/components/transform.js",
+    "js/components/combat/enemyAI.js",
+    "js/components/combat/healthComponent.js",
+    "js/components/rendering/mesh.js",
+    "js/components/physics/rigidbody.js"
+  ],
+  "js/systems/combat/enemyPoolManager.js": [
+    "js/components/transform.js",
+    "js/components/combat/enemyAI.js",
+    "js/components/combat/healthComponent.js",
+    "js/components/rendering/mesh.js",
+    "js/components/physics/rigidbody.js",
+    "js/components/rendering/trail.js"
+  ],
+  "js/systems/combat/enemySpawner.js": [],
+  "js/systems/combat/enemySystem.js": [
+    "js/core/system.js",
+    "js/components/rendering/trail.js",
+    "js/components/rendering/mesh.js",
+    "js/systems/combat/enemyPoolManager.js",
+    "js/systems/combat/enemySpawner.js",
+    "js/systems/combat/enemyLifecycle.js",
+    "js/systems/combat/enemy/behaviors/separationBehavior.js",
+    "js/systems/combat/enemy/state/difficultyScaling.js",
+    "js/systems/combat/enemy/state/dockingManager.js",
+    "js/systems/combat/enemy/updates/spawnMonitoring.js",
+    "js/systems/combat/enemy/updates/initialSpawning.js"
+  ],
+  "js/systems/combat/spawner/enemySpawner.js": [
+    "js/systems/combat/spawner/waves/progression.js",
+    "js/systems/combat/spawner/formations/builder.js",
+    "js/systems/combat/spawner/timing/scheduler.js",
+    "js/systems/combat/spawner/factory/enemyFactory.js"
+  ],
+  "js/systems/combat/spawner/factory/enemies/meshGeneration.js": [
+    "js/components/rendering/mesh.js",
+    "js/systems/combat/spawner/waves/definitions.js"
+  ],
+  "js/systems/combat/spawner/factory/enemies/spectralDrone.js": [
+    "js/components/transform.js",
+    "js/components/combat/healthComponent.js",
+    "js/components/combat/enemyAI.js",
+    "js/components/rendering/mesh.js",
+    "js/components/physics/rigidbody.js",
+    "js/systems/combat/spawner/waves/definitions.js"
+  ],
+  "js/systems/combat/spawner/factory/enemyFactory.js": [
+    "js/systems/combat/spawner/factory/enemies/spectralDrone.js",
+    "js/systems/combat/spawner/factory/enemies/meshGeneration.js",
+    "js/systems/combat/spawner/waves/definitions.js"
+  ],
+  "js/systems/combat/spawner/formations/builder.js": [
+    "js/systems/combat/spawner/formations/patterns.js"
+  ],
+  "js/systems/combat/spawner/formations/patterns.js": [],
+  "js/systems/combat/spawner/timing/scheduler.js": [],
+  "js/systems/combat/spawner/waves/definitions.js": [],
+  "js/systems/combat/spawner/waves/progression.js": [
+    "js/systems/combat/spawner/waves/definitions.js"
+  ],
+  "js/systems/deployables/deploymentSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/docking/dockingSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/entity/healthSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/mining/core/beamMechanics.js": [],
+  "js/systems/mining/core/resourceCollection.js": [],
+  "js/systems/mining/core/stateManagement.js": [],
+  "js/systems/mining/core/targetTracking.js": [],
+  "js/systems/mining/miningSystem.js": [
+    "js/core/system.js",
+    "js/systems/mining/core/beamMechanics.js",
+    "js/systems/mining/core/targetTracking.js",
+    "js/systems/mining/core/resourceCollection.js",
+    "js/systems/mining/core/stateManagement.js"
+  ],
+  "js/systems/physics/collisionSystem.js": [
+    "js/core/system.js",
+    "js/utils/memoryManager.js"
+  ],
+  "js/systems/physics/movementSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/rendering/InstancedRenderer.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/rendering/renderSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/rendering/trailSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/rendering/visualEffectsSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/trading/tradingSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/systems/weapons/deployableLaserSystem.js": [
+    "js/core/system.js"
+  ],
+  "js/utils/memoryManager.js": [],
+  "js/utils/mobileDetector.js": [],
+  "js/utils/pathUtils.js": [],
+  "src/main.js": [
+    "src/three-imports.js",
+    "js/modules/pooling/PoolRegistry.js"
+  ],
+  "src/three-imports.js": []
+}

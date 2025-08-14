@@ -1,0 +1,232 @@
+{
+  ".claude": {
+    "name": ".claude",
+    "path": ".claude",
+    "files": 1,
+    "children": []
+  },
+  ".github": {
+    "name": ".github",
+    "path": ".github",
+    "files": 1,
+    "children": [
+      {
+        "name": "workflows",
+        "path": ".github/workflows",
+        "files": 1,
+        "children": []
+      }
+    ]
+  },
+  "docs": {
+    "name": "docs",
+    "path": "docs",
+    "files": 1,
+    "children": []
+  },
+  "js": {
+    "name": "js",
+    "path": "js",
+    "files": 124,
+    "children": [
+      {
+        "name": "components",
+        "path": "js/components",
+        "files": 1,
+        "children": [
+          {
+            "name": "combat",
+            "path": "js/components/combat",
+            "files": 2
+          },
+          {
+            "name": "mining",
+            "path": "js/components/mining",
+            "files": 1
+          },
+          {
+            "name": "physics",
+            "path": "js/components/physics",
+            "files": 1
+          },
+          {
+            "name": "rendering",
+            "path": "js/components/rendering",
+            "files": 2
+          },
+          {
+            "name": "spaceship",
+            "path": "js/components/spaceship",
+            "files": 6
+          }
+        ]
+      },
+      {
+        "name": "core",
+        "path": "js/core",
+        "files": 10,
+        "children": [
+          {
+            "name": "optimized",
+            "path": "js/core/optimized",
+            "files": 1
+          },
+          {
+            "name": "spatial",
+            "path": "js/core/spatial",
+            "files": 1
+          }
+        ]
+      },
+      {
+        "name": "entities",
+        "path": "js/entities",
+        "files": 1,
+        "children": []
+      },
+      {
+        "name": "main",
+        "path": "js/main",
+        "files": 11,
+        "children": []
+      },
+      {
+        "name": "modules",
+        "path": "js/modules",
+        "files": 10,
+        "children": [
+          {
+            "name": "audio",
+            "path": "js/modules/audio",
+            "files": 1
+          },
+          {
+            "name": "combat",
+            "path": "js/modules/combat",
+            "files": 7
+          },
+          {
+            "name": "controls",
+            "path": "js/modules/controls",
+            "files": 6
+          },
+          {
+            "name": "debug",
+            "path": "js/modules/debug",
+            "files": 1
+          },
+          {
+            "name": "environment",
+            "path": "js/modules/environment",
+            "files": 11
+          },
+          {
+            "name": "game",
+            "path": "js/modules/game",
+            "files": 6
+          },
+          {
+            "name": "intro",
+            "path": "js/modules/intro",
+            "files": 0
+          },
+          {
+            "name": "pooling",
+            "path": "js/modules/pooling",
+            "files": 3
+          },
+          {
+            "name": "renderer",
+            "path": "js/modules/renderer",
+            "files": 6
+          },
+          {
+            "name": "spaceship",
+            "path": "js/modules/spaceship",
+            "files": 1
+          },
+          {
+            "name": "ui",
+            "path": "js/modules/ui",
+            "files": 13
+          },
+          {
+            "name": "utils",
+            "path": "js/modules/utils",
+            "files": 1
+          }
+        ]
+      },
+      {
+        "name": "systems",
+        "path": "js/systems",
+        "files": 0,
+        "children": [
+          {
+            "name": "combat",
+            "path": "js/systems/combat",
+            "files": 5
+          },
+          {
+            "name": "deployables",
+            "path": "js/systems/deployables",
+            "files": 1
+          },
+          {
+            "name": "docking",
+            "path": "js/systems/docking",
+            "files": 1
+          },
+          {
+            "name": "entity",
+            "path": "js/systems/entity",
+            "files": 1
+          },
+          {
+            "name": "mining",
+            "path": "js/systems/mining",
+            "files": 1
+          },
+          {
+            "name": "physics",
+            "path": "js/systems/physics",
+            "files": 2
+          },
+          {
+            "name": "rendering",
+            "path": "js/systems/rendering",
+            "files": 4
+          },
+          {
+            "name": "trading",
+            "path": "js/systems/trading",
+            "files": 1
+          },
+          {
+            "name": "weapons",
+            "path": "js/systems/weapons",
+            "files": 1
+          }
+        ]
+      },
+      {
+        "name": "utils",
+        "path": "js/utils",
+        "files": 3,
+        "children": []
+      }
+    ]
+  },
+  "src": {
+    "name": "src",
+    "path": "src",
+    "files": 2,
+    "children": []
+  },
+  "tools": {
+    "name": "tools",
+    "path": "tools",
+    "files": 2,
+    "children": []
+  }
+}

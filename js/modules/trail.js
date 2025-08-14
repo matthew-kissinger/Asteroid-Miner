@@ -158,13 +158,13 @@ export class TrailEffects {
                     // RIGHT thruster fires when A pressed (to move ship LEFT)
                     shouldShow = leftPressed; // A key
                     intensity = thrust.boost ? 1.5 : 1.2;
-                    if (shouldShow) console.log('RIGHT thruster firing to move LEFT');
+                    // if (shouldShow) console.log('RIGHT thruster firing to move LEFT');
                     break;
                 case 'left_thruster':
                     // LEFT thruster fires when D pressed (to move ship RIGHT)
                     shouldShow = rightPressed; // D key
                     intensity = thrust.boost ? 1.5 : 1.2;
-                    if (shouldShow) console.log('LEFT thruster firing to move RIGHT');
+                    // if (shouldShow) console.log('LEFT thruster firing to move RIGHT');
                     break;
                 case 'reverse':
                     shouldShow = thrust.backward;

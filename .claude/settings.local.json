@@ -8,7 +8,20 @@
       "Bash(rm:*)",
       "Bash(git push:*)",
       "Bash(git fetch:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git clean:*)",
+      "Bash(cp:*)",
+      "Bash(find:*)",
+      "Bash(curl:*)",
+      "Bash(mkdir:*)",
+      "Bash(python:*)",
+      "Bash(mv:*)",
+      "Bash(done)",
+      "Bash(for file in *.js)",
+      "Bash(do echo \"Checking $file:\")",
+      "Bash(do echo \"Checking $file...\")",
+      "Bash(npm start)",
+      "Bash(npm run:*)"
     ],
     "deny": []
   }

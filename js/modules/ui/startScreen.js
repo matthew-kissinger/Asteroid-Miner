@@ -97,22 +97,30 @@ export class StartScreen {
         const playButton = document.getElementById('play-button');
         if (playButton) {
             playButton.addEventListener('click', () => {
+                console.log("Play button clicked");
+                console.log("Game object:", this.game);
+                console.log("Game methods available:", Object.getOwnPropertyNames(Object.getPrototypeOf(this.game)));
+                
                 this.hide();
                 // Check if intro has been played before
                 const introPlayed = localStorage.getItem('introPlayed') === 'true';
+                console.log("Intro played before:", introPlayed);
+                
                 if (introPlayed) {
                     // Returning player - go directly to docked state
-                    if (this.game.startDocked) {
+                    console.log("Starting game in docked state for returning player");
+                    if (this.game && this.game.startDocked) {
                         this.game.startDocked();
                     } else {
-                        console.error("Game.startDocked not found");
+                        console.error("Game.startDocked not found", this.game);
                     }
                 } else {
                     // New player - start intro sequence
-                    if (this.game.startIntroSequence) {
+                    console.log("Starting intro sequence for new player");
+                    if (this.game && this.game.startIntroSequence) {
                         this.game.startIntroSequence();
                     } else {
-                        console.error("Game.startIntroSequence not found");
+                        console.error("Game.startIntroSequence not found", this.game);
                     }
                 }
             });
@@ -153,7 +161,7 @@ export class StartScreen {
             if (window.initialTimestamp) {
                 const timeToStartScreen = performance.now() - window.initialTimestamp;
                 console.log(`Time to start screen visible: ${timeToStartScreen.toFixed(2)}ms`);
-                console.timeEnd("init");
+                // Remove console.timeEnd since console.time was never called
             }
         }
     }

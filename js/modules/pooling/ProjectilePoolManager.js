@@ -3,466 +3,148 @@
  * 
  * Manages pools of projectiles, muzzle flashes, and trails for the combat system.
  * This reduces garbage collection by reusing objects instead of creating new ones.
+ * 
+ * Refactored to use specialized pools for different projectile types and effects.
  */
 
+import { LaserProjectilePool } from './projectiles/types/laser.js';
+import { MissileProjectilePool } from './projectiles/types/missile.js';
+import { PlasmaProjectilePool } from './projectiles/types/plasma.js';
+import { BulletProjectilePool } from './projectiles/types/bullet.js';
+import { TrailEffectsPool } from './projectiles/effects/trails.js';
+import { ImpactEffectsPool } from './projectiles/effects/impacts.js';
+import { MuzzleFlashPool } from './projectiles/effects/muzzleFlash.js';
 import { ObjectPool } from './ObjectPool.js';
 import * as THREE from 'three';
 
 export class ProjectilePoolManager {
-    /**
-     * Create a new ProjectilePoolManager
-     * @param {THREE.Scene} scene - The scene to add projectiles to
-     * @param {object} sharedAssets - An object containing pre-warmed materials and pre-created geometries
-     */
     constructor(scene, sharedAssets) {
         this.scene = scene;
         this.sharedAssets = sharedAssets;
 
-        // Assign geometries from sharedAssets
-        this.projectileGeometry = this.sharedAssets.projectileGeometry;
-        this.projectileGlowGeometry = this.sharedAssets.projectileGlowGeometry;
-        this.muzzleFlashGeometry = this.sharedAssets.muzzleFlashGeometry;
-        this.trailParticleGeometries = this.sharedAssets.trailParticleGeometries;
-        this.tracerGeometry = this.sharedAssets.tracerGeometry;
-
-        // Assign materials from sharedAssets
-        this.projectileMaterial = this.sharedAssets.projectileMaterial;
-        this.projectileGlowMaterial = this.sharedAssets.projectileGlowMaterial;
-        this.trailParticleMaterial = this.sharedAssets.trailParticleMaterial;
-        this.muzzleFlashMaterial = this.sharedAssets.muzzleFlashMaterial;
-        this.tracerLineMaterial = this.sharedAssets.tracerLineMaterial;
-        this.explosionParticleMaterial = this.sharedAssets.explosionParticleMaterial; 
+        // Assign geometries and materials from sharedAssets
+        Object.assign(this, sharedAssets);
         
         // Populate window.game with these shared assets (for legacy access if needed)
         this.populateWindowGameWithSharedAssets();
         
-        // Create object pools using these assets
+        // Create specialized pools
         this.initializePools();
         
-        console.log("ProjectilePoolManager initialized using pre-warmed shared assets and pools");
+        console.log("ProjectilePoolManager initialized using pre-warmed shared assets and specialized pools");
     }
 
-    /**
-     * Populate window.game with references to the shared assets for global/legacy access.
-     */
     populateWindowGameWithSharedAssets() {
         if (!window.game) window.game = {};
-        
-        // Geometries
-        window.game.projectileGeometry = this.projectileGeometry;
-        window.game.projectileGlowGeometry = this.projectileGlowGeometry;
-        window.game.muzzleFlashGeometry = this.muzzleFlashGeometry;
-        window.game.trailParticleGeometries = this.trailParticleGeometries;
-        window.game.tracerGeometry = this.tracerGeometry;
-        
-        // Materials
-        window.game.projectileMaterial = this.projectileMaterial;
-        window.game.projectileGlowMaterial = this.projectileGlowMaterial;
-        window.game.trailParticleMaterial = this.trailParticleMaterial;
-        window.game.muzzleFlashMaterial = this.muzzleFlashMaterial;
-        window.game.tracerLineMaterial = this.tracerLineMaterial;
-        window.game.explosionParticleMaterial = this.explosionParticleMaterial;
+        Object.assign(window.game, this.sharedAssets);
     }
     
-    /**
-     * Initialize the object pools
-     */
     initializePools() {
-        // Initialize projectile pool
-        this.projectilePool = new ObjectPool(
-            // Create function
-            () => {
-                // Create projectile mesh with glow as child
-                const projectile = new THREE.Mesh(this.projectileGeometry, this.projectileMaterial.clone());
-                const glowMesh = new THREE.Mesh(this.projectileGlowGeometry, this.projectileGlowMaterial.clone());
-                projectile.add(glowMesh);
-                
-                // Set up userData to track state
-                projectile.userData = {
-                    isProjectile: true,
-                    active: false,
-                    pooled: true,
-                    glowMesh: glowMesh
-                };
-                
-                return projectile;
-            },
-            // Reset function
-            (projectile) => {
-                // Reset position, velocity and visibility
-                projectile.position.set(0, 0, 0);
-                projectile.rotation.set(0, 0, 0);
-                projectile.scale.set(1, 1, 1);
-                projectile.visible = false;
-                
-                // Clean up any lingering references
-                projectile.userData.active = false;
-                projectile.userData.creationTime = 0;
-                projectile.userData.entityId = null;
-                
-                // If there's a trail, it will be released separately
-                projectile.userData.trail = null;
-                projectile.userData.trailParticles = null;
-            },
-            30, // Initial size
-            10  // Expand size
-        );
+        // Create renderer facade functions for delegation
+        const addToScene = (object) => this._addToScene(object);
+        const removeFromParent = (object) => this._removeFromParent(object);
         
-        // Initialize explosion pool
-        this.explosionPool = new ObjectPool(
-            // Create function
-            () => {
-                // Create particle geometry for explosion
-                const particleCount = 200;
-                const geometry = new THREE.BufferGeometry();
-                const positions = new Float32Array(particleCount * 3);
-                
-                // Randomize particle positions in a sphere
-                for (let i = 0; i < particleCount; i++) {
-                    const i3 = i * 3;
-                    positions[i3] = (Math.random() - 0.5) * 100;
-                    positions[i3 + 1] = (Math.random() - 0.5) * 100;
-                    positions[i3 + 2] = (Math.random() - 0.5) * 100;
-                }
-                
-                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-                
-                // Create bright material with additive blending for glow effect
-                const material = this.explosionParticleMaterial.clone();
-                
-                // Create particle system
-                const explosion = new THREE.Points(geometry, material);
-                
-                // Set up userData to track state
-                explosion.userData = {
-                    isExplosion: true,
-                    active: false,
-                    pooled: true,
-                    startTime: 0,
-                    duration: 1000, // Default duration
-                    particleCount: particleCount
-                };
-                
-                return explosion;
-            },
-            // Reset function
-            (explosion) => {
-                // Reset position and visibility
-                explosion.position.set(0, 0, 0);
-                explosion.visible = false;
-                
-                // Reset material opacity
-                explosion.material.opacity = 1.0;
-                
-                // Reset animation state
-                explosion.userData.active = false;
-                explosion.userData.startTime = 0;
-                
-                // Reset particle positions to initial random state
-                const positions = explosion.geometry.attributes.position.array;
-                const particleCount = explosion.userData.particleCount;
-                for (let i = 0; i < particleCount; i++) {
-                    const i3 = i * 3;
-                    positions[i3] = (Math.random() - 0.5) * 100;
-                    positions[i3 + 1] = (Math.random() - 0.5) * 100;
-                    positions[i3 + 2] = (Math.random() - 0.5) * 100;
-                }
-                explosion.geometry.attributes.position.needsUpdate = true;
-            },
-            10, // Initial size
-            5   // Expand size
-        );
+        // Initialize projectile type pools
+        this.laserPool = new LaserProjectilePool(this.sharedAssets, addToScene, removeFromParent);
+        this.missilePool = new MissileProjectilePool(this.sharedAssets, addToScene, removeFromParent);
+        this.plasmaPool = new PlasmaProjectilePool(this.sharedAssets, addToScene, removeFromParent);
+        this.bulletPool = new BulletProjectilePool(this.sharedAssets, addToScene, removeFromParent);
         
-        // Initialize muzzle flash pool
-        this.muzzleFlashPool = new ObjectPool(
-            // Create function
-            () => {
-                // Create cone mesh for muzzle flash
-                const muzzleFlash = new THREE.Mesh(this.muzzleFlashGeometry, this.muzzleFlashMaterial.clone());
-                
-                // Set up userData to track state
-                muzzleFlash.userData = {
-                    isMuzzleFlash: true,
-                    active: false,
-                    pooled: true,
-                    startTime: 0,
-                    flashLight: null
-                };
-                
-                // Create a point light that will be attached to the flash
-                const flashLight = new THREE.PointLight(0x00ffff, 200, 10, 2);
-                flashLight.visible = false;
-                this._addToScene(flashLight);
-                
-                // Store reference to light
-                muzzleFlash.userData.flashLight = flashLight;
-                
-                return muzzleFlash;
-            },
-            // Reset function
-            (muzzleFlash) => {
-                // Reset position, scale and visibility
-                muzzleFlash.position.set(0, 0, 0);
-                muzzleFlash.rotation.set(0, 0, 0);
-                muzzleFlash.scale.set(1, 1, 1);
-                muzzleFlash.visible = false;
-                
-                // Reset material opacity
-                muzzleFlash.material.opacity = 0.7;
-                
-                // Reset flash light
-                const flashLight = muzzleFlash.userData.flashLight;
-                if (flashLight) {
-                    flashLight.position.set(0, 0, 0);
-                    flashLight.intensity = 200;
-                    flashLight.visible = false;
-                }
-                
-                // Reset state
-                muzzleFlash.userData.active = false;
-                muzzleFlash.userData.startTime = 0;
-            },
-            20, // Initial size
-            5   // Expand size
-        );
+        // Initialize effect pools
+        this.trailEffects = new TrailEffectsPool(this.sharedAssets, addToScene, removeFromParent);
+        this.impactEffects = new ImpactEffectsPool(this.sharedAssets, addToScene, removeFromParent);
+        this.muzzleFlashEffects = new MuzzleFlashPool(this.sharedAssets, addToScene, removeFromParent);
         
-        // Initialize trail container pool
-        this.trailContainerPool = new ObjectPool(
-            // Create function
-            () => {
-                // Create container for trail particles
-                const trailContainer = new THREE.Object3D();
-                
-                // Set up userData to track state
-                trailContainer.userData = {
-                    isTrail: true,
-                    active: false,
-                    pooled: true,
-                    particles: []
-                };
-                
-                return trailContainer;
-            },
-            // Reset function
-            (trailContainer) => {
-                // Reset position
-                trailContainer.position.set(0, 0, 0);
-                trailContainer.rotation.set(0, 0, 0);
-                trailContainer.visible = false;
-                
-                // Reset state
-                trailContainer.userData.active = false;
-                trailContainer.userData.parentProjectile = null;
-                
-                // Note: Trail particles are handled separately
-            },
-            30, // Initial size
-            10  // Expand size
-        );
+        // Initialize tracer pool (still generic)
+        this.initializeTracerPool();
         
-        // Initialize trail particle pool
-        this.trailParticlePool = new ObjectPool(
-            // Create function
-            () => {
-                // Create a particle with default size (will be updated when used)
-                const particle = new THREE.Mesh(
-                    this.trailParticleGeometries[0],
-                    this.trailParticleMaterial.clone()
-                );
-                
-                // Set up userData to track state
-                particle.userData = {
-                    isTrailParticle: true,
-                    active: false,
-                    pooled: true,
-                    sizeIndex: 0,
-                    initialOffset: new THREE.Vector3()
-                };
-                
-                return particle;
-            },
-            // Reset function
-            (particle) => {
-                // Reset position and visibility
-                particle.position.set(0, 0, 0);
-                particle.visible = false;
-                
-                // Reset material
-                particle.material.opacity = 0.9;
-                
-                // Reset state
-                particle.userData.active = false;
-                particle.userData.sizeIndex = 0;
-                particle.userData.initialOffset.set(0, 0, 0);
-                particle.userData.initialOpacity = 0.9;
-            },
-            600, // Initial size (20 trails * 30 particles per trail)
-            100  // Expand size
-        );
-        
-        // Initialize tracer pool
+        // Create legacy projectile pool for backward compatibility
+        this.createLegacyProjectilePool();
+    }
+    
+    initializeTracerPool() {
         this.tracerPool = new ObjectPool(
-            // Create function
             () => {
-                // Create tracer line
-                const tracer = new THREE.Line(
-                    this.tracerGeometry.clone(),
-                    this.tracerLineMaterial.clone()
-                );
-                
-                // Set up userData to track state
-                tracer.userData = {
-                    isTracer: true,
-                    active: false,
-                    pooled: true,
-                    startTime: 0
-                };
-                
+                const tracer = new THREE.Line(this.tracerGeometry.clone(), this.tracerLineMaterial.clone());
+                tracer.userData = { isTracer: true, active: false, pooled: true, startTime: 0 };
                 return tracer;
             },
-            // Reset function
             (tracer) => {
-                // Reset position and visibility
                 tracer.position.set(0, 0, 0);
                 tracer.visible = false;
-                
-                // Reset material
                 tracer.material.opacity = 0.6;
-                
-                // Reset state
                 tracer.userData.active = false;
                 tracer.userData.startTime = 0;
             },
-            20, // Initial size
-            5   // Expand size
+            20, 5
         );
     }
     
-    /**
-     * Get a projectile from the pool
-     * @returns {THREE.Mesh} A projectile mesh
-     */
-    getProjectile() {
-        const projectile = this.projectilePool.get();
-        projectile.visible = true;
-        projectile.userData.active = true;
-        projectile.userData.creationTime = performance.now();
-        
-        // Add to scene if not already there
-        if (!projectile.parent) {
-            this._addToScene(projectile);
-        }
-        
-        return projectile;
+    createLegacyProjectilePool() {
+        this.projectilePool = {
+            get: () => this.bulletPool.get(),
+            release: (projectile) => {
+                const type = (projectile.userData && projectile.userData.projectileType) || 'bullet';
+                this.releaseProjectile(projectile, type);
+            },
+            active: new Set(),
+            availableCount: () => this.bulletPool.availableCount(),
+            activeCount: () => this.getAllActiveProjectiles().size
+        };
     }
     
-    /**
-     * Get a muzzle flash from the pool
-     * @returns {THREE.Mesh} A muzzle flash mesh
-     */
-    getMuzzleFlash() {
-        const muzzleFlash = this.muzzleFlashPool.get();
-        muzzleFlash.visible = true;
-        muzzleFlash.userData.active = true;
-        muzzleFlash.userData.startTime = performance.now();
-        
-        // Set up flash light
-        const flashLight = muzzleFlash.userData.flashLight;
-        if (flashLight) {
-            flashLight.visible = true;
-            flashLight.intensity = 200;
+    // Factory Pattern - Get projectile by type
+    getProjectile(type = 'bullet') {
+        switch (type.toLowerCase()) {
+            case 'laser': return this.laserPool.get();
+            case 'missile': return this.missilePool.get();
+            case 'plasma': return this.plasmaPool.get();
+            case 'bullet':
+            default: return this.bulletPool.get();
         }
-        
-        // Add to scene if not already there
-        if (!muzzleFlash.parent) {
-            this._addToScene(muzzleFlash);
-        }
-        
-        return muzzleFlash;
     }
     
-    /**
-     * Get a trail container from the pool
-     * @returns {THREE.Object3D} A trail container
-     */
+    // Effect factory methods
+    getMuzzleFlash(weaponType = 'generic', position = null, direction = null) {
+        return this.muzzleFlashEffects.getMuzzleFlash(weaponType, position, direction);
+    }
+    
     getTrailContainer() {
-        const trailContainer = this.trailContainerPool.get();
-        trailContainer.visible = true;
-        trailContainer.userData.active = true;
-        
-        return trailContainer;
+        return this.trailEffects.getTrailContainer();
     }
     
-    /**
-     * Get a trail particle from the pool
-     * @param {number} sizeIndex - Index of the size to use
-     * @returns {THREE.Mesh} A trail particle mesh
-     */
     getTrailParticle(sizeIndex = 0) {
-        const particle = this.trailParticlePool.get();
-        particle.visible = true;
-        particle.userData.active = true;
-        particle.userData.sizeIndex = sizeIndex;
-        
-        // Use the appropriate geometry for this particle size
-        if (sizeIndex >= 0 && sizeIndex < this.trailParticleGeometries.length) {
-            particle.geometry = this.trailParticleGeometries[sizeIndex];
-        }
-        
-        return particle;
+        return this.trailEffects.getTrailParticle(sizeIndex);
     }
     
-    /**
-     * Get a tracer from the pool
-     * @returns {THREE.Line} A tracer line
-     */
     getTracer() {
         const tracer = this.tracerPool.get();
         tracer.visible = true;
         tracer.userData.active = true;
         tracer.userData.startTime = performance.now();
-        
-        // Add to scene if not already there
-        if (!tracer.parent) {
-            this._addToScene(tracer);
-        }
-        
+        if (!tracer.parent) this._addToScene(tracer);
         return tracer;
     }
     
-    /**
-     * Get an explosion effect from the pool
-     * @param {THREE.Vector3} position Position for the explosion
-     * @param {number} duration Duration of the explosion in milliseconds
-     * @returns {THREE.Points} An explosion effect
-     */
     getExplosion(position, duration = 1000) {
-        const explosion = this.explosionPool.get();
-        explosion.position.copy(position);
-        explosion.visible = true;
-        explosion.userData.active = true;
-        explosion.userData.startTime = Date.now();
-        explosion.userData.duration = duration;
-        
-        // Add to scene if not already there
-        if (!explosion.parent) {
-            this._addToScene(explosion);
-        }
-        
-        return explosion;
+        return this.impactEffects.getExplosion(position, duration);
     }
     
-    /**
-     * Release a projectile back to the pool
-     * @param {THREE.Mesh} projectile - The projectile to release
-     */
-    releaseProjectile(projectile) {
-        // Skip if not a valid projectile
-        if (!projectile || !projectile.userData || !projectile.userData.isProjectile) {
-            return;
-        }
+    createImpactEffect(position, projectileType = 'bullet', options = {}) {
+        return this.impactEffects.createImpactEffect(position, projectileType, options);
+    }
+    
+    createTrailForProjectile(projectile, options = {}) {
+        return this.trailEffects.createTrailForProjectile(projectile, options);
+    }
+    
+    // Release methods - delegate to appropriate pools
+    releaseProjectile(projectile, type = null) {
+        if (!projectile || !projectile.userData || !projectile.userData.isProjectile) return;
         
-        // Release the trail if it exists
+        const projectileType = type || projectile.userData.projectileType || 'bullet';
+        
+        // Release trail if it exists
         if (projectile.userData.trail) {
             this.releaseTrail(projectile.userData.trail);
             projectile.remove(projectile.userData.trail);
@@ -470,328 +152,111 @@ export class ProjectilePoolManager {
             projectile.userData.trailParticles = null;
         }
         
-        // Remove from scene to ensure it's not rendered
-        if (projectile.parent) {
-            this._removeFromParent(projectile);
+        // Delegate to appropriate pool
+        switch (projectileType.toLowerCase()) {
+            case 'laser': this.laserPool.release(projectile); break;
+            case 'missile': this.missilePool.release(projectile); break;
+            case 'plasma': this.plasmaPool.release(projectile); break;
+            case 'bullet':
+            default: this.bulletPool.release(projectile); break;
         }
-        
-        // Return to pool
-        this.projectilePool.release(projectile);
     }
     
-    /**
-     * Release a muzzle flash back to the pool
-     * @param {THREE.Mesh} muzzleFlash - The muzzle flash to release
-     */
-    releaseMuzzleFlash(muzzleFlash) {
-        // Skip if not a valid muzzle flash
-        if (!muzzleFlash || !muzzleFlash.userData || !muzzleFlash.userData.isMuzzleFlash) {
-            return;
-        }
-        
-        // Hide the flash light
-        const flashLight = muzzleFlash.userData.flashLight;
-        if (flashLight) {
-            flashLight.visible = false;
-        }
-        
-        // Remove from scene
-        if (muzzleFlash.parent) {
-            this._removeFromParent(muzzleFlash);
-        }
-        
-        // Return to pool
-        this.muzzleFlashPool.release(muzzleFlash);
-    }
+    releaseMuzzleFlash(muzzleFlash) { this.muzzleFlashEffects.release(muzzleFlash); }
+    releaseTrail(trail) { this.trailEffects.releaseTrail(trail); }
+    releaseTrailParticle(particle) { this.trailEffects.releaseTrailParticle(particle); }
+    releaseExplosion(explosion) { this.impactEffects.releaseExplosion(explosion); }
     
-    /**
-     * Release a trail back to the pool
-     * @param {THREE.Object3D} trail - The trail container to release
-     */
-    releaseTrail(trail) {
-        // Skip if not a valid trail
-        if (!trail || !trail.userData || !trail.userData.isTrail) {
-            return;
-        }
-        
-        // Release all particles
-        if (trail.userData.particles) {
-            for (const particle of trail.userData.particles) {
-                if (particle) {
-                    // Remove from trail container
-                    trail.remove(particle);
-                    // Release back to particle pool
-                    this.releaseTrailParticle(particle);
-                }
-            }
-        }
-        
-        // Clear particles array
-        trail.userData.particles = [];
-        
-        // Return to pool
-        this.trailContainerPool.release(trail);
-    }
-    
-    /**
-     * Release a trail particle back to the pool
-     * @param {THREE.Mesh} particle - The trail particle to release
-     */
-    releaseTrailParticle(particle) {
-        // Skip if not a valid trail particle
-        if (!particle || !particle.userData || !particle.userData.isTrailParticle) {
-            return;
-        }
-        
-        // Return to pool
-        this.trailParticlePool.release(particle);
-    }
-    
-    /**
-     * Release a tracer back to the pool
-     * @param {THREE.Line} tracer - The tracer to release
-     */
     releaseTracer(tracer) {
-        // Skip if not a valid tracer
-        if (!tracer || !tracer.userData || !tracer.userData.isTracer) {
-            return;
-        }
-        
-        // Remove from scene
-        if (tracer.parent) {
-            this._removeFromParent(tracer);
-        }
-        
-        // Return to pool
+        if (!tracer || !tracer.userData || !tracer.userData.isTracer) return;
+        if (tracer.parent) this._removeFromParent(tracer);
         this.tracerPool.release(tracer);
     }
     
-    /**
-     * Release an explosion back to the pool
-     * @param {THREE.Points} explosion - The explosion to release
-     */
-    releaseExplosion(explosion) {
-        // Skip if not a valid explosion
-        if (!explosion || !explosion.userData || !explosion.userData.isExplosion) {
-            return;
-        }
-        
-        // Remove from scene
-        if (explosion.parent) {
-            this._removeFromParent(explosion);
-        }
-        
-        // Return to pool
-        this.explosionPool.release(explosion);
+    // Get all active projectiles from all pools
+    getAllActiveProjectiles() {
+        const allActive = new Set();
+        [this.laserPool, this.missilePool, this.plasmaPool, this.bulletPool].forEach(pool => {
+            pool.getActive().forEach(p => allActive.add(p));
+        });
+        this.projectilePool.active = allActive;
+        return allActive;
     }
     
-    /**
-     * Update all active objects from the pools
-     * @param {number} deltaTime - Time since last update
-     */
+    // Update all active objects from the pools
     update(deltaTime) {
-        this.updateMuzzleFlashes(deltaTime);
+        // Update specialized projectile behaviors
+        this.missilePool.getActive().forEach(missile => this.missilePool.updateMissile(missile, deltaTime));
+        this.plasmaPool.getActive().forEach(plasma => this.plasmaPool.updatePlasma(plasma, deltaTime));
+        this.bulletPool.getActive().forEach(bullet => this.bulletPool.updateBullet(bullet, deltaTime));
+        
+        // Update effects
+        this.muzzleFlashEffects.updateMuzzleFlashes(deltaTime);
+        this.trailEffects.updateTrails(deltaTime);
+        this.impactEffects.updateEffects(deltaTime);
         this.updateTracers(deltaTime);
-        this.updateExplosions(deltaTime);
     }
     
-    /**
-     * Update all active muzzle flashes
-     * @param {number} deltaTime - Time since last update
-     */
-    updateMuzzleFlashes(deltaTime) {
-        // Check all active muzzle flashes
-        for (const muzzleFlash of this.muzzleFlashPool.active) {
-            const elapsed = performance.now() - muzzleFlash.userData.startTime;
-            const burstDuration = 70; // Same as in the original code
-            const progress = elapsed / burstDuration;
-            
-            if (progress >= 1) {
-                // Animation complete, release back to pool
-                this.releaseMuzzleFlash(muzzleFlash);
-            } else {
-                // Continue animation
-                const travelProgress = Math.min(progress * 2.5, 1);
-                const travelDistance = 300;
-                
-                // Update position if initialPosition is set
-                if (muzzleFlash.userData.initialPosition && muzzleFlash.userData.direction) {
-                    const newPosition = muzzleFlash.userData.initialPosition.clone().add(
-                        muzzleFlash.userData.direction.clone().multiplyScalar(travelDistance * travelProgress)
-                    );
-                    muzzleFlash.position.copy(newPosition);
-                    
-                    // Update the flash light position too
-                    if (muzzleFlash.userData.flashLight) {
-                        muzzleFlash.userData.flashLight.position.copy(newPosition);
-                    }
-                }
-                
-                // Fade out
-                muzzleFlash.material.opacity = 0.7 * (1 - progress);
-                
-                // Fade light
-                if (muzzleFlash.userData.flashLight) {
-                    muzzleFlash.userData.flashLight.intensity = 200 * (1 - progress * 3);
-                }
-                
-                // Stretch effect
-                const stretchFactor = 1 + progress * 1.5;
-                muzzleFlash.scale.set(1, 1, stretchFactor);
-            }
-        }
-    }
-    
-    /**
-     * Update all active tracers
-     * @param {number} deltaTime - Time since last update
-     */
     updateTracers(deltaTime) {
-        // Check all active tracers
         for (const tracer of this.tracerPool.active) {
-            const elapsed = performance.now() - tracer.userData.startTime;
-            const fadeSpeed = 1.5; // From original code
-            const opacity = Math.max(0, tracer.material.opacity - fadeSpeed * 0.016);
-            
+            const opacity = Math.max(0, tracer.material.opacity - 1.5 * 0.016);
             if (opacity <= 0) {
-                // Fully faded, release back to pool
                 this.releaseTracer(tracer);
             } else {
-                // Update opacity
                 tracer.material.opacity = opacity;
             }
         }
     }
     
-    /**
-     * Update all active explosions
-     * @param {number} deltaTime - Time since last update
-     */
-    updateExplosions(deltaTime) {
-        // Check all active explosions
-        for (const explosion of this.explosionPool.active) {
-            const elapsed = Date.now() - explosion.userData.startTime;
-            const duration = explosion.userData.duration;
-            const progress = elapsed / duration;
-            
-            if (progress >= 1) {
-                // Animation complete, release back to pool
-                this.releaseExplosion(explosion);
-            } else {
-                // Continue animation - expand particles
-                const positions = explosion.geometry.attributes.position.array;
-                const particleCount = explosion.userData.particleCount;
-                
-                for (let i = 0; i < particleCount; i++) {
-                    const i3 = i * 3;
-                    const x = positions[i3] * (1 + progress * 5);
-                    const y = positions[i3 + 1] * (1 + progress * 5);
-                    const z = positions[i3 + 2] * (1 + progress * 5);
-                    
-                    explosion.geometry.attributes.position.array[i3] = x;
-                    explosion.geometry.attributes.position.array[i3 + 1] = y;
-                    explosion.geometry.attributes.position.array[i3 + 2] = z;
-                }
-                
-                explosion.geometry.attributes.position.needsUpdate = true;
-                
-                // Fade out
-                explosion.material.opacity = 1 - progress;
-            }
-        }
-    }
-    
-    /**
-     * Dispose all pools and shared assets
-     */
+    // Dispose all pools and shared assets
     dispose() {
         // Dispose shared geometries
-        this.projectileGeometry.dispose();
-        this.projectileGlowGeometry.dispose();
-        this.muzzleFlashGeometry.dispose();
-        this.tracerGeometry.dispose();
-        
-        this.trailParticleGeometries.forEach(geometry => geometry.dispose());
+        [this.projectileGeometry, this.projectileGlowGeometry, this.muzzleFlashGeometry, this.tracerGeometry]
+            .forEach(geo => geo && geo.dispose());
+        if (this.trailParticleGeometries) {
+            this.trailParticleGeometries.forEach(geo => geo && geo.dispose());
+        }
         
         // Dispose shared materials
-        this.projectileMaterial.dispose();
-        this.projectileGlowMaterial.dispose();
-        this.trailParticleMaterial.dispose();
-        this.muzzleFlashMaterial.dispose();
-        this.tracerLineMaterial.dispose();
+        [this.projectileMaterial, this.projectileGlowMaterial, this.trailParticleMaterial, 
+         this.muzzleFlashMaterial, this.tracerLineMaterial].forEach(mat => mat && mat.dispose());
         
-        // Dispose pools with custom dispose functions
-        this.projectilePool.dispose(projectile => {
-            // Remove from scene
-            if (projectile.parent) this._removeFromParent(projectile);
-            
-            // Clean up materials
-            if (projectile.userData.glowMesh && projectile.userData.glowMesh.material) {
-                projectile.userData.glowMesh.material.dispose();
-            }
-            
-            // Materials are cloned per projectile
-            if (projectile.material) projectile.material.dispose();
-        });
+        // Dispose specialized pools
+        [this.laserPool, this.missilePool, this.plasmaPool, this.bulletPool].forEach(pool => pool && pool.dispose());
         
-        this.muzzleFlashPool.dispose(muzzleFlash => {
-            // Remove from scene
-            if (muzzleFlash.parent) this._removeFromParent(muzzleFlash);
-            
-            // Remove flash light
-            if (muzzleFlash.userData.flashLight) {
-                if (muzzleFlash.userData.flashLight.parent) {
-                    muzzleFlash.userData.flashLight.parent.remove(muzzleFlash.userData.flashLight);
-                }
-            }
-            
-            // Materials are cloned per muzzle flash
-            if (muzzleFlash.material) muzzleFlash.material.dispose();
-        });
+        // Dispose effect pools
+        [this.trailEffects, this.impactEffects, this.muzzleFlashEffects].forEach(pool => pool && pool.dispose());
         
-        this.trailContainerPool.dispose(trail => {
-            // Remove from scene or parent
-            if (trail.parent) this._removeFromParent(trail);
-        });
-        
-        this.trailParticlePool.dispose(particle => {
-            // Remove from parent if still attached
-            if (particle.parent) this._removeFromParent(particle);
-            
-            // Materials are cloned per particle
-            if (particle.material) particle.material.dispose();
-        });
-        
-        this.tracerPool.dispose(tracer => {
-            // Remove from scene
+        // Dispose tracer pool
+        if (this.tracerPool) {
+            this.tracerPool.dispose((tracer) => {
             if (tracer.parent) this._removeFromParent(tracer);
-            
-            // Materials are cloned per tracer
             if (tracer.material) tracer.material.dispose();
-        });
+            });
+        }
         
         console.log("ProjectilePoolManager disposed all pools and shared assets");
     }
 
-    // --- Renderer facade helpers ---
+    // Renderer facade helpers
     _getRenderer() {
-        return (window.game && window.game.renderer) ? window.game.renderer : null;
+        return (window.game && window.game.renderer) || null;
     }
 
     _addToScene(object) {
         const renderer = this._getRenderer();
-        if (renderer && typeof renderer._withGuard === 'function') {
+        if (renderer && renderer._withGuard) {
             renderer._withGuard(() => renderer.add(object));
-        } else if (this.scene && typeof this.scene.add === 'function') {
+        } else if (this.scene && this.scene.add) {
             this.scene.add(object);
         }
     }
 
     _removeFromScene(object) {
         const renderer = this._getRenderer();
-        if (renderer && typeof renderer._withGuard === 'function') {
+        if (renderer && renderer._withGuard) {
             renderer._withGuard(() => this.scene.remove(object));
-        } else if (this.scene && typeof this.scene.remove === 'function') {
+        } else if (this.scene && this.scene.remove) {
             this.scene.remove(object);
         }
     }
@@ -800,8 +265,8 @@ export class ProjectilePoolManager {
         if (!object || !object.parent) return;
         if (object.parent === this.scene) {
             this._removeFromScene(object);
-        } else if (typeof object.parent.remove === 'function') {
+        } else if (object.parent.remove) {
             object.parent.remove(object);
         }
     }
-} 
+}

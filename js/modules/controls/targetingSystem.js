@@ -218,10 +218,7 @@ export class TargetingSystem {
     
     findNearestTarget() {
         try {
-            console.log("TargetingSystem: findNearestTarget called");
-            
             if (!this.spaceship || !this.spaceship.mesh || !this.spaceship.mesh.position) {
-                console.error("TargetingSystem: Cannot find nearest target - spaceship missing or invalid");
                 return null;
             }
             
@@ -231,15 +228,12 @@ export class TargetingSystem {
             // Try to get asteroids from the game environment
             const game = window.gameInstance || window.game;
             if (game && game.environment && Array.isArray(game.environment.asteroids)) {
-                console.log(`TargetingSystem: Found ${game.environment.asteroids.length} asteroids in environment`);
                 asteroids = game.environment.asteroids;
             } else {
-                console.error("TargetingSystem: Could not access asteroids from game environment");
                 return null;
             }
             
             if (asteroids.length === 0) {
-                console.log("TargetingSystem: No asteroids found in environment");
                 return null;
             }
             

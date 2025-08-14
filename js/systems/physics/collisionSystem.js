@@ -235,36 +235,61 @@ export class CollisionSystem extends System {
      * @private
      */
     _handleTrigger(entity, otherEntity) {
-        // Identify player projectile and enemy - use direct tag access for better performance
+        // Identify projectile types and targets
         let playerProjectile = null;
+        let enemyProjectile = null;
         let enemyEntity = null;
+        let playerEntity = null;
         
-        // Use _isPlayerProjectile, _isEnemy flags for faster checks if available
-        const entityIsProjectile = entity._isPlayerProjectile || 
-                                   entity.hasTag('playerProjectile') || 
-                                   entity.hasTag('particleProjectile');
+        // Check for player projectiles hitting enemies
+        const entityIsPlayerProjectile = entity._isPlayerProjectile || 
+                                         entity.hasTag('playerProjectile') || 
+                                         entity.hasTag('particleProjectile');
                                    
         const otherIsEnemy = otherEntity._isEnemy || 
                             otherEntity.hasTag('enemy') || 
                             otherEntity.hasComponent('EnemyComponent') || 
                             otherEntity.hasComponent('EnemyAIComponent');
         
-        if (entityIsProjectile && otherIsEnemy) {
+        if (entityIsPlayerProjectile && otherIsEnemy) {
             playerProjectile = entity;
             enemyEntity = otherEntity;
         } else {
-            const otherIsProjectile = otherEntity._isPlayerProjectile || 
-                                     otherEntity.hasTag('playerProjectile') || 
-                                     otherEntity.hasTag('particleProjectile');
+            const otherIsPlayerProjectile = otherEntity._isPlayerProjectile || 
+                                           otherEntity.hasTag('playerProjectile') || 
+                                           otherEntity.hasTag('particleProjectile');
                                      
             const entityIsEnemy = entity._isEnemy || 
                                  entity.hasTag('enemy') || 
                                  entity.hasComponent('EnemyComponent') || 
                                  entity.hasComponent('EnemyAIComponent');
             
-            if (otherIsProjectile && entityIsEnemy) {
+            if (otherIsPlayerProjectile && entityIsEnemy) {
                 playerProjectile = otherEntity;
                 enemyEntity = entity;
+            }
+        }
+        
+        // Check for enemy projectiles hitting the player
+        const entityIsEnemyProjectile = entity._isEnemyProjectile || 
+                                        entity.hasTag('enemyProjectile');
+                                        
+        const otherIsPlayer = otherEntity._isPlayer || 
+                             otherEntity.hasTag('player');
+        
+        if (entityIsEnemyProjectile && otherIsPlayer) {
+            enemyProjectile = entity;
+            playerEntity = otherEntity;
+        } else {
+            const otherIsEnemyProjectile = otherEntity._isEnemyProjectile || 
+                                           otherEntity.hasTag('enemyProjectile');
+                                           
+            const entityIsPlayer = entity._isPlayer || 
+                                  entity.hasTag('player');
+            
+            if (otherIsEnemyProjectile && entityIsPlayer) {
+                enemyProjectile = otherEntity;
+                playerEntity = entity;
             }
         }
         
@@ -342,6 +367,46 @@ export class CollisionSystem extends System {
             
             // Destroy the projectile only - the enemy will be handled by its health component
             this.world.destroyEntity(playerProjectile.id);
+        } 
+        // Handle enemy projectile hitting player
+        else if (enemyProjectile && playerEntity) {
+            console.log(`ENEMY HIT: Enemy projectile ${enemyProjectile.id} hit player ${playerEntity.id}`);
+            
+            // Apply damage to player
+            const health = playerEntity.getComponent('HealthComponent');
+            if (health) {
+                const damage = 10; // Standard enemy projectile damage
+                console.log(`Applying ${damage} damage to player`);
+                health.applyDamage(damage, 'enemyProjectile', enemyProjectile);
+            }
+            
+            // Get position for effects
+            let position = null;
+            try {
+                position = enemyProjectile.getComponent('TransformComponent').position.clone();
+            } catch (error) {
+                try {
+                    position = playerEntity.getComponent('TransformComponent').position.clone();
+                } catch (innerError) {
+                    position = new THREE.Vector3(0, 0, 0);
+                }
+            }
+            
+            // Publish events for the hit
+            this.world.messageBus.publish('collision.trigger', {
+                entityA: enemyProjectile,
+                entityB: playerEntity,
+                projectileHit: true
+            });
+            
+            this.world.messageBus.publish('projectile.hit', {
+                projectile: enemyProjectile,
+                target: playerEntity,
+                position: position
+            });
+            
+            // Destroy the enemy projectile
+            this.world.destroyEntity(enemyProjectile.id);
         } else {
             // Generic trigger event for non-projectile collisions
             this.world.messageBus.publish('collision.trigger', {

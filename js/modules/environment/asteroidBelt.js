@@ -101,7 +101,7 @@ export class AsteroidBelt {
             );
             
             // Setup orbital parameters
-            const orbitSpeed = 0.0001 + Math.random() * 0.0001; // Slow orbit
+            const orbitSpeed = 0.00005 + Math.random() * 0.00005; // Realistic asteroid orbital speed
             const orbitRadius = radius; // Use initial radius
             
             // Add random orbital tilt
@@ -234,7 +234,8 @@ export class AsteroidBelt {
         }
     }
     
-    update() {
+    update(deltaTime = 0.016) {
+        
         // Update asteroid positions and rotations with orbital tilt
         this.asteroids.forEach(asteroid => {
             // Rotate the asteroid (axial rotation)
