@@ -104,6 +104,14 @@ export class MeshComponent extends Component {
     }
     
     /**
+     * Check if mesh is visible
+     * @returns {boolean} Whether the mesh is visible
+     */
+    isVisible() {
+        return this.visible && this.mesh.visible;
+    }
+    
+    /**
      * Set whether the mesh casts shadows
      * @param {boolean} castShadow Whether the mesh casts shadows
      */

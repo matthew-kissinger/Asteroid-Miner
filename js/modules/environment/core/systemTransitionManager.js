@@ -132,10 +132,24 @@ export class SystemTransitionManager {
         }
         
         // Update asteroid belt based on system properties
-        if (asteroidBelt && asteroidBelt.setResourceMultipliers) {
+        if (asteroidBelt) {
+            // Dispose of old asteroids before creating new ones
+            if (asteroidBelt.dispose) {
+                console.log(`Disposing old asteroids before updating for ${systemId}`);
+                asteroidBelt.dispose();
+            }
+            
+            // Recreate asteroid belt for new system
+            if (asteroidBelt.createAsteroidBelt) {
+                console.log(`Creating new asteroids for ${systemId}`);
+                asteroidBelt.createAsteroidBelt();
+            }
+            
             // Apply resource multipliers from system
-            console.log(`Updating asteroid resources for ${systemId}:`, systemData.resourceMultipliers);
-            asteroidBelt.setResourceMultipliers(systemData.resourceMultipliers);
+            if (asteroidBelt.setResourceMultipliers) {
+                console.log(`Updating asteroid resources for ${systemId}:`, systemData.resourceMultipliers);
+                asteroidBelt.setResourceMultipliers(systemData.resourceMultipliers);
+            }
             
             // Update asteroid density if the method exists
             if (asteroidBelt.updateDensity) {
@@ -143,7 +157,7 @@ export class SystemTransitionManager {
                 asteroidBelt.updateDensity(systemData.asteroidDensity);
             }
         } else {
-            console.warn("AsteroidBelt or update methods not available");
+            console.warn("AsteroidBelt not available");
         }
         
         // Update space anomalies for this system

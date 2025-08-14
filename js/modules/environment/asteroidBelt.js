@@ -201,6 +201,8 @@ export class AsteroidBelt {
             // Use index to ensure consistent visibility
             const shouldBeVisible = (index % 10) < (densityMultiplier * 5);
             asteroid.mesh.visible = shouldBeVisible;
+            // Also update the minable flag to prevent targeting invisible asteroids
+            asteroid.minable = shouldBeVisible;
         });
     }
     
@@ -226,6 +228,21 @@ export class AsteroidBelt {
     removeAsteroid(asteroid) {
         // Remove the asteroid from the scene
         this.scene.remove(asteroid.mesh);
+        
+        // Properly dispose of geometry and material to prevent memory leaks
+        if (asteroid.mesh.geometry) {
+            asteroid.mesh.geometry.dispose();
+        }
+        
+        if (asteroid.mesh.material) {
+            // Dispose of textures if they exist
+            if (asteroid.mesh.material.map) asteroid.mesh.material.map.dispose();
+            if (asteroid.mesh.material.emissiveMap) asteroid.mesh.material.emissiveMap.dispose();
+            if (asteroid.mesh.material.normalMap) asteroid.mesh.material.normalMap.dispose();
+            if (asteroid.mesh.material.roughnessMap) asteroid.mesh.material.roughnessMap.dispose();
+            if (asteroid.mesh.material.metalnessMap) asteroid.mesh.material.metalnessMap.dispose();
+            asteroid.mesh.material.dispose();
+        }
         
         // Remove from asteroid array
         const index = this.asteroids.findIndex(a => a === asteroid);
@@ -266,5 +283,17 @@ export class AsteroidBelt {
                 asteroid.mesh.position.y = asteroid.initialHeight;
             }
         });
+    }
+    
+    // Clean up all asteroids (for system transitions)
+    dispose() {
+        // Remove and dispose of all asteroids
+        while (this.asteroids.length > 0) {
+            const asteroid = this.asteroids[0];
+            this.removeAsteroid(asteroid);
+        }
+        
+        // Clear the array completely
+        this.asteroids = [];
     }
 }

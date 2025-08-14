@@ -105,6 +105,9 @@ export class TargetingSystem {
         this.nearbyAsteroids = [];
         const shipPosition = this.spaceship.mesh.position;
         
+        // Create raycaster for line-of-sight validation
+        const raycaster = new THREE.Raycaster();
+        
         // Find all asteroids within scan radius
         const asteroids = this.environment.asteroids;
         asteroids.forEach(asteroid => {
@@ -113,10 +116,26 @@ export class TargetingSystem {
             
             const distance = shipPosition.distanceTo(asteroid.mesh.position);
             if (distance <= this.scanRadius) {
-                this.nearbyAsteroids.push({
-                    asteroid: asteroid,
-                    distance: distance
-                });
+                // Perform raycasting to verify line of sight
+                const direction = new THREE.Vector3()
+                    .subVectors(asteroid.mesh.position, shipPosition)
+                    .normalize();
+                
+                raycaster.set(shipPosition, direction);
+                raycaster.far = distance;
+                
+                // Check for intersections with all asteroids
+                const intersects = raycaster.intersectObjects(
+                    asteroids.filter(a => a.mesh && a.mesh.visible).map(a => a.mesh)
+                );
+                
+                // If the first intersection is our target asteroid, it's visible
+                if (intersects.length > 0 && intersects[0].object === asteroid.mesh) {
+                    this.nearbyAsteroids.push({
+                        asteroid: asteroid,
+                        distance: distance
+                    });
+                }
             }
         });
         
@@ -242,9 +261,8 @@ export class TargetingSystem {
             let closestDistance = Infinity;
             
             for (const asteroid of asteroids) {
-                // Validate asteroid has required properties and is visible
-                if (!asteroid || !asteroid.mesh || !asteroid.mesh.position || !asteroid.mesh.visible) {
-                    console.log("TargetingSystem: Skipping invalid or invisible asteroid", asteroid);
+                // Validate asteroid has required properties and is visible and minable
+                if (!asteroid || !asteroid.mesh || !asteroid.mesh.position || !asteroid.mesh.visible || !asteroid.minable) {
                     continue;
                 }
                 
