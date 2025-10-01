@@ -44,24 +44,13 @@ export class Controls {
         
         this.miningSystem = new MiningSystem(spaceship, this.scene);
         this.targetingSystem = new TargetingSystem(spaceship, this.scene, environment);
-        
+
         // Initialize docking system with all needed references
         this.dockingSystem = new DockingSystem(spaceship, environment.stargate, ui);
-        
-        // Share the resources reference between components
-        this.resources = this.miningSystem.resources;
+
+        // Share the resources reference between components - use live reference, not a copy
+        this.resources = this.miningSystem.resourceExtraction.resources;
         this.dockingSystem.setResources(this.resources);
-        
-        // Initialize orb inventory
-        if (!this.resources.orbs) {
-            this.resources.orbs = {
-                common: 0,
-                uncommon: 0,
-                rare: 0,
-                epic: 0,
-                legendary: 0
-            };
-        }
         
         // Pass control systems to touch controls if on mobile
         if (this.isMobile && this.touchControls) {
@@ -250,18 +239,7 @@ export class Controls {
             // Orb already collected, notification handled in checkForAnomalyOrbs
             return;
         }
-        
-        // Initialize orbs inventory if needed
-        if (!this.resources.orbs) {
-            this.resources.orbs = {
-                common: 0,
-                uncommon: 0,
-                rare: 0,
-                epic: 0,
-                legendary: 0
-            };
-        }
-        
+
         // Add orb to inventory
         this.resources.orbs[orbData.rarity]++;
         

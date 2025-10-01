@@ -75,12 +75,33 @@ export class Physics {
         
         if (hasFuel) {
             // NOTE: Player authority migrating to ECS. Respect global inputIntent when available.
-            const intent = window.inputIntent || 0;
-            const forwardPressed = this.spaceship.thrust.forward || ((intent & 1) !== 0);
-            const backwardPressed = this.spaceship.thrust.backward || ((intent & 2) !== 0);
-            const leftPressed = this.spaceship.thrust.left || ((intent & 4) !== 0);
-            const rightPressed = this.spaceship.thrust.right || ((intent & 8) !== 0);
-            const boostPressed = this.spaceship.thrust.boost || ((intent & 16) !== 0);
+            const intent = window.inputIntent;
+
+            // Determine input source and compute thrust state without circular dependency
+            let forwardPressed, backwardPressed, leftPressed, rightPressed, boostPressed;
+
+            if (intent !== undefined) {
+                // Keyboard input system is active - use inputIntent exclusively (even if 0)
+                forwardPressed = (intent & 1) !== 0;
+                backwardPressed = (intent & 2) !== 0;
+                leftPressed = (intent & 4) !== 0;
+                rightPressed = (intent & 8) !== 0;
+                boostPressed = (intent & 16) !== 0;
+            } else {
+                // Keyboard input not initialized - use gamepad/touch thrust values
+                forwardPressed = this.spaceship.thrust.forward;
+                backwardPressed = this.spaceship.thrust.backward;
+                leftPressed = this.spaceship.thrust.left;
+                rightPressed = this.spaceship.thrust.right;
+                boostPressed = this.spaceship.thrust.boost;
+            }
+
+            // Synchronize spaceship.thrust with input state for audio system
+            this.spaceship.thrust.forward = forwardPressed;
+            this.spaceship.thrust.backward = backwardPressed;
+            this.spaceship.thrust.left = leftPressed;
+            this.spaceship.thrust.right = rightPressed;
+            this.spaceship.thrust.boost = boostPressed;
 
             // Forward thrust handling
             if (forwardPressed) {
@@ -136,8 +157,15 @@ export class Physics {
                     this.spaceship.velocity.normalize().multiplyScalar(maxVelocity);
                 }
             }
+        } else {
+            // No fuel - reset all thrust states for audio system
+            this.spaceship.thrust.forward = false;
+            this.spaceship.thrust.backward = false;
+            this.spaceship.thrust.left = false;
+            this.spaceship.thrust.right = false;
+            this.spaceship.thrust.boost = false;
         }
-        
+
         // Add a small amount of "space friction" to make controls more manageable
         // This isn't realistic physics but makes the game more enjoyable to play
         if (!isThrusting && this.spaceship.velocity.length() > 0) {

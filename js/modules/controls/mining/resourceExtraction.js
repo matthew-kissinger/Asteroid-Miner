@@ -5,7 +5,14 @@ export class ResourceExtraction {
         this.resources = {
             iron: 0,
             gold: 0,
-            platinum: 0
+            platinum: 0,
+            orbs: {
+                common: 0,
+                uncommon: 0,
+                rare: 0,
+                epic: 0,
+                legendary: 0
+            }
         };
     }
 
