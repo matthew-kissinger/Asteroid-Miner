@@ -1,4 +1,4 @@
-import { h as System } from "./modules-BUUuAvZs.js";
+import { h as System } from "./modules-CtmUUd99.js";
 import { an as SphereGeometry, x as MeshBasicMaterial, I as InstancedMesh, O as Object3D } from "./three-BPefaS9B.js";
 import "./core-CQR7b8gS.js";
 class InstancedRenderer extends System {
@@ -95,4 +95,4 @@ class InstancedRenderer extends System {
 export {
   InstancedRenderer
 };
-//# sourceMappingURL=InstancedRenderer-6YWyCoVq.js.map
+//# sourceMappingURL=InstancedRenderer-Dlr2ZsId.js.map

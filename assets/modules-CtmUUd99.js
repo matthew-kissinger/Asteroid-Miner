@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/InstancedRenderer-6YWyCoVq.js","assets/three-BPefaS9B.js","assets/core-CQR7b8gS.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/InstancedRenderer-Dlr2ZsId.js","assets/three-BPefaS9B.js","assets/core-CQR7b8gS.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -11008,7 +11008,7 @@ class SystemRegistrar {
       }
       try {
         const { InstancedRenderer } = await __vitePreload(async () => {
-          const { InstancedRenderer: InstancedRenderer2 } = await import("./InstancedRenderer-6YWyCoVq.js");
+          const { InstancedRenderer: InstancedRenderer2 } = await import("./InstancedRenderer-Dlr2ZsId.js");
           return { InstancedRenderer: InstancedRenderer2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0);
         this.registeredSystems.instancedRenderer = new InstancedRenderer(world, scene);
@@ -14907,12 +14907,26 @@ const _Physics = class _Physics {
     shipForward.applyQuaternion(this.spaceship.mesh.quaternion);
     shipForward.dot(this.spaceship.velocity);
     if (hasFuel) {
-      const intent = window.inputIntent || 0;
-      const forwardPressed = this.spaceship.thrust.forward || (intent & 1) !== 0;
-      const backwardPressed = this.spaceship.thrust.backward || (intent & 2) !== 0;
-      const leftPressed = this.spaceship.thrust.left || (intent & 4) !== 0;
-      const rightPressed = this.spaceship.thrust.right || (intent & 8) !== 0;
-      const boostPressed = this.spaceship.thrust.boost || (intent & 16) !== 0;
+      const intent = window.inputIntent;
+      let forwardPressed, backwardPressed, leftPressed, rightPressed, boostPressed;
+      if (intent !== void 0) {
+        forwardPressed = (intent & 1) !== 0;
+        backwardPressed = (intent & 2) !== 0;
+        leftPressed = (intent & 4) !== 0;
+        rightPressed = (intent & 8) !== 0;
+        boostPressed = (intent & 16) !== 0;
+      } else {
+        forwardPressed = this.spaceship.thrust.forward;
+        backwardPressed = this.spaceship.thrust.backward;
+        leftPressed = this.spaceship.thrust.left;
+        rightPressed = this.spaceship.thrust.right;
+        boostPressed = this.spaceship.thrust.boost;
+      }
+      this.spaceship.thrust.forward = forwardPressed;
+      this.spaceship.thrust.backward = backwardPressed;
+      this.spaceship.thrust.left = leftPressed;
+      this.spaceship.thrust.right = rightPressed;
+      this.spaceship.thrust.boost = boostPressed;
       if (forwardPressed) {
         isThrusting = true;
         const forwardThrust = new Vector3(0, 0, -0.5);
@@ -14940,6 +14954,12 @@ const _Physics = class _Physics {
           this.spaceship.velocity.normalize().multiplyScalar(maxVelocity);
         }
       }
+    } else {
+      this.spaceship.thrust.forward = false;
+      this.spaceship.thrust.backward = false;
+      this.spaceship.thrust.left = false;
+      this.spaceship.thrust.right = false;
+      this.spaceship.thrust.boost = false;
     }
     if (!isThrusting && this.spaceship.velocity.length() > 0) {
       const friction = _Physics.FRICTION * this.normalizedDeltaTime;
@@ -22286,7 +22306,14 @@ class ResourceExtraction {
     this.resources = {
       iron: 0,
       gold: 0,
-      platinum: 0
+      platinum: 0,
+      orbs: {
+        common: 0,
+        uncommon: 0,
+        rare: 0,
+        epic: 0,
+        legendary: 0
+      }
     };
   }
   /**
@@ -24760,17 +24787,8 @@ class Controls {
     this.miningSystem = new MiningSystem(spaceship, this.scene);
     this.targetingSystem = new TargetingSystem(spaceship, this.scene, environment);
     this.dockingSystem = new DockingSystem(spaceship, environment.stargate, ui);
-    this.resources = this.miningSystem.resources;
+    this.resources = this.miningSystem.resourceExtraction.resources;
     this.dockingSystem.setResources(this.resources);
-    if (!this.resources.orbs) {
-      this.resources.orbs = {
-        common: 0,
-        uncommon: 0,
-        rare: 0,
-        epic: 0,
-        legendary: 0
-      };
-    }
     if (this.isMobile && this.touchControls) {
       this.touchControls.setControlSystems(this);
     }
@@ -24910,15 +24928,6 @@ class Controls {
     const orbData = this.environment.collectAnomalyOrb(anomaly);
     if (!orbData) {
       return;
-    }
-    if (!this.resources.orbs) {
-      this.resources.orbs = {
-        common: 0,
-        uncommon: 0,
-        rare: 0,
-        epic: 0,
-        legendary: 0
-      };
     }
     this.resources.orbs[orbData.rarity]++;
     let rarityColor;
@@ -36214,4 +36223,4 @@ export {
   System as h,
   combat as i
 };
-//# sourceMappingURL=modules-BUUuAvZs.js.map
+//# sourceMappingURL=modules-CtmUUd99.js.map

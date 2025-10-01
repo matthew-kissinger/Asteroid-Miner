@@ -1,5 +1,5 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/main-BVto7Jtb.js","assets/core-CQR7b8gS.js","assets/modules-BUUuAvZs.js","assets/three-BPefaS9B.js"])))=>i.map(i=>d[i]);
-import { G as GLTFLoader, E as EffectComposer, R as RenderPass, U as UnrealBloomPass, S as ShaderPass, F as FXAAShader, C as ColorCorrectionShader, a as FilmShader, V as VignetteShader, W as WebGL, _ as __vitePreload } from "./modules-BUUuAvZs.js";
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/main-No8h_hpM.js","assets/core-CQR7b8gS.js","assets/modules-CtmUUd99.js","assets/three-BPefaS9B.js"])))=>i.map(i=>d[i]);
+import { G as GLTFLoader, E as EffectComposer, R as RenderPass, U as UnrealBloomPass, S as ShaderPass, F as FXAAShader, C as ColorCorrectionShader, a as FilmShader, V as VignetteShader, W as WebGL, _ as __vitePreload } from "./modules-CtmUUd99.js";
 import { aM as Controls, g as Vector3, aN as MOUSE, aO as TOUCH, Q as Quaternion, aP as Spherical, V as Vector2, aQ as Ray, aR as Plane, X as MathUtils, aS as THREE } from "./three-BPefaS9B.js";
 import "./core-CQR7b8gS.js";
 (function polyfill() {
@@ -1072,7 +1072,7 @@ document.addEventListener("DOMContentLoaded", () => {
       overlay.style.transition = "opacity 0.5s ease-out";
       setTimeout(() => overlay.remove(), 600);
       try {
-        await __vitePreload(() => import("./main-BVto7Jtb.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0);
+        await __vitePreload(() => import("./main-No8h_hpM.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0);
       } catch (err) {
       }
     }, 200);
@@ -1094,4 +1094,4 @@ document.addEventListener("DOMContentLoaded", () => {
 export {
   getGlobalPoolRegistry as g
 };
-//# sourceMappingURL=index-DliE-3WW.js.map
+//# sourceMappingURL=index-D9pzPllf.js.map
