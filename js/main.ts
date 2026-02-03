@@ -16,6 +16,9 @@ import { AudioUpdater } from './main/audioUpdater.js';
 // @ts-ignore
 import { GameLifecycle } from './main/gameLifecycle.js';
 
+// Import bitECS systems
+import { initECS, updateECS } from './ecs/systems/index.js';
+
 export class Game {
     initializer: any;
     lifecycle: any;
@@ -96,6 +99,10 @@ export class Game {
             // Initialize diagnostics
             this.diagnostics = new Diagnostics(this);
 
+            // Initialize bitECS systems (pass scene for test entity mesh)
+            // @ts-ignore - renderer.scene exists after core initialization
+            initECS(this.renderer?.scene);
+
             // Start the initialization sequence
             this.startupSequence.initializeGameSequence();
         } catch (error) {
@@ -173,7 +180,10 @@ export class Game {
         
         // Update physics
         this.physics.update(deltaTime);
-        
+
+        // Update bitECS systems (parallel to legacy systems)
+        updateECS(deltaTime);
+
         // Update spaceship
         if (this.spaceship.update) {
             this.spaceship.update(deltaTime);

@@ -21,3 +21,12 @@ export {
   unregisterMesh,
   type MeshRegistry,
 } from './renderSyncSystem'
+
+// ECS Runner
+export {
+  initECS,
+  updateECS,
+  getMeshRegistry,
+  addTrackedEntity,
+  removeTrackedEntity,
+} from './ecsRunner'
