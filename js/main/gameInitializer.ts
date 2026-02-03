@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { Renderer } from '../modules/renderer.js';
 import { Spaceship } from '../modules/spaceship.js';
-import { Physics } from '../modules/physics.js';
+import { Physics } from '../modules/physics';
 import { Environment } from '../modules/environment.js';
 import { Controls } from '../modules/controls.js';
 import { UI } from '../modules/ui.js';

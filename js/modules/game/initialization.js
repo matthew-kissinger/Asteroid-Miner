@@ -1,7 +1,7 @@
 // initialization.js - Game initialization logic
 import { Renderer } from '../renderer.js';
 import { Spaceship } from '../spaceship.js';
-import { Physics } from '../physics.js';
+import { Physics } from '../physics';
 import { Environment } from '../environment.js';
 import { Controls } from '../controls.js';
 import { UI } from '../ui.js';
