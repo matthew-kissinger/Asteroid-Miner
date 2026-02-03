@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { Renderer } from '../modules/renderer.js';
 import { Spaceship } from '../modules/spaceship.js';
 import { Physics } from '../modules/physics';
-import { Environment } from '../modules/environment.js';
+import { Environment } from '../modules/environment';
 import { Controls } from '../modules/controls.js';
 import { UI } from '../modules/ui.js';
 import { AudioManager } from '../modules/audio/audio.js';
@@ -111,7 +111,7 @@ export class GameInitializer {
         this.game.ui.setAudio(this.game.audio);
         
         // Initialize controls last, as it depends on other components
-        this.game.controls = new Controls(spaceship, physics, environment, this.game.ui);
+        this.game.controls = new Controls(spaceship, physics, environment as any, this.game.ui);
         
         // Share controls reference with UI for bidirectional communication
         this.game.ui.setControls(this.game.controls);

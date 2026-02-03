@@ -216,7 +216,7 @@ vite.config.js # Vite configuration file
     -   `renderer.js`: Sets up Three.js renderer, scene, camera, lighting, post-processing. Provides facade guards for `scene.add/remove` and exposes `_withGuard`, `add`, `removeView`, `addView` placeholders. Also collects perf counters per frame.
     -   `spaceship.js`: Authoritative source for player state (hull, shield, cargo, upgrades, etc.). Manages deployable laser inventory. Synchronizes relevant state bidirectionally with the 'player' entity's components within the Combat ECS world via methods called in `combat.js`.
     -   `physics.js`: Coordinator for *player ship* physics simulation. Directly applies forces to the `Spaceship` object based on controls. Operates independently of the Combat ECS physics systems (which handle enemies, projectiles etc.).
-    -   `environment.js`: Manages scene elements (Skybox, Sun, Planets, Stargate, AsteroidBelt, SpaceAnomalies). `AsteroidBelt` manages asteroids directly using standard `THREE.Mesh` objects (though asteroids might also have corresponding entities in the ECS for mining/targeting). `SpaceAnomalies` manages unique space structures with collectible energy orbs. Uses `StarSystemGenerator`.
+    -   `environment.ts`: Manages scene elements (Skybox, Sun, Planets, Stargate, AsteroidBelt, SpaceAnomalies). `AsteroidBelt` manages asteroids directly using standard `THREE.Mesh` objects (though asteroids might also have corresponding entities in the ECS for mining/targeting). `SpaceAnomalies` manages unique space structures with collectible energy orbs. Uses `StarSystemGenerator`.
     -   `controls.js`: Main coordinator for player input. Delegates to specific handlers (`inputHandler.js`, `touchControls.js`) and systems (`miningSystem.js`, `targetingSystem.js`, `dockingSystem.js`, `deploymentSystem.js`). Handles automatic collection of energy orbs when colliding with anomalies.
     -   `controls/inputHandler.js`, `controls/touchControls.js`: Handle raw desktop/mobile input events and translate them into game actions or state changes for the `Spaceship` or other modules.
     -   `controls/gamepadHandler.js`: Comprehensive gamepad/controller support with advanced axis mapping, sensitivity controls, response curves, and intelligent button mapping for all game functions.
@@ -342,7 +342,7 @@ vite.config.js # Vite configuration file
     -   *Version:* Latest version loaded via unpkg CDN in `index.html`.
 -   **External AI API:** Used by the custom system creator feature.
     -   *Integration:* `apiClient.js` is used by `customSystemCreator.js` for skybox and planet generation.
-    -   *Initialization:* The `CustomSystemCreator` is created in `environment.js` and accessed via the stargate interface.
+    -   *Initialization:* The `CustomSystemCreator` is created in `environment.ts` and accessed via the stargate interface.
 
 ## 9. Development Workflow
 
@@ -376,7 +376,7 @@ vite.config.js # Vite configuration file
     -   `js/modules/mobile/` directory exists as a placeholder for future mobile-specific modules.
 -   **External API Dependency:**
     -   The custom system creation feature using `apiClient.js` and `customSystemCreator.js` is implemented.
-    -   Initialized in `environment.js` and accessible through the stargate interface.
+    -   Initialized in `environment.ts` and accessible through the stargate interface.
     -   This feature requires the external API to be available.
 -   **Audio Context:** Audio Context suspension to handle browser restrictions.
 -   **Asset Loading:** Asset paths are handled by `pathUtils.js` to support different deployment environments.
