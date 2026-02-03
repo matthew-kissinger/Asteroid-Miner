@@ -6,7 +6,7 @@ import { Spaceship } from '../modules/spaceship.js';
 import { Physics } from '../modules/physics';
 import { Environment } from '../modules/environment';
 import { Controls } from '../modules/controls.js';
-import { UI } from '../modules/ui.js';
+import { UI } from '../modules/ui';
 import { AudioManager } from '../modules/audio/audio.js';
 
 type GameRenderer = {

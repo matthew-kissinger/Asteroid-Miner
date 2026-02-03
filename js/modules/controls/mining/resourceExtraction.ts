@@ -6,6 +6,7 @@ interface OrbResources {
     rare: number;
     epic: number;
     legendary: number;
+    [rarity: string]: number;
 }
 
 interface ResourceInventory {
