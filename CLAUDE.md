@@ -18,18 +18,19 @@ Phase 1 of the modernization is done. TypeScript and WebGPU renderer are working
 - Entry points converted to TypeScript (src/main.ts, js/main.ts)
 
 **Remaining Problems:**
-- **Partial TypeScript** - Entry points done, but ~100 JS modules remain
-- **Custom ECS mess** - Hybrid architecture, bitECS not yet integrated
-- **GLSL shaders** - Most shaders still GLSL strings, TSL laser material ready but not integrated
-- **Global state** - 686 `window.*` usages across 112 files
-- **Dual mining system** - Two implementations need consolidation
+- **Partial TypeScript** - 2 entry points (src/main.ts, js/main.ts) done, but 275 JS files remain. js/main.ts has 40+ @ts-ignore suppressions.
+- **Custom ECS mess** - Hybrid architecture, bitECS not yet integrated. Two prior bitECS install attempts failed (timeout).
+- **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.js (volumetric light + claude rays). TSL laser material exists in js/modules/render/laserMaterial.js but is not imported anywhere.
+- **Global state** - ~700 `window.*` usages across the codebase
+- **Dual mining system** - Active legacy system in js/modules/controls/miningSystem.js (CSS laser overlay) and dormant ECS system in js/systems/mining/ (3D laser, never integrated). CSS laser still renders as HTML div, not 3D geometry.
+- **Minification disabled** - Vite build has `minify: false` due to "breaking our component system"
 
 ## Target Stack (2026 Best Practices)
 
 | Layer | Current | Target | Status |
 |-------|---------|--------|--------|
 | Language | TypeScript (partial) | **TypeScript (strict)** | In Progress |
-| Renderer | Three.js r175 WebGPU | **Three.js r180+ WebGPU** | Done (needs upgrade) |
+| Renderer | Three.js r180 WebGPU | **Three.js r180+ WebGPU** | Done |
 | Shaders | GLSL + TSL laser | **TSL (Three Shading Language)** | Started |
 | ECS | Custom mess | **bitECS** | Pending |
 | Physics | Custom Newtonian | **Keep custom** (cleaned up) | - |
@@ -145,10 +146,10 @@ const Thrust = defineComponent({
 ## Migration Plan
 
 ### Phase 1: Upgrade Three.js + TypeScript - COMPLETE
-1. ~~Upgrade to Three.js r180+~~ Done (r175 with WebGPU)
-2. ~~Add TypeScript with strict mode~~ Done (tsconfig.json)
+1. ~~Upgrade to Three.js r180+~~ Done (r180, package.json updated)
+2. ~~Add TypeScript with strict mode~~ Done (tsconfig.json, checkJs=false for JS files)
 3. ~~Enable WebGPU renderer with WebGL2 fallback~~ Done (js/modules/renderer.js)
-4. Convert `.js` → `.ts` incrementally - In progress (entry points done)
+4. Convert `.js` -> `.ts` incrementally - In progress (2 entry points done, 275 JS files remain)
 
 ### Phase 2: bitECS Migration
 1. Install bitECS
@@ -243,27 +244,27 @@ Current (package.json):
 ```json
 {
   "dependencies": {
-    "three": "^0.175.0"
+    "three": "^0.180.0",
+    "serve-static": "^2.2.0"
   },
   "devDependencies": {
+    "@types/three": "^0.180.0",
+    "gh-pages": "^6.3.0",
+    "rimraf": "^5.0.5",
     "typescript": "^5.7.3",
-    "vite": "^5.0.0",
-    "@types/three": "^0.175.0"
+    "vite": "^5.0.0"
   }
 }
 ```
 
-Target:
+Target additions:
 ```json
 {
   "dependencies": {
-    "three": "^0.180.0",
     "bitecs": "^0.3.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "vite": "^6.0.0",
-    "@types/three": "^0.180.0"
+    "vite": "^6.0.0"
   }
 }
 ```
@@ -344,6 +345,14 @@ After overhaul:
 - **GPU particles** - Millions of particles via compute shaders
 - **Clean HUD** - Minimal, informative, contextual
 - **No dead code** - No globals, CSS classes, clean imports
+
+## Known Pitfalls (From Failed Tasks)
+
+- **bitECS install tasks timeout.** Two attempts failed at 30min. The scope was too large (install + components + systems + queries + verification). Break into smaller pieces: install only, then components, then systems.
+- **TypeScript conversion of large modules fails.** The spaceship module conversion (7+ files) was too ambitious. Convert one file at a time, verify build after each.
+- **Mining consolidation is blocked on bitECS.** Cannot consolidate the dual mining system until bitECS is integrated, since the ECS mining system depends on a world object.
+- **TSL laser integration failed.** The task tried to wire up laserMaterial.js into the active mining system, but the active system uses CSS divs not 3D meshes. Need to first replace the CSS laser with a 3D mesh, then apply TSL material.
+- **js/main.ts has 40+ @ts-ignore.** This is expected - it imports from JS files that lack type declarations. Will resolve as modules are converted to TS.
 
 ## Resources
 
