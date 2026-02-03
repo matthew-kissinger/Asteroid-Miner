@@ -22,11 +22,11 @@ export class LightingManager {
                 intensity: 3.0,    // Moderate intensity with new lighting model
                 position: new THREE.Vector3(1, 0.5, 0.5).normalize() // Direction vector
             },
-            // Ambient - increased for better visibility
+            // Ambient - very low for realistic space darkness
             ambient: {
-                skyColor: 0x303045,    // Slightly brighter blue space
-                groundColor: 0x151520,  // Dark blue
-                intensity: 0.6         // More visible ambient
+                skyColor: 0x202030,    // Deep blue space
+                groundColor: 0x0a0a10,  // Nearly black
+                intensity: 0.3         // Very subtle ambient from starlight
             },
             // Rim light - edge definition from opposite side
             rim: {
@@ -68,23 +68,24 @@ export class LightingManager {
         this.renderer.toneMapping = this.config.toneMapping.type;
         this.renderer.toneMappingExposure = this.config.toneMapping.exposure;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-        
+
         // Create main sun directional light
         this.sunLight = new THREE.DirectionalLight(
             this.config.sun.color,
-            this.config.sun.intensity * Math.PI  // Multiply by PI for physically correct
+            this.config.sun.intensity  // Use raw intensity without PI for space scenes
         );
-        
-        // Set light direction - DirectionalLight shines FROM position TO target
-        // For sun at origin, light should come FROM origin outward
-        this.sunLight.position.set(0, 0, 0);  // At sun position
-        this.sunLight.target.position.set(10000, 5000, 5000);  // Pointing outward
-        
+
+        // Position sun light to come from behind the sun toward scene
+        // This simulates sunlight casting shadows properly
+        // Default: light from positive X direction
+        this.sunLight.position.set(50000, 10000, 20000);
+        this.sunLight.target.position.set(0, 0, 0);  // Point at sun (center)
+
         // Configure shadows
         this.sunLight.castShadow = true;
         this.sunLight.shadow.mapSize.width = this.config.shadows.mapSize;
         this.sunLight.shadow.mapSize.height = this.config.shadows.mapSize;
-        
+
         // Shadow camera setup - this is crucial for large scenes
         const d = this.config.shadows.frustumSize;
         this.sunLight.shadow.camera.left = -d;
@@ -93,76 +94,43 @@ export class LightingManager {
         this.sunLight.shadow.camera.bottom = -d;
         this.sunLight.shadow.camera.near = this.config.shadows.near;
         this.sunLight.shadow.camera.far = this.config.shadows.far;
-        
+
         this.sunLight.shadow.bias = this.config.shadows.bias;
         this.sunLight.shadow.normalBias = this.config.shadows.normalBias;
         this.sunLight.shadow.radius = this.config.shadows.radius;
         this.sunLight.shadow.blurSamples = this.config.shadows.blurSamples;
-        
+
         this.scene.add(this.sunLight);
         this.scene.add(this.sunLight.target);
-        
-        // Add hemisphere ambient light for basic visibility
+
+        // Add very subtle ambient light for space (mostly from starlight)
         this.ambientLight = new THREE.HemisphereLight(
             this.config.ambient.skyColor,
             this.config.ambient.groundColor,
-            this.config.ambient.intensity * Math.PI
+            0.3  // Much lower intensity - space is dark
         );
         this.scene.add(this.ambientLight);
-        
-        // Add rim light from opposite direction
-        this.rimLight = new THREE.DirectionalLight(
-            this.config.rim.color,
-            this.config.rim.intensity * Math.PI
-        );
-        this.rimLight.position.set(-10000, -3000, -5000);
-        this.scene.add(this.rimLight);
-        
-        // Add fill light
-        this.fillLight = new THREE.DirectionalLight(
-            this.config.fill.color,
-            this.config.fill.intensity * Math.PI
-        );
-        this.fillLight.position.set(5000, -5000, 10000);
-        this.scene.add(this.fillLight);
-        
-        console.log("Lighting setup complete with physically correct lights");
+
+        // Remove rim and fill lights - the sun's directional light is sufficient
+        // These were causing excessive illumination
+
+        console.log("Lighting setup complete with proper sun directional light");
     }
     
     /**
      * Update sun light direction based on sun position
-     * For DirectionalLight, we need to set the direction, not just position
+     * Keep the directional light stable in world space
      */
     updateSunPosition(sunWorldPosition) {
         if (!this.sunLight) return;
-        
-        // DirectionalLight simulates parallel rays from infinite distance
-        // Position sets WHERE the light comes from
-        // Target sets WHERE the light points to
-        
-        // Since sun is at origin (0,0,0), we want light to come FROM the sun
-        // and illuminate everything around it
-        
-        // Elegant solution: Make directional light simulate sun rays
-        // Position it BEHIND the sun (opposite from camera) pointing through the sun
-        
-        if (this.camera) {
-            // Get vector from camera to sun
-            const sunToCamera = new THREE.Vector3().subVectors(this.camera.position, sunWorldPosition);
-            
-            // Position light behind sun (opposite side from camera)
-            // This makes light come through the sun toward the camera
-            const lightPosition = sunWorldPosition.clone().sub(sunToCamera.normalize().multiplyScalar(50000));
-            this.sunLight.position.copy(lightPosition);
-            
-            // Point light toward camera through the sun
-            // This illuminates everything between sun and camera correctly
-            this.sunLight.target.position.copy(this.camera.position);
-        } else {
-            // Fallback: standard position
-            this.sunLight.position.set(-10000, 5000, -5000);
-            this.sunLight.target.position.set(0, 0, 0);
-        }
+
+        // The sun's directional light should maintain a fixed direction
+        // relative to the sun, simulating the sun's rays coming from a direction.
+        // We keep it at a fixed position and pointed at the sun.
+
+        // This creates proper shadows for objects around the sun
+        // The position is maintained, only the target follows the sun
+        this.sunLight.target.position.copy(sunWorldPosition);
         this.sunLight.target.updateMatrixWorld();
     }
     
@@ -191,7 +159,7 @@ export class LightingManager {
     adjustLightingForRayType(useClaudeRays) {
         // Keep lighting consistent
         if (this.ambientLight) {
-            this.ambientLight.intensity = this.config.ambient.intensity * Math.PI;
+            this.ambientLight.intensity = this.config.ambient.intensity;
         }
     }
     
