@@ -2,19 +2,94 @@
 
 import { IntroSequence } from '../modules/introSequence.js';
 
+type AudioContextLike = {
+    state: string;
+};
+
+type AudioManagerLike = {
+    audioContext?: AudioContextLike;
+    resumeAudioContext: () => void;
+    initialize: () => Promise<void>;
+};
+
+type StartScreenLike = {
+    show: () => void;
+};
+
+type CombatDisplayLike = {
+    hide: () => void;
+    show: () => void;
+};
+
+type StargateInterfaceLike = {
+    hide: () => void;
+};
+
+type UiLike = {
+    startScreen?: StartScreenLike;
+    showError?: (message: string) => void;
+    combatDisplay?: CombatDisplayLike;
+    stargateInterface?: StargateInterfaceLike;
+    hideUI: () => void;
+    showUI: () => void;
+};
+
+type EnemySystemLike = {
+    freezeAllEnemies: () => void;
+    unfreezeAllEnemies: () => void;
+};
+
+type CombatLike = {
+    world?: unknown;
+    playerEntity?: unknown;
+    createPlayerReferenceEntity?: () => void;
+};
+
+type SpaceshipLike = {
+    mesh?: {
+        position: { set: (x: number, y: number, z: number) => void; x: number; y: number; z: number };
+        rotation: { set: (x: number, y: number, z: number) => void };
+    };
+    isDocked: boolean;
+    undock: () => void;
+};
+
+type StartupGameContext = {
+    audio?: AudioManagerLike;
+    ui?: UiLike;
+    boundAnimate?: () => void;
+    combat?: CombatLike;
+    scene?: unknown;
+    camera?: unknown;
+    spaceship?: SpaceshipLike;
+    initializeObjectPools?: () => void;
+    preWarmBasicShaders?: () => void;
+    startDocked?: () => void;
+    introSequenceActive?: boolean;
+};
+
+type IntroSequenceLike = {
+    onComplete?: () => void;
+    startSequence: (onComplete?: () => void) => void;
+};
+
 export class StartupSequence {
-    constructor(game) {
+    game: StartupGameContext;
+    introSequence: IntroSequenceLike | null;
+    introSequenceActive: boolean;
+
+    constructor(game: StartupGameContext) {
         this.game = game;
         this.introSequence = null;
         this.introSequenceActive = false;
     }
     
     // Initialize game in sequence, showing start screen first and loading non-essentials after
-    async initializeGameSequence() {
+    async initializeGameSequence(): Promise<void> {
         try {
             
             // Add a small delay to let browser stabilize after page load
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise<void>(resolve => setTimeout(resolve, 100));
             
             // Resume audio context if needed (browser autoplay policy)
             if (this.game.audio && this.game.audio.audioContext && this.game.audio.audioContext.state === 'suspended') {
@@ -32,7 +107,9 @@ export class StartupSequence {
             }
             
             // Start game loop with warm-up frames
-            requestAnimationFrame(this.game.boundAnimate);
+            if (this.game.boundAnimate) {
+                requestAnimationFrame(this.game.boundAnimate);
+            }
             
             // Initialize remaining systems in the background after start screen is shown
             this.initializeRemainingSystemsAsync();
@@ -41,15 +118,17 @@ export class StartupSequence {
             
             // Show error in UI if possible
             if (this.game.ui && this.game.ui.showError) {
-                this.game.ui.showError("Failed to initialize game: " + error.message);
+                const message = error instanceof Error ? error.message : String(error);
+                this.game.ui.showError("Failed to initialize game: " + message);
             } else {
-                alert("Failed to initialize game: " + error.message);
+                const message = error instanceof Error ? error.message : String(error);
+                alert("Failed to initialize game: " + message);
             }
         }
     }
     
     // Initialize remaining systems asynchronously after showing the start screen
-    async initializeRemainingSystemsAsync() {
+    async initializeRemainingSystemsAsync(): Promise<void> {
         try {
             // Start loading audio in the background
             this.loadAudioAsync();
@@ -60,12 +139,11 @@ export class StartupSequence {
                 this.game.combat = new Combat(this.game.scene, this.game.spaceship);
                 
                 // Ensure the ECS world in combat is properly initialized
-                if (this.game.combat.world) {
-                } else {
+                if (!this.game.combat.world) {
                     // Add a check to ensure the player entity exists
                     setTimeout(() => {
-                        if (this.game.combat.world && this.game.combat.playerEntity) {
-                        } else {
+                        if (this.game.combat && this.game.combat.world && this.game.combat.playerEntity) {
+                        } else if (this.game.combat) {
                             console.warn("Combat ECS world or player entity not available after delay, recreating...");
                             if (this.game.combat.createPlayerReferenceEntity) {
                                 this.game.combat.createPlayerReferenceEntity();
@@ -77,34 +155,40 @@ export class StartupSequence {
             
             // Initialize common object pools after start screen is shown
             setTimeout(() => {
-                this.game.initializeObjectPools();
+                if (this.game.initializeObjectPools) {
+                    this.game.initializeObjectPools();
+                }
                 
                 // Pre-warm essential shaders and projectile assets after start screen is shown
-                this.game.preWarmBasicShaders();
+                if (this.game.preWarmBasicShaders) {
+                    this.game.preWarmBasicShaders();
+                }
             }, 100);
         } catch (error) {
         }
     }
     
     // Load audio asynchronously after showing the start screen
-    async loadAudioAsync() {
+    async loadAudioAsync(): Promise<void> {
         try {
             if (this.game.audio) {
                 // Initialize audio in the background
                 this.game.audio.initialize().then(() => {
-                }).catch(error => {
+                }).catch(() => {
                 });
             }
         } catch (error) {
         }
     }
     
-    fallbackToDefaultBehavior() {
+    fallbackToDefaultBehavior(): void {
         // Start the game immediately with default settings
-        this.game.startDocked();
+        if (this.game.startDocked) {
+            this.game.startDocked();
+        }
     }
     
-    initIntroSequence() {
+    initIntroSequence(): void {
         // Initialize the intro sequence module
         this.introSequence = new IntroSequence(
             this.game.scene,
@@ -119,17 +203,22 @@ export class StartupSequence {
         };
     }
     
-    startIntroSequence() {
+    startIntroSequence(): void {
         if (!this.introSequence) {
             this.initIntroSequence();
         }
         
         this.introSequenceActive = true;
-        this.game.introSequenceActive = true;
+        if (typeof this.game.introSequenceActive !== 'undefined') {
+            this.game.introSequenceActive = true;
+        }
         
         // Disable all enemies during intro sequence
-        if (this.game.combat && this.game.combat.world && this.game.combat.world.enemySystem) {
-            this.game.combat.world.enemySystem.freezeAllEnemies();
+        if (this.game.combat && this.game.combat.world) {
+            const enemySystem = (this.game.combat.world as { enemySystem?: EnemySystemLike }).enemySystem;
+            if (enemySystem) {
+                enemySystem.freezeAllEnemies();
+            }
         }
         
         // Hide UI elements during intro
@@ -157,21 +246,28 @@ export class StartupSequence {
         }
         
         // Start the intro sequence
-        this.introSequence.startSequence(() => {
+        const introSequence = this.introSequence;
+        if (!introSequence) return;
+        introSequence.startSequence(() => {
             this.completeIntroSequence();
         });
     }
     
-    completeIntroSequence() {
+    completeIntroSequence(): void {
         this.introSequenceActive = false;
-        this.game.introSequenceActive = false;
+        if (typeof this.game.introSequenceActive !== 'undefined') {
+            this.game.introSequenceActive = false;
+        }
         
         // Mark intro as played so it doesn't play again
         localStorage.setItem('introPlayed', 'true');
         
         // Re-enable enemies after intro
-        if (this.game.combat && this.game.combat.world && this.game.combat.world.enemySystem) {
-            this.game.combat.world.enemySystem.unfreezeAllEnemies();
+        if (this.game.combat && this.game.combat.world) {
+            const enemySystem = (this.game.combat.world as { enemySystem?: EnemySystemLike }).enemySystem;
+            if (enemySystem) {
+                enemySystem.unfreezeAllEnemies();
+            }
         }
         
         // Ensure stargate UI is hidden after intro

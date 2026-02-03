@@ -4,13 +4,38 @@ import * as THREE from 'three';
 import { MessageBus } from '../core/messageBus.js';
 import { getGlobalPoolRegistry } from '../modules/pooling/PoolRegistry.js';
 
+type PoolRegistry = {
+    get: (poolName: string, ...args: unknown[]) => unknown;
+    register: (poolName: string, config: { factory: () => unknown; reset?: (obj: unknown) => void; preallocate?: number; maxSize?: number }) => void;
+    release: (poolName: string, obj: unknown) => void;
+    clearAll?: () => void;
+    typeToPool?: Map<string, { objects: unknown[]; maxSize: number }>;
+    statsData?: { hits: number; misses: number };
+};
+
+type ObjectPoolFacade = {
+    registry: PoolRegistry;
+    get: (poolName: string, ...args: unknown[]) => unknown;
+    release: (poolName: string, obj: unknown) => void;
+    createPool: (poolName: string, factory: () => unknown, initialSize?: number, maxSize?: number) => void;
+    getStats: (poolName: string) => { available: number; maxSize: number; hits: number; misses: number } | null;
+    clearAllPools: () => void;
+};
+
+type VectorPool = {
+    pool: THREE.Vector3[];
+    maxSize: number;
+    get: (x?: number, y?: number, z?: number) => THREE.Vector3;
+    release: (vector: THREE.Vector3) => void;
+};
+
 // Global debug flag - set to true for development
 window.DEBUG_MODE = false;
 
-export function initializeGlobals() {
+export function initializeGlobals(): void {
     // Initialize Three.js global (already set by src/main.js, but ensure it's available)
     if (!window.THREE) {
-        window.THREE = THREE;
+        window.THREE = THREE as Window['THREE'];
     }
     
     // Set up global message bus for cross-system communication
@@ -23,14 +48,17 @@ export function initializeGlobals() {
     initializeVectorPool();
 }
 
-function initializeVectorPool() {
-    window.vectorPool = {
+function initializeVectorPool(): void {
+    const vectorPool: VectorPool = {
         pool: [],
         maxSize: 100,
         
         get: function(x = 0, y = 0, z = 0) {
             if (this.pool.length > 0) {
-                return this.pool.pop().set(x, y, z);
+                const vector = this.pool.pop();
+                if (vector) {
+                    return vector.set(x, y, z);
+                }
             }
             return new THREE.Vector3(x, y, z);
         },
@@ -41,12 +69,13 @@ function initializeVectorPool() {
             }
         }
     };
+    window.vectorPool = vectorPool;
 }
 
-function initializeObjectPoolFacade() {
+function initializeObjectPoolFacade(): void {
     // Bridge our global facade to the real PoolRegistry
-    window.objectPool = {
-        registry: getGlobalPoolRegistry(),
+    const objectPool: ObjectPoolFacade = {
+        registry: getGlobalPoolRegistry() as PoolRegistry,
         
         // Get an object from a pool
         get(poolName, ...args) {
@@ -77,8 +106,8 @@ function initializeObjectPoolFacade() {
             this.registry.register(poolName, { 
                 factory, 
                 reset: (obj) => {
-                    if (obj && typeof obj.reset === 'function') {
-                        obj.reset();
+                    if (obj && typeof obj === 'object' && 'reset' in obj && typeof (obj as { reset?: () => void }).reset === 'function') {
+                        (obj as { reset: () => void }).reset();
                     }
                 },
                 preallocate: initialSize, 
@@ -92,10 +121,10 @@ function initializeObjectPoolFacade() {
             if (this.registry.typeToPool && this.registry.typeToPool.has(poolName)) {
                 const pool = this.registry.typeToPool.get(poolName);
                 return {
-                    available: pool.objects.length,
-                    maxSize: pool.maxSize,
-                    hits: this.registry.statsData.hits,
-                    misses: this.registry.statsData.misses
+                    available: pool ? pool.objects.length : 0,
+                    maxSize: pool ? pool.maxSize : 0,
+                    hits: this.registry.statsData ? this.registry.statsData.hits : 0,
+                    misses: this.registry.statsData ? this.registry.statsData.misses : 0
                 };
             }
             return null;
@@ -107,10 +136,12 @@ function initializeObjectPoolFacade() {
                 this.registry.clearAll();
             } else if (this.registry.typeToPool) {
                 // Manual clear if clearAll doesn't exist
-                this.registry.typeToPool.forEach((pool, type) => {
+                this.registry.typeToPool.forEach((pool) => {
                     pool.objects = [];
                 });
             }
         }
     };
+
+    window.objectPool = objectPool;
 }

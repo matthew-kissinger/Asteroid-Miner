@@ -1,5 +1,6 @@
 // gameInitializer.js - Game initialization logic
 
+import * as THREE from 'three';
 import { Renderer } from '../modules/renderer.js';
 import { Spaceship } from '../modules/spaceship.js';
 import { Physics } from '../modules/physics.js';
@@ -8,12 +9,55 @@ import { Controls } from '../modules/controls.js';
 import { UI } from '../modules/ui.js';
 import { AudioManager } from '../modules/audio/audio.js';
 
+type GameRenderer = {
+    scene: THREE.Scene;
+    camera: THREE.Camera;
+};
+
+type PhysicsSpaceship = Parameters<Physics['setSpaceship']>[0];
+
+type GameEnvironment = {
+    setSpaceship: (ship: PhysicsSpaceship) => void;
+};
+
+type GameSpaceship = PhysicsSpaceship & {
+    dock: () => void;
+};
+
+type GameUi = {
+    setAudio: (audio: AudioManager) => void;
+    setControls: (controls: GameControls) => void;
+    initializeSettings: (game: GameInitializerContext) => void;
+    stargateInterface?: { showStargateUI: () => void };
+};
+
+type GameControls = {
+    dockingSystem?: { isDocked: boolean };
+};
+
+type GameInitializerContext = {
+    audio?: AudioManager;
+    renderer?: GameRenderer;
+    scene?: THREE.Scene;
+    camera?: THREE.Camera;
+    physics?: Physics;
+    environment?: GameEnvironment;
+    spaceship?: GameSpaceship;
+    ui?: GameUi;
+    controls?: GameControls;
+    handleResize: () => void;
+    handleVisibilityChange: () => void;
+    handleKeyDown: (event: KeyboardEvent) => void;
+};
+
 export class GameInitializer {
-    constructor(game) {
+    game: GameInitializerContext;
+
+    constructor(game: GameInitializerContext) {
         this.game = game;
     }
     
-    async initializeCore() {
+    async initializeCore(): Promise<void> {
         // Create audio manager first but don't initialize yet
         if (window.DEBUG_MODE) console.log("Creating audio manager...");
         this.game.audio = new AudioManager();
@@ -22,46 +66,52 @@ export class GameInitializer {
         if (window.DEBUG_MODE) console.log("Creating renderer...");
         this.game.renderer = await Renderer.create();
         if (window.DEBUG_MODE) console.log("Renderer created, getting scene...");
+
+        const renderer = this.game.renderer;
         
         // Access scene and camera directly rather than through getters
-        this.game.scene = this.game.renderer.scene;
-        this.game.camera = this.game.renderer.camera;
+        this.game.scene = renderer.scene;
+        this.game.camera = renderer.camera;
         
         if (window.DEBUG_MODE) console.log("Scene and camera references obtained");
         
         // Share camera reference with scene for easy access by other components
-        this.game.scene.camera = this.game.camera;
+        const sceneWithCamera = this.game.scene as THREE.Scene & { camera?: THREE.Camera };
+        sceneWithCamera.camera = this.game.camera;
         
         // Initialize essential components needed for the start screen
         if (window.DEBUG_MODE) console.log("Initializing essential components...");
         
         // Initialize physics
-        this.game.physics = new Physics(this.game.scene);
+        const physics = new Physics(this.game.scene);
+        this.game.physics = physics;
         
         // Set camera reference in physics
-        this.game.physics.setCamera(this.game.camera);
+        physics.setCamera(this.game.camera);
         
         // Initialize environment (essential components only)
-        this.game.environment = new Environment(this.game.scene);
+        const environment = new Environment(this.game.scene);
+        this.game.environment = environment;
         
         // Initialize spaceship
         if (window.DEBUG_MODE) console.log("Creating spaceship...");
-        this.game.spaceship = new Spaceship(this.game.scene);
+        const spaceship = new Spaceship(this.game.scene) as GameSpaceship;
+        this.game.spaceship = spaceship;
         
         // Set spaceship reference in physics
-        this.game.physics.setSpaceship(this.game.spaceship);
+        physics.setSpaceship(spaceship);
         
         // Set spaceship reference in environment (for VibeVerse portals)
-        this.game.environment.setSpaceship(this.game.spaceship);
+        environment.setSpaceship(spaceship);
         
         // Initialize UI
-        this.game.ui = new UI(this.game.spaceship, this.game.environment);
+        this.game.ui = new UI(spaceship, environment);
         
         // Share audio reference with UI for sound-based components
         this.game.ui.setAudio(this.game.audio);
         
         // Initialize controls last, as it depends on other components
-        this.game.controls = new Controls(this.game.spaceship, this.game.physics, this.game.environment, this.game.ui);
+        this.game.controls = new Controls(spaceship, physics, environment, this.game.ui);
         
         // Share controls reference with UI for bidirectional communication
         this.game.ui.setControls(this.game.controls);
@@ -71,7 +121,7 @@ export class GameInitializer {
         this.game.ui.initializeSettings(this.game);
     }
     
-    setupEventHandlers() {
+    setupEventHandlers(): void {
         // Handle window resize
         window.addEventListener('resize', this.game.handleResize.bind(this.game));
         
@@ -82,7 +132,7 @@ export class GameInitializer {
         document.addEventListener('keydown', this.game.handleKeyDown.bind(this.game));
     }
     
-    startDocked() {
+    startDocked(): void {
         // Start the game with the spaceship docked at the stargate
         console.log("Starting game in docked state");
         

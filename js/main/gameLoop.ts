@@ -1,7 +1,45 @@
 // gameLoop.js - Ticking and requestAnimationFrame wiring
 
+type GameLoopRenderer = {
+    render: () => void;
+};
+
+type GameLoopSettings = {
+    getFrameRateCap?: () => string | number;
+};
+
+type GameLoopUi = {
+    updateFPS?: (fps: number, cap?: number) => void;
+    settings?: GameLoopSettings;
+};
+
+type GameLoopGame = {
+    update: (deltaTime: number) => void;
+    renderer?: GameLoopRenderer;
+    ui?: GameLoopUi;
+    gameTime: number;
+};
+
 export class GameLoop {
-    constructor(game) {
+    game: GameLoopGame;
+    frameRateCap: number;
+    warmupFrames: number;
+    currentWarmupFrame: number;
+    performanceStable: boolean;
+    lastFrameTime: number;
+    actualFrameTime: number;
+    frameStartTime: number;
+    accumulator: number;
+    fixedDeltaTime: number;
+    fpsBuffer: number[];
+    fpsBufferSize: number;
+    boundAnimate: FrameRequestCallback | null;
+    deltaTime: number;
+    lastUpdateTime: number;
+    frameCount: number;
+    currentFPS: number;
+
+    constructor(game: GameLoopGame) {
         this.game = game;
         
         // Frame rate cap (defaults to auto/monitor refresh rate)
@@ -33,11 +71,13 @@ export class GameLoop {
         this.currentFPS = 0;
     }
     
-    start() {
-        requestAnimationFrame(this.boundAnimate);
+    start(): void {
+        if (this.boundAnimate) {
+            requestAnimationFrame(this.boundAnimate);
+        }
     }
     
-    animate(timestamp) {
+    animate(timestamp: number): void {
         // Handle warm-up frames for timing stabilization
         if (this.currentWarmupFrame < this.warmupFrames) {
             this.currentWarmupFrame++;
@@ -51,7 +91,9 @@ export class GameLoop {
             }
             
             // Continue warm-up
-            requestAnimationFrame(this.boundAnimate);
+            if (this.boundAnimate) {
+                requestAnimationFrame(this.boundAnimate);
+            }
             return;
         }
         
@@ -60,7 +102,9 @@ export class GameLoop {
             this.lastFrameTime = timestamp;
             this.frameStartTime = performance.now();
             // Request next frame and return
-            requestAnimationFrame(this.boundAnimate);
+            if (this.boundAnimate) {
+                requestAnimationFrame(this.boundAnimate);
+            }
             return; // Skip first frame to establish baseline
         }
         
@@ -78,7 +122,9 @@ export class GameLoop {
             // If we haven't reached the target frame time yet, skip this frame
             if (elapsedSinceLastFrame < targetFrameTime - 0.5) { // Subtract small amount to account for timing imprecision
                 // Request next frame and return early
-                requestAnimationFrame(this.boundAnimate);
+                if (this.boundAnimate) {
+                    requestAnimationFrame(this.boundAnimate);
+                }
                 return;
             }
             
@@ -130,11 +176,12 @@ export class GameLoop {
         this.updateFPS();
         
         // Request next frame
-        requestAnimationFrame(this.boundAnimate);
+        if (this.boundAnimate) {
+            requestAnimationFrame(this.boundAnimate);
+        }
     }
     
-    updateFPS() {
-        const now = performance.now();
+    updateFPS(): void {
         const instantFPS = this.actualFrameTime ? 1000 / this.actualFrameTime : 60;
         
         // Add to FPS buffer with weighted preference to more recent readings
@@ -173,11 +220,11 @@ export class GameLoop {
         this.frameCount++;
     }
     
-    setFrameRateCap(cap) {
+    setFrameRateCap(cap: number): void {
         this.frameRateCap = cap;
     }
     
-    applyFrameRateSettings() {
+    applyFrameRateSettings(): void {
         // Apply frame rate settings from UI
         if (this.game.ui && this.game.ui.settings) {
             const frameRateSetting = this.game.ui.settings.getFrameRateCap ? 
@@ -195,20 +242,21 @@ export class GameLoop {
                 });
             } else {
                 // Use manual setting
-                this.setFrameRateCap(parseInt(frameRateSetting));
+                const cap = typeof frameRateSetting === 'string' ? parseInt(frameRateSetting) : frameRateSetting;
+                this.setFrameRateCap(cap);
             }
         }
     }
     
-    async detectRefreshRate() {
+    async detectRefreshRate(): Promise<number> {
         // Try to detect the monitor's refresh rate
         // This is a simple heuristic that measures frame timing
         return new Promise((resolve) => {
             let frames = 0;
             let startTime = 0;
-            const samples = [];
+            const samples: number[] = [];
             
-            const measure = (timestamp) => {
+            const measure = (timestamp: number) => {
                 if (frames === 0) {
                     startTime = timestamp;
                 } else if (frames > 10 && frames <= 70) {
@@ -257,10 +305,10 @@ export class GameLoop {
         });
     }
     
-    destroy() {
+    destroy(): void {
         // Cancel animation frame
         if (this.boundAnimate) {
-            cancelAnimationFrame(this.boundAnimate);
+            cancelAnimationFrame(this.boundAnimate as unknown as number);
             this.boundAnimate = null;
         }
     }

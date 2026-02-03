@@ -1,7 +1,35 @@
 // hordeMode.js - Horde mode management
 
+type HordeAudio = {
+    playSound: (soundId: string) => void;
+};
+
+type HordeUi = {
+    showNotification?: (message: string, durationMs: number) => void;
+    showUI?: () => void;
+};
+
+type HordeSpaceship = {
+    isDocked: boolean;
+    undock: () => void;
+};
+
+type HordeGameContext = {
+    isHordeActive?: boolean;
+    hordeStartTime?: number;
+    hordeSurvivalTime?: number;
+    audio?: HordeAudio;
+    ui?: HordeUi;
+    spaceship?: HordeSpaceship;
+};
+
 export class HordeMode {
-    constructor(game) {
+    game: HordeGameContext;
+    isActive: boolean;
+    startTime: number;
+    survivalTime: number;
+
+    constructor(game: HordeGameContext) {
         this.game = game;
         this.isActive = false;
         this.startTime = 0;
@@ -11,7 +39,7 @@ export class HordeMode {
     /**
      * Activate horde mode (extreme survival challenge)
      */
-    activate() {
+    activate(): void {
         if (this.isActive) return; // Already active
         
         if (window.DEBUG_MODE) console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
@@ -66,7 +94,7 @@ export class HordeMode {
     /**
      * Update horde mode survival time
      */
-    update() {
+    update(): void {
         if (this.isActive) {
             this.survivalTime = performance.now() - this.startTime;
             this.game.hordeSurvivalTime = this.survivalTime;
@@ -77,7 +105,7 @@ export class HordeMode {
      * Format horde survival time as MM:SS
      * @returns {string} Formatted time string
      */
-    getFormattedSurvivalTime() {
+    getFormattedSurvivalTime(): string {
         const totalSeconds = Math.floor(this.survivalTime / 1000);
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;

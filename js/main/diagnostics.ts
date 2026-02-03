@@ -2,20 +2,64 @@
 
 import { initPerfOverlay } from '../modules/debug/perfOverlay.js';
 
+type GameLoopLike = {
+    setFrameRateCap: (limit: number) => void;
+    currentFPS?: number;
+};
+
+type UiLike = {
+    initializePerformanceMonitor?: () => void;
+    statsInterval?: number | null;
+};
+
+type StartupSequenceLike = {
+    startIntroSequence?: () => void;
+};
+
+type CombatWorldLike = {
+    entityManager?: { entities: Set<unknown> };
+    systemManager?: { systems: unknown[] };
+};
+
+type CombatLike = {
+    world?: CombatWorldLike;
+};
+
+type DifficultyManagerLike = {
+    currentLevel?: number;
+};
+
+type DiagnosticsGame = {
+    gameLoop?: GameLoopLike;
+    ui?: UiLike;
+    startupSequence?: StartupSequenceLike;
+    isGameOver?: boolean;
+    spaceship?: { isDocked?: boolean };
+    introSequenceActive?: boolean;
+    isHordeActive?: boolean;
+    gameTime?: number;
+    difficultyManager?: DifficultyManagerLike;
+    activateHordeMode?: () => void;
+    combat?: CombatLike;
+    scene?: { children: unknown[] };
+};
+
 export class Diagnostics {
-    constructor(game) {
+    game: DiagnosticsGame;
+
+    constructor(game: DiagnosticsGame) {
         this.game = game;
         this.setupDiagnostics();
     }
     
-    setupDiagnostics() {
+    setupDiagnostics(): void {
         // Perf overlay & sink
         initPerfOverlay();
-        if (!window.__perf) window.__perf = {};
-        window.__perf.enabled = false;
+        const perf = window.__perf ?? (window.__perf = {});
+        perf.enabled = false;
         
         // Add debug command for FPS limit
-        window.setFPSLimit = (limit) => {
+        window.setFPSLimit = (limit: number) => {
             if (this.game.gameLoop) {
                 this.game.gameLoop.setFrameRateCap(limit);
                 return `FPS limit set to ${limit > 0 ? limit : 'unlimited'}`;
@@ -24,10 +68,10 @@ export class Diagnostics {
         };
         
         // Add debug command for performance monitoring
-        window.togglePerf = () => {
-            window.__perf.enabled = !window.__perf.enabled;
+        window.togglePerf = (): string => {
+            perf.enabled = !perf.enabled;
             
-            if (window.__perf.enabled) {
+            if (perf.enabled) {
                 // Initialize performance monitor if needed
                 if (this.game.ui && this.game.ui.initializePerformanceMonitor) {
                     this.game.ui.initializePerformanceMonitor();
@@ -52,11 +96,11 @@ export class Diagnostics {
                 }
             }
             
-            return window.__perf.enabled ? "enabled" : "disabled";
+            return perf.enabled ? "enabled" : "disabled";
         };
         
         // Add global debug command to trigger intro sequence
-        window.playIntro = () => {
+        window.playIntro = (): string => {
             if (this.game.startupSequence && this.game.startupSequence.startIntroSequence) {
                     this.game.startupSequence.startIntroSequence();
                 return "Playing intro sequence...";
@@ -65,7 +109,7 @@ export class Diagnostics {
         };
         
         // Add debug command to toggle debug mode
-        window.toggleDebug = () => {
+        window.toggleDebug = (): string => {
             window.DEBUG_MODE = !window.DEBUG_MODE;
             return `Debug mode ${window.DEBUG_MODE ? 'enabled' : 'disabled'}`;
         };
@@ -84,7 +128,7 @@ export class Diagnostics {
         };
         
         // Add debug command to force horde mode
-        window.startHorde = () => {
+        window.startHorde = (): string => {
             if (this.game.activateHordeMode) {
                 this.game.activateHordeMode();
                 return "Horde mode activated!";
@@ -102,13 +146,13 @@ export class Diagnostics {
         };
         
         // Add debug command to check object pool stats
-        window.poolStats = (poolName) => {
+        window.poolStats = (poolName?: string) => {
             if (window.objectPool && window.objectPool.getStats) {
                 if (poolName) {
                     return window.objectPool.getStats(poolName);
                 } else {
                     // Get stats for all pools
-                    const allStats = {};
+                    const allStats: Record<string, unknown> = {};
                     const pools = ['projectile', 'enemy', 'particle', 'hitEffect', 'explosion'];
                     for (const pool of pools) {
                         const stats = window.objectPool.getStats(pool);
@@ -126,7 +170,7 @@ export class Diagnostics {
         window.entityCount = () => {
             if (this.game.combat && this.game.combat.world && this.game.combat.world.entityManager) {
                 const entities = this.game.combat.world.entityManager.entities.size;
-                const systems = this.game.combat.world.systemManager.systems.length;
+                const systems = this.game.combat.world.systemManager?.systems.length ?? 0;
                 return {
                     entities,
                     systems,

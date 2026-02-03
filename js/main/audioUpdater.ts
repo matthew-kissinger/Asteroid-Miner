@@ -1,12 +1,38 @@
 // audioUpdater.js - Game audio state management
 
+type AudioSystem = {
+    playSound: (soundId: string) => void;
+    stopSound: (soundId: string) => void;
+    setThrustVolume: (volume: number) => void;
+};
+
+type ThrustState = {
+    forward: boolean;
+    backward: boolean;
+    left: boolean;
+    right: boolean;
+    boost: boolean;
+};
+
+type SpaceshipState = {
+    isDocked: boolean;
+    thrust: ThrustState;
+};
+
+type GameAudioContext = {
+    audio?: AudioSystem;
+    spaceship?: SpaceshipState;
+};
+
 export class AudioUpdater {
-    constructor(game) {
+    game: GameAudioContext;
+
+    constructor(game: GameAudioContext) {
         this.game = game;
     }
     
     // Update game sounds based on current game state
-    update() {
+    update(): void {
         if (!this.game.audio || !this.game.spaceship) return;
         
         // Handle thruster sounds based on current thrust state

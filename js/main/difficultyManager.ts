@@ -1,6 +1,18 @@
 // difficultyManager.js - Dynamic difficulty scaling
 
+type DifficultyParams = {
+    maxEnemies: number;
+    spawnInterval: number;
+    enemyHealth: number;
+    enemyDamage: number;
+    enemySpeed: number;
+};
+
 export class DifficultyManager {
+    params: DifficultyParams;
+    gameTime: number;
+    currentLevel: number;
+
     constructor() {
         this.params = {
             maxEnemies: 10,
@@ -13,7 +25,7 @@ export class DifficultyManager {
         this.currentLevel = 1;
     }
     
-    update(deltaTime) {
+    update(deltaTime: number): void {
         // Update game time in minutes
         this.gameTime += deltaTime;
         const minutes = this.gameTime / 60;

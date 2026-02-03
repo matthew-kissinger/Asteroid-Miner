@@ -2,13 +2,60 @@
 
 import * as THREE from 'three';
 
+type GameRenderer = {
+    renderer: {
+        compile: (scene: THREE.Scene, camera: THREE.Camera) => void;
+    };
+    _withGuard: (fn: () => void) => void;
+};
+
+type GameContext = {
+    scene?: THREE.Scene;
+    camera?: THREE.Camera;
+    renderer?: GameRenderer;
+};
+
+type HitEffectItem = {
+    mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
+    material: THREE.MeshBasicMaterial;
+    reset: (this: HitEffectItem, color?: number, size?: number) => void;
+    clear: (this: HitEffectItem) => void;
+};
+
+type ParticlePoolItem = {
+    mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
+    velocity: THREE.Vector3;
+    life: number;
+    reset: (this: ParticlePoolItem, position: THREE.Vector3, velocity: THREE.Vector3, color?: number) => void;
+    update: (this: ParticlePoolItem, delta: number) => boolean;
+    clear: (this: ParticlePoolItem) => void;
+};
+
+type ExplosionPoolItem = {
+    container: THREE.Group;
+    particles: ParticlePoolItem[];
+    active: boolean;
+    reset: (this: ExplosionPoolItem, position: THREE.Vector3, color?: number, force?: number) => void;
+    update: (this: ExplosionPoolItem, delta: number) => boolean;
+    clear: (this: ExplosionPoolItem) => void;
+};
+
 export class ObjectPools {
-    constructor(game) {
+    game: GameContext;
+    projectileGeometry?: THREE.SphereGeometry;
+    projectileMaterial?: THREE.MeshStandardMaterial;
+    hitEffectGeometry?: THREE.SphereGeometry;
+
+    constructor(game: GameContext) {
         this.game = game;
     }
     
     // Pre-warm only the most essential shaders needed for immediate gameplay
-    preWarmBasicShaders() {
+    preWarmBasicShaders(): void {
+        const scene = this.game.scene;
+        const camera = this.game.camera;
+        const renderer = this.game.renderer;
+        if (!scene || !camera || !renderer) return;
         
         // Create template projectile geometry and materials
         this.projectileGeometry = new THREE.SphereGeometry(1.8, 12, 12);
@@ -24,17 +71,17 @@ export class ObjectPools {
         const dummyProjectile = new THREE.Mesh(this.projectileGeometry, this.projectileMaterial);
         
         // Add to scene temporarily
-        this.game.scene.add(dummyProjectile);
+        scene.add(dummyProjectile);
         
         // Force shader compilation for better performance
-        this.game.renderer.renderer.compile(this.game.scene, this.game.camera);
+        renderer.renderer.compile(scene, camera);
         
         // Remove dummy object after compilation
-        this.game.renderer._withGuard(() => this.game.scene.remove(dummyProjectile));
+        renderer._withGuard(() => scene.remove(dummyProjectile));
         
     }
     
-    initializeObjectPools() {
+    initializeObjectPools(): void {
         
         try {
             // Initialize hit effect pool
@@ -42,26 +89,26 @@ export class ObjectPools {
                 this.hitEffectGeometry = new THREE.SphereGeometry(2, 8, 8);
             }
             
-            window.objectPool.createPool('hitEffect', () => {
+            window.objectPool.createPool('hitEffect', (): HitEffectItem => {
                 const material = new THREE.MeshBasicMaterial({
                     color: 0xff5500,
                     transparent: true,
                     opacity: 0.8
                 });
                 
-                const mesh = new THREE.Mesh(this.hitEffectGeometry, material);
+                const mesh = new THREE.Mesh(this.hitEffectGeometry, material) as THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
                 mesh.visible = false;
                 
                 return {
                     mesh: mesh,
                     material: material,
-                    reset: function(color = 0xff5500, size = 1) {
+                    reset: function(this: HitEffectItem, color = 0xff5500, size = 1) {
                         this.material.color.set(color);
                         this.material.opacity = 0.8;
                         this.mesh.scale.set(size, size, size);
                         this.mesh.visible = true;
                     },
-                    clear: function() {
+                    clear: function(this: HitEffectItem) {
                         if (this.mesh.parent) {
                             this.mesh.parent.remove(this.mesh);
                         }
@@ -85,15 +132,15 @@ export class ObjectPools {
                 transparent: true
             });
             
-            window.objectPool.createPool('particle', () => {
-                const mesh = new THREE.Mesh(particleGeometry, particleMaterial.clone());
+            window.objectPool.createPool('particle', (): ParticlePoolItem => {
+                const mesh = new THREE.Mesh(particleGeometry, particleMaterial.clone()) as THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
                 mesh.visible = false;
                 
                 return {
                     mesh: mesh,
                     velocity: new THREE.Vector3(),
                     life: 0,
-                    reset: function(position, velocity, color = 0xff5500) {
+                    reset: function(this: ParticlePoolItem, position: THREE.Vector3, velocity: THREE.Vector3, color = 0xff5500) {
                         this.mesh.position.copy(position);
                         this.velocity.copy(velocity);
                         this.mesh.material.color.set(color);
@@ -101,7 +148,7 @@ export class ObjectPools {
                         this.mesh.visible = true;
                         this.life = 1;
                     },
-                    update: function(delta) {
+                    update: function(this: ParticlePoolItem, delta: number) {
                         this.life -= delta * 2; // Fade out over 0.5 seconds
                         if (this.life <= 0) {
                             this.clear();
@@ -112,7 +159,7 @@ export class ObjectPools {
                         this.mesh.material.opacity = this.life;
                         return true;
                     },
-                    clear: function() {
+                    clear: function(this: ParticlePoolItem) {
                         if (this.mesh.parent) {
                             this.mesh.parent.remove(this.mesh);
                         }
@@ -124,12 +171,12 @@ export class ObjectPools {
             
             // Initialize explosion effect pool
             const particleCount = 15;
-            window.objectPool.createPool('explosion', () => {
+            window.objectPool.createPool('explosion', (): ExplosionPoolItem => {
                 const container = new THREE.Group();
-                const particles = [];
+                const particles: ParticlePoolItem[] = [];
                 
                 for (let i = 0; i < particleCount; i++) {
-                    const particle = window.objectPool.get('particle');
+                    const particle = window.objectPool.get('particle') as ParticlePoolItem | null;
                     if (particle) {
                         particles.push(particle);
                     }
@@ -139,7 +186,7 @@ export class ObjectPools {
                     container: container,
                     particles: particles,
                     active: false,
-                    reset: function(position, color = 0xff5500, force = 50) {
+                    reset: function(this: ExplosionPoolItem, position: THREE.Vector3, color = 0xff5500, force = 50) {
                         this.container.position.copy(position);
                         this.active = true;
                         
@@ -160,7 +207,7 @@ export class ObjectPools {
                             window.game.scene.add(this.container);
                         }
                     },
-                    update: function(delta) {
+                    update: function(this: ExplosionPoolItem, delta: number) {
                         if (!this.active) return false;
                         
                         let anyAlive = false;
@@ -179,7 +226,7 @@ export class ObjectPools {
                         
                         return true;
                     },
-                    clear: function() {
+                    clear: function(this: ExplosionPoolItem) {
                         this.active = false;
                         
                         // Clear all particles
