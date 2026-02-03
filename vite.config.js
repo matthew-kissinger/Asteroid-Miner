@@ -16,10 +16,9 @@ export default defineConfig({
   build: {
     // Output directory for production build
     outDir: 'dist',
-    
-    // DISABLE MINIFICATION - it's breaking our component system
-    // The size savings aren't worth the complexity and debugging issues
-    minify: false,
+
+    // Enable minification - now safe after fixing constructor.name usage
+    minify: true,
     
     // Customize asset chunking
     rollupOptions: {

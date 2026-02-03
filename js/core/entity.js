@@ -27,22 +27,23 @@ export class Entity {
      */
     addComponent(component) {
         component.entity = this;
-        this.components.set(component.constructor.name, component);
-        
+        const componentType = component.type || component.constructor.name;
+        this.components.set(componentType, component);
+
         // Call onAttached
         if (component.onAttached) {
             component.onAttached();
         }
-        
+
         // Notify the world that a component was added
         if (this.world && this.world.messageBus) {
             this.world.messageBus.publish('component.added', {
                 entity: this,
-                componentType: component.constructor.name,
+                componentType: componentType,
                 component: component
             });
         }
-        
+
         return this;
     }
     
@@ -58,13 +59,18 @@ export class Entity {
                 component.onDetached();
             }
             component.entity = null;
-            
+
             // Get the component type name - handle both string and class inputs
-            const componentTypeName = typeof componentType === 'string' 
-                ? componentType 
-                : componentType.name;
+            let componentTypeName;
+            if (typeof componentType === 'string') {
+                componentTypeName = componentType;
+            } else if (componentType.type) {
+                componentTypeName = componentType.type;
+            } else {
+                componentTypeName = componentType.name;
+            }
             this.components.delete(componentTypeName);
-            
+
             // Notify the world that a component was removed
             if (this.world && this.world.messageBus) {
                 this.world.messageBus.publish('component.removed', {
@@ -86,7 +92,8 @@ export class Entity {
         if (typeof componentType === 'string') {
             return this.components.get(componentType);
         }
-        return this.components.get(componentType.name);
+        const typeName = componentType.type || componentType.name;
+        return this.components.get(typeName);
     }
     
     /**
@@ -98,7 +105,8 @@ export class Entity {
         if (typeof componentType === 'string') {
             return this.components.has(componentType);
         }
-        return this.components.has(componentType.name);
+        const typeName = componentType.type || componentType.name;
+        return this.components.has(typeName);
     }
     
     /**

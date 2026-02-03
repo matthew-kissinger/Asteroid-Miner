@@ -131,22 +131,23 @@ export class WeaponDisplay {
         
         if (activeWeapon) {
             // Set weapon name and color based on type
-            if (activeWeapon.constructor.name === 'ParticleCannonComponent') {
+            const weaponType = activeWeapon.type || activeWeapon.constructor.name;
+            if (weaponType === 'ParticleCannonComponent') {
                 weaponName = 'Particle Cannon';
                 weaponColor = '#00ffff';
                 energy = this.spaceship.energy || 100;
                 maxEnergy = this.spaceship.maxEnergy || 100;
-            } else if (activeWeapon.constructor.name === 'MissileComponent') {
+            } else if (weaponType === 'MissileComponent') {
                 weaponName = `Missiles (${activeWeapon.ammo}/${activeWeapon.maxAmmo})`;
                 weaponColor = '#ff5500';
                 energy = this.spaceship.energy || 100;
                 maxEnergy = this.spaceship.maxEnergy || 100;
-            } else if (activeWeapon.constructor.name === 'TurretComponent') {
+            } else if (weaponType === 'TurretComponent') {
                 weaponName = `Laser Turrets ${activeWeapon.isActive ? '(ACTIVE)' : '(INACTIVE)'}`;
                 weaponColor = '#ff00aa';
                 energy = this.spaceship.energy || 100;
                 maxEnergy = this.spaceship.maxEnergy || 100;
-            } else if (activeWeapon.constructor.name === 'EMPComponent') {
+            } else if (weaponType === 'EMPComponent') {
                 weaponName = 'EMP Burst';
                 weaponColor = '#00ffff';
                 energy = this.spaceship.energy || 100;
@@ -305,7 +306,7 @@ export class WeaponDisplay {
         if (!activeWeapon) return null;
         
         return {
-            name: activeWeapon.constructor.name,
+            name: activeWeapon.type || activeWeapon.constructor.name,
             component: activeWeapon,
             energy: this.spaceship?.energy || 100,
             maxEnergy: this.spaceship?.maxEnergy || 100

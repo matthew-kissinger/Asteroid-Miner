@@ -20,17 +20,18 @@ export class SystemManager {
      * @returns {System} The registered system
      */
     registerSystem(system) {
-        if (this.systemsByType.has(system.constructor.name)) {
-            console.warn(`System of type ${system.constructor.name} already registered`);
+        const systemType = system.type || system.constructor.name;
+        if (this.systemsByType.has(systemType)) {
+            console.warn(`System of type ${systemType} already registered`);
             return system;
         }
-        
+
         this.systems.push(system);
-        this.systemsByType.set(system.constructor.name, system);
-        
+        this.systemsByType.set(systemType, system);
+
         // Sort systems by priority (lower = earlier)
         this.systems.sort((a, b) => a.priority - b.priority);
-        
+
         return system;
     }
     
@@ -40,7 +41,8 @@ export class SystemManager {
      * @returns {System|undefined} The system instance or undefined if not found
      */
     getSystem(systemType) {
-        return this.systemsByType.get(systemType.name);
+        const typeName = systemType.type || systemType.name;
+        return this.systemsByType.get(typeName);
     }
     
     /**
@@ -52,7 +54,7 @@ export class SystemManager {
     for (const system of this.systems) {
       if (!system.enabled) continue;
       // Stagger heavy systems every 2 ticks (example heuristic)
-      const name = system.constructor.name;
+      const name = system.type || system.constructor.name;
       const isHeavy = name === 'EnemySystem' || name === 'CollisionSystem' || name === 'TargetingSystem';
       if (isHeavy && (this._tick & 1) === 1) {
         continue;

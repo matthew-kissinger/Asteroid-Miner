@@ -152,8 +152,9 @@ export class Combat {
             if (this.world.systems) {
                 for (const system of this.world.systems) {
                     // Skip enemy systems when intro is active
-                    if (system.constructor.name !== 'EnemySystem' && 
-                        system.constructor.name !== 'EnemyAISystem') {
+                    const systemType = system.type || system.constructor.name;
+                    if (systemType !== 'EnemySystem' &&
+                        systemType !== 'EnemyAISystem') {
                         system.update(deltaTime);
                     }
                 }
