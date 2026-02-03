@@ -1,6 +1,7 @@
 // lighting.js - Handles all lighting setup and management for the renderer
 
 import * as THREE from 'three';
+import { LIGHTING_CONFIG } from '../../config/lightingConfig.js';
 
 export class LightingManager {
     constructor(scene, renderer, camera) {
@@ -11,82 +12,45 @@ export class LightingManager {
         // Light components
         this.sunLight = null;
         this.ambientLight = null;
-        this.rimLight = null;
-        this.fillLight = null;
         
-        // Configuration for space scene with proper lighting
-        this.config = {
-            // Sun light - primary illumination
-            sun: {
-                color: 0xFFFFFF,  // Pure white sun
-                intensity: 3.0,    // Moderate intensity with new lighting model
-                position: new THREE.Vector3(1, 0.5, 0.5).normalize() // Direction vector
-            },
-            // Ambient - very low for realistic space darkness
-            ambient: {
-                skyColor: 0x202030,    // Deep blue space
-                groundColor: 0x0a0a10,  // Nearly black
-                intensity: 0.3         // Very subtle ambient from starlight
-            },
-            // Rim light - edge definition from opposite side
-            rim: {
-                color: 0x4466AA,       // Blue rim light
-                intensity: 0.5,        // Subtle rim
-                position: new THREE.Vector3(-1, -0.3, -0.5).normalize()
-            },
-            // Fill light - subtle shadow fill
-            fill: {
-                color: 0x334466,       // Dark blue fill
-                intensity: 0.3,        // Very subtle
-                position: new THREE.Vector3(0.5, -0.5, 1).normalize()
-            },
-            // Shadows
-            shadows: {
-                mapSize: 4096,
-                radius: 2,
-                blurSamples: 25,
-                bias: -0.0001,
-                normalBias: 0.02,
-                frustumSize: 10000,  // Large enough for nearby objects
-                near: 0.5,
-                far: 50000
-            },
-            // Tone mapping
-            toneMapping: {
-                exposure: 1.0,
-                type: THREE.ACESFilmicToneMapping
-            }
-        };
+        // Use centralized configuration
+        this.config = LIGHTING_CONFIG;
     }
 
     setupLighting() {
         // Configure renderer for physically correct lighting
-        this.renderer.useLegacyLights = false;
-        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.enabled = this.config.shadows.enabled;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.renderer.shadowMap.autoUpdate = true;
-        this.renderer.toneMapping = this.config.toneMapping.type;
+        this.renderer.shadowMap.autoUpdate = this.config.performance.shadowMapAutoUpdate;
+        
+        // Map string type to THREE constant
+        if (this.config.toneMapping.type === 'ACESFilmic') {
+            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        }
+        
         this.renderer.toneMappingExposure = this.config.toneMapping.exposure;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         // Create main sun directional light
         this.sunLight = new THREE.DirectionalLight(
             this.config.sun.color,
-            this.config.sun.intensity  // Use raw intensity without PI for space scenes
+            this.config.sun.intensity
         );
 
         // Position sun light to come from behind the sun toward scene
-        // This simulates sunlight casting shadows properly
-        // Default: light from positive X direction
-        this.sunLight.position.set(50000, 10000, 20000);
-        this.sunLight.target.position.set(0, 0, 0);  // Point at sun (center)
+        this.sunLight.position.set(
+            this.config.sun.position.x, 
+            this.config.sun.position.y, 
+            this.config.sun.position.z
+        );
+        this.sunLight.target.position.set(0, 0, 0);
 
         // Configure shadows
-        this.sunLight.castShadow = true;
+        this.sunLight.castShadow = this.config.shadows.enabled;
         this.sunLight.shadow.mapSize.width = this.config.shadows.mapSize;
         this.sunLight.shadow.mapSize.height = this.config.shadows.mapSize;
 
-        // Shadow camera setup - this is crucial for large scenes
+        // Shadow camera setup
         const d = this.config.shadows.frustumSize;
         this.sunLight.shadow.camera.left = -d;
         this.sunLight.shadow.camera.right = d;
@@ -103,18 +67,15 @@ export class LightingManager {
         this.scene.add(this.sunLight);
         this.scene.add(this.sunLight.target);
 
-        // Add very subtle ambient light for space (mostly from starlight)
+        // Add subtle ambient light
         this.ambientLight = new THREE.HemisphereLight(
             this.config.ambient.skyColor,
             this.config.ambient.groundColor,
-            0.3  // Much lower intensity - space is dark
+            this.config.ambient.intensity
         );
         this.scene.add(this.ambientLight);
 
-        // Remove rim and fill lights - the sun's directional light is sufficient
-        // These were causing excessive illumination
-
-        console.log("Lighting setup complete with proper sun directional light");
+        console.log("Lighting setup complete using centralized LIGHTING_CONFIG");
     }
     
     /**
@@ -141,7 +102,7 @@ export class LightingManager {
         const clampedFactor = THREE.MathUtils.clamp(factor, 0.5, 2.0);
         
         if (this.sunLight) {
-            this.sunLight.intensity = this.config.sun.intensity * Math.PI * clampedFactor;
+            this.sunLight.intensity = this.config.sun.intensity * clampedFactor;
         }
     }
     
@@ -201,7 +162,7 @@ export class LightingManager {
         }
         
         // Remove lights from scene
-        [this.sunLight, this.ambientLight, this.rimLight, this.fillLight].forEach(light => {
+        [this.sunLight, this.ambientLight].forEach(light => {
             if (light) {
                 if (light.target) {
                     this.scene.remove(light.target);

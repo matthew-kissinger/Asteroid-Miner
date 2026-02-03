@@ -33,9 +33,6 @@ export class Renderer {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        // Use the new physically correct lighting system (default in r155+)
-        this.renderer.useLegacyLights = false;
-
         // Set tone mapping for HDR rendering
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.0;
@@ -174,10 +171,8 @@ export class Renderer {
     
     // Allow dynamic adjustment of post-processing settings
     adjustBloom(strength, radius, threshold) {
-        if (this.bloomPass) {
-            this.bloomPass.strength = strength !== undefined ? strength : this.bloomPass.strength;
-            this.bloomPass.radius = radius !== undefined ? radius : this.bloomPass.radius;
-            this.bloomPass.threshold = threshold !== undefined ? threshold : this.bloomPass.threshold;
+        if (this.postProcessingManager) {
+            this.postProcessingManager.adjustBloom(strength, radius, threshold);
         }
     }
     

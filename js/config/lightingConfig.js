@@ -4,56 +4,34 @@
 export const LIGHTING_CONFIG = {
     // Main sun light configuration
     sun: {
-        color: 0xFFFFF5,           // Bright white with slight warmth
-        intensity: 12.0 * Math.PI,  // Physically correct intensity for non-legacy lights
+        color: 0xFFFFFF,           // Pure white sun
+        intensity: 3.0,            // Moderate intensity for space scenes
         position: {
-            x: 10000,
-            y: 4000,
-            z: 2000
+            x: 50000,
+            y: 10000,
+            z: 20000
         }
     },
     
     // Ambient lighting - enough to see objects in space
     ambient: {
-        skyColor: 0x404060,        // Dark blue for top hemisphere
-        groundColor: 0x101020,      // Very dark blue for bottom hemisphere  
-        intensity: 0.5 * Math.PI    // Visible ambient light
-    },
-    
-    // Rim light for edge definition
-    rim: {
-        color: 0x6A8FBD,           // Light blue for contrast
-        intensity: 0.8 * Math.PI,   // More visible
-        position: {
-            x: -5000,
-            y: 2000,
-            z: -3000
-        }
-    },
-    
-    // Fill light for shadow softening
-    fill: {
-        color: 0x4A6F8F,           // Medium blue
-        intensity: 0.5 * Math.PI,   // More visible
-        position: {
-            x: -3000,
-            y: -1000,
-            z: 4000
-        }
+        skyColor: 0x202030,        // Deep blue space
+        groundColor: 0x0a0a10,      // Nearly black
+        intensity: 0.3             // Very subtle ambient from starlight
     },
     
     // Shadow configuration
     shadows: {
         enabled: true,
-        mapSize: 4096,              // High quality (was 2048)
+        mapSize: 4096,              // High quality
         type: 'PCFSoft',            // Soft shadows
-        radius: 1.5,                // Softness amount
+        radius: 2,                  // Softness amount
         blurSamples: 25,            // Quality of blur
-        bias: -0.00008,             // Prevents shadow acne
-        normalBias: 0.015,          // Additional bias based on normals
-        frustumSize: 3000,          // Shadow camera size
-        near: 0.1,
-        far: 15000
+        bias: -0.0001,              // Prevents shadow acne
+        normalBias: 0.02,           // Additional bias based on normals
+        frustumSize: 10000,         // Shadow camera size
+        near: 0.5,
+        far: 50000
     },
     
     // Post-processing bloom for stars
@@ -128,7 +106,6 @@ export const LIGHTING_CONFIG = {
     performance: {
         shadowAutoUpdate: true,
         shadowMapAutoUpdate: true,
-        useLegacyLights: false,     // Use modern lighting
         logarithmicDepthBuffer: true // Better for large scenes
     },
     
@@ -151,41 +128,69 @@ export const LIGHTING_CONFIG = {
     }
 };
 
-// Helper function to apply config to lighting manager
-export function applyLightingConfig(lightingManager, config = LIGHTING_CONFIG) {
+/**
+ * Helper function to apply config to lighting and post-processing managers
+ * @param {Object} lightingManager - The LightingManager instance or a combined renderer instance
+ * @param {Object} config - The lighting configuration to apply
+ * @param {Object} postProcessingManager - Optional PostProcessingManager instance
+ */
+export function applyLightingConfig(lightingManager, config = LIGHTING_CONFIG, postProcessingManager = null) {
     if (!lightingManager) return;
     
+    // Support passing the main Renderer instance
+    const lm = lightingManager.lightingManager || lightingManager;
+    const ppm = postProcessingManager || lightingManager.postProcessingManager;
+    
     // Update sun light
-    if (lightingManager.sunLight) {
-        lightingManager.sunLight.color.setHex(config.sun.color);
-        lightingManager.sunLight.intensity = config.sun.intensity;
+    if (lm.sunLight) {
+        lm.sunLight.color.setHex(config.sun.color);
+        lm.sunLight.intensity = config.sun.intensity;
+        
+        // Update sun position if specified
+        if (config.sun.position) {
+            lm.sunLight.position.set(
+                config.sun.position.x,
+                config.sun.position.y,
+                config.sun.position.z
+            );
+        }
     }
     
     // Update ambient
-    if (lightingManager.ambientLight) {
-        lightingManager.ambientLight.color.setHex(config.ambient.skyColor);
-        lightingManager.ambientLight.groundColor.setHex(config.ambient.groundColor);
-        lightingManager.ambientLight.intensity = config.ambient.intensity;
+    if (lm.ambientLight) {
+        lm.ambientLight.color.setHex(config.ambient.skyColor);
+        lm.ambientLight.groundColor.setHex(config.ambient.groundColor);
+        lm.ambientLight.intensity = config.ambient.intensity;
     }
     
     // Update shadows
-    if (lightingManager.sunLight && lightingManager.sunLight.shadow) {
-        lightingManager.sunLight.shadow.mapSize.width = config.shadows.mapSize;
-        lightingManager.sunLight.shadow.mapSize.height = config.shadows.mapSize;
-        lightingManager.sunLight.shadow.radius = config.shadows.radius;
-        lightingManager.sunLight.shadow.blurSamples = config.shadows.blurSamples;
+    if (lm.sunLight && lm.sunLight.shadow) {
+        lm.sunLight.shadow.mapSize.width = config.shadows.mapSize;
+        lm.sunLight.shadow.mapSize.height = config.shadows.mapSize;
+        lm.sunLight.shadow.radius = config.shadows.radius;
+        
+        // Update frustum
+        const d = config.shadows.frustumSize;
+        lm.sunLight.shadow.camera.left = -d;
+        lm.sunLight.shadow.camera.right = d;
+        lm.sunLight.shadow.camera.top = d;
+        lm.sunLight.shadow.camera.bottom = -d;
+        lm.sunLight.shadow.camera.near = config.shadows.near;
+        lm.sunLight.shadow.camera.far = config.shadows.far;
+        lm.sunLight.shadow.camera.updateProjectionMatrix();
+        
+        lm.sunLight.shadow.bias = config.shadows.bias;
+        lm.sunLight.shadow.normalBias = config.shadows.normalBias;
     }
     
     // Update bloom
-    if (lightingManager.bloomPass) {
-        lightingManager.bloomPass.strength = config.bloom.strength;
-        lightingManager.bloomPass.radius = config.bloom.radius;
-        lightingManager.bloomPass.threshold = config.bloom.threshold;
+    if (ppm) {
+        ppm.adjustBloom(config.bloom.strength, config.bloom.radius, config.bloom.threshold);
     }
     
     // Update exposure
-    if (lightingManager.renderer) {
-        lightingManager.renderer.toneMappingExposure = config.toneMapping.exposure;
+    if (lm.renderer) {
+        lm.renderer.toneMappingExposure = config.toneMapping.exposure;
     }
 }
 
