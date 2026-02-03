@@ -6,9 +6,9 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 1 Complete, Phase 2 Started
+## Current State: Phase 1 Complete, Phase 2 In Progress
 
-Phase 1 is done. Early Phase 2 work has begun - bitECS installed, mining subsystem converted to TypeScript.
+Phase 1 is done. Phase 2 is progressing - bitECS installed, components defined, spaceship factory and mining subsystem converted to TypeScript, lighting config wired up.
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured, typecheck passes)
@@ -19,16 +19,19 @@ Phase 1 is done. Early Phase 2 work has begun - bitECS installed, mining subsyst
 - Mining subsystem converted to TypeScript (5 modules in js/modules/controls/mining/)
 - CSS mining laser replaced with 3D cylinder mesh using TSL material (js/modules/controls/mining/laserControl.ts)
 - bitECS installed (v0.4.0) and world module created (js/ecs/world.ts)
+- bitECS components defined (24 components in js/ecs/components.ts) - Transform, Render, Physics, Combat, Spaceship, Mining, AI, Tags, Utility
+- Spaceship entity factory converted to TypeScript (js/entities/spaceship.ts)
 - Vite minification re-enabled (constructor.name breakage fixed)
+- lightingConfig.js wired to lighting.js - values now match (sun: 3.0, ambient: 0.3)
 
 **Remaining Problems:**
-- **Partial TypeScript** - 10 TS files done, but 270 JS files remain. js/main.ts has 16 @ts-ignore suppressions (imports from untyped JS modules).
-- **bitECS world exists but unused** - js/ecs/world.ts exports createWorld/createGameEntity/removeGameEntity but no components, systems, or queries are defined yet. Nothing imports the world module.
-- **Custom ECS still active** - Legacy ECS framework in js/core/ still runs the game. bitECS migration requires defining components + systems before switchover.
-- **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.js (volumetric light + claude rays). Pending TSL conversion task exists.
-- **Global state** - ~735 `window.*` usages across 119 files
-- **Dormant ECS mining system** - js/systems/mining/ has a fully implemented but never-integrated ECS mining system. Active system is now the TypeScript version in js/modules/controls/mining/.
-- **lightingConfig.js drift** - js/config/lightingConfig.js defines lighting values (sun: 12*PI, ambient: 0.5*PI) that don't match the hardcoded values actually used in js/modules/renderer/lighting.js (sun: 3.0, ambient: 0.3). The config's applyLightingConfig() function exists but may not be called.
+- **Partial TypeScript** - 12 TS files done, but 269 JS files remain. js/main.ts has 16 @ts-ignore suppressions (imports from untyped JS modules).
+- **bitECS components defined but no systems** - js/ecs/components.ts has 24 components but no systems, queries, or game loop integration exist. Nothing imports the world or components modules.
+- **Custom ECS still active** - Legacy ECS framework in js/core/ still runs the game. bitECS migration requires creating systems before switchover.
+- **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.js (volumetric light + claude rays). Pending TSL conversion task exists (ccc67db9).
+- **Global state** - ~922 `window.*` usages across 165 files
+- **Dormant ECS mining system** - js/systems/mining/ still has a fully implemented but never-integrated ECS mining system. Delete task failed. Active system is the TypeScript version in js/modules/controls/mining/.
+- **Physics still JavaScript** - js/modules/physics.js (27KB) remains unconverted despite a completed task claiming otherwise. Needs actual TypeScript conversion.
 
 ## Target Stack (2026 Best Practices)
 
@@ -37,7 +40,7 @@ Phase 1 is done. Early Phase 2 work has begun - bitECS installed, mining subsyst
 | Language | TypeScript (partial) | **TypeScript (strict)** | In Progress |
 | Renderer | Three.js r180 WebGPU | **Three.js r180+ WebGPU** | Done |
 | Shaders | GLSL + TSL laser (integrated) | **TSL (Three Shading Language)** | Started |
-| ECS | Custom + bitECS world module | **bitECS** | Started |
+| ECS | Custom + bitECS (components defined) | **bitECS** | Started |
 | Physics | Custom Newtonian | **Keep custom** (cleaned up) | - |
 | Particles | CPU-based | **WebGPU Compute Shaders** | - |
 | Build | Vite 5 | Vite 6 | - |
@@ -103,49 +106,25 @@ Phase 1 is done. Early Phase 2 work has begun - bitECS installed, mining subsyst
 - TSL for all custom shaders
 - Compute shaders for particles, effects
 
-## Component Design
+## Component Design (Implemented)
+
+Components are defined in `js/ecs/components.ts` using plain SoA (Structure-of-Arrays) pattern with pre-allocated TypedArrays (10k entities). bitECS v0.4.0 uses plain objects as components.
+
+**24 components across 8 categories:**
+- **Transform:** Position, Velocity, Rotation (quaternion), Scale
+- **Render:** MeshRef (index into Three.js mesh array), Renderable (visibility flags)
+- **Physics:** Rigidbody (mass, drag), Collider (sphere radius)
+- **Combat:** Health (HP, shield, regen, resistance), Weapon (damage, fire rate, range)
+- **Spaceship:** Thrust (6-axis input), Thruster (force, speed), ShipState (fuel, upgrades), Cargo (resources)
+- **Mining:** MiningLaser (target, progress, rates per resource), Mineable (type, amount, difficulty)
+- **AI:** EnemyAI (faction, detection, spiral movement), SeparationForce (flocking)
+- **Tags/Utility:** Player, Enemy, Asteroid, Planet, Projectile, Lifetime, Trail
 
 ```typescript
-import { defineComponent, Types } from 'bitecs'
-
-// Flat TypedArrays - cache friendly
-const Position = defineComponent({
-  x: Types.f32, y: Types.f32, z: Types.f32
-})
-
-const Velocity = defineComponent({
-  x: Types.f32, y: Types.f32, z: Types.f32
-})
-
-const Rotation = defineComponent({
-  x: Types.f32, y: Types.f32, z: Types.f32, w: Types.f32  // Quaternion
-})
-
-const MeshRef = defineComponent({
-  id: Types.ui32  // Index into Three.js mesh array
-})
-
-const Health = defineComponent({
-  current: Types.f32, max: Types.f32, shield: Types.f32
-})
-
-const Collider = defineComponent({
-  radius: Types.f32  // Sphere collision radius
-})
-
-const MiningLaser = defineComponent({
-  active: Types.ui8,
-  targetEntity: Types.eid,
-  progress: Types.f32
-})
-
-const Thrust = defineComponent({
-  forward: Types.ui8,
-  backward: Types.ui8,
-  left: Types.ui8,
-  right: Types.ui8,
-  boost: Types.ui8
-})
+// Access pattern (SoA):
+Position.x[eid] = 100
+Velocity.y[eid] = 5.5
+Health.current[eid] = Health.max[eid]
 ```
 
 ## Migration Plan
@@ -154,13 +133,14 @@ const Thrust = defineComponent({
 1. ~~Upgrade to Three.js r180+~~ Done (r180, package.json updated)
 2. ~~Add TypeScript with strict mode~~ Done (tsconfig.json, checkJs=false for JS files)
 3. ~~Enable WebGPU renderer with WebGL2 fallback~~ Done (js/modules/renderer.js)
-4. Convert `.js` -> `.ts` incrementally - In progress (10 TS files done, 270 JS files remain)
+4. Convert `.js` -> `.ts` incrementally - In progress (12 TS files done, 269 JS files remain)
 
-### Phase 2: bitECS Migration - STARTED
+### Phase 2: bitECS Migration - IN PROGRESS
 1. ~~Install bitECS~~ Done (v0.4.0, js/ecs/world.ts created)
-2. Define components - Next up
-3. Create systems (physics, combat, AI, mining)
+2. ~~Define components~~ Done (24 components in js/ecs/components.ts)
+3. Create systems (physics, combat, AI, mining) - Next up
 4. Delete old custom ECS
+5. Delete dormant ECS mining system (js/systems/mining/)
 
 ### Phase 3: Game Feel Overhaul
 1. **Controller tuning**
@@ -284,7 +264,10 @@ src/
 js/
 ├── main.ts              # Game class, main loop
 ├── ecs/
-│   └── world.ts         # bitECS world module (createWorld, add/remove entity)
+│   ├── world.ts         # bitECS world module (createWorld, add/remove entity)
+│   └── components.ts    # 24 bitECS component definitions (SoA TypedArrays)
+├── entities/
+│   └── spaceship.ts     # Spaceship entity factory (TypeScript, uses legacy components)
 ├── main/                # Game initialization, lifecycle
 ├── modules/
 │   ├── renderer.js      # WebGPU/WebGL2 renderer
@@ -306,7 +289,7 @@ js/
 │   └── mining/          # Dormant ECS mining system (never integrated)
 ├── components/          # Legacy components
 └── config/
-    └── lightingConfig.js # Lighting config (values drifted from actual implementation)
+    └── lightingConfig.js # Lighting config (wired to lighting.js, values in sync)
 ```
 
 Target:
@@ -366,10 +349,12 @@ After overhaul:
 
 - **bitECS install tasks timeout.** Two attempts failed at 30min. The scope was too large (install + components + systems + queries + verification). Break into smaller pieces: install only, then components, then systems. Third attempt (install-only) succeeded.
 - **TypeScript conversion of large modules fails.** The spaceship module conversion (7+ files) was too ambitious. Convert one file at a time, verify build after each.
-- **Mining consolidation is blocked on bitECS.** Cannot consolidate the dual mining system until bitECS components and systems are defined, since the ECS mining system depends on a world object.
+- **Mining consolidation is blocked on bitECS systems.** Components are defined but no systems exist yet. Cannot consolidate the dual mining system until bitECS systems are created.
+- **Dormant mining delete task failed.** js/systems/mining/ still exists. The cline agent failed to complete this task. Needs a retry with a simpler, more targeted approach.
 - ~~**TSL laser integration failed.**~~ RESOLVED - CSS laser replaced with 3D cylinder mesh using TSL material in js/modules/controls/mining/laserControl.ts.
 - **js/main.ts has 16 @ts-ignore.** These are imports from JS files that lack type declarations. Will resolve as modules are converted to TS.
-- **lightingConfig.js is drifted.** The config file defines values that don't match what lighting.js actually uses. Either wire up applyLightingConfig() or update the config to match reality.
+- ~~**lightingConfig.js is drifted.**~~ RESOLVED - Config wired to lighting.js, values in sync (sun: 3.0, ambient: 0.3).
+- **Physics TypeScript conversion was falsely marked done.** js/modules/physics.js (27KB) is still JavaScript. Task needs to be re-done.
 
 ## Resources
 
