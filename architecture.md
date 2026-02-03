@@ -7,7 +7,7 @@
 -   **Purpose:** A 3D space mining simulation game playable in a web browser. Players navigate space, mine asteroids, trade resources, upgrade their ship, and engage in combat.
 -   **Core Functionality:**
     -   3D Space Navigation & Physics Simulation
-    -   Asteroid Mining & Resource Collection (Split between Module and ECS System)
+    -   Asteroid Mining & Resource Collection (TypeScript-based module system)
     -   Ship Upgrades & Trading via Stargate Interface (Likely involves ECS Trading System)
     -   Combat System (Player vs Spectral Drones, managed via dedicated ECS with balanced encounter timing)
     -   Deployable Space Laser Turrets (Autonomous defense platforms)
@@ -110,7 +110,6 @@ js/ # JavaScript source code - Core game logic
         docking/ # Docking logic systems
         entity/ # Entity state systems
         input/ # Low-level input processing systems
-        mining/ # Mining process logic systems
         physics/ # Physics simulation systems
         rendering/ # Rendering update systems
         trading/ # Trading logic systems
@@ -205,7 +204,6 @@ vite.config.js # Vite configuration file
     -   `deployment/deploymentSystem.js`: Handles deployment and retrieval of space laser turrets.
 -   **Available But NOT Registered ECS Systems:** (See ECS_SYSTEMS_INVENTORY.md for details)
     -   `entity/healthSystem.js`: Complete health management system with UI hooks
-    -   `mining/miningSystem.js`: Production-ready with full visual effects (579 lines)
     -   `docking/dockingSystem.js`: Proximity detection and state management
     -   `trading/tradingSystem.js`: Market mechanics and UI integration
     -   `physics/movementSystem.js`: Complete physics implementation
@@ -222,7 +220,7 @@ vite.config.js # Vite configuration file
     -   `controls.js`: Main coordinator for player input. Delegates to specific handlers (`inputHandler.js`, `touchControls.js`) and systems (`miningSystem.js`, `targetingSystem.js`, `dockingSystem.js`, `deploymentSystem.js`). Handles automatic collection of energy orbs when colliding with anomalies.
     -   `controls/inputHandler.js`, `controls/touchControls.js`: Handle raw desktop/mobile input events and translate them into game actions or state changes for the `Spaceship` or other modules.
     -   `controls/gamepadHandler.js`: Comprehensive gamepad/controller support with advanced axis mapping, sensitivity controls, response curves, and intelligent button mapping for all game functions.
-    -   `controls/miningSystem.js`: Handles player *intent* to mine, target selection, UI updates (progress bar, target info), resource calculation and addition to `Spaceship` cargo. Publishes events like `mining.start` / `mining.stop` for the ECS `miningSystem` to handle visuals.
+    -   `controls/miningSystem.js`: Handles player *intent* to mine, target selection, UI updates (progress bar, target info), resource calculation, and addition to `Spaceship` cargo. Also coordinates visual effects via its TypeScript sub-modules.
     -   `controls/targetingSystem.js`: Performance-optimized targeting system with reduced update frequencies, simplified visual effects, and clean UI positioning at screen top.
     -   `controls/dockingSystem.js`: Handles player *intent* to dock/undock, target selection (stargate), UI updates. Publishes events for the ECS `dockingSystem` to handle entity state changes.
     -   `controls/deploymentSystem.js`: Handles player *intent* to deploy/retrieve space laser turrets, UI updates. Publishes events for the ECS `deploymentSystem` to handle entity creation/destruction.
@@ -259,7 +257,6 @@ vite.config.js # Vite configuration file
 -   **`js/modules/spaceship.js`**: Authoritative player state. Syncs with the Combat ECS player entity.
 -   **`js/modules/combat.js`**: Creates and manages the Combat ECS world, registers combat systems, handles projectile logic and pooling, syncs player state with ECS.
 -   **`js/modules/controls/miningSystem.js`**: Handles player mining intent, UI, and resource logic.
--   **`js/systems/mining/miningSystem.js`**: Handles ECS-level mining visuals and entity state updates.
 -   **`js/modules/environment/asteroidBelt.js`**: Manages asteroids using direct `THREE.Mesh` objects.
 -   **`js/modules/environment/spaceAnomalies.js`**: Creates and manages space anomalies with collectible energy orbs. Implements 5 unique anomaly types with particle effects, animations, and collision detection.
 -   **`js/modules/utils/apiClient.js`**: Handles external AI API.

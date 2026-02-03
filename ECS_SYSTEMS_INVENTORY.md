@@ -5,33 +5,7 @@ These ECS systems are fully implemented and tested but not currently registered 
 
 ## Ready-to-Use Systems
 
-### 1. MiningSystem (`js/systems/mining/miningSystem.js`)
-**Status:** Complete and production-ready (579 lines)
-
-**Features:**
-- Complete visual effects system:
-  - Animated laser beam with color pulsing
-  - Progress ring indicator
-  - Particle impact effects
-- Event-driven architecture (responds to `mining.start`, `mining.stop`)
-- Range checking with 2x extended range for gameplay
-- Resource depletion tracking
-- Cargo integration
-- Proper cleanup and resource disposal
-
-**To Activate:**
-```javascript
-// In js/modules/combat.js
-import { MiningSystem } from '../systems/mining/miningSystem.js';
-this.miningSystem = new MiningSystem(this.world);
-this.world.registerSystem(this.miningSystem);
-```
-
-**Would Replace:** `js/modules/controls/miningSystem.js` (module version)
-
----
-
-### 2. HealthSystem (`js/systems/entity/healthSystem.js`)
+### 1. HealthSystem (`js/systems/entity/healthSystem.js`)
 **Status:** Complete with UI integration
 
 **Features:**
@@ -57,13 +31,13 @@ this.world.registerSystem(this.healthSystem);
 
 ---
 
-### 3. MovementSystem (`js/systems/physics/movementSystem.js`)
+### 2. MovementSystem (`js/systems/physics/movementSystem.js`)
 **Status:** Complete physics implementation
 
 **Features:**
 - Proper physics integration:
   - Force accumulation
-  - Velocity integration
+  - Velocity integration:
   - Angular velocity handling
 - Drag simulation (linear and angular)
 - Kinematic body support
@@ -82,7 +56,7 @@ this.world.registerSystem(this.movementSystem);
 
 ---
 
-### 4. DockingSystem (`js/systems/docking/dockingSystem.js`)
+### 3. DockingSystem (`js/systems/docking/dockingSystem.js`)
 **Status:** Complete with proximity detection
 
 **Features:**
@@ -105,7 +79,7 @@ this.world.registerSystem(this.dockingSystem);
 
 ---
 
-### 5. TradingSystem (`js/systems/trading/tradingSystem.js`)
+### 4. TradingSystem (`js/systems/trading/tradingSystem.js`)
 **Status:** Complete with market mechanics
 
 **Features:**
@@ -134,8 +108,7 @@ this.world.registerSystem(this.tradingSystem);
 Activate systems one at a time, testing each:
 1. Start with `MovementSystem` (lowest risk, high benefit)
 2. Add `HealthSystem` (unifies health logic)
-3. Migrate `MiningSystem` (better visuals)
-4. Complete with `DockingSystem` and `TradingSystem`
+3. Complete with `DockingSystem` and `TradingSystem`
 
 ### Option 2: Feature-Based Activation
 Activate systems when adding related features:
@@ -171,7 +144,6 @@ Systems that create Three.js objects:
 
 ## Performance Considerations
 
-- **MiningSystem:** Creates visual effects per mining operation
 - **MovementSystem:** Runs every frame for all moving entities
 - **HealthSystem:** Minimal overhead, event-driven
 - **DockingSystem:** Proximity checks only when near stargate
