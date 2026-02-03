@@ -2,6 +2,7 @@
 
 import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
+import { WebGPURenderer } from 'three/webgpu';
 import { LightingManager } from './renderer/lighting.js';
 import { PostProcessingManager } from './renderer/post.js';
 import { SceneApiManager } from './renderer/sceneApi.js';
@@ -11,60 +12,82 @@ import { VolumetricLightingManager } from './renderer/volumetricLighting.js';
 export class Renderer {
     constructor() {
         console.log("Initializing enhanced renderer...");
-        
-        // Check for WebGL 2 support
-        if (!WebGL.isWebGL2Available()) {
-            const warning = WebGL.getWebGL2ErrorMessage();
-            document.body.appendChild(warning);
-            console.error("WebGL 2 is required but not available.");
-            throw new Error("WebGL 2 not available");
-        } else {
-            console.log("WebGL 2 is available.");
-        }
-        
+
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 400000);
-        
-        // Create renderer with HDR support
-        this.renderer = new THREE.WebGLRenderer({ 
-            antialias: true,
-            powerPreference: "high-performance",
-            logarithmicDepthBuffer: true, // Better for space scenes with huge distance ranges
-            stencil: true, // Explicitly enable stencil buffer (default changed to false in r163)
-        });
-        
+
+        // Interpolation alpha provided by main
+        this.renderAlpha = 0;
+    }
+
+    static async create() {
+        const instance = new Renderer();
+        await instance.init();
+        return instance;
+    }
+
+    async init() {
+        this.renderer = await this.createRenderer();
+
         // Enable shadow mapping
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        
+
         // Use the new physically correct lighting system (default in r155+)
         this.renderer.useLegacyLights = false;
-        
+
         // Set tone mapping for HDR rendering
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.0;
-        
+
         this.setupRenderer();
-        
+
         // Initialize submodules
         this.lightingManager = new LightingManager(this.scene, this.renderer, this.camera);
         this.postProcessingManager = new PostProcessingManager(this.renderer, this.scene, this.camera);
         this.sceneApiManager = new SceneApiManager(this.scene);
         this.renderHelpers = new RenderHelpers(this.scene);
         this.volumetricLightingManager = new VolumetricLightingManager(this.postProcessingManager, this.sceneApiManager, this.camera);
-        
+
         // Setup through submodules
         this.lightingManager.setupLighting();
         this.postProcessingManager.setupPostProcessing();
         this.setupResizeHandler();
-        
+
         // Store reference for sun to access
         this.scene.lightingManager = this.lightingManager;
-        
-        // Interpolation alpha provided by main
-        this.renderAlpha = 0;
-        
+
         console.log("Enhanced renderer initialized successfully");
+    }
+
+    async createRenderer() {
+        // Try WebGPU first, fall back to WebGL2
+        try {
+            const renderer = new WebGPURenderer({
+                antialias: true,
+                powerPreference: "high-performance",
+            });
+            await renderer.init();
+            console.log("WebGPU renderer initialized");
+            return renderer;
+        } catch (error) {
+            console.log("WebGPU not available, falling back to WebGL2");
+        }
+
+        if (!WebGL.isWebGL2Available()) {
+            const warning = WebGL.getWebGL2ErrorMessage();
+            document.body.appendChild(warning);
+            console.error("WebGL 2 is required but not available.");
+            throw new Error("WebGL 2 not available");
+        }
+
+        console.log("WebGL 2 is available.");
+        return new THREE.WebGLRenderer({
+            antialias: true,
+            powerPreference: "high-performance",
+            logarithmicDepthBuffer: true, // Better for space scenes with huge distance ranges
+            stencil: true, // Explicitly enable stencil buffer (default changed to false in r163)
+        });
     }
     
     setupRenderer() {

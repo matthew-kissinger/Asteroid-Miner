@@ -13,14 +13,14 @@ export class GameInitializer {
         this.game = game;
     }
     
-    initializeCore() {
+    async initializeCore() {
         // Create audio manager first but don't initialize yet
         if (window.DEBUG_MODE) console.log("Creating audio manager...");
         this.game.audio = new AudioManager();
         
         // Initialize renderer first
         if (window.DEBUG_MODE) console.log("Creating renderer...");
-        this.game.renderer = new Renderer();
+        this.game.renderer = await Renderer.create();
         if (window.DEBUG_MODE) console.log("Renderer created, getting scene...");
         
         // Access scene and camera directly rather than through getters

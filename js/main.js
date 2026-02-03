@@ -24,52 +24,58 @@ export class Game {
         window.game = this;
         
         // Subscribe to global events
-        window.mainMessageBus.subscribe('game.over', (data) => this.lifecycle.gameOver(data.reason || 'Game Over'));
-        
+        window.mainMessageBus.subscribe('game.over', (data) => {
+            if (this.lifecycle) {
+                this.lifecycle.gameOver(data.reason || 'Game Over');
+            }
+        });
+
+        // Initialize core game systems
+        this.initializer = new GameInitializer(this);
+    }
+
+    async initialize() {
         try {
-            // Initialize core game systems
-            this.initializer = new GameInitializer(this);
-            this.initializer.initializeCore();
-            
+            await this.initializer.initializeCore();
+
             // Game state
             this.isGameOver = false;
             this.introSequenceActive = false;
             this.gameTime = 0;
-            
+
             // Detect mobile device
             this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                            (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
-            
+
             // Initialize managers
             this.difficultyManager = new DifficultyManager();
             this.hordeMode = new HordeMode(this);
             this.audioUpdater = new AudioUpdater(this);
             this.lifecycle = new GameLifecycle(this);
             this.objectPools = new ObjectPools(this);
-            
+
             // Register event handlers
             this.initializer.setupEventHandlers();
-            
+
             // Initialize game loop
             this.gameLoop = new GameLoop(this);
             this.boundAnimate = this.gameLoop.boundAnimate;
-            
+
             // Apply frame rate settings if available
             if (this.ui && this.ui.settings) {
                 this.gameLoop.applyFrameRateSettings();
             }
-            
+
             // Initialize startup sequence
             this.startupSequence = new StartupSequence(this);
-            
+
             // Initialize diagnostics
             this.diagnostics = new Diagnostics(this);
-            
+
             // Start the initialization sequence
             this.startupSequence.initializeGameSequence();
-            
         } catch (error) {
-                throw error;
+            throw error;
         }
     }
     
@@ -264,7 +270,7 @@ export class Game {
 }
 
 // Entry point - called from bootstrap.js or directly
-function startGameMainModule() {
+async function startGameMainModule() {
     try {
         // Create loading overlay - hide the black loading screen after initialization
         const loadingOverlay = document.getElementById('loading-overlay');
@@ -284,6 +290,7 @@ function startGameMainModule() {
 
         // Create game instance (globals initialized in constructor)
         window.game = new Game();
+        await window.game.initialize();
 
     } catch (error) {
         

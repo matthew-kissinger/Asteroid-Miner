@@ -31,7 +31,7 @@ export class GameInitializer {
 
             // Initialize renderer first
             console.log("Creating renderer...");
-            this.game.renderer = new Renderer();
+            this.game.renderer = await Renderer.create();
             console.log("Renderer created, getting scene...");
 
             // Access scene and camera directly rather than through getters
