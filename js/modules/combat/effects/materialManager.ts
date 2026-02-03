@@ -7,15 +7,33 @@
 import * as THREE from 'three';
 
 export class MaterialManager {
-    constructor(scene) {
+    scene: THREE.Scene;
+    projectileMaterial: THREE.MeshStandardMaterial;
+    projectileGlowMaterial: THREE.MeshBasicMaterial;
+    trailParticleMaterial: THREE.MeshBasicMaterial;
+    muzzleFlashMaterial: THREE.MeshBasicMaterial;
+    tracerLineMaterial: THREE.LineBasicMaterial;
+    pointLightMaterial: THREE.MeshBasicMaterial;
+    explosionParticleMaterial: THREE.PointsMaterial;
+
+    constructor(scene: THREE.Scene) {
         this.scene = scene;
+        // Initialize with dummy values to satisfy TS, then real values in initializeTemplateMaterials
+        this.projectileMaterial = {} as any;
+        this.projectileGlowMaterial = {} as any;
+        this.trailParticleMaterial = {} as any;
+        this.muzzleFlashMaterial = {} as any;
+        this.tracerLineMaterial = {} as any;
+        this.pointLightMaterial = {} as any;
+        this.explosionParticleMaterial = {} as any;
+
         this.initializeTemplateMaterials();
     }
 
     /**
      * Initialize template materials to prevent shader compilation stutter during first fire
      */
-    initializeTemplateMaterials() {
+    initializeTemplateMaterials(): void {
         console.log("Initializing template materials for combat effects");
         
         // Template for projectile material (MeshStandardMaterial) - Red Laser Bolt
@@ -87,7 +105,7 @@ export class MaterialManager {
     /**
      * Pre-compile shaders to prevent stutter during combat
      */
-    precompileShaders() {
+    precompileShaders(): void {
         // Force material compilation by creating a small invisible mesh
         // This ensures shaders are compiled immediately rather than at first fire
         const dummyGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
@@ -148,14 +166,14 @@ export class MaterialManager {
         addToScene(dummyExplosion);
         
         // Force shader compilation using renderer.compile if available
-        if (window.renderer) {
+        if ((window as any).renderer) {
             console.log("Forcing shader compilation with renderer.compile()");
-            window.renderer.compile(tempScene, this.scene.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
-            window.renderer.compile(this.scene, this.scene.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
-        } else if (window.game && window.game.renderer && window.game.renderer.renderer) {
+            (window as any).renderer.compile(tempScene, (this.scene as any).camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
+            (window as any).renderer.compile(this.scene, (this.scene as any).camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
+        } else if ((window as any).game && (window as any).game.renderer && (window as any).game.renderer.renderer) {
             console.log("Forcing shader compilation with game.renderer.renderer.compile()");
-            window.game.renderer.renderer.compile(tempScene, this.scene.camera || window.game.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
-            window.game.renderer.renderer.compile(this.scene, this.scene.camera || window.game.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
+            (window as any).game.renderer.renderer.compile(tempScene, (this.scene as any).camera || (window as any).game.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
+            (window as any).game.renderer.renderer.compile(this.scene, (this.scene as any).camera || (window as any).game.camera || { isCamera: true, matrixWorldInverse: new THREE.Matrix4() });
         } else {
             console.warn("No renderer available for shader pre-compilation");
         }
@@ -179,8 +197,8 @@ export class MaterialManager {
             
             // Clean up trail particles
             dummyTrailContainer.children.forEach(child => {
-                if (child.geometry) child.geometry.dispose();
-                if (child.material) child.material.dispose(); // Material here is a clone, original is on this.trailParticleMaterial
+                if ((child as any).geometry) (child as any).geometry.dispose();
+                if ((child as any).material) (child as any).material.dispose(); // Material here is a clone, original is on this.trailParticleMaterial
             });
             
             console.log("Template materials initialized and dummy objects removed");
@@ -190,7 +208,7 @@ export class MaterialManager {
     /**
      * Get material by type
      */
-    getMaterial(type) {
+    getMaterial(type: string): THREE.Material | null {
         switch (type) {
             case 'projectile': return this.projectileMaterial;
             case 'projectileGlow': return this.projectileGlowMaterial;
@@ -206,12 +224,12 @@ export class MaterialManager {
     /**
      * Helper to get add to scene function
      */
-    _getAddToSceneFunction() {
-        const renderer = window.game && window.game.renderer ? window.game.renderer : null;
+    _getAddToSceneFunction(): (object: THREE.Object3D) => void {
+        const renderer = (window as any).game && (window as any).game.renderer ? (window as any).game.renderer : null;
         if (renderer && typeof renderer._withGuard === 'function') {
-            return (object) => renderer._withGuard(() => renderer.add(object));
+            return (object: THREE.Object3D) => renderer._withGuard(() => renderer.add(object));
         } else if (this.scene && typeof this.scene.add === 'function') {
-            return (object) => this.scene.add(object);
+            return (object: THREE.Object3D) => this.scene.add(object);
         }
         return () => {};
     }
@@ -219,12 +237,12 @@ export class MaterialManager {
     /**
      * Helper to get remove from scene function
      */
-    _getRemoveFromSceneFunction() {
-        const renderer = window.game && window.game.renderer ? window.game.renderer : null;
+    _getRemoveFromSceneFunction(): (object: THREE.Object3D) => void {
+        const renderer = (window as any).game && (window as any).game.renderer ? (window as any).game.renderer : null;
         if (renderer && typeof renderer._withGuard === 'function') {
-            return (object) => renderer._withGuard(() => this.scene.remove(object));
+            return (object: THREE.Object3D) => renderer._withGuard(() => this.scene.remove(object));
         } else if (this.scene && typeof this.scene.remove === 'function') {
-            return (object) => this.scene.remove(object);
+            return (object: THREE.Object3D) => this.scene.remove(object);
         }
         return () => {};
     }
@@ -232,7 +250,7 @@ export class MaterialManager {
     /**
      * Clean up material resources
      */
-    dispose() {
+    dispose(): void {
         // Dispose materials
         if (this.projectileMaterial) this.projectileMaterial.dispose();
         if (this.projectileGlowMaterial) this.projectileGlowMaterial.dispose();

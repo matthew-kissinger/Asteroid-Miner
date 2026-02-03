@@ -1,12 +1,9 @@
 // Import all Three.js modules from our centralized import file
-import * as ThreeImports from './three-imports.js';
+import * as ThreeImports from './three-imports.ts';
 
 // Make THREE extensible before adding properties
-Object.defineProperty(window, 'THREE', {
-  value: Object.assign({}, ThreeImports.THREE),
-  writable: true,
-  configurable: true
-});
+// @ts-ignore - We are intentionally extending THREE on window
+window.THREE = Object.assign({}, ThreeImports.THREE);
 
 // Set up global THREE addon references that the original code expects
 window.THREE.OrbitControls = ThreeImports.OrbitControls;
@@ -23,34 +20,41 @@ window.THREE.WebGL = ThreeImports.WebGL;
 
 // Create a global compat layer for fixing module imports
 window.__vite_compat = {
-  resolveImport(path) {
+  resolveImport(path: string) {
     // This will be used to help resolve imports in the original code
     return path;
   }
 };
 
+// @ts-ignore - js/modules might not be typed yet
 import { getGlobalPoolRegistry } from '../js/modules/pooling/PoolRegistry.js';
 
 // Initialize the global object pool early via PoolRegistry facade
 window.objectPool = (() => {
   const registry = getGlobalPoolRegistry();
   return {
-    createPool: function(type, factory, initialSize = 10, maxSize = 100) {
-      registry.register(type, { factory, reset: (o)=>{}, preallocate: initialSize, maxSize });
+    createPool: function(type: string, factory: () => any, initialSize = 10, maxSize = 100) {
+      registry.register(type, { factory, reset: (_o: any)=>{}, preallocate: initialSize, maxSize });
     },
-    get: function(type, ...args) {
-      try { return registry.get(type, ...args); } catch (e) { console.warn(e.message); return null; }
+    get: function(type: string, ...args: any[]) {
+      try { return registry.get(type, ...args); } catch (e: any) { console.warn(e.message); return null; }
     },
-    release: function(type, obj) { registry.release(type, obj); },
+    release: function(type: string, obj: any) { registry.release(type, obj); },
     clearAllPools: function() { registry.clearAll(); },
-    clearPool: function(type) { registry.clear(type); }
+    clearPool: function(type: string) { registry.clear(type); }
   };
 })();
 
 // ---------------- Asynchronous Asset Loading & Progress UI -----------------
 
+interface LoadingOverlay {
+  overlay: HTMLDivElement;
+  text: HTMLDivElement;
+  bar: HTMLDivElement;
+}
+
 // Create and inject a basic loading overlay that will display progress to the user
-function createLoadingOverlay() {
+function createLoadingOverlay(): LoadingOverlay {
   const overlay = document.createElement('div');
   overlay.id = 'loading-overlay';
   overlay.style.position = 'fixed';
@@ -104,16 +108,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingManager = window.THREE.DefaultLoadingManager;
 
   // Track loading progress and update UI
-  loadingManager.onStart = function (url, itemsLoaded, itemsTotal) {
+  loadingManager.onStart = function (_url: string, _itemsLoaded: number, _itemsTotal: number) {
   };
 
-  loadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
+  loadingManager.onProgress = function (_url: string, itemsLoaded: number, itemsTotal: number) {
     const percent = Math.round((itemsLoaded / itemsTotal) * 100);
     text.textContent = `Loading ${percent}%`;
     bar.style.width = `${percent}%`;
   };
 
-  loadingManager.onError = function (url) {
+  loadingManager.onError = function (_url: string) {
   };
 
   // Once everything is loaded we fade out the overlay and launch the game
@@ -129,7 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Dynamically import the main game module now that assets are ready
       try {
-        await import('js/main.js');
+        // @ts-ignore
+        await import('js/main.ts');
       } catch (err) {
       }
     }, 200);

@@ -5,26 +5,37 @@
  * order required to maintain compatibility with existing behavior.
  */
 
+// @ts-ignore
 import { CombatSystem } from '../../systems/combat/combatSystem.js';
+// @ts-ignore
 import { EnemySystem } from '../../systems/combat/enemySystem.js';
+// @ts-ignore
 import { RenderSystem } from '../../systems/rendering/renderSystem.js';
+// @ts-ignore
 import { CollisionSystem } from '../../systems/physics/collisionSystem.js';
+// @ts-ignore
 import { VisualEffectsSystem } from '../../systems/rendering/visualEffectsSystem.js';
+// @ts-ignore
 import { TrailSystem } from '../../systems/rendering/trailSystem.js';
+// @ts-ignore
 import { DeployableLaserSystem } from '../../systems/weapons/deployableLaserSystem.js';
+// @ts-ignore
 import { DeploymentSystem } from '../../systems/deployables/deploymentSystem.js';
+// @ts-ignore
 import { ExplosionHandler } from '../../systems/effects/explosionHandler.js';
+import * as THREE from 'three';
 
 export class SystemRegistrar {
+    registeredSystems: Record<string, any> = {};
+
     constructor() {
-        this.registeredSystems = {};
     }
 
     /**
      * Register all combat systems with the ECS world in the correct order
      * CRITICAL: This order must be preserved to maintain existing behavior
      */
-    async registerAllSystems(world, scene) {
+    async registerAllSystems(world: any, scene: THREE.Scene): Promise<any> {
         console.log("[COMBAT] Registering combat systems with ECS world...");
         
         try {
@@ -37,9 +48,9 @@ export class SystemRegistrar {
             world.registerSystem(this.registeredSystems.enemySystem);
             
             // GLOBAL ACCESS: Make the enemy system accessible to other modules
-            if (window.game) {
-                window.game.ecsWorld = window.game.ecsWorld || {};
-                window.game.ecsWorld.enemySystem = this.registeredSystems.enemySystem;
+            if ((window as any).game) {
+                (window as any).game.ecsWorld = (window as any).game.ecsWorld || {};
+                (window as any).game.ecsWorld.enemySystem = this.registeredSystems.enemySystem;
                 console.log("[COMBAT] Made enemy system globally available via window.game.ecsWorld.enemySystem");
             }
             
@@ -63,13 +74,14 @@ export class SystemRegistrar {
             }
             
             // Add trail system to window.game for global access if game object exists
-            if (window.game) {
-                window.game.trailSystem = this.registeredSystems.trailSystem;
+            if ((window as any).game) {
+                (window as any).game.trailSystem = this.registeredSystems.trailSystem;
                 console.log("[COMBAT] Registered trail system with window.game for global access");
             }
             
             // 5. Register the instanced renderer first
             try {
+                // @ts-ignore
                 const { InstancedRenderer } = await import('../../systems/rendering/InstancedRenderer.js');
                 this.registeredSystems.instancedRenderer = new InstancedRenderer(world, scene);
                 world.registerSystem(this.registeredSystems.instancedRenderer);
@@ -80,7 +92,7 @@ export class SystemRegistrar {
 
             // 6. Register the render system - this is critical for making meshes visible
             // Use the scene's camera reference if available
-            const camera = scene.camera;
+            const camera = (scene as any).camera;
             
             if (!camera) {
                 console.error("[COMBAT] No camera found on scene, enemies may not be visible");
@@ -117,7 +129,7 @@ export class SystemRegistrar {
             return this.registeredSystems;
         } catch (error) {
             console.error("[COMBAT] Error during system registration:", error);
-            console.error("[COMBAT] Stack trace:", error.stack);
+            console.error("[COMBAT] Stack trace:", (error as Error).stack);
             throw error;
         }
     }
@@ -125,21 +137,21 @@ export class SystemRegistrar {
     /**
      * Get a specific system by name
      */
-    getSystem(systemName) {
+    getSystem(systemName: string): any {
         return this.registeredSystems[systemName];
     }
 
     /**
      * Get all registered systems
      */
-    getAllSystems() {
+    getAllSystems(): Record<string, any> {
         return this.registeredSystems;
     }
 
     /**
      * Enable or disable all systems
      */
-    setSystemsEnabled(enabled) {
+    setSystemsEnabled(enabled: boolean): void {
         // Enable/disable ECS systems
         const systems = ['enemySystem', 'combatSystem'];
         
@@ -165,7 +177,7 @@ export class SystemRegistrar {
      * @param {Object} scene The scene (optional)
      * @returns {Object} The system instance
      */
-    async importAndRegisterSystem(path, className, world, scene = null) {
+    async importAndRegisterSystem(path: string, className: string, world: any, scene: any = null): Promise<any> {
         try {
             // Add vite-ignore to allow dynamic imports
             // @ts-ignore

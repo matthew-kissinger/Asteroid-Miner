@@ -17,7 +17,7 @@ export class ProjectileEffects {
      * @param {THREE.Vector3} direction Direction the effect should travel
      * @param {Object} poolManager Pool manager for getting muzzle flash objects
      */
-    createMuzzleFlash(position, direction, poolManager) {
+    createMuzzleFlash(position: THREE.Vector3, direction: THREE.Vector3, poolManager: any) {
         if (!poolManager) {
             console.warn("No pool manager available for muzzle flash");
             return null;
@@ -55,7 +55,7 @@ export class ProjectileEffects {
      * @param {THREE.Vector3} direction Direction of travel
      * @param {Object} poolManager Pool manager for getting trail components
      */
-    addProjectileTrail(projectile, direction, poolManager) {
+    addProjectileTrail(projectile: THREE.Mesh, direction: THREE.Vector3, poolManager: any): void {
         // Parameters for a subtle, short trail
         const numPoints = 4; // Number of particles in the trail
         const trailLength = 4.0; // Total length of the trail (shorter than laser bolt length for subtlety)
@@ -73,13 +73,14 @@ export class ProjectileEffects {
         }
         projectile.add(trailContainer);
 
-        const trailParticles = [];
+        const trailParticles: THREE.Mesh[] = [];
         trailContainer.userData.particles = trailParticles; // Store for release by PoolManager if needed
         trailContainer.userData.isTrailActive = true; // Flag for animation loop
 
         for (let i = 0; i < numPoints; i++) {
             const ratio = i / (numPoints -1); // Distribute particles along the trail length
-            const particle = poolManager.getTrailParticle(i % window.game.trailParticleGeometries.length); // Cycle through available geometries
+            // @ts-ignore
+            const particle = poolManager.getTrailParticle(i % (window as any).game.trailParticleGeometries.length); // Cycle through available geometries
             
             if (!particle) {
                 console.warn(`Failed to get trail particle ${i} from pool.`);
@@ -117,7 +118,7 @@ export class ProjectileEffects {
                     trailParticles.splice(i, 1);
                     if (particle.parent) particle.parent.remove(particle); // Ensure removal from container
                 } else {
-                    particle.material.opacity = particle.userData.initialOpacity * (1 - progress);
+                    (particle.material as THREE.Material).opacity = particle.userData.initialOpacity * (1 - progress);
                     const currentScale = particle.userData.initialScale * (1 - progress);
                     particle.scale.set(currentScale, currentScale, currentScale);
                 }
@@ -142,7 +143,7 @@ export class ProjectileEffects {
      * @param {number} distance Distance of the aiming line
      * @param {Object} poolManager Pool manager for getting tracer objects
      */
-    createAimingTracer(startPosition, direction, distance = 3000, poolManager) {
+    createAimingTracer(startPosition: THREE.Vector3, direction: THREE.Vector3, distance: number = 3000, poolManager: any) {
         if (!poolManager) {
             console.warn("No pool manager available for aiming tracer");
             return null;
@@ -155,7 +156,7 @@ export class ProjectileEffects {
         const endPosition = startPosition.clone().add(direction.clone().multiplyScalar(distance));
         
         // Update the positions in the geometry
-        const positions = tracer.geometry.attributes.position.array;
+        const positions = (tracer.geometry.attributes.position as THREE.BufferAttribute).array as Float32Array;
         positions[0] = startPosition.x;
         positions[1] = startPosition.y;
         positions[2] = startPosition.z;

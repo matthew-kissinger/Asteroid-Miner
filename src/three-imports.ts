@@ -13,6 +13,7 @@ import { ColorCorrectionShader } from 'three/addons/shaders/ColorCorrectionShade
 import { FilmShader } from 'three/addons/shaders/FilmShader.js';
 import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
 import WebGL from 'three/addons/capabilities/WebGL.js';
+// @ts-ignore
 import { WebGPURenderer } from 'three/webgpu';
 
 // Export everything
@@ -30,4 +31,4 @@ export {
   VignetteShader,
   WebGL,
   WebGPURenderer
-}; 
+};

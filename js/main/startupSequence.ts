@@ -1,5 +1,6 @@
 // startupSequence.js - Asset preloads and intro flow management
 
+import * as THREE from 'three';
 import { IntroSequence } from '../modules/introSequence.js';
 
 type AudioContextLike = {
@@ -136,7 +137,7 @@ export class StartupSequence {
             // Initialize combat systems asynchronously
             if (!this.game.combat) {
                 const { Combat } = await import('../modules/combat.js');
-                this.game.combat = new Combat(this.game.scene, this.game.spaceship);
+                this.game.combat = new Combat(this.game.scene as THREE.Scene, this.game.spaceship);
                 
                 // Ensure the ECS world in combat is properly initialized
                 if (!this.game.combat.world) {

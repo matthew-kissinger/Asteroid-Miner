@@ -1,21 +1,160 @@
-// ui.js - Main UI class that integrates all UI components
+// ui.ts - Main UI class that integrates all UI components
 
+// @ts-ignore - importing from unconverted JS modules
 import { HUD } from './ui/hud.js';
+// @ts-ignore - importing from unconverted JS modules
 import { MobileHUD } from './ui/mobileHUD.js';
+// @ts-ignore - importing from unconverted JS modules
 import { MiningDisplay } from './ui/miningDisplay.js';
+// @ts-ignore - importing from unconverted JS modules
 import { TargetingUI } from './ui/targetingUI.js';
+// @ts-ignore - importing from unconverted JS modules
 import { StargateInterface } from './ui/stargateInterface.js';
+// @ts-ignore - importing from unconverted JS modules
 import { GameOverScreen } from './ui/gameOverScreen.js';
+// @ts-ignore - importing from unconverted JS modules
 import { ControlsMenu } from './ui/controlsMenu.js';
+// @ts-ignore - importing from unconverted JS modules
 import { StarMap } from './ui/starMap.js';
+// @ts-ignore - importing from unconverted JS modules
 import { BlackjackGame } from './ui/blackjackGame.js';
+// @ts-ignore - importing from unconverted JS modules
 import { Settings } from './ui/settings.js';
+// @ts-ignore - importing from unconverted JS modules
 import { StartScreen } from './ui/startScreen.js';
+// @ts-ignore - importing from unconverted JS modules
 import { MemoryStats } from '../utils/memoryManager.js';
 import { MobileDetector } from '../utils/mobileDetector.js';
 
+// Type definitions for UI-related objects
+interface Cargo {
+    iron: number;
+    gold: number;
+    platinum: number;
+}
+
+interface SpaceshipForUI {
+    cargo?: Cargo;
+    isDocked?: boolean;
+}
+
+interface StarSystemGenerator {
+    getCurrentSystemData(): { name: string } | null;
+}
+
+interface EnvironmentForUI {
+    starSystemGenerator?: StarSystemGenerator;
+}
+
+interface DockingSystem {
+    isDocked: boolean;
+}
+
+interface TouchControls {
+    update(): void;
+    hide(): void;
+    show(): void;
+}
+
+interface ControlsForUI {
+    dockingSystem?: DockingSystem;
+    touchControls?: TouchControls;
+    setupStargateUIControls?: () => void;
+}
+
+interface AudioForUI {
+    playSound?: (sound: string) => void;
+}
+
+interface HUDComponent {
+    update?: () => void;
+    updateLocation?: (location: string | null, systemName: string) => void;
+    updateCoordinates?: (x: number, y: number, z: number) => void;
+    updateFPS?: (fps: number, cap?: number) => void;
+    hide?: () => void;
+    show?: () => void;
+    setControls?: (controls: ControlsForUI) => void;
+}
+
+interface MiningDisplayComponent {
+    update?: () => void;
+    hide?: () => void;
+    show?: () => void;
+    setControls?: (controls: ControlsForUI) => void;
+}
+
+interface TargetingUIComponent {
+    hideLockOn?: () => void;
+    hideTargetInfo?: () => void;
+}
+
+interface StargateInterfaceComponent {
+    hideDockingPrompt?: () => void;
+    showStargateUI?: () => void;
+    setStarMap?: (starMap: StarMapComponent) => void;
+    setBlackjackGame?: (blackjackGame: BlackjackGameComponent) => void;
+    setSettings?: (settings: SettingsComponent) => void;
+}
+
+interface GameOverScreenComponent {
+    audio?: AudioForUI;
+    show?: (resources: unknown, message: unknown) => void;
+    setupGameOverScreen?: () => void;
+}
+
+interface ControlsMenuComponent {
+    setupButtonHandler?: () => void;
+}
+
+interface StarMapComponent {
+    dockingSystem?: DockingSystem;
+}
+
+interface BlackjackGameComponent {
+    // BlackjackGame interface
+}
+
+interface SettingsComponent {
+    settings?: {
+        showFPS?: boolean;
+    };
+}
+
+interface StartScreenComponent {
+    isVisible?: boolean;
+}
+
+// Use any for game parameter to be compatible with different game types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GameForUI = any;
+
+interface MessageBusEvent {
+    data?: {
+        message?: string;
+        duration?: number;
+        reason?: string;
+    };
+}
+
 export class UI {
-    constructor(spaceship, environment) {
+    spaceship: SpaceshipForUI;
+    environment: EnvironmentForUI;
+    controls: ControlsForUI | null;
+    audio: AudioForUI | null;
+    isMobile: boolean;
+    hud: HUDComponent;
+    miningDisplay: MiningDisplayComponent;
+    targetingUI: TargetingUIComponent;
+    stargateInterface: StargateInterfaceComponent;
+    gameOverScreen: GameOverScreenComponent;
+    controlsMenu: ControlsMenuComponent;
+    starMap: StarMapComponent;
+    blackjackGame: BlackjackGameComponent | null;
+    settings: SettingsComponent | null;
+    startScreen: StartScreenComponent | null;
+    statsInterval?: number;
+    
+    constructor(spaceship: SpaceshipForUI, environment: EnvironmentForUI) {
         this.spaceship = spaceship;
         this.environment = environment;
         this.controls = null; // Will be set via setControls
@@ -52,7 +191,7 @@ export class UI {
         this.settings = null;
         
         // Link starMap to stargateInterface
-        this.stargateInterface.setStarMap(this.starMap);
+        this.stargateInterface.setStarMap?.(this.starMap);
         
         // StartScreen will be initialized after game instance is available
         this.startScreen = null;
@@ -65,7 +204,7 @@ export class UI {
         console.log("UI components initialized");
     }
     
-    loadMobileCSS() {
+    loadMobileCSS(): void {
         // Create link element for mobile CSS
         const mobileCSS = document.createElement('link');
         mobileCSS.rel = 'stylesheet';
@@ -78,7 +217,7 @@ export class UI {
         console.log("Mobile CSS loaded");
     }
     
-    setAudio(audio) {
+    setAudio(audio: AudioForUI): void {
         console.log("Setting audio reference in UI");
         this.audio = audio;
         
@@ -94,11 +233,11 @@ export class UI {
             console.log("UI: Created BlackjackGame with spaceship:", this.spaceship);
             
             // Link blackjackGame to stargateInterface
-            this.stargateInterface.setBlackjackGame(this.blackjackGame);
+            this.stargateInterface.setBlackjackGame?.(this.blackjackGame);
         }
     }
     
-    setControls(controls) {
+    setControls(controls: ControlsForUI): void {
         console.log("Setting controls reference in UI");
         this.controls = controls;
         
@@ -122,7 +261,7 @@ export class UI {
     }
     
     // Initialize settings with the game instance
-    initializeSettings(game) {
+    initializeSettings(game: GameForUI): void {
         if (!game) {
             console.error("Cannot initialize settings without game instance");
             return;
@@ -132,7 +271,7 @@ export class UI {
         this.settings = new Settings(game);
         
         // Link settings to stargateInterface
-        this.stargateInterface.setSettings(this.settings);
+        this.stargateInterface.setSettings?.(this.settings);
         
         // Initialize start screen now that we have game instance
         this.startScreen = new StartScreen(game, this);
@@ -143,7 +282,7 @@ export class UI {
     /**
      * Set up event handlers
      */
-    setupEventHandlers() {
+    setupEventHandlers(): void {
         console.log("Setting up UI event handlers");
         
         // Set up controls menu button handler
@@ -157,7 +296,7 @@ export class UI {
         }
         
         // Listen for UI notification events
-        window.mainMessageBus.subscribe('ui.notification', this.handleNotification.bind(this));
+        window.mainMessageBus?.subscribe('ui.notification', this.handleNotification.bind(this));
         
         // Add resize handler to update mobile detection
         window.addEventListener('resize', () => {
@@ -174,9 +313,9 @@ export class UI {
     
     /**
      * Handle UI notification events
-     * @param {Object} message The notification message
+     * @param message The notification message
      */
-    handleNotification(message) {
+    handleNotification(message: MessageBusEvent): void {
         if (message && message.data) {
             const content = message.data.message || 'System notification';
             const duration = message.data.duration || 3000;
@@ -186,13 +325,13 @@ export class UI {
     
     /**
      * Handle game over event
-     * @param {Object} message Event data
+     * @param _message Event data
      */
-    handleGameOver(message) {
+    handleGameOver(_message: MessageBusEvent): void {
         // ... existing code ...
     }
     
-    update() {
+    update(): void {
         // Update appropriate HUD based on device type
         if (this.hud && this.hud.update) {
             this.hud.update();
@@ -208,7 +347,7 @@ export class UI {
         }
     }
     
-    updateLocation(locationName) {
+    updateLocation(_locationName: string): void {
         // Get the current star system name from the environment
         let systemName = 'Unknown System';
         if (this.environment && this.environment.starSystemGenerator) {
@@ -222,13 +361,13 @@ export class UI {
         }
     }
     
-    updateCoordinates(x, y, z) {
+    updateCoordinates(x: number, y: number, z: number): void {
         if (this.hud && this.hud.updateCoordinates) {
             this.hud.updateCoordinates(x, y, z);
         }
     }
     
-    updateFPS(fps, cap) {
+    updateFPS(fps: number, cap?: number): void {
         if (this.hud && this.hud.updateFPS) {
             // Pass both actual FPS and cap to HUD
             this.hud.updateFPS(fps, cap);
@@ -245,10 +384,10 @@ export class UI {
     
     /**
      * Show a notification message to the user
-     * @param {string} message - The message to display
-     * @param {number} duration - Time in milliseconds to show the notification
+     * @param message - The message to display
+     * @param duration - Time in milliseconds to show the notification
      */
-    showNotification(message, duration = 3000) {
+    showNotification(message: string, duration: number = 3000): void {
         const notificationsArea = document.getElementById('notifications-area');
         if (!notificationsArea) return;
         
@@ -285,7 +424,7 @@ export class UI {
         }, duration);
     }
     
-    showGameOver(resources, message) {
+    showGameOver(resources: unknown, message: unknown): void {
         console.log("Showing game over screen");
         console.log("Resources data:", resources); // Add logging to see structure
         
@@ -294,7 +433,7 @@ export class UI {
             // Make sure element exists in DOM first
             if (!document.getElementById('game-over-container')) {
                 console.warn("Game over container not found in DOM, recreating");
-                this.gameOverScreen.setupGameOverScreen();
+                this.gameOverScreen.setupGameOverScreen?.();
             }
             
             // Pass the audio reference to the game over screen
@@ -324,8 +463,9 @@ export class UI {
             fallbackOverlay.style.zIndex = '9999';
             
             // Extract message text if it's an object
+            const messageData = message as MessageBusEvent;
             const messageText = typeof message === 'string' ? message : 
-                               (message && message.data && message.data.reason ? message.data.reason : 
+                               (messageData && messageData.data && messageData.data.reason ? messageData.data.reason : 
                                 'Your ship was destroyed!');
             
             const content = document.createElement('div');
@@ -339,16 +479,19 @@ export class UI {
             document.body.appendChild(fallbackOverlay);
             
             // Add restart button handler
-            document.getElementById('restart-btn').addEventListener('click', () => {
-                location.reload();
-            });
+            const restartBtn = document.getElementById('restart-btn');
+            if (restartBtn) {
+                restartBtn.addEventListener('click', () => {
+                    location.reload();
+                });
+            }
         }
         
         // Hide other UI elements
         this.hideUI();
     }
     
-    hideUI() {
+    hideUI(): void {
         console.log("Hiding UI elements");
         
         // Force hide ALL UI elements during intro sequence
@@ -356,7 +499,7 @@ export class UI {
             console.log("Intro sequence active - forcing ALL UI elements to be hidden");
             
             // Get references to each UI element we need to hide
-            const elements = [
+            const elements: (HTMLElement | null)[] = [
                 document.getElementById('hud-container'),
                 document.getElementById('mobile-hud-container'),
                 document.getElementById('pointer-lock-instructions'),
@@ -373,7 +516,9 @@ export class UI {
             // Hide any additional UI panels that might be visible
             const allPanels = document.querySelectorAll('.ui-panel, .panel, .hud-panel, .status-panel');
             allPanels.forEach(panel => {
-                panel.style.display = 'none';
+                if (panel instanceof HTMLElement) {
+                    panel.style.display = 'none';
+                }
             });
             
             return; // Skip standard hiding - we've handled everything
@@ -407,7 +552,7 @@ export class UI {
         }
     }
     
-    showUI() {
+    showUI(): void {
         console.log("Showing UI elements");
         
         // Don't show UI if intro sequence is active
@@ -479,18 +624,20 @@ export class UI {
         // Also show any panels that might have been hidden (except target-info which should stay hidden)
         const allPanels = document.querySelectorAll('.ui-panel, .panel, .hud-panel, .status-panel');
         allPanels.forEach(panel => {
-            // Don't force target-info to be visible - let targeting system control it
-            if (panel.id !== 'target-info') {
-                panel.style.display = 'block';
+            if (panel instanceof HTMLElement) {
+                // Don't force target-info to be visible - let targeting system control it
+                if (panel.id !== 'target-info') {
+                    panel.style.display = 'block';
+                }
+                panel.style.visibility = 'visible';
             }
-            panel.style.visibility = 'visible';
         });
     }
     
     /**
      * Initialize performance monitor for debugging
      */
-    initializePerformanceMonitor() {
+    initializePerformanceMonitor(): void {
         // Create container for performance stats
         const statsContainer = document.createElement('div');
         statsContainer.id = 'performance-stats';
@@ -522,7 +669,7 @@ export class UI {
         document.body.appendChild(statsContainer);
         
         // Update stats every second
-        this.statsInterval = setInterval(() => {
+        this.statsInterval = window.setInterval(() => {
             // Update memory stats display
             memoryStats.innerHTML = MemoryStats.getReport().replace(/\n/g, '<br>');
             
@@ -534,11 +681,11 @@ export class UI {
     }
     
     // Make sure to clean up stats interval when necessary
-    onDisabled() {
+    onDisabled(): void {
         // Clear stats interval if it exists
         if (this.statsInterval) {
             clearInterval(this.statsInterval);
-            this.statsInterval = null;
+            this.statsInterval = undefined;
         }
     }
-} 
+}

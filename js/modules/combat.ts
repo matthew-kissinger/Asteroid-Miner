@@ -19,8 +19,81 @@ import { AISpawnerManager } from './combat/aiAndSpawners.js';
 import { CombatLogic } from './combat/combatLogic.js';
 import * as THREE from 'three';
 
+// Define interfaces for submodules until they are converted
+interface IWorldSetup {
+    initializeECSWorld(scene: THREE.Scene, spaceship: any): Promise<any>;
+    isWorldInitialized(): boolean;
+    getPlayerEntity(): any;
+    setSceneReference(scene: THREE.Scene): void;
+    initializeWorld(): void;
+    createPlayerReferenceEntity(spaceship: any): Promise<any>;
+    updatePlayerReference(spaceship: any): void;
+    updateSpaceshipHealth(spaceship: any): void;
+    setWorldInitialized(): void;
+    getWorld(): any;
+}
+
+interface ISystemRegistrar {
+    registerAllSystems(world: any, scene: THREE.Scene): Promise<any>;
+    setSystemsEnabled(enabled: boolean): void;
+    importAndRegisterSystem(path: string, className: string, world: any, scene: THREE.Scene): Promise<any>;
+}
+
+interface IEventManager {
+    setupEventHandlers(world: any, playerEntity: any): void;
+    cleanup(): void;
+}
+
+interface IEffectsManager {
+    updateTracers(deltaTime: number): void;
+    createExplosionEffect(position: THREE.Vector3, duration: number, isVisible: boolean, arg3: null): any;
+    createAimingTracer(startPosition: THREE.Vector3, direction: THREE.Vector3, distance: number, arg3: null): any;
+    createMuzzleFlash(position: THREE.Vector3, direction: THREE.Vector3, arg3: null): any;
+    dispose(): void;
+}
+
+interface IAISpawnerManager {
+    configureEnemySystem(enemySystem: any): void;
+    registerEnemy(enemyId: string): void;
+    unregisterEnemy(enemyId: string): void;
+    emergencyCleanup(): void;
+}
+
+interface ICombatLogic {
+    fireParticleCannon(
+        scene: THREE.Scene,
+        spaceship: any,
+        world: any,
+        playerEntity: any,
+        particleCannonDamage: number,
+        lastFireTime: number,
+        cooldown: number
+    ): { newLastFireTime: number, success: boolean };
+}
+
 export class Combat {
-    constructor(scene, spaceship) {
+    scene: THREE.Scene;
+    spaceship: any;
+    fireRate: number;
+    lastFireTime: number;
+    aimingSpread: number;
+    isFiring: boolean;
+    cooldown: number;
+    particleCannonDamage: number;
+    
+    worldSetup: IWorldSetup;
+    systemRegistrar: ISystemRegistrar;
+    eventManager: IEventManager;
+    effectsManager: IEffectsManager;
+    aiSpawnerManager: IAISpawnerManager;
+    combatLogic: ICombatLogic;
+    
+    world: any;
+    playerEntity: any;
+    enemySystem: any;
+    disposed: boolean = false;
+
+    constructor(scene: THREE.Scene, spaceship: any) {
         this.scene = scene;
         this.spaceship = spaceship;
         
@@ -71,6 +144,7 @@ export class Combat {
             await this.setupECSWorld();
             
         } catch (error) {
+            console.error("[COMBAT] Error initializing ECS world:", error);
         }
     }
     
@@ -111,6 +185,7 @@ export class Combat {
             this.worldSetup.setWorldInitialized();
             
         } catch (error) {
+            console.error("[COMBAT] Error setting up ECS world:", error);
         }
     }
     
@@ -120,12 +195,12 @@ export class Combat {
      * Update combat systems and handle firing logic
      * @param {number} deltaTime Time since last update in seconds
      */
-    update(deltaTime) {
+    update(deltaTime: number) {
         // Skip if disabled
         if (!this.scene || !this.spaceship) return;
         
         // Skip enemy updates if intro sequence is active
-        const introActive = window.game && window.game.introSequenceActive;
+        const introActive = (window as any).game && (window as any).game.introSequenceActive;
         
         // Update the player reference entity position
         this.updatePlayerReference();
@@ -160,6 +235,7 @@ export class Combat {
                 }
             }
         } else if (!this.world) {
+            // World not initialized yet
         }
     }
     
@@ -182,7 +258,7 @@ export class Combat {
      * Set firing state for the particle cannon
      * @param {boolean} isFiring Whether the cannon should be firing
      */
-    setFiring(isFiring) {
+    setFiring(isFiring: boolean) {
         this.isFiring = isFiring;
     }
     
@@ -192,7 +268,7 @@ export class Combat {
      * @param {number} duration Duration of the explosion in milliseconds
      * @param {boolean} isVisible Whether the explosion should be visible
      */
-    createExplosionEffect(position, duration = 1000, isVisible = true) {
+    createExplosionEffect(position: THREE.Vector3, duration: number = 1000, isVisible: boolean = true) {
         return this.effectsManager.createExplosionEffect(position, duration, isVisible, null);
     }
     
@@ -202,7 +278,7 @@ export class Combat {
      * Register an enemy entity for synchronization with EnemySystem
      * @param {string} enemyId ID of the enemy entity
      */
-    registerEnemy(enemyId) {
+    registerEnemy(enemyId: string) {
         this.aiSpawnerManager.registerEnemy(enemyId);
     }
     
@@ -210,7 +286,7 @@ export class Combat {
      * Unregister an enemy entity
      * @param {string} enemyId ID of the enemy entity
      */
-    unregisterEnemy(enemyId) {
+    unregisterEnemy(enemyId: string) {
         this.aiSpawnerManager.unregisterEnemy(enemyId);
     }
     
@@ -239,7 +315,7 @@ export class Combat {
      * Enable or disable all combat systems
      * @param {boolean} enabled Whether combat systems should be enabled
      */
-    setEnabled(enabled) {
+    setEnabled(enabled: boolean) {
         
         // Use system registrar to enable/disable systems
         this.systemRegistrar.setSystemsEnabled(enabled);
@@ -247,7 +323,7 @@ export class Combat {
     
     
     // Aiming tracer creation moved to EffectsManager
-    createAimingTracer(startPosition, direction, distance = 3000) {
+    createAimingTracer(startPosition: THREE.Vector3, direction: THREE.Vector3, distance: number = 3000) {
         return this.effectsManager.createAimingTracer(startPosition, direction, distance, null);
     }
     
@@ -256,7 +332,7 @@ export class Combat {
      * @param {THREE.Vector3} position Position for the effect
      * @param {THREE.Vector3} direction Direction the effect should travel
      */
-    createMuzzleFlash(position, direction) {
+    createMuzzleFlash(position: THREE.Vector3, direction: THREE.Vector3) {
         return this.effectsManager.createMuzzleFlash(position, direction, null);
     }
     
@@ -286,22 +362,13 @@ export class Combat {
         
     }
 
-    // Renderer facade helpers moved to EffectsManager
-    
     /**
      * Import and register a system
      * @param {string} path The path to the system module
      * @param {string} className The name of the system class
      * @returns {Object} The system instance
      */
-    async importAndRegisterSystem(path, className) {
+    async importAndRegisterSystem(path: string, className: string) {
         return this.systemRegistrar.importAndRegisterSystem(path, className, this.world, this.scene);
     }
 }
-
-// Helper to remove the addProjectileTrail method entirely if it exists as a standalone function in an unexpected way
-// This is unlikely given typical class structure but added for robustness
-// if (typeof Combat !== 'undefined' && Combat.prototype.addProjectileTrail) {
-// delete Combat.prototype.addProjectileTrail;
-;
-// }

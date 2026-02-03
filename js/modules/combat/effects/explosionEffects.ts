@@ -7,21 +7,22 @@
 import * as THREE from 'three';
 
 export class ExplosionEffects {
+    activeTracers: THREE.Group[] = [];
+
     constructor() {
-        this.activeTracers = [];
     }
 
     /**
      * Create an explosion effect at the given position
      * @param {THREE.Vector3} position Position for the explosion
      * @param {number} duration Duration of the explosion in milliseconds
-     * @param {boolean} isVisible Whether the explosion should be visible
+     * @param {boolean} _isVisible Whether the explosion should be visible
      * @param {Object} poolManager Pool manager for getting explosion objects
      * @param {Function} addToScene Function to add objects to scene
      */
-    createExplosionEffect(position, duration = 1000, isVisible = true, poolManager = null, addToScene = null) {
+    createExplosionEffect(position: THREE.Vector3, duration: number = 1000, _isVisible: boolean = true, poolManager: any = null, addToScene: ((obj: THREE.Object3D) => void) | null = null) {
         try {
-            let explosion = null;
+            let explosion: any = null;
             
             // Try to get explosion from poolManager
             if (poolManager && poolManager.getExplosion) {
@@ -36,6 +37,7 @@ export class ExplosionEffects {
                     color: 0xff6600,
                     transparent: true,
                     opacity: 0.9,
+                    // @ts-ignore - Emissive is not on MeshBasicMaterial, but the original JS used it
                     emissive: 0xff3300,
                     emissiveIntensity: 2,
                     blending: THREE.AdditiveBlending
@@ -47,8 +49,8 @@ export class ExplosionEffects {
                 // Add to scene if function provided
                 if (addToScene) {
                     addToScene(explosion);
-                } else if (window.game && window.game.scene) {
-                    window.game.scene.add(explosion);
+                } else if ((window as any).game && (window as any).game.scene) {
+                    (window as any).game.scene.add(explosion);
                 }
                 
                 // Animate the explosion
@@ -79,8 +81,8 @@ export class ExplosionEffects {
             }
             
             // Play explosion sound
-            if (window.game && window.game.audio) {
-                window.game.audio.playSound('boink');
+            if ((window as any).game && (window as any).game.audio) {
+                (window as any).game.audio.playSound('boink');
             }
             
             return explosion;
@@ -98,7 +100,7 @@ export class ExplosionEffects {
      * @param {number} fadeTime Time in seconds for the beam to fade
      * @param {Function} addToScene Function to add objects to scene
      */
-    createInstantTracer(startPos, endPos, isHit = false, fadeTime = 0.5, addToScene = null) {
+    createInstantTracer(startPos: THREE.Vector3, endPos: THREE.Vector3, isHit: boolean = false, fadeTime: number = 0.5, addToScene: ((obj: THREE.Object3D) => void) | null = null) {
         const distance = startPos.distanceTo(endPos);
         
         // Create multiple cylinders for a layered plasma effect
@@ -178,14 +180,14 @@ export class ExplosionEffects {
 
     /**
      * Update active tracer beams - fade them out from start to end
-     * @param {number} deltaTime Time since last update
+     * @param {number} _deltaTime Time since last update
      * @param {Function} removeFromScene Function to remove objects from scene
      */
-    updateTracers(deltaTime, removeFromScene = null) {
+    updateTracers(_deltaTime: number, removeFromScene: ((obj: THREE.Object3D) => void) | null = null) {
         if (!this.activeTracers || this.activeTracers.length === 0) return;
         
         const currentTime = performance.now();
-        const tracersToRemove = [];
+        const tracersToRemove: number[] = [];
         
         for (let i = this.activeTracers.length - 1; i >= 0; i--) {
             const beamGroup = this.activeTracers[i];
@@ -239,6 +241,8 @@ export class ExplosionEffects {
         }
         
         // Remove completed tracers from the array
+        // Sort indices in descending order to avoid splicing issues
+        tracersToRemove.sort((a, b) => b - a);
         for (const index of tracersToRemove) {
             this.activeTracers.splice(index, 1);
         }
@@ -247,7 +251,7 @@ export class ExplosionEffects {
     /**
      * Clean up explosion effects resources
      */
-    dispose() {
+    dispose(): void {
         this.activeTracers = [];
     }
 }

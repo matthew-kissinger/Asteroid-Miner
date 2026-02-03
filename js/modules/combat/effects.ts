@@ -6,13 +6,23 @@
  */
 
 import * as THREE from 'three';
+// @ts-ignore
 import { ExplosionEffects } from './effects/explosionEffects.js';
+// @ts-ignore
 import { MaterialManager } from './effects/materialManager.js';
+// @ts-ignore
 import { GeometryManager } from './effects/geometryManager.js';
+// @ts-ignore
 import { ProjectileEffects } from './effects/projectileEffects.js';
 
 export class EffectsManager {
-    constructor(scene) {
+    scene: THREE.Scene;
+    materialManager: any;
+    geometryManager: any;
+    explosionEffects: any;
+    projectileEffects: any;
+
+    constructor(scene: THREE.Scene) {
         this.scene = scene;
         
         // Initialize sub-managers
@@ -32,7 +42,7 @@ export class EffectsManager {
      * @param {number} duration Duration of the explosion in milliseconds
      * @param {boolean} isVisible Whether the explosion should be visible
      */
-    createExplosionEffect(position, duration = 1000, isVisible = true, poolManager = null) {
+    createExplosionEffect(position: THREE.Vector3, duration: number = 1000, isVisible: boolean = true, poolManager: any = null) {
         return this.explosionEffects.createExplosionEffect(position, duration, isVisible, poolManager, this._addToScene.bind(this));
     }
 
@@ -43,7 +53,7 @@ export class EffectsManager {
      * @param {boolean} isHit Whether this beam hit a target
      * @param {number} fadeTime Time in seconds for the beam to fade
      */
-    createInstantTracer(startPos, endPos, isHit = false, fadeTime = 0.5) {
+    createInstantTracer(startPos: THREE.Vector3, endPos: THREE.Vector3, isHit: boolean = false, fadeTime: number = 0.5) {
         return this.explosionEffects.createInstantTracer(startPos, endPos, isHit, fadeTime, this._addToScene.bind(this));
     }
 
@@ -51,7 +61,7 @@ export class EffectsManager {
      * Update active tracer beams - fade them out from start to end
      * @param {number} deltaTime Time since last update
      */
-    updateTracers(deltaTime) {
+    updateTracers(deltaTime: number) {
         this.explosionEffects.updateTracers(deltaTime, this._removeFromScene.bind(this));
     }
 
@@ -60,7 +70,7 @@ export class EffectsManager {
      * @param {THREE.Vector3} position Position for the effect
      * @param {THREE.Vector3} direction Direction the effect should travel
      */
-    createMuzzleFlash(position, direction, poolManager) {
+    createMuzzleFlash(position: THREE.Vector3, direction: THREE.Vector3, poolManager: any) {
         return this.projectileEffects.createMuzzleFlash(position, direction, poolManager);
     }
 
@@ -70,27 +80,27 @@ export class EffectsManager {
      * @param {THREE.Vector3} direction Direction of travel
      * @param {Object} poolManager Pool manager for getting trail components
      */
-    addProjectileTrail(projectile, direction, poolManager) {
+    addProjectileTrail(projectile: THREE.Mesh, direction: THREE.Vector3, poolManager: any) {
         this.projectileEffects.addProjectileTrail(projectile, direction, poolManager);
     }
 
     /**
      * New method to visualize projectile trajectory
      */
-    createAimingTracer(startPosition, direction, distance = 3000, poolManager) {
+    createAimingTracer(startPosition: THREE.Vector3, direction: THREE.Vector3, distance: number = 3000, poolManager: any) {
         return this.projectileEffects.createAimingTracer(startPosition, direction, distance, poolManager);
     }
 
     /**
      * Get material by type
      */
-    getMaterial(type) {
+    getMaterial(type: string) {
         return this.materialManager.getMaterial(type);
     }
 
     // --- Renderer facade helpers to centralize scene mutations ---
-    _addToScene(object) {
-        const renderer = window.game && window.game.renderer ? window.game.renderer : null;
+    _addToScene(object: THREE.Object3D) {
+        const renderer = (window as any).game && (window as any).game.renderer ? (window as any).game.renderer : null;
         if (renderer && typeof renderer._withGuard === 'function') {
             renderer._withGuard(() => renderer.add(object));
         } else if (this.scene && typeof this.scene.add === 'function') {
@@ -99,8 +109,8 @@ export class EffectsManager {
         }
     }
 
-    _removeFromScene(object) {
-        const renderer = window.game && window.game.renderer ? window.game.renderer : null;
+    _removeFromScene(object: THREE.Object3D) {
+        const renderer = (window as any).game && (window as any).game.renderer ? (window as any).game.renderer : null;
         if (renderer && typeof renderer._withGuard === 'function') {
             renderer._withGuard(() => this.scene.remove(object));
         } else if (this.scene && typeof this.scene.remove === 'function') {

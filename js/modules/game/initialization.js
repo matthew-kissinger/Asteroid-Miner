@@ -4,7 +4,7 @@ import { Spaceship } from '../spaceship.js';
 import { Physics } from '../physics';
 import { Environment } from '../environment';
 import { Controls } from '../controls.js';
-import { UI } from '../ui.js';
+import { UI } from '../ui';
 import { CombatManager } from '../combat/combatManager.js';
 import { Combat } from '../combat.ts';
 import { AudioManager } from '../audio/audio.js';

@@ -5,32 +5,34 @@
  * including the player reference entity and basic world configuration.
  */
 
+// @ts-ignore
 import { World } from '../../core/world.js';
 import * as THREE from 'three';
 
 export class WorldSetup {
+    world: any = null;
+    playerEntity: any = null;
+    worldInitialized: boolean = false;
+
     constructor() {
-        this.world = null;
-        this.playerEntity = null;
-        this.worldInitialized = false;
     }
 
     /**
      * Initialize the ECS world asynchronously
      * This is called from the constructor and runs in the background
      */
-    async initializeECSWorld(scene, spaceship) {
+    async initializeECSWorld(scene: THREE.Scene, spaceship: any): Promise<any> {
         try {
             console.log("[COMBAT] Starting ECS world initialization...");
             
             // Create a new World instance immediately to allow references
-            this.world = new World(window.mainMessageBus);
+            this.world = new World((window as any).mainMessageBus);
             console.log("[COMBAT] Created world with messageBus: ", 
-                        this.world.messageBus === window.mainMessageBus ? "Using shared messageBus" : "Created new messageBus");
+                        this.world.messageBus === (window as any).mainMessageBus ? "Using shared messageBus" : "Created new messageBus");
             
             // Make world globally available immediately
-            if (window.game) {
-                window.game.ecsWorld = this.world;
+            if ((window as any).game) {
+                (window as any).game.ecsWorld = this.world;
                 console.log("[COMBAT] Made ECS world globally available via window.game.ecsWorld");
             }
             
@@ -47,6 +49,7 @@ export class WorldSetup {
             // Create optimized projectile store
             if (!this.world.optimizedProjectiles) {
                 try {
+                    // @ts-ignore
                     const { OptimizedProjectileStore } = await import('../../core/optimized/OptimizedProjectileStore.js');
                     this.world.optimizedProjectiles = new OptimizedProjectileStore(4096);
                     console.log('[COMBAT] OptimizedProjectileStore created');
@@ -67,7 +70,7 @@ export class WorldSetup {
      * Create a player reference entity in the ECS world
      * This allows enemies and other systems to interact with the player
      */
-    async createPlayerReferenceEntity(spaceship) {
+    async createPlayerReferenceEntity(spaceship: any): Promise<any> {
         if (!this.world) {
             console.error("[COMBAT] Cannot create player entity - world not available");
             return null;
@@ -105,9 +108,9 @@ export class WorldSetup {
                     }
                     
                     // Make it globally accessible
-                    if (window.game) {
-                        window.game.combat = window.game.combat || {};
-                        window.game.combat.playerEntity = existingEntity;
+                    if ((window as any).game) {
+                        (window as any).game.combat = (window as any).game.combat || {};
+                        (window as any).game.combat.playerEntity = existingEntity;
                     }
                     
                     return existingEntity;
@@ -124,9 +127,10 @@ export class WorldSetup {
             console.log(`[COMBAT] Added 'player' tag to entity ${playerEntity.id}`);
             
             // Import needed components
-            let TransformComponent, HealthComponent;
+            let TransformComponent: any, HealthComponent: any;
             
             try {
+                // @ts-ignore
                 const transformModule = await import('../../components/transform.js');
                 TransformComponent = transformModule.TransformComponent;
                 console.log("[COMBAT] Successfully imported TransformComponent");
@@ -134,7 +138,10 @@ export class WorldSetup {
                 console.error("[COMBAT] Failed to import TransformComponent:", error);
                 // Create a minimal fallback if import fails
                 TransformComponent = class FallbackTransform {
-                    constructor(position) { 
+                    position: THREE.Vector3;
+                    rotation: THREE.Euler;
+                    quaternion: THREE.Quaternion;
+                    constructor(position?: THREE.Vector3) { 
                         this.position = position || new THREE.Vector3();
                         this.rotation = new THREE.Euler();
                         this.quaternion = new THREE.Quaternion();
@@ -143,6 +150,7 @@ export class WorldSetup {
             }
             
             try {
+                // @ts-ignore
                 const healthModule = await import('../../components/combat/healthComponent.js');
                 HealthComponent = healthModule.HealthComponent;
                 console.log("[COMBAT] Successfully imported HealthComponent");
@@ -150,7 +158,11 @@ export class WorldSetup {
                 console.error("[COMBAT] Failed to import HealthComponent:", error);
                 // Create a minimal fallback if import fails
                 HealthComponent = class FallbackHealth {
-                    constructor(health, shield) {
+                    health: number;
+                    shield: number;
+                    maxHealth: number;
+                    maxShield: number;
+                    constructor(health?: number, shield?: number) {
                         this.health = health || 100;
                         this.shield = shield || 50;
                         this.maxHealth = health || 100;
@@ -182,9 +194,9 @@ export class WorldSetup {
             this.playerEntity = playerEntity;
             
             // Make the player entity globally accessible for emergency access
-            if (window.game) {
-                window.game.combat = window.game.combat || {};
-                window.game.combat.playerEntity = playerEntity;
+            if ((window as any).game) {
+                (window as any).game.combat = (window as any).game.combat || {};
+                (window as any).game.combat.playerEntity = playerEntity;
                 console.log("[COMBAT] Made player entity globally accessible via window.game.combat.playerEntity");
             }
             
@@ -204,7 +216,7 @@ export class WorldSetup {
             return playerEntity;
         } catch (error) {
             console.error("[COMBAT] Error creating player reference entity:", error);
-            console.error("[COMBAT] Stack trace:", error.stack);
+            console.error("[COMBAT] Stack trace:", (error as Error).stack);
             return null;
         }
     }
@@ -212,7 +224,7 @@ export class WorldSetup {
     /**
      * Update the player reference entity with the current spaceship position
      */
-    updatePlayerReference(spaceship) {
+    updatePlayerReference(spaceship: any): void {
         // Skip if missing references
         if (!this.world || !spaceship || !this.playerEntity) {
             // If we don't have a player entity, try to create one now if world is ready
@@ -268,7 +280,7 @@ export class WorldSetup {
     /**
      * Sync the spaceship hull/shield with the player entity's HealthComponent
      */
-    updateSpaceshipHealth(spaceship) {
+    updateSpaceshipHealth(spaceship: any): void {
         if (!this.playerEntity || !spaceship) return;
         
         // Get health component
@@ -309,9 +321,9 @@ export class WorldSetup {
                 }
                 
                 // Force game over with a "pwned by space alien" message
-                if (window.game) {
+                if ((window as any).game) {
                     console.log("FORCING GAME OVER FROM COMBAT MODULE!");
-                    window.game.gameOver("You were pwned by a space alien!");
+                    (window as any).game.gameOver("You were pwned by a space alien!");
                 }
             }
         }
@@ -320,14 +332,14 @@ export class WorldSetup {
     /**
      * Initialize the world
      */
-    initializeWorld() {
+    initializeWorld(): void {
         try {
             console.log("[COMBAT] Calling world.initialize()...");
             this.world.initialize();
             console.log("[COMBAT] World initialization completed successfully");
         } catch (error) {
             console.error("[COMBAT] Error during world.initialize():", error);
-            console.error("[COMBAT] Stack trace:", error.stack);
+            console.error("[COMBAT] Stack trace:", (error as Error).stack);
             
             // Continue execution - don't let this error stop us
             console.log("[COMBAT] Continuing despite initialization error");
@@ -337,16 +349,16 @@ export class WorldSetup {
     /**
      * Mark world as initialized
      */
-    setWorldInitialized() {
+    setWorldInitialized(): void {
         this.worldInitialized = true;
     }
 
     /**
      * Set reference to this world in the scene for cross-component access
      */
-    setSceneReference(scene) {
+    setSceneReference(scene: THREE.Scene): void {
         if (scene) {
-            scene.ecsWorld = this.world;
+            (scene as any).ecsWorld = this.world;
             console.log("[COMBAT] Set ECS world reference in scene for cross-system access");
         }
     }
@@ -354,21 +366,21 @@ export class WorldSetup {
     /**
      * Get the world instance
      */
-    getWorld() {
+    getWorld(): any {
         return this.world;
     }
 
     /**
      * Get the player entity
      */
-    getPlayerEntity() {
+    getPlayerEntity(): any {
         return this.playerEntity;
     }
 
     /**
      * Check if world is initialized
      */
-    isWorldInitialized() {
+    isWorldInitialized(): boolean {
         return this.worldInitialized;
     }
 }
