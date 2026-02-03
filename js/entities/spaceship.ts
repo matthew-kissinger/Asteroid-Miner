@@ -4,12 +4,34 @@
  * Creates a player spaceship entity with all required components.
  */
 
+import * as THREE from 'three';
+
+// @ts-ignore - JS modules without types
 import { TransformComponent } from '../components/transform.js';
+// @ts-ignore - JS modules without types
 import { RigidbodyComponent } from '../components/physics/rigidbody.js';
+// @ts-ignore - JS modules without types
 import { MeshComponent } from '../components/rendering/mesh.js';
+// @ts-ignore - JS modules without types
 import { ThrusterComponent } from '../components/spaceship/thruster.js';
+// @ts-ignore - JS modules without types
 import { MiningLaserComponent } from '../components/spaceship/miningLaser.js';
+// @ts-ignore - JS modules without types
 import { CargoComponent } from '../components/spaceship/cargo.js';
+// @ts-ignore - JS modules without types
+import { MineableComponent } from '../components/mining/mineable.js';
+
+interface GameEntity {
+    addTag: (tag: string) => void;
+    addComponent: (component: unknown) => void;
+}
+
+interface WorldLike {
+    createEntity: (type: string) => GameEntity;
+}
+
+type SpaceshipEntity = GameEntity;
+type AsteroidEntity = GameEntity;
 
 /**
  * Create a player spaceship entity
@@ -18,7 +40,11 @@ import { CargoComponent } from '../components/spaceship/cargo.js';
  * @param {THREE.Scene} scene Three.js scene (for particles)
  * @returns {Entity} The created entity
  */
-export function createPlayerShip(world, position, scene) {
+export function createPlayerShip(
+    world: WorldLike,
+    position: THREE.Vector3,
+    scene?: THREE.Scene | null
+): SpaceshipEntity {
     // Create entity
     const ship = world.createEntity('player');
     
@@ -38,52 +64,58 @@ export function createPlayerShip(world, position, scene) {
     ship.addComponent(rigidbody);
     
     // Create ship geometry
-    const shipGeometry = new THREE.Group();
+    const shipGeometry: THREE.Group = new THREE.Group();
     
     // Main body
-    const bodyGeometry = new THREE.CylinderGeometry(0, 2, 8, 8);
+    const bodyGeometry: THREE.CylinderGeometry = new THREE.CylinderGeometry(0, 2, 8, 8);
     bodyGeometry.rotateX(Math.PI / 2);
-    const bodyMaterial = new THREE.MeshPhongMaterial({ 
+    const bodyMaterial: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial({ 
         color: 0x3344aa, 
         specular: 0x111111, 
         shininess: 100 
     });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    const body: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshPhongMaterial> = new THREE.Mesh(bodyGeometry, bodyMaterial);
     shipGeometry.add(body);
     
     // Cockpit
-    const cockpitGeometry = new THREE.SphereGeometry(1.2, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    const cockpitGeometry: THREE.SphereGeometry = new THREE.SphereGeometry(1.2, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
     cockpitGeometry.translate(0, 0, -2.5);
-    const cockpitMaterial = new THREE.MeshPhongMaterial({ 
+    const cockpitMaterial: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial({ 
         color: 0x88ccff, 
         specular: 0xffffff, 
         shininess: 200,
         transparent: true,
         opacity: 0.7
     });
-    const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
+    const cockpit: THREE.Mesh<THREE.SphereGeometry, THREE.MeshPhongMaterial> = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
     shipGeometry.add(cockpit);
     
     // Wings
-    const wingGeometry = new THREE.BoxGeometry(6, 0.2, 3);
+    const wingGeometry: THREE.BoxGeometry = new THREE.BoxGeometry(6, 0.2, 3);
     wingGeometry.translate(0, 0, 1);
-    const wingMaterial = new THREE.MeshPhongMaterial({ 
+    const wingMaterial: THREE.MeshPhongMaterial = new THREE.MeshPhongMaterial({ 
         color: 0x2233aa, 
         specular: 0x111111, 
         shininess: 100 
     });
-    const wings = new THREE.Mesh(wingGeometry, wingMaterial);
+    const wings: THREE.Mesh<THREE.BoxGeometry, THREE.MeshPhongMaterial> = new THREE.Mesh(wingGeometry, wingMaterial);
     shipGeometry.add(wings);
     
     // Add mesh component
-    const mesh = new MeshComponent(null, null);
+    const mesh = new MeshComponent(null, null) as {
+        mesh: THREE.Object3D | null;
+        setCastShadow: (value: boolean) => void;
+        setReceiveShadow: (value: boolean) => void;
+    };
     mesh.mesh = shipGeometry;
     mesh.setCastShadow(true);
     mesh.setReceiveShadow(true);
     ship.addComponent(mesh);
     
     // Add thruster component
-    const thruster = new ThrusterComponent(25, 100);
+    const thruster = new ThrusterComponent(25, 100) as {
+        initializeParticleEffects: (scene: THREE.Scene) => void;
+    };
     ship.addComponent(thruster);
     
     // Initialize thruster particles
@@ -92,7 +124,7 @@ export function createPlayerShip(world, position, scene) {
     }
     
     // Add mining laser component
-    const miningLaser = new MiningLaserComponent(1, 50);
+    const miningLaser = new MiningLaserComponent(1, 50) as any;
     ship.addComponent(miningLaser);
     
     // Initialize mining laser
@@ -121,7 +153,13 @@ export function createPlayerShip(world, position, scene) {
  * @param {THREE.Scene} scene Three.js scene
  * @returns {Entity} The created entity
  */
-export function createAsteroid(world, position, resourceType, size, scene) {
+export function createAsteroid(
+    world: WorldLike,
+    position: THREE.Vector3,
+    resourceType: string,
+    size: number,
+    scene?: THREE.Scene | null
+): AsteroidEntity {
     // Create entity
     const asteroid = world.createEntity('asteroid');
     
@@ -138,10 +176,11 @@ export function createAsteroid(world, position, resourceType, size, scene) {
     
     // Create asteroid geometry with random segments
     const segments = Math.floor(Math.random() * 3) + 5;
-    const asteroidGeometry = new THREE.DodecahedronGeometry(2, 0);
+    void segments;
+    const asteroidGeometry: THREE.DodecahedronGeometry = new THREE.DodecahedronGeometry(2, 0);
     
     // Randomize vertices to make it look more natural
-    const positions = asteroidGeometry.getAttribute('position');
+    const positions = asteroidGeometry.getAttribute('position') as THREE.BufferAttribute;
     
     for (let i = 0; i < positions.count; i++) {
         const x = positions.getX(i);
@@ -165,7 +204,7 @@ export function createAsteroid(world, position, resourceType, size, scene) {
     asteroidGeometry.computeVertexNormals();
     
     // Use MeshPhongMaterial for better light response
-    let material;
+    let material: THREE.MeshPhongMaterial;
     switch (resourceType) {
         case 'iron':
             material = new THREE.MeshPhongMaterial({ 
@@ -209,13 +248,17 @@ export function createAsteroid(world, position, resourceType, size, scene) {
     }
     
     // Add mesh component
-    const mesh = new MeshComponent(asteroidGeometry, material);
+    const mesh = new MeshComponent(asteroidGeometry, material) as {
+        addToScene: (scene: THREE.Scene) => void;
+        setCastShadow: (value: boolean) => void;
+        setReceiveShadow: (value: boolean) => void;
+    };
     mesh.setCastShadow(true);
     mesh.setReceiveShadow(true);
     asteroid.addComponent(mesh);
     
     // Add mineable component with balanced resource amounts for single-action mining
-    let resourceAmount;
+    let resourceAmount: number;
     switch (resourceType) {
         case 'iron':
             resourceAmount = Math.floor(size * 5 + Math.random() * 5); // 5-10 iron for small asteroids
@@ -232,10 +275,13 @@ export function createAsteroid(world, position, resourceType, size, scene) {
     
     // Scale up resources for larger asteroids
     if (size > 2) {
-        resourceAmount *= 1.5;
+        resourceAmount = Math.round(resourceAmount * 1.5);
     }
     
-    const mineable = new MineableComponent(resourceType, resourceAmount);
+    const mineable = new MineableComponent(resourceType, resourceAmount) as {
+        initializeParticleEffects: (scene: THREE.Scene) => void;
+        setStartingScale: (scale: number) => void;
+    };
     mineable.setStartingScale(size);
     asteroid.addComponent(mineable);
     
