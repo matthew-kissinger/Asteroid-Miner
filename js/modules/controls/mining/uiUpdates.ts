@@ -1,17 +1,45 @@
 // uiUpdates.js - Handles UI updates and progress displays
 
+import type { Object3D } from 'three';
+
+interface TargetingSystem {
+    isLockOnEnabled: () => boolean;
+}
+
+type WindowWithGame = {
+    gameInstance?: {
+        controls?: {
+            targetingSystem?: TargetingSystem;
+        };
+    };
+    game?: {
+        controls?: {
+            targetingSystem?: TargetingSystem;
+        };
+    };
+};
+
+interface HasMesh {
+    mesh: Object3D;
+}
+
+interface AsteroidInfo extends HasMesh {
+    resourceType?: string;
+}
+
 export class UIUpdates {
     constructor() {}
 
     /**
      * Update target info UI elements
      */
-    updateTargetInfo(asteroid, spaceship, miningDistance) {
+    updateTargetInfo(asteroid: AsteroidInfo | null, spaceship: HasMesh | null, miningDistance: number): void {
         if (!asteroid || !asteroid.mesh || !spaceship || !spaceship.mesh) return;
         
         try {
             // Check if targeting system is active
-            const targetingSystem = window.gameInstance?.controls?.targetingSystem || window.game?.controls?.targetingSystem;
+            const gameWindow = window as WindowWithGame;
+            const targetingSystem = gameWindow.gameInstance?.controls?.targetingSystem || gameWindow.game?.controls?.targetingSystem;
             const isTargetingEnabled = targetingSystem && targetingSystem.isLockOnEnabled();
             
             if (!isTargetingEnabled) return;
@@ -55,7 +83,7 @@ export class UIUpdates {
     /**
      * Update mining status with time estimate
      */
-    updateMiningStatusWithTime(asteroid, miningSpeed, efficiency = 1.0) {
+    updateMiningStatusWithTime(asteroid: AsteroidInfo | null, miningSpeed: number, efficiency = 1.0): void {
         const miningStatusElement = document.getElementById('mining-status');
         if (!miningStatusElement || !asteroid || !asteroid.resourceType) return;
         
@@ -75,7 +103,7 @@ export class UIUpdates {
     /**
      * Reset mining status display
      */
-    resetMiningStatus() {
+    resetMiningStatus(): void {
         const miningStatusElement = document.getElementById('mining-status');
         if (miningStatusElement) {
             miningStatusElement.textContent = 'INACTIVE';
@@ -86,7 +114,7 @@ export class UIUpdates {
     /**
      * Create or update mining progress bar
      */
-    setupMiningProgressBar() {
+    setupMiningProgressBar(): void {
         let miningProgressContainer = document.getElementById('mining-progress-container');
         if (!miningProgressContainer) {
             console.log("UIUpdates: Creating mining progress container");
@@ -121,7 +149,7 @@ export class UIUpdates {
     /**
      * Update mining progress bar
      */
-    updateMiningProgress(progress) {
+    updateMiningProgress(progress: number): void {
         const progressBar = document.getElementById('mining-progress-bar');
         if (progressBar) {
             progressBar.style.width = `${progress * 100}%`;
@@ -131,7 +159,7 @@ export class UIUpdates {
     /**
      * Hide mining progress bar
      */
-    hideMiningProgressBar() {
+    hideMiningProgressBar(): void {
         const miningProgressContainer = document.getElementById('mining-progress-container');
         if (miningProgressContainer) {
             miningProgressContainer.style.display = 'none';
@@ -141,8 +169,9 @@ export class UIUpdates {
     /**
      * Show out of range message
      */
-    showOutOfRangeMessage() {
-        const targetingSystem = window.gameInstance?.controls?.targetingSystem || window.game?.controls?.targetingSystem;
+    showOutOfRangeMessage(): void {
+        const gameWindow = window as WindowWithGame;
+        const targetingSystem = gameWindow.gameInstance?.controls?.targetingSystem || gameWindow.game?.controls?.targetingSystem;
         const isTargetingEnabled = targetingSystem && targetingSystem.isLockOnEnabled();
         
         const targetInfo = document.getElementById('target-info');

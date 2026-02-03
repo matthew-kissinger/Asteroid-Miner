@@ -1,6 +1,28 @@
 // resourceExtraction.js - Handles resource extraction and notification
 
+interface OrbResources {
+    common: number;
+    uncommon: number;
+    rare: number;
+    epic: number;
+    legendary: number;
+}
+
+interface ResourceInventory {
+    iron: number;
+    gold: number;
+    platinum: number;
+    orbs: OrbResources;
+    [key: string]: number | OrbResources;
+}
+
+interface AsteroidResourceInfo {
+    resourceType?: string;
+}
+
 export class ResourceExtraction {
+    resources: ResourceInventory;
+
     constructor() {
         this.resources = {
             iron: 0,
@@ -19,7 +41,7 @@ export class ResourceExtraction {
     /**
      * Add all resources from the mined asteroid to the player's inventory at once
      */
-    addAsteroidResources(targetAsteroid, efficiency = 1.0) {
+    addAsteroidResources(targetAsteroid: AsteroidResourceInfo | null, efficiency = 1.0): boolean {
         if (!targetAsteroid) return false;
         
         // Get the resource type from the asteroid
@@ -75,7 +97,7 @@ export class ResourceExtraction {
     /**
      * Show a notification for resources gained
      */
-    showResourceGainNotification(amount, resourceType) {
+    showResourceGainNotification(amount: number, resourceType: string): void {
         // Get color based on resource type
         let color = '#a0a0a0'; // Default gray for iron
         if (resourceType === 'gold') {
@@ -118,14 +140,16 @@ export class ResourceExtraction {
     /**
      * Get current resource counts
      */
-    getResources() {
+    getResources(): ResourceInventory {
         return { ...this.resources };
     }
 
     /**
      * Get resource count for specific type
      */
-    getResource(type) {
-        return this.resources[type.toLowerCase()] || 0;
+    getResource(type: string): number {
+        const key = type.toLowerCase();
+        const value = this.resources[key];
+        return typeof value === 'number' ? value : 0;
     }
 }

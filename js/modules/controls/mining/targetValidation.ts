@@ -1,7 +1,23 @@
 // targetValidation.js - Handles target validation and range checking
 
+import type { Object3D } from 'three';
+
+interface HasMesh {
+    mesh: Object3D;
+}
+
+interface MiningStartResult {
+    valid: boolean;
+    reason?: string;
+    distance?: number;
+    maxRange?: number;
+}
+
 export class TargetValidation {
-    constructor(spaceship, miningDistance = 6000) {
+    spaceship: HasMesh | null;
+    miningDistance: number;
+
+    constructor(spaceship: HasMesh | null, miningDistance = 6000) {
         this.spaceship = spaceship;
         this.miningDistance = miningDistance;
     }
@@ -9,7 +25,7 @@ export class TargetValidation {
     /**
      * Validate asteroid target
      */
-    validateAsteroid(asteroid) {
+    validateAsteroid(asteroid: HasMesh | null): boolean {
         try {
             console.log("TargetValidation: validating asteroid", asteroid);
             
@@ -29,7 +45,7 @@ export class TargetValidation {
     /**
      * Check if target is in mining range
      */
-    isInRange(asteroid) {
+    isInRange(asteroid: HasMesh | null): boolean {
         if (!asteroid || !asteroid.mesh || !this.spaceship || !this.spaceship.mesh) {
             return false;
         }
@@ -41,7 +57,7 @@ export class TargetValidation {
     /**
      * Get distance to target
      */
-    getDistanceToTarget(asteroid) {
+    getDistanceToTarget(asteroid: HasMesh | null): number {
         if (!asteroid || !asteroid.mesh || !this.spaceship || !this.spaceship.mesh) {
             return Infinity;
         }
@@ -52,7 +68,7 @@ export class TargetValidation {
     /**
      * Validate spaceship for mining
      */
-    validateSpaceship() {
+    validateSpaceship(): boolean {
         if (!this.spaceship || !this.spaceship.mesh || !this.spaceship.mesh.position) {
             console.error("TargetValidation: Spaceship is missing mesh or position");
             return false;
@@ -63,7 +79,7 @@ export class TargetValidation {
     /**
      * Check if asteroid is valid for mining start
      */
-    canStartMining(asteroid) {
+    canStartMining(asteroid: HasMesh | null): MiningStartResult {
         if (!this.validateAsteroid(asteroid)) {
             return { valid: false, reason: "Invalid asteroid" };
         }

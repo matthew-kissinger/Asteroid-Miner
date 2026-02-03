@@ -1,11 +1,11 @@
 // miningSystem.js - Handles asteroid mining functionality
 
 import * as THREE from 'three';
-import { LaserControl } from './mining/laserControl.js';
-import { TargetValidation } from './mining/targetValidation.js';
-import { ResourceExtraction } from './mining/resourceExtraction.js';
-import { UIUpdates } from './mining/uiUpdates.js';
-import { VisualEffects } from './mining/visualEffects.js';
+import { LaserControl } from './mining/laserControl.ts';
+import { TargetValidation } from './mining/targetValidation.ts';
+import { ResourceExtraction } from './mining/resourceExtraction.ts';
+import { UIUpdates } from './mining/uiUpdates.ts';
+import { VisualEffects } from './mining/visualEffects.ts';
 
 export class MiningSystem {
     constructor(spaceship, scene) {

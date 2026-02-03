@@ -2,8 +2,21 @@
 
 import * as THREE from 'three';
 
+interface AsteroidResourceInfo {
+    resourceType?: string;
+}
+
+interface Velocity {
+    x: number;
+    y: number;
+    z: number;
+}
+
 export class VisualEffects {
-    constructor(scene) {
+    scene: THREE.Scene;
+    miningParticles: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial> | null;
+
+    constructor(scene: THREE.Scene) {
         this.scene = scene;
         this.miningParticles = null;
         this.setupMiningParticles();
@@ -12,7 +25,7 @@ export class VisualEffects {
     /**
      * Setup mining particles effect
      */
-    setupMiningParticles() {
+    setupMiningParticles(): void {
         // Create particle effect for mining impact
         const particleCount = 100;
         const particles = new THREE.BufferGeometry();
@@ -40,7 +53,7 @@ export class VisualEffects {
     /**
      * Show mining particles with appropriate color
      */
-    showMiningParticles(asteroid, efficiency = 1.0) {
+    showMiningParticles(asteroid: AsteroidResourceInfo, efficiency = 1.0): void {
         if (!this.miningParticles) return;
         
         this.miningParticles.visible = true;
@@ -67,7 +80,7 @@ export class VisualEffects {
     /**
      * Hide mining particles
      */
-    hideMiningParticles() {
+    hideMiningParticles(): void {
         if (this.miningParticles) {
             this.miningParticles.visible = false;
         }
@@ -76,10 +89,10 @@ export class VisualEffects {
     /**
      * Update mining particles animation
      */
-    updateMiningParticles(efficiency = 1.0) {
+    updateMiningParticles(efficiency = 1.0): void {
         if (!this.miningParticles || !this.miningParticles.visible) return;
         
-        const positions = this.miningParticles.geometry.attributes.position.array;
+        const positions = this.miningParticles.geometry.attributes.position.array as Float32Array;
         
         // Particles move faster with higher efficiency
         const particleSpeed = 0.3 * efficiency;
@@ -112,7 +125,7 @@ export class VisualEffects {
     /**
      * Update particles position to asteroid location
      */
-    setParticlesPosition(position) {
+    setParticlesPosition(position: THREE.Vector3): void {
         if (this.miningParticles && this.miningParticles.visible) {
             this.miningParticles.position.copy(position);
         }
@@ -121,7 +134,7 @@ export class VisualEffects {
     /**
      * Create asteroid break effect
      */
-    createAsteroidBreakEffect(position) {
+    createAsteroidBreakEffect(position: THREE.Vector3): void {
         // Create particle effect for asteroid breaking
         const particleCount = 50;
         const particles = new THREE.BufferGeometry();
@@ -134,7 +147,7 @@ export class VisualEffects {
         });
         
         const positions = new Float32Array(particleCount * 3);
-        const velocities = [];
+        const velocities: Velocity[] = [];
         
         for (let i = 0; i < particleCount; i++) {
             // Start at asteroid position
@@ -160,7 +173,7 @@ export class VisualEffects {
             frameCount++;
             
             // Update particle positions
-            const positions = particleSystem.geometry.attributes.position.array;
+            const positions = particleSystem.geometry.attributes.position.array as Float32Array;
             
             for (let i = 0; i < particleCount; i++) {
                 positions[i * 3] += velocities[i].x;
@@ -187,7 +200,7 @@ export class VisualEffects {
     /**
      * Cleanup resources
      */
-    cleanup() {
+    cleanup(): void {
         if (this.miningParticles) {
             if (this.miningParticles.geometry) this.miningParticles.geometry.dispose();
             if (this.miningParticles.material) this.miningParticles.material.dispose();
