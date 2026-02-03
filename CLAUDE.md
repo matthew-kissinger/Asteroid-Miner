@@ -6,24 +6,29 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 1 Complete
+## Current State: Phase 1 Complete, Phase 2 Started
 
-Phase 1 of the modernization is done. TypeScript and WebGPU renderer are working.
+Phase 1 is done. Early Phase 2 work has begun - bitECS installed, mining subsystem converted to TypeScript.
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured, typecheck passes)
 - WebGPU renderer with automatic WebGL2 fallback (js/modules/renderer.js)
 - Directional sun lighting fixed
-- TSL laser material created (js/modules/render/laserMaterial.js)
+- TSL laser material created and integrated (js/modules/render/laserMaterial.js)
 - Entry points converted to TypeScript (src/main.ts, js/main.ts)
+- Mining subsystem converted to TypeScript (5 modules in js/modules/controls/mining/)
+- CSS mining laser replaced with 3D cylinder mesh using TSL material (js/modules/controls/mining/laserControl.ts)
+- bitECS installed (v0.4.0) and world module created (js/ecs/world.ts)
+- Vite minification re-enabled (constructor.name breakage fixed)
 
 **Remaining Problems:**
-- **Partial TypeScript** - 2 entry points (src/main.ts, js/main.ts) done, but 275 JS files remain. js/main.ts has 40+ @ts-ignore suppressions.
-- **Custom ECS mess** - Hybrid architecture, bitECS not yet integrated. Two prior bitECS install attempts failed (timeout).
-- **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.js (volumetric light + claude rays). TSL laser material exists in js/modules/render/laserMaterial.js but is not imported anywhere.
-- **Global state** - ~700 `window.*` usages across the codebase
-- **Dual mining system** - Active legacy system in js/modules/controls/miningSystem.js (CSS laser overlay) and dormant ECS system in js/systems/mining/ (3D laser, never integrated). CSS laser still renders as HTML div, not 3D geometry.
-- **Minification disabled** - Vite build has `minify: false` due to "breaking our component system"
+- **Partial TypeScript** - 10 TS files done, but 270 JS files remain. js/main.ts has 16 @ts-ignore suppressions (imports from untyped JS modules).
+- **bitECS world exists but unused** - js/ecs/world.ts exports createWorld/createGameEntity/removeGameEntity but no components, systems, or queries are defined yet. Nothing imports the world module.
+- **Custom ECS still active** - Legacy ECS framework in js/core/ still runs the game. bitECS migration requires defining components + systems before switchover.
+- **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.js (volumetric light + claude rays). Pending TSL conversion task exists.
+- **Global state** - ~735 `window.*` usages across 119 files
+- **Dormant ECS mining system** - js/systems/mining/ has a fully implemented but never-integrated ECS mining system. Active system is now the TypeScript version in js/modules/controls/mining/.
+- **lightingConfig.js drift** - js/config/lightingConfig.js defines lighting values (sun: 12*PI, ambient: 0.5*PI) that don't match the hardcoded values actually used in js/modules/renderer/lighting.js (sun: 3.0, ambient: 0.3). The config's applyLightingConfig() function exists but may not be called.
 
 ## Target Stack (2026 Best Practices)
 
@@ -31,8 +36,8 @@ Phase 1 of the modernization is done. TypeScript and WebGPU renderer are working
 |-------|---------|--------|--------|
 | Language | TypeScript (partial) | **TypeScript (strict)** | In Progress |
 | Renderer | Three.js r180 WebGPU | **Three.js r180+ WebGPU** | Done |
-| Shaders | GLSL + TSL laser | **TSL (Three Shading Language)** | Started |
-| ECS | Custom mess | **bitECS** | Pending |
+| Shaders | GLSL + TSL laser (integrated) | **TSL (Three Shading Language)** | Started |
+| ECS | Custom + bitECS world module | **bitECS** | Started |
 | Physics | Custom Newtonian | **Keep custom** (cleaned up) | - |
 | Particles | CPU-based | **WebGPU Compute Shaders** | - |
 | Build | Vite 5 | Vite 6 | - |
@@ -149,11 +154,11 @@ const Thrust = defineComponent({
 1. ~~Upgrade to Three.js r180+~~ Done (r180, package.json updated)
 2. ~~Add TypeScript with strict mode~~ Done (tsconfig.json, checkJs=false for JS files)
 3. ~~Enable WebGPU renderer with WebGL2 fallback~~ Done (js/modules/renderer.js)
-4. Convert `.js` -> `.ts` incrementally - In progress (2 entry points done, 275 JS files remain)
+4. Convert `.js` -> `.ts` incrementally - In progress (10 TS files done, 270 JS files remain)
 
-### Phase 2: bitECS Migration
-1. Install bitECS
-2. Define components
+### Phase 2: bitECS Migration - STARTED
+1. ~~Install bitECS~~ Done (v0.4.0, js/ecs/world.ts created)
+2. Define components - Next up
 3. Create systems (physics, combat, AI, mining)
 4. Delete old custom ECS
 
@@ -244,6 +249,7 @@ Current (package.json):
 ```json
 {
   "dependencies": {
+    "bitecs": "^0.4.0",
     "three": "^0.180.0",
     "serve-static": "^2.2.0"
   },
@@ -260,9 +266,6 @@ Current (package.json):
 Target additions:
 ```json
 {
-  "dependencies": {
-    "bitecs": "^0.3.0"
-  },
   "devDependencies": {
     "vite": "^6.0.0"
   }
@@ -280,17 +283,30 @@ src/
 
 js/
 ├── main.ts              # Game class, main loop
+├── ecs/
+│   └── world.ts         # bitECS world module (createWorld, add/remove entity)
 ├── main/                # Game initialization, lifecycle
 ├── modules/
 │   ├── renderer.js      # WebGPU/WebGL2 renderer
 │   ├── render/
-│   │   └── laserMaterial.js  # TSL laser material
+│   │   └── laserMaterial.js  # TSL laser material (pulsing glow)
+│   ├── controls/
+│   │   ├── miningSystem.js   # Active mining orchestrator
+│   │   └── mining/           # TypeScript mining modules
+│   │       ├── laserControl.ts       # 3D cylinder laser with TSL material
+│   │       ├── resourceExtraction.ts # Resource calculation
+│   │       ├── targetValidation.ts   # Range/target checks
+│   │       ├── uiUpdates.ts          # Mining progress UI
+│   │       └── visualEffects.ts      # Particle effects
 │   ├── physics.js       # Newtonian physics
 │   ├── combat.js        # Combat system
 │   ├── controls.js      # Input handling
 │   └── ...              # ~15 more module directories
-├── systems/             # Legacy ECS systems
-└── components/          # Legacy components
+├── systems/             # Legacy ECS systems (dormant)
+│   └── mining/          # Dormant ECS mining system (never integrated)
+├── components/          # Legacy components
+└── config/
+    └── lightingConfig.js # Lighting config (values drifted from actual implementation)
 ```
 
 Target:
@@ -348,11 +364,12 @@ After overhaul:
 
 ## Known Pitfalls (From Failed Tasks)
 
-- **bitECS install tasks timeout.** Two attempts failed at 30min. The scope was too large (install + components + systems + queries + verification). Break into smaller pieces: install only, then components, then systems.
+- **bitECS install tasks timeout.** Two attempts failed at 30min. The scope was too large (install + components + systems + queries + verification). Break into smaller pieces: install only, then components, then systems. Third attempt (install-only) succeeded.
 - **TypeScript conversion of large modules fails.** The spaceship module conversion (7+ files) was too ambitious. Convert one file at a time, verify build after each.
-- **Mining consolidation is blocked on bitECS.** Cannot consolidate the dual mining system until bitECS is integrated, since the ECS mining system depends on a world object.
-- **TSL laser integration failed.** The task tried to wire up laserMaterial.js into the active mining system, but the active system uses CSS divs not 3D meshes. Need to first replace the CSS laser with a 3D mesh, then apply TSL material.
-- **js/main.ts has 40+ @ts-ignore.** This is expected - it imports from JS files that lack type declarations. Will resolve as modules are converted to TS.
+- **Mining consolidation is blocked on bitECS.** Cannot consolidate the dual mining system until bitECS components and systems are defined, since the ECS mining system depends on a world object.
+- ~~**TSL laser integration failed.**~~ RESOLVED - CSS laser replaced with 3D cylinder mesh using TSL material in js/modules/controls/mining/laserControl.ts.
+- **js/main.ts has 16 @ts-ignore.** These are imports from JS files that lack type declarations. Will resolve as modules are converted to TS.
+- **lightingConfig.js is drifted.** The config file defines values that don't match what lighting.js actually uses. Either wire up applyLightingConfig() or update the config to match reality.
 
 ## Resources
 
