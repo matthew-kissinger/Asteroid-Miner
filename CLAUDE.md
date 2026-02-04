@@ -8,7 +8,7 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 
 ## Current State: Phase 1 Complete, Phase 2 ~99% Done
 
-Phase 1 is done. Phase 2 is nearly complete. The ui/ subsystem is partially converted: top-level files (13), hud/ (6 of 7), settings/ (7), stargate/ (7+7 terminal), starmap/ (4) are now TypeScript. Remaining JS: blackjack/ (7), combat/ (7), customSystem/ (7), hud/displays.js (1) = 22 files. Plus 18 stale JS files (stargate+starmap) coexist with their TS replacements and need deletion. 197 TS files total. Build succeeds. Typecheck has ~69 errors (mostly in newly converted ui/ files - implicit any, DOM types). Previous 15 errors (diagnostics/gameInitializer/arrivalPhase) are fixed.
+Phase 1 is done. Phase 2 TypeScript conversion is nearly complete. All ui/ subsystems are converted except customSystem/ (7 JS files). 212 TS files total, 64 JS files remain (7 customSystem + 57 legacy ECS slated for deletion). Build succeeds. Typecheck passes with 0 errors. 39 @ts-ignore suppressions remain across converted modules. Main chunk is 1,111 kB.
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured)
@@ -48,23 +48,27 @@ Phase 1 is done. Phase 2 is nearly complete. The ui/ subsystem is partially conv
 - Environment/ subsystem fully converted to TypeScript (39 files, d945b03 + d9afbc0)
 - Scattered JS files converted to TypeScript (7 files: lightingConfig, perfOverlay, laserMaterial, apiClient, memoryManager, mobileDetector, pathUtils - baf5249)
 - Previous 15 typecheck errors fixed (diagnostics, gameInitializer, arrivalPhase - dedf603)
-- UI top-level files converted to TypeScript (13 files, 33412a0) - includes hud/ (6 of 7), settings/ (7), stargate/ (14), starmap/ (4)
+- UI top-level files converted to TypeScript (13 files, 33412a0) - includes hud/ (7 of 7), settings/ (7), stargate/ (14), starmap/ (4)
+- 18 stale JS files deleted from stargate/ + starmap/ (44af1e0)
+- UI blackjack/ converted to TypeScript (7 files, 5c12dfe)
+- UI combat/ converted to TypeScript (7 files, 324c740)
+- UI hud + settings converted to TypeScript (14 files, 1592476)
+- All typecheck errors in ui/ resolved (9254892) - 0 errors remaining
 
 **Remaining Problems:**
-- **Typecheck has ~69 errors** - Mostly in newly converted ui/ files (hud/eventHandlers.ts, settings/helpers.ts, settings/graphicsSettings.ts, hud/minimap.ts, stargate/terminalView.ts, etc.). Previous 15 errors (diagnostics/gameInitializer/arrivalPhase) are now fixed.
-- **Partial TypeScript** - 197 TS files, 22 unconverted JS files remain in ui/ (blackjack 7, combat 7, customSystem 7, hud/displays.js 1), plus 18 stale JS files needing deletion, plus 57 legacy ECS JS files slated for deletion. 50 @ts-ignore suppressions across converted modules.
+- **Partial TypeScript** - 212 TS files, 7 unconverted JS files remain in ui/components/customSystem/, plus 57 legacy ECS JS files slated for deletion. 39 @ts-ignore suppressions across converted modules.
 - **Dual ECS running** - Both bitECS (via ecsRunner.ts) and legacy ECS (js/core/) run each frame in parallel. Legacy ECS still drives the actual game; bitECS runs a test entity.
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts (volumetric light + claude rays). Pending TSL conversion.
-- **Global state** - ~645 `window.*` usages across the codebase
-- **Large bundle** - Main chunk is 1,112 kB after minification (combat chunk split out at 146 kB). Needs further code splitting.
-- **Unconverted subsystems** - ui/ has 22 unconverted JS files remaining (blackjack/ 7, combat/ 7, customSystem/ 7, hud/displays.js 1) plus 18 stale JS files needing deletion.
+- **Global state** - ~645 `window.*` usages across the codebase (84 files affected)
+- **Large bundle** - Main chunk is 1,111 kB after minification (combat chunk split out at 146 kB). Needs further code splitting.
+- **Unconverted subsystem** - ui/components/customSystem/ has 7 JS files (~1,885 lines) remaining.
 - **Legacy ECS** - js/core/ (12 files), js/components/ (13 files), js/systems/ (32 files) still active. Will be deleted when bitECS fully replaces them.
 
 ## Target Stack (2026 Best Practices)
 
 | Layer | Current | Target | Status |
 |-------|---------|--------|--------|
-| Language | TypeScript (partial) | **TypeScript (strict)** | In Progress |
+| Language | TypeScript (212 TS, 7 JS remaining) | **TypeScript (strict)** | Nearly Complete |
 | Renderer | Three.js r180 WebGPU | **Three.js r180+ WebGPU** | Done |
 | Shaders | GLSL + TSL laser (integrated) | **TSL (Three Shading Language)** | Started |
 | ECS | Custom + bitECS (integrated, dual running) | **bitECS** | In Progress |
@@ -160,7 +164,7 @@ Health.current[eid] = Health.max[eid]
 1. ~~Upgrade to Three.js r180+~~ Done (r180, package.json updated)
 2. ~~Add TypeScript with strict mode~~ Done (tsconfig.json, checkJs=false for JS files)
 3. ~~Enable WebGPU renderer with WebGL2 fallback~~ Done (js/modules/renderer.js)
-4. Convert `.js` -> `.ts` incrementally - In progress (153 TS files done, 66 JS files remain in ui/)
+4. Convert `.js` -> `.ts` incrementally - Nearly complete (212 TS files, 7 JS remain in ui/components/customSystem/)
 
 ### Phase 2: bitECS Migration - IN PROGRESS (~98%)
 1. ~~Install bitECS~~ Done (v0.4.0, js/ecs/world.ts created)
@@ -186,12 +190,12 @@ Health.current[eid] = Health.max[eid]
 21. ~~Convert scattered JS files to TypeScript~~ Done (7 files, baf5249)
 22. ~~Convert ui/ top-level + hud + settings + stargate + starmap to TypeScript~~ Done (44 files, 33412a0)
 23. ~~Fix 15 typecheck errors (diagnostics, gameInitializer, arrivalPhase)~~ Done (dedf603)
-24. Delete 18 stale JS files in stargate/ + starmap/ (TS replacements exist)
-25. Convert ui/components/blackjack to TypeScript (7 files, ~2,669 lines)
-26. Convert ui/components/combat to TypeScript (7 files, ~2,708 lines)
+24. ~~Delete 18 stale JS files in stargate/ + starmap/~~ Done (44af1e0)
+25. ~~Convert ui/components/blackjack to TypeScript~~ Done (7 files, 5c12dfe)
+26. ~~Convert ui/components/combat to TypeScript~~ Done (7 files, 324c740)
 27. Convert ui/components/customSystem to TypeScript (7 files, ~1,885 lines)
-28. Convert ui/components/hud/displays.js to TypeScript (1 file, 469 lines)
-29. Fix ~69 typecheck errors in newly converted ui/ files
+28. ~~Convert ui/components/hud/displays.js to TypeScript~~ Done (1592476)
+29. ~~Fix typecheck errors in newly converted ui/ files~~ Done (9254892) - 0 errors
 30. Create remaining bitECS systems (combat, AI, mining)
 31. Delete old custom ECS (js/core/, js/components/, js/systems/)
 
@@ -353,7 +357,7 @@ js/
 │   ├── game/            # 5 TS files (fully converted, 4ec0b63)
 │   ├── renderer/        # 6 TS files (fully converted, 5b661ee)
 │   ├── environment/     # 39 TS files (fully converted, d945b03 + d9afbc0)
-│   ├── ui/              # 44 TS + 22 unconverted JS + 18 stale JS to delete
+│   ├── ui/              # 58 TS + 7 unconverted JS (customSystem/)
 │   └── intro/           # 6 TS files (fully converted, 6d8f9fa)
 ├── systems/             # Legacy ECS systems (32 JS files - to be deleted)
 ├── components/          # Legacy components (13 JS files - to be deleted)
