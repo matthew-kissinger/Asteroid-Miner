@@ -4,11 +4,11 @@ import * as THREE from 'three';
 import { Renderer } from '../modules/renderer.js';
 import { Spaceship } from '../modules/spaceship';
 import { Physics } from '../modules/physics';
-import { Environment } from '../modules/environment';
 import { Controls } from '../modules/controls.js';
 import type { DockingSpaceship } from '../modules/controls/docking/types.ts';
-import { UI } from '../modules/ui';
-import { AudioManager } from '../modules/audio/audio.js';
+// import { Environment } from '../modules/environment';
+// import { UI } from '../modules/ui';
+// import { AudioManager } from '../modules/audio/audio.js';
 
 type GameRenderer = {
     scene: THREE.Scene;
@@ -27,10 +27,11 @@ type GameSpaceship = PhysicsSpaceship & DockingSpaceship & {
 };
 
 type GameUi = {
-    setAudio: (audio: AudioManager) => void;
+    setAudio: (audio: any) => Promise<void>;
     setControls: (controls: GameControls) => void;
-    initializeSettings: (game: GameInitializerContext) => void;
+    initializeSettings: (game: GameInitializerContext) => Promise<void>;
     stargateInterface?: { showStargateUI?: (() => void) | undefined };
+    initializeUIComponents: () => Promise<void>; // Add this method
 };
 
 type GameControls = {
@@ -38,7 +39,7 @@ type GameControls = {
 };
 
 type GameInitializerContext = {
-    audio?: AudioManager;
+    audio?: any;
     renderer?: GameRenderer;
     scene?: THREE.Scene;
     camera?: THREE.Camera;
@@ -62,6 +63,7 @@ export class GameInitializer {
     async initializeCore(): Promise<void> {
         // Create audio manager first but don't initialize yet
         if (window.DEBUG_MODE) console.log("Creating audio manager...");
+        const { AudioManager } = await import('../modules/audio/audio.js');
         this.game.audio = new AudioManager();
         
         // Initialize renderer first
@@ -92,6 +94,7 @@ export class GameInitializer {
         physics.setCamera(this.game.camera);
         
         // Initialize environment (essential components only)
+        const { Environment } = await import('../modules/environment.js');
         const environment = new Environment(this.game.scene);
         this.game.environment = environment;
         
@@ -107,10 +110,12 @@ export class GameInitializer {
         environment.setSpaceship(spaceship);
         
         // Initialize UI
+        const { UI } = await import('../modules/ui.js');
         this.game.ui = new UI(spaceship, environment);
+        await this.game.ui.initializeUIComponents();
         
         // Share audio reference with UI for sound-based components
-        this.game.ui.setAudio(this.game.audio);
+        await this.game.ui.setAudio(this.game.audio);
         
         // Initialize controls last, as it depends on other components
         this.game.controls = new Controls(spaceship, physics as any, environment as any, this.game.ui);
@@ -120,7 +125,7 @@ export class GameInitializer {
         
         // Initialize settings
         if (window.DEBUG_MODE) console.log("Initializing settings...");
-        this.game.ui.initializeSettings(this.game);
+        await this.game.ui.initializeSettings(this.game);
     }
     
     setupEventHandlers(): void {

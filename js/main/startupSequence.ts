@@ -1,7 +1,7 @@
 // startupSequence.js - Asset preloads and intro flow management
 
 import * as THREE from 'three';
-import { IntroSequence } from '../modules/introSequence.js';
+// import { IntroSequence } from '../modules/introSequence.js'; // Removed direct import
 
 type AudioContextLike = {
     state: string;
@@ -189,8 +189,9 @@ export class StartupSequence {
         }
     }
     
-    initIntroSequence(): void {
+    async initIntroSequence(): Promise<void> {
         // Initialize the intro sequence module
+        const { IntroSequence } = await import('../modules/introSequence.js');
         this.introSequence = new IntroSequence(
             this.game.scene as THREE.Scene,
             this.game.camera as THREE.Camera,
@@ -204,9 +205,9 @@ export class StartupSequence {
         };
     }
     
-    startIntroSequence(): void {
+    async startIntroSequence(): Promise<void> { // Mark as async
         if (!this.introSequence) {
-            this.initIntroSequence();
+            await this.initIntroSequence(); // Await the dynamic import
         }
         
         this.introSequenceActive = true;

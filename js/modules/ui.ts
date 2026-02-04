@@ -2,15 +2,16 @@
 
 import { HUD } from './ui/hud.ts';
 import { MobileHUD } from './ui/mobileHUD.ts';
-import { MiningDisplay } from './ui/miningDisplay.ts';
-import { TargetingUI } from './ui/targetingUI.ts';
-import { StargateInterface } from './ui/stargateInterface.ts';
-import { GameOverScreen } from './ui/gameOverScreen.ts';
-import { ControlsMenu } from './ui/controlsMenu.ts';
-import { StarMap } from './ui/starMap.ts';
-import { BlackjackGame } from './ui/blackjackGame.ts';
-import { Settings } from './ui/settings.ts';
-import { StartScreen } from './ui/startScreen.ts';
+// Removed direct imports for MiningDisplay, TargetingUI, StargateInterface, GameOverScreen, ControlsMenu, StarMap, BlackjackGame, Settings, StartScreen
+// import { MiningDisplay } from './ui/miningDisplay.ts';
+// import { TargetingUI } from './ui/targetingUI.ts';
+// import { StargateInterface } from './ui/stargateInterface.ts';
+// import { GameOverScreen } from './ui/gameOverScreen.ts';
+// import { ControlsMenu } from './ui/controlsMenu.ts';
+// import { StarMap } from './ui/starMap.ts';
+// import { BlackjackGame } from './ui/blackjackGame.ts';
+// import { Settings } from './ui/settings.ts';
+// import { StartScreen } from './ui/startScreen.ts';
 import { MemoryStats } from '../utils/memoryManager.js';
 import { MobileDetector } from '../utils/mobileDetector.js';
 
@@ -123,15 +124,15 @@ export class UI {
     audio: AudioForUI | null;
     isMobile: boolean;
     hud: HUDComponent;
-    miningDisplay: MiningDisplayComponent;
-    targetingUI: TargetingUIComponent;
-    stargateInterface: StargateInterfaceComponent;
-    gameOverScreen: GameOverScreenComponent;
-    controlsMenu: ControlsMenuComponent;
-    starMap: StarMapComponent;
-    blackjackGame: BlackjackGameComponent | null;
-    settings: SettingsComponent | null;
-    startScreen: StartScreenComponent | null;
+    miningDisplay!: MiningDisplayComponent;
+    targetingUI!: TargetingUIComponent;
+    stargateInterface!: StargateInterfaceComponent;
+    gameOverScreen!: GameOverScreenComponent;
+    controlsMenu!: ControlsMenuComponent;
+    starMap!: StarMapComponent;
+    blackjackGame: BlackjackGameComponent | null = null;
+    settings: SettingsComponent | null = null;
+    startScreen: StartScreenComponent | null = null;
     statsInterval?: number;
     
     constructor(spaceship: SpaceshipForUI, environment: EnvironmentForUI) {
@@ -154,13 +155,26 @@ export class UI {
         } else {
             this.hud = new HUD(spaceship);
         }
-        
+    }
+    
+    // Add an async initialization method
+    async initializeUIComponents() {
+        const { MiningDisplay } = await import('./ui/miningDisplay.ts');
         this.miningDisplay = new MiningDisplay();
+        
+        const { TargetingUI } = await import('./ui/targetingUI.ts');
         this.targetingUI = new TargetingUI();
+        
+        const { StargateInterface } = await import('./ui/stargateInterface.ts');
         this.stargateInterface = new StargateInterface();
+        
+        const { GameOverScreen } = await import('./ui/gameOverScreen.ts');
         this.gameOverScreen = new GameOverScreen();
+        
+        const { ControlsMenu } = await import('./ui/controlsMenu.ts');
         this.controlsMenu = new ControlsMenu();
         
+        const { StarMap } = await import('./ui/starMap.ts');
         // Initialize star map (requires environment, docking system, and stargate interface)
         this.starMap = new StarMap(this.environment.starSystemGenerator ?? null, null, this.stargateInterface);
         
@@ -197,7 +211,7 @@ export class UI {
         console.log("Mobile CSS loaded");
     }
     
-    setAudio(audio: AudioForUI): void {
+    async setAudio(audio: AudioForUI): Promise<void> {
         console.log("Setting audio reference in UI");
         this.audio = audio;
         
@@ -209,6 +223,7 @@ export class UI {
                 console.warn("UI: Created empty cargo object for spaceship");
             }
             
+            const { BlackjackGame } = await import('./ui/blackjackGame.ts');
             this.blackjackGame = new BlackjackGame(null, this.spaceship, this.audio);
             console.log("UI: Created BlackjackGame with spaceship:", this.spaceship);
             
@@ -241,19 +256,21 @@ export class UI {
     }
     
     // Initialize settings with the game instance
-    initializeSettings(game: GameForUI): void {
+    async initializeSettings(game: GameForUI): Promise<void> {
         if (!game) {
             console.error("Cannot initialize settings without game instance");
             return;
         }
         
         // Create settings
+        const { Settings } = await import('./ui/settings.ts');
         this.settings = new Settings(game);
         
         // Link settings to stargateInterface
         this.stargateInterface.setSettings?.(this.settings);
         
         // Initialize start screen now that we have game instance
+        const { StartScreen } = await import('./ui/startScreen.ts');
         this.startScreen = new StartScreen(game, this);
         
         console.log("Settings and StartScreen initialized with game instance");

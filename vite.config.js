@@ -24,9 +24,22 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Configure chunk sizes for better loading times
-        manualChunks: {
-          'three': ['three'],
-          'core': ['./js/core/messageBus.js', './js/core/difficultyManager.js'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Let the existing 'three' chunk handle this for three.js specifically
+            if (id.includes('three')) {
+              return 'three';
+            }
+            return 'vendor'; // Catch-all for other node_modules
+          }
+          // Group all modules directly under js/main/ into a 'game-core' chunk
+          if (id.includes('/js/main/')) {
+            return 'game-core';
+          }
+          // Group all modules directly under js/ecs/systems/ into an 'ecs-systems' chunk
+          if (id.includes('/js/ecs/systems/')) {
+              return 'ecs-systems';
+          }
         },
       },
     },

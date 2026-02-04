@@ -6,14 +6,15 @@ import { StartupSequence } from './main/startupSequence.js';
 import { GameLoop } from './main/gameLoop.js';
 import { Diagnostics } from './main/diagnostics.js';
 import { GameInitializer } from './main/gameInitializer.js';
-import { ObjectPools } from './main/objectPools.js';
-import { DifficultyManager } from './main/difficultyManager.js';
-import { HordeMode } from './main/hordeMode.js';
-import { AudioUpdater } from './main/audioUpdater.js';
-import { GameLifecycle } from './main/gameLifecycle.ts';
+// Removed direct imports for ObjectPools, DifficultyManager, HordeMode, AudioUpdater, GameLifecycle
+// import { ObjectPools } from './main/objectPools.js';
+// import { DifficultyManager } from './main/difficultyManager.js';
+// import { HordeMode } from './main/hordeMode.js';
+// import { AudioUpdater } from './main/audioUpdater.js';
+// import { GameLifecycle } from './main/gameLifecycle.ts';
 
 // Import bitECS systems
-import { initECS, updateECS } from './ecs/systems/index.js';
+// import { initECS, updateECS } from './ecs/systems/index.js'; // Removed direct import
 
 export class Game {
     initializer: any;
@@ -40,6 +41,7 @@ export class Game {
     audio: any;
     private _environment: any;
     private _controls: any;
+    private _updateECS: ((deltaTime: number) => void) | undefined; // New property
 
     constructor() {
         // Initialize globals first
@@ -73,10 +75,19 @@ export class Game {
                            (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
 
             // Initialize managers
+            const { DifficultyManager } = await import('./main/difficultyManager.js');
             this.difficultyManager = new DifficultyManager();
+            
+            const { HordeMode } = await import('./main/hordeMode.js');
             this.hordeMode = new HordeMode(this);
+            
+            const { AudioUpdater } = await import('./main/audioUpdater.js');
             this.audioUpdater = new AudioUpdater(this);
+            
+            const { GameLifecycle } = await import('./main/gameLifecycle.ts');
             this.lifecycle = new GameLifecycle(this);
+            
+            const { ObjectPools } = await import('./main/objectPools.js');
             this.objectPools = new ObjectPools(this);
 
             // Register event handlers
@@ -98,7 +109,9 @@ export class Game {
             this.diagnostics = new Diagnostics(this);
 
             // Initialize bitECS systems (pass scene for test entity mesh)
+            const { initECS, updateECS } = await import('./ecs/systems/index.js');
             initECS(this.renderer?.scene);
+            this._updateECS = updateECS;
 
             // Start the initialization sequence
             this.startupSequence.initializeGameSequence();
@@ -179,7 +192,9 @@ export class Game {
         this.physics.update(deltaTime);
 
         // Update bitECS systems (parallel to legacy systems)
-        updateECS(deltaTime);
+        if (this._updateECS) {
+            this._updateECS(deltaTime);
+        }
 
         // Update spaceship
         if (this.spaceship.update) {
