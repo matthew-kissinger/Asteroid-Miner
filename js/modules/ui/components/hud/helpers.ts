@@ -174,8 +174,8 @@ export class HUDHelpers {
      * Debounce function to limit how often a function can be called
      */
     static debounce(func: Function, wait: number): (...args: any[]) => void {
-        let timeout;
-        return function executedFunction(...args) {
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        return function executedFunction(...args: any[]) {
             const later = () => {
                 clearTimeout(timeout);
                 func(...args);
@@ -189,8 +189,8 @@ export class HUDHelpers {
      * Throttle function to limit how often a function can be called
      */
     static throttle(func: Function, limit: number): (...args: any[]) => void {
-        let inThrottle;
-        return function() {
+        let inThrottle: boolean;
+        return function(this: any) {
             const args = arguments;
             const context = this;
             if (!inThrottle) {
@@ -284,9 +284,9 @@ export class HUDHelpers {
      */
     static getOptimalTextColor(backgroundColor: string): string {
         // Simple luminance calculation to determine if text should be light or dark
-        const rgb = backgroundColor.match(/\d+/g);
+        const rgb: number[] | null = backgroundColor.match(/\d+/g)?.map(Number) || null;
         if (rgb && rgb.length >= 3) {
-            const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+            const luminance: number = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
             return luminance > 0.5 ? '#000000' : '#ffffff';
         }
         return '#ffffff'; // Default to white

@@ -5,9 +5,9 @@ import { SettingsStyles } from './styles.ts';
 
 export class GraphicsSettings {
     game: any; // TODO: Define a proper interface for 'game'
-    styles: typeof SettingsStyles;
+    styles: SettingsStyles;
 
-    constructor(game: any, styles: typeof SettingsStyles) {
+    constructor(game: any, styles: SettingsStyles) {
         this.game = game;
         this.styles = styles;
     }

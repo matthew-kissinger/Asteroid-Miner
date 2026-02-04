@@ -55,21 +55,21 @@ export class SettingsHelpers {
         
         try {
             // Method 1: Try modern Chrome API first (most reliable when available)
-            if ('getScreenDetails' in window && window.getScreenDetails) {
-                window.getScreenDetails().then(details => {
+            if ('getScreenDetails' in window && (window as any).getScreenDetails) {
+                (window as any).getScreenDetails().then((details: any) => {
                     if (details && details.currentScreen && details.currentScreen.refreshRate) {
                         this.monitorRefreshRate = Math.round(details.currentScreen.refreshRate);
                         console.log(`Using getScreenDetails API: ${this.monitorRefreshRate}Hz`);
                         this.updateRefreshRateCallback?.();
                     }
-                }).catch(err => {
+                }).catch((err: any) => {
                     console.log("getScreenDetails not available, falling back to other methods");
                 });
             }
             
             // Method 2: Try screen.refresh (older API but sometimes available)
-            if (window.screen && typeof window.screen.refresh === 'number' && window.screen.refresh > 0) {
-                this.monitorRefreshRate = Math.round(window.screen.refresh);
+            if (window.screen && typeof (window.screen as any).refresh === 'number' && (window.screen as any).refresh > 0) {
+                this.monitorRefreshRate = Math.round((window.screen as any).refresh);
                 console.log(`Using screen.refresh value: ${this.monitorRefreshRate}Hz`);
                 return; // Use this value immediately if available
             }
@@ -94,8 +94,8 @@ export class SettingsHelpers {
      */
     quickRefreshRateMeasure(): number {
         // Check if we have screen refresh rate available
-        if (window.screen && typeof window.screen.refresh === 'number' && window.screen.refresh > 0) {
-            return Math.round(window.screen.refresh);
+        if (window.screen && typeof (window.screen as any).refresh === 'number' && (window.screen as any).refresh > 0) {
+            return Math.round((window.screen as any).refresh);
         }
         
         // Check common indicators for high refresh displays

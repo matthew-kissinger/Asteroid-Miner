@@ -1,20 +1,19 @@
-// settingsView.js - Settings panel layout and view management
-
 import { GraphicsSettings } from './graphicsSettings.ts';
 import { AudioSettings } from './audioSettings.ts';
 import { SettingsHelpers } from './helpers.ts';
 import { SettingsPersistence } from './persistence.ts'; // Assuming this will be needed
+import { SettingsStyles } from './styles.ts';
 
 export class SettingsView {
-    styles: any; // TODO: Type this accurately
+    styles: SettingsStyles;
     graphicsSettings: GraphicsSettings;
     audioSettings: AudioSettings;
     helpers: SettingsHelpers;
-    persistence: SettingsPersistence; // Added for saving/loading
+    persistence: SettingsPersistence;
     private _isVisible: boolean = false; // Internal state for visibility
 
     constructor(
-        styles: any, // Styles class reference
+        styles: SettingsStyles,
         graphicsSettings: GraphicsSettings,
         audioSettings: AudioSettings,
         helpers: SettingsHelpers,
@@ -61,33 +60,10 @@ export class SettingsView {
         // this.updateAllUI(this.currentSettings);
     }
 
-    showSettingsApplied(): void {
-        // Create notification
-        const notification: HTMLDivElement = document.createElement('div');
-        const notificationStyles: Record<string, string> = this.styles.getNotificationStyle();
-        
-        // Apply all styles
-        Object.assign(notification.style, notificationStyles);
-        notification.textContent = 'Settings applied and saved';
-        
-        document.body.appendChild(notification);
-        
-        // Remove after a few seconds
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transition = 'opacity 0.5s';
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 500);
-        }, 1500);
-    }
-
     get isVisible(): boolean {
         return this._isVisible;
     }
 
-    // --- Original methods with type annotations ---
 
     /**
      * Creates the complete settings UI
@@ -209,6 +185,9 @@ export class SettingsView {
         if (settingsContainer) {
             settingsContainer.style.display = 'block';
             this._isVisible = true;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -219,6 +198,9 @@ export class SettingsView {
         if (settingsContainer) {
             settingsContainer.style.display = 'none';
             this._isVisible = false;
+            return true;
+        }
+        return false;
     }
 
     /**

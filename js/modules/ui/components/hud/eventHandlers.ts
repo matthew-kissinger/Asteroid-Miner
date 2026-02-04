@@ -187,7 +187,7 @@ export class HUDEventHandlers {
         }
         
         // Remove DOM event listeners
-        const controls: HTMLElement | null = document.getElementById('show-controls');
+        const controls: any = document.getElementById('show-controls');
         if (controls) {
             controls.removeEventListener('click', controls.clickHandler);
             controls.removeEventListener('mouseover', controls.mouseoverHandler);

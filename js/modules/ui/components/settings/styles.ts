@@ -41,7 +41,7 @@ export class SettingsStyles {
         
         // Add mobile-specific scroll support
         if (this.isMobile) {
-            settingsContainer.style.webkitOverflowScrolling = 'touch';
+            (settingsContainer.style as any).webkitOverflowScrolling = 'touch';
             settingsContainer.style.touchAction = 'pan-y';
             settingsContainer.style.overscrollBehavior = 'contain';
         }
@@ -80,98 +80,98 @@ export class SettingsStyles {
     /**
      * Gets styles for label text
      */
-    getLabelTextStyle() {
+    getLabelTextStyle(): string {
         return `font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};`;
     }
 
     /**
      * Gets styles for description text
      */
-    getDescriptionTextStyle() {
+    getDescriptionTextStyle(): string {
         return `margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;`;
     }
 
     /**
      * Gets styles for select elements
      */
-    getSelectStyle() {
+    getSelectStyle(): string {
         return `background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};`;
     }
 
     /**
      * Gets styles for toggle switches
      */
-    getToggleStyle() {
+    getToggleStyle(): string {
         return `display: inline-block; position: relative; width: ${this.isMobile ? '70px' : '60px'}; height: ${this.isMobile ? '34px' : '30px'};`;
     }
 
     /**
      * Gets styles for toggle inputs
      */
-    getToggleInputStyle() {
+    getToggleInputStyle(): string {
         return 'opacity: 0; width: 0; height: 0;';
     }
 
     /**
      * Gets styles for toggle sliders
      */
-    getToggleSliderStyle() {
+    getToggleSliderStyle(): string {
         return `position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: ${this.isMobile ? '17px' : '15px'}; transition: .4s;`;
     }
 
     /**
      * Gets styles for section headers
      */
-    getSectionHeaderStyle() {
+    getSectionHeaderStyle(): string {
         return `color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px; font-size: ${this.isMobile ? '18px' : '20px'};`;
     }
 
     /**
      * Gets styles for main title
      */
-    getMainTitleStyle() {
+    getMainTitleStyle(): string {
         return `text-align: center; color: #33aaff; margin-top: 0; font-size: ${this.isMobile ? '24px' : '28px'};`;
     }
 
     /**
      * Gets styles for preset buttons container
      */
-    getPresetContainerStyle() {
+    getPresetContainerStyle(): string {
         return `display: flex; justify-content: space-between; margin-bottom: 20px; flex-direction: ${this.isMobile ? 'column' : 'row'}; gap: ${this.isMobile ? '10px' : '0'};`;
     }
 
     /**
      * Gets styles for preset buttons
      */
-    getPresetButtonStyle() {
+    getPresetButtonStyle(): string {
         return `flex: 1; margin-right: ${this.isMobile ? '0' : '10px'}; padding: ${this.isMobile ? '15px' : '10px'}; background-color: #2a3a5a; color: white; border: 1px solid #33aaff; border-radius: 5px; cursor: pointer; font-size: ${this.isMobile ? '16px' : 'inherit'};`;
     }
 
     /**
      * Gets styles for action buttons container
      */
-    getActionButtonsContainerStyle() {
+    getActionButtonsContainerStyle(): string {
         return `display: flex; justify-content: space-between; flex-direction: ${this.isMobile ? 'column' : 'row'}; gap: ${this.isMobile ? '15px' : '0'};`;
     }
 
     /**
      * Gets styles for apply button
      */
-    getApplyButtonStyle() {
+    getApplyButtonStyle(): string {
         return `flex: 1; margin-right: ${this.isMobile ? '0' : '10px'}; padding: ${this.isMobile ? '20px' : '15px'}; background-color: #33aaff; color: black; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: ${this.isMobile ? '18px' : '16px'};`;
     }
 
     /**
      * Gets styles for back button
      */
-    getBackButtonStyle() {
+    getBackButtonStyle(): string {
         return `flex: 1; padding: ${this.isMobile ? '20px' : '15px'}; background-color: #555; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: ${this.isMobile ? '18px' : '16px'};`;
     }
 
     /**
      * Gets styles for notification
      */
-    getNotificationStyle() {
+    getNotificationStyle(): Record<string, string> {
         return {
             position: 'fixed',
             top: this.isMobile ? '25%' : '20%',
@@ -191,8 +191,8 @@ export class SettingsStyles {
     /**
      * Injects toggle slider CSS into the document head
      */
-    injectToggleCSS() {
-        const style = document.createElement('style');
+    injectToggleCSS(): void {
+        const style: HTMLStyleElement = document.createElement('style');
         style.textContent = `
             .slider:before {
                 position: absolute;
@@ -221,7 +221,7 @@ export class SettingsStyles {
     /**
      * Creates a settings row with label and control
      */
-    createSettingRow(labelText, description, controlHtml) {
+    createSettingRow(labelText: string, description: string, controlHtml: string): string {
         return `
             <div class="settings-row" style="${this.getSettingsRowStyle()}">
                 <div style="${this.getSettingLabelStyle()}">
@@ -238,8 +238,8 @@ export class SettingsStyles {
     /**
      * Creates a toggle settings row
      */
-    createToggleRow(labelText, description, inputId) {
-        const toggleHtml = `
+    createToggleRow(labelText: string, description: string, inputId: string): string {
+        const toggleHtml: string = `
             <label class="toggle" style="${this.getToggleStyle()}">
                 <input type="checkbox" id="${inputId}" style="${this.getToggleInputStyle()}">
                 <span class="slider" style="${this.getToggleSliderStyle()}"></span>
@@ -262,12 +262,12 @@ export class SettingsStyles {
     /**
      * Creates a select dropdown settings row
      */
-    createSelectRow(labelText, description, selectId, options) {
-        const optionsHtml = options.map(option => 
+    createSelectRow(labelText: string, description: string, selectId: string, options: { value: string; text: string }[]): string {
+        const optionsHtml: string = options.map(option => 
             `<option value="${option.value}">${option.text}</option>`
         ).join('');
 
-        const selectHtml = `
+        const selectHtml: string = `
             <select id="${selectId}" style="${this.getSelectStyle()}">
                 ${optionsHtml}
             </select>
