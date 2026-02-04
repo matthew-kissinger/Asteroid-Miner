@@ -1,11 +1,12 @@
-// soundEffects.js - Tone.js sound effects for intro sequence
+// soundEffects.ts - Tone.js sound effects for intro sequence
 
 /**
  * Creates all intro sequence sound effects using Tone.js
- * @param {AudioManager} audioManager - Reference to the main audio manager
+ * @param {any} audioManager - Reference to the main audio manager
  * @returns {Object} Object containing all intro sound effects
  */
-export function createIntroSoundEffects(audioManager) {
+export function createIntroSoundEffects(audioManager: any): any {
+    const Tone = (window as any).Tone;
     if (typeof Tone === 'undefined') {
         console.error("Tone.js not available for intro sound effects");
         return {};
@@ -14,7 +15,7 @@ export function createIntroSoundEffects(audioManager) {
     try {
         console.log("Creating intro sequence sound effects...");
         
-        const introSounds = {};
+        const introSounds: any = {};
         
         // Create warp portal sound
         introSounds.warp = createWarpSound(audioManager);
@@ -34,7 +35,8 @@ export function createIntroSoundEffects(audioManager) {
 }
 
 // Create warp portal sound effect
-function createWarpSound(audioManager) {
+function createWarpSound(audioManager: any): any {
+    const Tone = (window as any).Tone;
     try {
         // Use Tone.Destination directly - audio system might not be fully initialized yet
         const destination = Tone.Destination;
@@ -136,7 +138,8 @@ function createWarpSound(audioManager) {
 }
 
 // Create ship arrival sound effect
-function createShipArrivalSound(audioManager) {
+function createShipArrivalSound(audioManager: any): any {
+    const Tone = (window as any).Tone;
     try {
         // Use Tone.Destination directly - audio system might not be fully initialized yet
         const destination = Tone.Destination;
@@ -212,7 +215,8 @@ function createShipArrivalSound(audioManager) {
 }
 
 // Create teleport beam sound effect
-function createTeleportSound(audioManager) {
+function createTeleportSound(audioManager: any): any {
+    const Tone = (window as any).Tone;
     try {
         // Use Tone.Destination directly - audio system might not be fully initialized yet
         const destination = Tone.Destination;

@@ -1,16 +1,17 @@
-// portalEffect.js - Manages the warp portal visual effects for intro sequence
+// portalEffect.ts - Manages the warp portal visual effects for intro sequence
 
 import * as THREE from 'three';
 
 export class PortalEffect {
+    private warpTunnel: THREE.Group | null = null;
+    private warpPortal: THREE.Mesh | null = null;
+    private portalParticles: THREE.Points | null = null;
+
     constructor() {
-        this.warpTunnel = null;
-        this.warpPortal = null;
-        this.portalParticles = null;
         this.setupPortalEffect();
     }
     
-    setupPortalEffect() {
+    setupPortalEffect(): void {
         // Create a circular portal instead of a particle tower
         const portalGeometry = new THREE.RingGeometry(0, 400, 64);
         const portalMaterial = new THREE.ShaderMaterial({
@@ -80,9 +81,9 @@ export class PortalEffect {
     /**
      * Update portal shader uniforms and animations
      */
-    updatePortalEffect() {
-        if (this.warpPortal && this.warpPortal.material.uniforms) {
-            this.warpPortal.material.uniforms.time.value += 0.016;
+    updatePortalEffect(): void {
+        if (this.warpPortal && (this.warpPortal.material as THREE.ShaderMaterial).uniforms) {
+            (this.warpPortal.material as THREE.ShaderMaterial).uniforms.time.value += 0.016;
         }
     }
     
@@ -90,12 +91,12 @@ export class PortalEffect {
      * Set portal opacity for fade effects
      * @param {number} opacity - Opacity value between 0 and 1
      */
-    setOpacity(opacity) {
+    setOpacity(opacity: number): void {
         if (this.portalParticles && this.portalParticles.material) {
-            this.portalParticles.material.opacity = opacity;
+            (this.portalParticles.material as THREE.PointsMaterial).opacity = opacity;
         }
         if (this.warpPortal && this.warpPortal.material) {
-            this.warpPortal.material.opacity = opacity;
+            (this.warpPortal.material as THREE.Material).opacity = opacity;
         }
     }
     
@@ -103,7 +104,7 @@ export class PortalEffect {
      * Set portal scale
      * @param {number} scale - Scale factor
      */
-    setScale(scale) {
+    setScale(scale: number): void {
         if (this.warpTunnel) {
             this.warpTunnel.scale.set(scale, scale, 1);
         }
@@ -113,7 +114,7 @@ export class PortalEffect {
      * Set portal position
      * @param {THREE.Vector3} position - Position vector
      */
-    setPosition(position) {
+    setPosition(position: THREE.Vector3): void {
         if (this.warpTunnel) {
             this.warpTunnel.position.copy(position);
         }
@@ -123,7 +124,7 @@ export class PortalEffect {
      * Set portal rotation
      * @param {THREE.Euler} rotation - Rotation euler angles
      */
-    setRotation(rotation) {
+    setRotation(rotation: THREE.Euler): void {
         if (this.warpTunnel) {
             this.warpTunnel.rotation.copy(rotation);
         }
@@ -133,7 +134,7 @@ export class PortalEffect {
      * Set portal visibility
      * @param {boolean} visible - Whether portal should be visible
      */
-    setVisible(visible) {
+    setVisible(visible: boolean): void {
         if (this.warpTunnel) {
             this.warpTunnel.visible = visible;
         }
@@ -141,23 +142,23 @@ export class PortalEffect {
     
     /**
      * Get the portal group for adding to scene
-     * @returns {THREE.Group} The warp tunnel group
+     * @returns {THREE.Group | null} The warp tunnel group
      */
-    getPortalGroup() {
+    getPortalGroup(): THREE.Group | null {
         return this.warpTunnel;
     }
     
     /**
      * Clean up portal resources
      */
-    dispose() {
+    dispose(): void {
         if (this.warpPortal) {
             if (this.warpPortal.geometry) this.warpPortal.geometry.dispose();
-            if (this.warpPortal.material) this.warpPortal.material.dispose();
+            if (this.warpPortal.material) (this.warpPortal.material as THREE.Material).dispose();
         }
         if (this.portalParticles) {
             if (this.portalParticles.geometry) this.portalParticles.geometry.dispose();
-            if (this.portalParticles.material) this.portalParticles.material.dispose();
+            if (this.portalParticles.material) (this.portalParticles.material as THREE.Material).dispose();
         }
         this.warpTunnel = null;
         this.warpPortal = null;

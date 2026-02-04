@@ -1,13 +1,13 @@
-// departurePhase.js - Manages the ship departure phase of the intro sequence
+// departurePhase.ts - Manages the ship departure phase of the intro sequence
 
 import * as THREE from 'three';
 
 /**
  * Update the departure phase animation (ship rotation, portal reappearance, and departure)
  * @param {number} progress - Progress through departure phase (0-1)
- * @param {Object} context - Context object containing all necessary references
+ * @param {any} context - Context object containing all necessary references
  */
-export function updateDeparturePhase(progress, context) {
+export function updateDeparturePhase(progress: number, context: any): void {
     const {
         portalEffect,
         starDreadnought,
@@ -74,7 +74,7 @@ export function updateDeparturePhase(progress, context) {
         const easeIn = moveProgress * moveProgress; // Accelerating movement
         
         // Ship position calculation
-        let position;
+        let position: THREE.Vector3;
         if (moveProgress < 0.7) {
             // Move to portal
             const t = easeIn / 0.5; // Normalized and accelerated

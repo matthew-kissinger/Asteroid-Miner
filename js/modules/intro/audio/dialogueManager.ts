@@ -1,15 +1,15 @@
-// dialogueManager.js - Manages loading and playing dialogue WAV files for intro sequence
+// dialogueManager.ts - Manages loading and playing dialogue WAV files for intro sequence
 
 import { getAbsolutePath } from '../../../utils/pathUtils.js';
 
 /**
  * Load dialogue WAV files (1.wav through 8.wav)
- * @returns {Array} Array of Audio elements for dialogue files
+ * @returns {HTMLAudioElement[]} Array of Audio elements for dialogue files
  */
-export function loadDialogueWavs() {
+export function loadDialogueWavs(): HTMLAudioElement[] {
     console.log("Loading dialogue WAV files...");
     
-    const dialogueWavs = [];
+    const dialogueWavs: HTMLAudioElement[] = [];
     
     try {
         // Load 8 dialogue WAV files
@@ -25,7 +25,7 @@ export function loadDialogueWavs() {
                 console.log(`Dialogue WAV ${i} loaded successfully`);
             });
             
-            audio.addEventListener('error', (e) => {
+            audio.addEventListener('error', () => {
                 console.warn(`Dialogue WAV ${i} not found or couldn't be loaded - this is normal if you haven't added the files yet`);
                 // Don't log the full error object as it's noisy
             });
@@ -47,11 +47,11 @@ export function loadDialogueWavs() {
 
 /**
  * Play a specific dialogue WAV file
- * @param {Array} dialogueWavs - Array of dialogue audio elements
+ * @param {HTMLAudioElement[]} dialogueWavs - Array of dialogue audio elements
  * @param {number} index - Index of the dialogue to play
- * @param {AudioManager} audioManager - Audio manager for volume control
+ * @param {any} audioManager - Audio manager for volume control
  */
-export function playDialogueWav(dialogueWavs, index, audioManager) {
+export function playDialogueWav(dialogueWavs: HTMLAudioElement[], index: number, audioManager: any): void {
     // Only play WAVs for the first 8 dialogues (the ones with voice acting)
     if (index >= 8 || !dialogueWavs[index]) {
         return;
@@ -76,7 +76,7 @@ export function playDialogueWav(dialogueWavs, index, audioManager) {
         } else {
             console.log(`Skipping dialogue WAV ${index + 1} (not loaded)`);
         }
-    } catch (error) {
+    } catch (error: any) {
         console.warn(`Error playing dialogue WAV ${index + 1}, continuing without audio`, error.message);
     }
 }

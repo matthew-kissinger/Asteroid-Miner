@@ -1,8 +1,17 @@
-// dialogueSystem.js - Manages dialogue UI and typing animation for intro sequence
+// dialogueSystem.ts - Manages dialogue UI and typing animation for intro sequence
 
 import { playDialogueWav } from '../audio/dialogueManager.js';
 
 export class DialogueSystem {
+    private dialogueBox: HTMLDivElement | null = null;
+    private dialogueText: HTMLDivElement | null = null;
+    private currentDialogueIndex: number = 0;
+    private isTyping: boolean = false;
+    private typeInterval: number | ReturnType<typeof setInterval> | null = null;
+    private dialogueWavs: HTMLAudioElement[] = [];
+    private audioManager: any = null;
+    private dialogueLines: string[];
+    
     constructor() {
         this.dialogueBox = null;
         this.dialogueText = null;
@@ -29,10 +38,10 @@ export class DialogueSystem {
     
     /**
      * Initialize the dialogue system with required dependencies
-     * @param {Array} dialogueWavs - Array of loaded dialogue audio elements
-     * @param {AudioManager} audioManager - Audio manager for volume control
+     * @param {HTMLAudioElement[]} dialogueWavs - Array of loaded dialogue audio elements
+     * @param {any} audioManager - Audio manager for volume control
      */
-    initialize(dialogueWavs, audioManager) {
+    initialize(dialogueWavs: HTMLAudioElement[], audioManager: any): void {
         this.dialogueWavs = dialogueWavs;
         this.audioManager = audioManager;
     }
@@ -40,7 +49,7 @@ export class DialogueSystem {
     /**
      * Setup the dialogue UI elements
      */
-    setupDialogueUI() {
+    setupDialogueUI(): void {
         // Create dialogue box
         this.dialogueBox = document.createElement('div');
         this.dialogueBox.id = 'intro-dialogue';
@@ -72,7 +81,9 @@ export class DialogueSystem {
         
         // Fade in dialogue box
         setTimeout(() => {
-            this.dialogueBox.style.opacity = '1';
+            if (this.dialogueBox) {
+                this.dialogueBox.style.opacity = '1';
+            }
         }, 200);
     }
     
@@ -82,7 +93,7 @@ export class DialogueSystem {
      * @param {boolean} isPlaying - Whether intro sequence is still playing
      * @returns {boolean} True if there are more dialogues, false if complete
      */
-    typeNextDialogue(sequenceTime = 0, isPlaying = true) {
+    typeNextDialogue(sequenceTime: number = 0, isPlaying: boolean = true): boolean {
         if (this.currentDialogueIndex >= this.dialogueLines.length) {
             return false;
         }
@@ -95,10 +106,12 @@ export class DialogueSystem {
         this.currentDialogueIndex++;
         
         // Clear previous text
-        this.dialogueText.textContent = '';
+        if (this.dialogueText) {
+            this.dialogueText.textContent = '';
+        }
         
         // Show dialogue box if not visible
-        if (this.dialogueBox.style.opacity === '0') {
+        if (this.dialogueBox && this.dialogueBox.style.opacity === '0') {
             this.dialogueBox.style.opacity = '1';
         }
         
@@ -108,26 +121,32 @@ export class DialogueSystem {
         
         // Clear previous interval if exists
         if (this.typeInterval) {
-            clearInterval(this.typeInterval);
+            clearInterval(this.typeInterval as any);
         }
         
         // Special effects for transmission terminated line
-        if (line.includes("TRANSMISSION TERMINATED") || line.includes("DEPLOYMENT ACTIVE")) {
-            this.dialogueText.style.color = '#ff3030';
-        } else {
-            this.dialogueText.style.color = '#30f0c0';
+        if (this.dialogueText) {
+            if (line.includes("TRANSMISSION TERMINATED") || line.includes("DEPLOYMENT ACTIVE")) {
+                this.dialogueText.style.color = '#ff3030';
+            } else {
+                this.dialogueText.style.color = '#30f0c0';
+            }
         }
         
         // Type each character with random speed for effect
         this.typeInterval = setInterval(() => {
             if (charIndex < line.length) {
-                this.dialogueText.textContent += line.charAt(charIndex);
+                if (this.dialogueText) {
+                    this.dialogueText.textContent += line.charAt(charIndex);
+                }
                 charIndex++;
                 
                 // Typing sound disabled - uiClick sound not available
                 // Could be re-enabled when proper UI sounds are added to the audio system
             } else {
-                clearInterval(this.typeInterval);
+                if (this.typeInterval) {
+                    clearInterval(this.typeInterval as any);
+                }
                 this.typeInterval = null;
                 this.isTyping = false;
                 
@@ -151,7 +170,7 @@ export class DialogueSystem {
      * Get current dialogue index
      * @returns {number} Current dialogue index
      */
-    getCurrentDialogueIndex() {
+    getCurrentDialogueIndex(): number {
         return this.currentDialogueIndex;
     }
     
@@ -159,17 +178,17 @@ export class DialogueSystem {
      * Check if currently typing
      * @returns {boolean} True if typing animation is active
      */
-    getIsTyping() {
+    getIsTyping(): boolean {
         return this.isTyping;
     }
     
     /**
      * Clean up dialogue system resources
      */
-    cleanup() {
+    cleanup(): void {
         // Clear typing interval if running
         if (this.typeInterval) {
-            clearInterval(this.typeInterval);
+            clearInterval(this.typeInterval as any);
             this.typeInterval = null;
         }
         

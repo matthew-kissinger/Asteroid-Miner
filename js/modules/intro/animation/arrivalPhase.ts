@@ -1,13 +1,13 @@
-// arrivalPhase.js - Manages the ship arrival phase of the intro sequence
+// arrivalPhase.ts - Manages the ship arrival phase of the intro sequence
 
 import * as THREE from 'three';
 
 /**
  * Update the arrival phase animation (portal, ship arrival and player deployment)
  * @param {number} progress - Progress through arrival phase (0-1)
- * @param {Object} context - Context object containing all necessary references
+ * @param {any} context - Context object containing all necessary references
  */
-export function updateArrivalPhase(progress, context) {
+export function updateArrivalPhase(progress: number, context: any): void {
     const {
         portalEffect,
         starDreadnought,
@@ -164,10 +164,10 @@ export function updateArrivalPhase(progress, context) {
 
 /**
  * Create shield effect around player ship
- * @param {Object} spaceship - Player spaceship object
- * @param {Object} context - Context object for storing shield effect reference
+ * @param {any} spaceship - Player spaceship object
+ * @param {any} context - Context object for storing shield effect reference
  */
-function createPlayerShieldEffect(spaceship, context) {
+function createPlayerShieldEffect(spaceship: any, context: any): void {
     // Create a sphere slightly larger than the player ship
     const geometry = new THREE.SphereGeometry(30, 32, 32);
     const material = new THREE.MeshBasicMaterial({
