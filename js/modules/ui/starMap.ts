@@ -198,7 +198,7 @@ export class StarMap {
             this.isVisible = false;
             
             // Show the stargate UI when returning from star map
-            if (this.stargateInterface) {
+            if (this.stargateInterface?.showStargateUI) {
                 this.stargateInterface.showStargateUI();
             } else if (window.game && window.game.ui && window.game.ui.stargateInterface) {
                 // Try to find stargate UI via game instance if direct reference fails

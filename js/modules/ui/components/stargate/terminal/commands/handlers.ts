@@ -44,7 +44,7 @@ export class CommandHandlers {
                 case 'help':
                     return this.handleHelp(args);
                 case 'list':
-                    return this.handleList(args);
+                    return this.handleList();
                 case 'clear':
                     return this.handleClear();
                 case 'quit':

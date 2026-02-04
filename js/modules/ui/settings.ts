@@ -54,10 +54,10 @@ export class Settings {
         this.styles = new SettingsStyles(this.isMobile);
         this.helpers = new SettingsHelpers();
         this.persistence = new SettingsPersistence();
-        this.graphicsSettings = new GraphicsSettings(this.game, this.styles as unknown as typeof SettingsStyles);
-        this.audioSettings = new AudioSettings(this.game, this.styles as unknown as typeof SettingsStyles);
+        this.graphicsSettings = new GraphicsSettings(this.game, this.styles);
+        this.audioSettings = new AudioSettings(this.game, this.styles);
         this.settingsView = new SettingsView(
-            this.styles as unknown as typeof SettingsStyles,
+            this.styles,
             this.graphicsSettings,
             this.audioSettings,
             this.helpers,

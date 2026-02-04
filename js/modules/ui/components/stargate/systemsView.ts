@@ -45,7 +45,7 @@ export class SystemsView {
             });
         } else if (starMapButton) {
             // If star map not available, disable the button
-            starMapButton.disabled = true;
+            (starMapButton as HTMLButtonElement).disabled = true;
             (starMapButton as HTMLElement).style.backgroundColor = '#555';
             (starMapButton as HTMLElement).style.cursor = 'not-allowed';
             starMapButton.title = 'Star map not available';
@@ -62,7 +62,7 @@ export class SystemsView {
             });
         } else if (blackjackButton) {
             // If blackjack game not available, disable the button
-            blackjackButton.disabled = true;
+            (blackjackButton as HTMLButtonElement).disabled = true;
             (blackjackButton as HTMLElement).style.backgroundColor = '#555';
             (blackjackButton as HTMLElement).style.cursor = 'not-allowed';
             blackjackButton.title = 'Blackjack game not available';

@@ -141,13 +141,13 @@ export class EventHandlers {
         const tabButtons = stargateUI.querySelectorAll('.tablinks');
         if (tabButtons.length > 0) {
             tabButtons.forEach(button => {
-                button.addEventListener('touchend', (e: TouchEvent) => {
+                button.addEventListener('touchend', ((e: TouchEvent) => {
                     // Prevent rapid multiple touches
                     e.preventDefault();
-                    
+
                     // Simulate a click event
                     (button as HTMLElement).click();
-                });
+                }) as EventListener);
             });
         }
         

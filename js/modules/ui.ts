@@ -16,12 +16,6 @@ import { MemoryStats } from '../utils/memoryManager.js';
 import { MobileDetector } from '../utils/mobileDetector.js';
 
 // Type definitions for UI-related objects
-interface Cargo {
-    iron: number;
-    gold: number;
-    platinum: number;
-}
-
 type SpaceshipForUI = any;
 
 interface StarSystemGenerator {

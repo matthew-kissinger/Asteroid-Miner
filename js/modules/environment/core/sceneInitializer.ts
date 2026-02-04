@@ -90,7 +90,7 @@ export class SceneInitializer {
 
         // Initialize the custom system creator
         const { CustomSystemCreator } = await import('../../ui/customSystemCreator.ts');
-        this.customSystemCreator = new CustomSystemCreator(this.starSystemGenerator ?? null, this);
+        this.customSystemCreator = new CustomSystemCreator(this.starSystemGenerator ?? null, this as any);
         console.log("Custom system creator initialized:", this.customSystemCreator);
 
         this.componentsLoaded = true;

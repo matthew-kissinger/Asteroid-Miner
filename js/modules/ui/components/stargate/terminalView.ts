@@ -6,55 +6,36 @@ import { TerminalEffects } from './terminal/display/effects.js';
 import { CommandParser } from './terminal/commands/parser.js';
 import { CommandHandlers } from './terminal/commands/handlers.js';
 import { TerminalMessages } from './terminal/content/messages.js';
-import { TerminalAscii } from './terminal/content/ascii.js';
 import { TerminalKeyboard } from './terminal/input/keyboard.js';
 
-interface CommandResult {
-    clearScreen?: boolean;
-    message?: string;
-    action?: string;
-    target?: string;
-}
-
-interface ParsedCommand {
-    command: string;
-    args: string[];
-}
-
 export class TerminalView {
-    private isMobile: boolean;
     private screen: TerminalScreen;
     private effects: TerminalEffects;
     private parser: CommandParser;
     private handlers: CommandHandlers;
     private messages: TerminalMessages;
-    private ascii: TerminalAscii;
     private keyboard: TerminalKeyboard;
     
     constructor() {
-        this.isMobile = false;
-        
         // Initialize all modules
         this.screen = new TerminalScreen();
         this.effects = new TerminalEffects();
         this.parser = new CommandParser();
         this.handlers = new CommandHandlers(this);
         this.messages = new TerminalMessages();
-        this.ascii = new TerminalAscii();
         this.keyboard = new TerminalKeyboard();
-        
+
         this.setupKeyboardHandlers();
     }
-    
+
     setMobile(isMobile: boolean): void {
-        this.isMobile = isMobile;
         this.screen.setMobile(isMobile);
     }
     
     setupKeyboardHandlers(): void {
         // Register keyboard event handlers for terminal commands
-        this.keyboard.registerHandler('enter', (data: { input: string }) => {
-            if (data.input.trim()) {
+        this.keyboard.registerHandler('enter', (data) => {
+            if (data.input?.trim()) {
                 this.handleCommand(data.input);
             }
         });
@@ -121,11 +102,11 @@ export class TerminalView {
         this.effects.createStyles();
     }
     
-    createDockingPrompt(): string {
+    createDockingPrompt(): HTMLElement {
         return this.screen.createDockingPrompt();
     }
-    
-    createMainUI(): string {
+
+    createMainUI(): HTMLElement {
         return this.screen.createMainUI();
     }
     

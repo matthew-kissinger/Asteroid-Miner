@@ -35,15 +35,11 @@ interface Environment {
 
 export class NavigationLogic {
     private starSystemGenerator: StarSystemGenerator;
-    private dockingSystem: DockingSystem;
-    private stargateInterface: StargateInterface;
     private selectedSystem: string | null;
     private isTraveling: boolean;
 
-    constructor(starSystemGenerator: StarSystemGenerator, dockingSystem: DockingSystem, stargateInterface: StargateInterface) {
+    constructor(starSystemGenerator: StarSystemGenerator, _dockingSystem: DockingSystem, _stargateInterface: StargateInterface) {
         this.starSystemGenerator = starSystemGenerator;
-        this.dockingSystem = dockingSystem;
-        this.stargateInterface = stargateInterface;
         this.selectedSystem = null;
         this.isTraveling = false;
     }

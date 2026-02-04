@@ -27,7 +27,7 @@ export class DataManager {
     }
 
     // Update the current system information
-    updateCurrentSystemInfo(isMobile: boolean): void {
+    updateCurrentSystemInfo(_isMobile: boolean): void {
         const system = this.starSystemGenerator.getCurrentSystemData();
         if (!system) return;
         
