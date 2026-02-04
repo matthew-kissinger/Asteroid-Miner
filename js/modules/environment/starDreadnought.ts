@@ -1,5 +1,5 @@
-// starDreadnought.js - Creates and manages the massive Star Dreadnought ship
+// starDreadnought.ts - Creates and manages the massive Star Dreadnought ship
 // Refactored to use modular components
 
 // Re-export the refactored StarDreadnought class
-export { StarDreadnought } from './dreadnought/starDreadnought.js';
+export { StarDreadnought } from './dreadnought/starDreadnought';

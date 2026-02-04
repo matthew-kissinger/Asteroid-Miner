@@ -1,6 +1,6 @@
 // settings.js - Handles game settings and performance options
 
-import { MobileDetector } from '../../utils/mobileDetector.js';
+import { MobileDetector } from '../../utils/mobileDetector.ts';
 import { SettingsStyles } from './components/settings/styles.js';
 import { AudioSettings } from './components/settings/audioSettings.js';
 import { GraphicsSettings } from './components/settings/graphicsSettings.js';

@@ -1,6 +1,7 @@
 // post.ts - Post-processing effects management
 
 import * as THREE from 'three';
+import type { WebGPURenderer } from 'three/webgpu';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -10,9 +11,6 @@ import { ColorCorrectionShader } from 'three/addons/shaders/ColorCorrectionShade
 import { FilmShader } from 'three/addons/shaders/FilmShader.js';
 import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
 import { createVolumetricLightShader, createClaudeRayShader } from './shaders';
-
-// WebGPURenderer is not in @types/three yet, declare it
-declare class WebGPURenderer extends THREE.WebGLRenderer {}
 
 type RendererType = THREE.WebGLRenderer | WebGPURenderer;
 

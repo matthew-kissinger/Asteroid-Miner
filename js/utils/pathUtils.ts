@@ -4,10 +4,10 @@
 
 /**
  * Converts a relative path to an absolute path that works both locally and on GitHub Pages
- * @param {string} relativePath - The relative path to convert
- * @returns {string} - The absolute path adjusted for the current environment
+ * @param relativePath - The relative path to convert
+ * @returns - The absolute path adjusted for the current environment
  */
-export function getAbsolutePath(relativePath) {
+export function getAbsolutePath(relativePath: string): string {
     // Log for debugging
     console.log(`Original path: ${relativePath}`);
     

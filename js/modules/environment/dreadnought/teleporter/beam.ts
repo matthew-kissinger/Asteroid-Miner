@@ -1,14 +1,14 @@
-// beam.js - Creates the teleport beam and impact ring for the Star Dreadnought
+// beam.ts - Creates the teleport beam and impact ring for the Star Dreadnought
 
 import * as THREE from 'three';
 
 export class TeleportBeam {
-    static createTeleportBeam(scale, ship) {
+    static createTeleportBeam(scale: number, ship: THREE.Group): THREE.Mesh {
         // Create teleport beam (initially inactive)
         const beamTopRadius = scale * 0.03;
         const beamBottomRadius = scale * 0.2; // Much wider at bottom for dramatic beam
         const beamHeight = scale * 0.8; // Longer beam to reach further
-        
+
         // Custom shader material for energy beam effect with more dynamic patterns
         const beamMaterial = new THREE.ShaderMaterial({
             uniforms: {
@@ -66,25 +66,25 @@ export class TeleportBeam {
             side: THREE.DoubleSide,
             blending: THREE.AdditiveBlending // Use additive blending for glowing effect
         });
-        
+
         // Create beam cone
         const beamGeometry = new THREE.CylinderGeometry(beamBottomRadius, beamTopRadius, beamHeight, 32, 16, true);
         const teleportBeam = new THREE.Mesh(beamGeometry, beamMaterial);
-        
+
         // Position beam below the ship facing down
-        teleportBeam.position.set(0, -beamHeight/2, -scale * 0.1);
+        teleportBeam.position.set(0, -beamHeight / 2, -scale * 0.1);
         teleportBeam.rotation.x = Math.PI; // Point downward
-        
+
         // Hide beam initially
         teleportBeam.visible = false;
-        
+
         // Add to ship
         ship.add(teleportBeam);
-        
+
         return teleportBeam;
     }
-    
-    static createBeamImpactRing(scale, ship) {
+
+    static createBeamImpactRing(scale: number, ship: THREE.Group): THREE.Mesh {
         // Create a flat ring at the beam impact point
         const ringGeometry = new THREE.RingGeometry(scale * 0.1, scale * 0.22, 32);
         const ringMaterial = new THREE.ShaderMaterial({
@@ -126,19 +126,19 @@ export class TeleportBeam {
             blending: THREE.AdditiveBlending,
             depthWrite: false
         });
-        
+
         const impactRing = new THREE.Mesh(ringGeometry, ringMaterial);
-        
+
         // Position the ring below the beam's end
         impactRing.position.set(0, -scale * 1.0, -scale * 0.1);
-        impactRing.rotation.x = -Math.PI/2; // Face downward
-        
+        impactRing.rotation.x = -Math.PI / 2; // Face downward
+
         // Hide initially
         impactRing.visible = false;
-        
+
         // Add to ship
         ship.add(impactRing);
-        
+
         return impactRing;
     }
 }

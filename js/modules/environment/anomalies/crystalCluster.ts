@@ -1,34 +1,67 @@
-// crystalCluster.js - Crystal cluster anomaly with floating crystals
+// crystalCluster.ts - Crystal cluster anomaly with floating crystals
 
 import * as THREE from 'three';
 
+interface CrystalData {
+    mesh: THREE.Mesh;
+    initialPosition: THREE.Vector3;
+    floatPhase: number;
+    floatSpeed: number;
+    floatAmplitude: number;
+    rotationSpeed: {
+        x: number;
+        y: number;
+        z: number;
+    };
+}
+
+interface EnergyOrbData {
+    mesh: THREE.Sprite | THREE.Mesh;
+}
+
+interface CrystalClusterAnomalyData {
+    type: 'crystalCluster';
+    mesh: THREE.Group;
+    position: THREE.Vector3;
+    crystals: CrystalData[];
+    orb: EnergyOrbData;
+    collisionRadius: number;
+    orbCollected: boolean;
+    rotationSpeed: THREE.Vector3;
+}
+
 export class CrystalClusterAnomaly {
-    constructor(scene, anomalyScale = 4, orbScale = 4) {
-        this.scene = scene;
+    private anomalyScale: number;
+
+    constructor(_scene: THREE.Scene, anomalyScale: number = 4, _orbScale: number = 4) {
         this.anomalyScale = anomalyScale;
-        this.orbScale = orbScale;
     }
 
-    create(position, createEnergyOrbCallback, getRandomOrbRarityCallback, addToSceneCallback) {
+    create(
+        position: THREE.Vector3,
+        createEnergyOrbCallback: (rarity: string) => EnergyOrbData,
+        getRandomOrbRarityCallback: () => string,
+        addToSceneCallback: (object: THREE.Object3D) => void
+    ): CrystalClusterAnomalyData {
         // Create a crystalline structure with floating crystals and central orb
         const anomalyGroup = new THREE.Group();
         anomalyGroup.position.copy(position);
-        
+
         // Apply scale to make anomaly 4x bigger
         anomalyGroup.scale.set(this.anomalyScale, this.anomalyScale, this.anomalyScale);
-        
+
         // Create main crystal structure using multiple crystal forms
-        const crystals = [];
-        const crystalCount = 20;
-        
+        const crystals: CrystalData[] = [];
+        const crystalCount: number = 20;
+
         for (let i = 0; i < crystalCount; i++) {
             // Random crystal size
-            const size = 50 + Math.random() * 100; // Increased from 30+80 to 50+100
-            
+            const size: number = 50 + Math.random() * 100; // Increased from 30+80 to 50+100
+
             // Create crystal geometry - mix of different polyhedra
-            let geometry;
-            const crystalType = Math.floor(Math.random() * 3);
-            
+            let geometry: THREE.BufferGeometry;
+            const crystalType: number = Math.floor(Math.random() * 3);
+
             if (crystalType === 0) {
                 // Octahedron - diamond-like crystal
                 geometry = new THREE.OctahedronGeometry(size, 0);
@@ -38,28 +71,28 @@ export class CrystalClusterAnomaly {
             } else {
                 // Prism-like crystal using stretched tetrahedron
                 geometry = new THREE.TetrahedronGeometry(size, 0);
-                
+
                 // Stretch it to make it more crystal-like
                 const positions = geometry.attributes.position;
                 for (let j = 0; j < positions.count; j++) {
                     const vertex = new THREE.Vector3();
                     vertex.fromBufferAttribute(positions, j);
-                    
+
                     // Stretch along one axis
                     vertex.y *= 2.5;
-                    
+
                     positions.setXYZ(j, vertex.x, vertex.y, vertex.z);
                 }
                 geometry.computeVertexNormals();
             }
-            
+
             // Create a semi-transparent crystalline material with bright teal colors
-            const hue = 0.45 + Math.random() * 0.1; // Teal/aqua/green color palette
-            const saturation = 0.9 + Math.random() * 0.1; // Increased saturation
-            const lightness = 0.6 + Math.random() * 0.2; // Increased lightness
-            
+            const hue: number = 0.45 + Math.random() * 0.1; // Teal/aqua/green color palette
+            const saturation: number = 0.9 + Math.random() * 0.1; // Increased saturation
+            const lightness: number = 0.6 + Math.random() * 0.2; // Increased lightness
+
             const color = new THREE.Color().setHSL(hue, saturation, lightness);
-            
+
             const material = new THREE.MeshStandardMaterial({
                 color: color,
                 metalness: 0.9,
@@ -69,29 +102,29 @@ export class CrystalClusterAnomaly {
                 emissive: color.clone(),
                 emissiveIntensity: 0.5
             });
-            
+
             const crystal = new THREE.Mesh(geometry, material);
-            
+
             // Position crystal in a spherical arrangement
-            const radius = 200 + Math.random() * 100;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.random() * Math.PI;
-            
+            const radius: number = 200 + Math.random() * 100;
+            const theta: number = Math.random() * Math.PI * 2;
+            const phi: number = Math.random() * Math.PI;
+
             crystal.position.set(
                 radius * Math.sin(phi) * Math.cos(theta),
                 radius * Math.sin(phi) * Math.sin(theta),
                 radius * Math.cos(phi)
             );
-            
+
             // Random rotation
             crystal.rotation.set(
                 Math.random() * Math.PI * 2,
                 Math.random() * Math.PI * 2,
                 Math.random() * Math.PI * 2
             );
-            
+
             anomalyGroup.add(crystal);
-            
+
             // Store crystal data for animation
             crystals.push({
                 mesh: crystal,
@@ -106,15 +139,15 @@ export class CrystalClusterAnomaly {
                 }
             });
         }
-        
+
         // Create energy orb in the center
-        const orbRarity = getRandomOrbRarityCallback();
+        const orbRarity: string = getRandomOrbRarityCallback();
         const orb = createEnergyOrbCallback(orbRarity);
         anomalyGroup.add(orb.mesh);
-        
+
         // Add to scene
         addToSceneCallback(anomalyGroup);
-        
+
         // Return anomaly data
         return {
             type: 'crystalCluster',
@@ -128,16 +161,16 @@ export class CrystalClusterAnomaly {
         };
     }
 
-    update(anomaly, deltaTime) {
+    update(anomaly: CrystalClusterAnomalyData, deltaTime: number): void {
         // Animate floating crystals
-        anomaly.crystals.forEach(crystal => {
+        anomaly.crystals.forEach((crystal: CrystalData) => {
             // Update float phase
             crystal.floatPhase += deltaTime * crystal.floatSpeed;
-            
+
             // Create floating motion
-            const floatOffset = Math.sin(crystal.floatPhase) * crystal.floatAmplitude;
+            const floatOffset: number = Math.sin(crystal.floatPhase) * crystal.floatAmplitude;
             crystal.mesh.position.y = crystal.initialPosition.y + floatOffset;
-            
+
             // Rotate the crystal
             crystal.mesh.rotation.x += crystal.rotationSpeed.x;
             crystal.mesh.rotation.y += crystal.rotationSpeed.y;
@@ -145,18 +178,18 @@ export class CrystalClusterAnomaly {
         });
     }
 
-    cleanup(anomaly) {
+    cleanup(anomaly: CrystalClusterAnomalyData): void {
         // Clean up crystals
         if (anomaly.crystals) {
-            anomaly.crystals.forEach(crystal => {
+            anomaly.crystals.forEach((crystal: CrystalData) => {
                 if (crystal.mesh && crystal.mesh.geometry) {
                     crystal.mesh.geometry.dispose();
                 }
                 if (crystal.mesh && crystal.mesh.material) {
                     if (Array.isArray(crystal.mesh.material)) {
-                        crystal.mesh.material.forEach(m => m.dispose());
+                        crystal.mesh.material.forEach((m: THREE.Material) => m.dispose());
                     } else {
-                        crystal.mesh.material.dispose();
+                        (crystal.mesh.material as THREE.Material).dispose();
                     }
                 }
             });

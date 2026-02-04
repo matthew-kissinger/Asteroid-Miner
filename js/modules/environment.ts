@@ -1,11 +1,8 @@
 // environment.ts - Main environment class that integrates all environment components
 
 import * as THREE from 'three';
-// @ts-ignore
 import { SceneInitializer } from './environment/core/sceneInitializer.js';
-// @ts-ignore
 import { RegionManager } from './environment/core/regionManager.js';
-// @ts-ignore
 import { SystemTransitionManager } from './environment/core/systemTransitionManager.js';
 
 interface EnvironmentComponents {

@@ -1,20 +1,20 @@
-// hull.js - Creates the main hull structure for the Star Dreadnought
+// hull.ts - Creates the main hull structure for the Star Dreadnought
 
 import * as THREE from 'three';
 
 export class DreadnoughtHull {
-    static createMainHull(scale, ship) {
+    static createMainHull(scale: number, ship: THREE.Group): THREE.Mesh {
         // Create main hull using custom geometry for the distinctive arrow/dagger shape
         const hullLength = scale;
         const hullWidth = scale * 0.22;
         const hullHeight = scale * 0.06;
         const taperFactor = 0.15; // How much the front tapers
-        
+
         // Create geometry for the main hull shape
         const hullGeometry = new THREE.BufferGeometry();
         
         // Define vertices for the hull shape (triangulated)
-        const vertices = new Float32Array([
+        const vertices: Float32Array = new Float32Array([
             // Bottom face
             -hullWidth/2, -hullHeight/2, hullLength/2,  // bottom left back
             hullWidth/2, -hullHeight/2, hullLength/2,   // bottom right back
@@ -95,11 +95,11 @@ export class DreadnoughtHull {
         
         // Add additional hull plates for more detail
         this.addHullPlates(scale, ship);
-        
+
         return hull;
     }
-    
-    static addHullPlates(scale, ship) {
+
+    static addHullPlates(scale: number, ship: THREE.Group): void {
         // Add additional hull plates for more detail and segmentation
         const plateLength = scale * 0.2;
         const plateWidth = scale * 0.18;

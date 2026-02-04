@@ -1,16 +1,18 @@
-// sunFlares.js - Sun lens flare and particle effects
+// sunFlares.ts - Sun lens flare and particle effects
 
 import * as THREE from 'three';
 
 export class SunFlares {
-    constructor(scene, sunGroup) {
-        this.scene = scene;
+    private sunGroup: THREE.Group;
+    private lensFlares: THREE.Sprite[] = [];
+
+    constructor(_scene: THREE.Scene, sunGroup: THREE.Group) {
         this.sunGroup = sunGroup;
         this.lensFlares = [];
         this.createFireballFlares();
     }
 
-    createFireballFlares() {
+    private createFireballFlares(): void {
         const flareTextures = [
             'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/textures/lensflare/lensflare0.png',
             'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/textures/lensflare/lensflare2.png',
@@ -90,14 +92,14 @@ export class SunFlares {
         }
     }
 
-    clearFlares() {
+    private clearFlares(): void {
         this.lensFlares.forEach(flare => {
             if (flare.parent) flare.parent.remove(flare);
         });
         this.lensFlares = [];
     }
 
-    updateFlareColors(color) {
+    public updateFlareColors(color: THREE.ColorRepresentation): void {
         this.lensFlares.forEach((flare, index) => {
             if (flare && flare.material) {
                 const flareColor = new THREE.Color(color);
@@ -111,7 +113,7 @@ export class SunFlares {
         });
     }
 
-    update(time, camera) {
+    public update(time: number, camera: THREE.Camera): void {
         if (!camera) return;
 
         const viewVector = new THREE.Vector3().subVectors(

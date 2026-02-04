@@ -1,6 +1,6 @@
 // starMap.js - Handles the star map UI for interstellar travel
 
-import { MobileDetector } from '../../utils/mobileDetector.js';
+import { MobileDetector } from '../../utils/mobileDetector.ts';
 import { CanvasRenderer } from './starmap/canvasRenderer.js';
 import { NavigationLogic } from './starmap/navigationLogic.js';
 import { DataManager } from './starmap/dataManager.js';

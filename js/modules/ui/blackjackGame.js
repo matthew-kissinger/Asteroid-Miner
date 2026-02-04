@@ -8,7 +8,7 @@
  * - Holographic UI with neon effects
  */
 
-import { MobileDetector } from '../../utils/mobileDetector.js';
+import { MobileDetector } from '../../utils/mobileDetector.ts';
 import { BlackjackGameView } from './components/blackjack/gameView.js';
 import { BlackjackCardDeck } from './components/blackjack/cardDeck.js';
 import { BlackjackGameLogic } from './components/blackjack/gameLogic.js';

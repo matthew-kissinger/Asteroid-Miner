@@ -1,36 +1,68 @@
-// sceneInitializer.js - Handles scene setup and initialization logic
+// sceneInitializer.ts - Handles scene setup and initialization logic
 
 import { Skybox } from '../skybox.js';
 import { Sun } from '../sun.js';
 import { Planets } from '../planets.js';
 import { Stargate } from '../stargate.js';
 import { StarSystemGenerator } from '../starSystemGenerator.js';
+import type { AsteroidBelt } from '../asteroidBelt.js';
+import type { SpaceAnomalies } from '../spaceAnomalies.js';
+import type { SystemTransition } from '../systemTransition.js';
+import type { VibeVersePortals } from '../vibeVersePortals.js';
+
+interface EnvironmentComponents {
+    skybox: Skybox;
+    sun: Sun;
+    starSystemGenerator: StarSystemGenerator;
+    planets: Planets;
+    stargate: Stargate;
+}
+
+interface RemainingComponents {
+    asteroidBelt: AsteroidBelt;
+    spaceAnomalies: SpaceAnomalies;
+    systemTransition: SystemTransition;
+    customSystemCreator: unknown;
+}
 
 export class SceneInitializer {
-    constructor(scene) {
+    scene: any;
+    componentsLoaded: boolean;
+    skybox?: Skybox;
+    sun?: Sun;
+    starSystemGenerator?: StarSystemGenerator;
+    planets?: Planets;
+    stargate?: Stargate;
+    asteroidBelt?: AsteroidBelt;
+    spaceAnomalies?: SpaceAnomalies;
+    systemTransition?: SystemTransition;
+    customSystemCreator?: unknown;
+    vibeVersePortals?: VibeVersePortals;
+
+    constructor(scene: any) {
         this.scene = scene;
         this.componentsLoaded = false;
     }
 
     // Initialize essential components first
-    initializeEssentialComponents() {
+    initializeEssentialComponents(): EnvironmentComponents {
         console.log("Initializing essential environment components...");
-        
+
         // Initialize only essential components first
         this.skybox = new Skybox(this.scene);
         this.sun = new Sun(this.scene);
-        
+
         // Initialize star system generator
         this.starSystemGenerator = new StarSystemGenerator(this.scene);
-        
+
         // Initialize planets with reference to starSystemGenerator - needed for basic gameplay
         this.planets = new Planets(this.scene, this.starSystemGenerator);
-        
+
         // Initialize stargate - needed for docking UI
         this.stargate = new Stargate(this.scene);
-        
+
         console.log("Essential environment components initialized");
-        
+
         return {
             skybox: this.skybox,
             sun: this.sun,
@@ -41,29 +73,29 @@ export class SceneInitializer {
     }
 
     // Load remaining non-essential components asynchronously
-    async loadRemainingComponents() {
+    async loadRemainingComponents(): Promise<RemainingComponents> {
         console.log("Loading remaining environment components...");
-        
+
         // Initialize asteroid belt - slightly defer to prioritize UI loading
         const { AsteroidBelt } = await import('../asteroidBelt.js');
         this.asteroidBelt = new AsteroidBelt(this.scene);
-        
+
         // Initialize space anomalies
         const { SpaceAnomalies } = await import('../spaceAnomalies.js');
         this.spaceAnomalies = new SpaceAnomalies(this.scene);
-        
+
         // Initialize system transition effects
         const { SystemTransition } = await import('../systemTransition.js');
         this.systemTransition = new SystemTransition(this.scene, this.scene.camera);
-        
+
         // Initialize the custom system creator
         const { CustomSystemCreator } = await import('../../ui/customSystemCreator.js');
         this.customSystemCreator = new CustomSystemCreator(this.starSystemGenerator, this);
         console.log("Custom system creator initialized:", this.customSystemCreator);
-        
+
         this.componentsLoaded = true;
         console.log("All environment components initialized");
-        
+
         return {
             asteroidBelt: this.asteroidBelt,
             spaceAnomalies: this.spaceAnomalies,
@@ -73,14 +105,14 @@ export class SceneInitializer {
     }
 
     // Initialize VibeVerse portals - requires spaceship reference
-    async initializePortals(spaceship) {
+    async initializePortals(spaceship: unknown): Promise<VibeVersePortals> {
         const { VibeVersePortals } = await import('../vibeVersePortals.js');
-        this.vibeVersePortals = new VibeVersePortals(this.scene, spaceship);
+        this.vibeVersePortals = new VibeVersePortals(this.scene, spaceship as any);
         console.log("VibeVerse portals initialized");
         return this.vibeVersePortals;
     }
 
-    dispose() {
+    dispose(): void {
         // Dispose all components
         if (this.skybox) this.skybox.dispose();
         if (this.sun) this.sun.dispose();

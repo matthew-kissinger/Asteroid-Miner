@@ -1,9 +1,7 @@
 // helpers.ts - Utility functions and instanced mesh management
 
 import * as THREE from 'three';
-
-// WebGPURenderer is not in @types/three yet, declare it
-declare class WebGPURenderer extends THREE.WebGLRenderer {}
+import type { WebGPURenderer } from 'three/webgpu';
 
 interface InstanceData {
     mesh: THREE.InstancedMesh;

@@ -1,10 +1,8 @@
 // lighting.ts - Handles all lighting setup and management for the renderer
 
 import * as THREE from 'three';
+import type { WebGPURenderer } from 'three/webgpu';
 import { LIGHTING_CONFIG } from '../../config/lightingConfig.js';
-
-// WebGPURenderer is not in @types/three yet, declare it
-declare class WebGPURenderer extends THREE.WebGLRenderer {}
 
 type RendererType = THREE.WebGLRenderer | WebGPURenderer;
 

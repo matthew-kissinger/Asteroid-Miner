@@ -1,6 +1,6 @@
 // stargateInterface.js - Handles the stargate docking and trading UI
 
-import { MobileDetector } from '../../utils/mobileDetector.js';
+import { MobileDetector } from '../../utils/mobileDetector.ts';
 import { TerminalView } from './components/stargate/terminalView.js';
 import { SystemsView } from './components/stargate/systemsView.js';
 import { TradingView } from './components/stargate/tradingView.js';

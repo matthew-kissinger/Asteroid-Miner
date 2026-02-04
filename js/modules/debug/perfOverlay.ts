@@ -1,51 +1,61 @@
-// perfOverlay.js - Minimal scaffold for performance overlay toggle (F3)
+// perfOverlay.ts - Minimal scaffold for performance overlay toggle (F3)
 // Feature flag default ON per V07_TIGHTENING
+
+interface PerfPools {
+  hits: number;
+  misses: number;
+}
+
+interface PerfSystems {
+  [key: string]: number;
+}
+
+interface PerfMetrics {
+  enabled: boolean;
+  fps: number;
+  simMs: number;
+  renderMs: number;
+  drawCalls: number;
+  visibleInstances: number;
+  pools: PerfPools;
+  gc: number;
+  systems: PerfSystems;
+}
 
 const FEATURE_FLAG = true; // V07_TIGHTENING default ON
 
 export class PerfOverlay {
+  private panel: HTMLElement | null = null;
+  private updateHzMs: number = 500; // ~2Hz
+  private _gcObserver: PerformanceObserver | null = null;
+  private interval: number | null = null;
+
   constructor() {
     // Global perf sink
-    if (!window.__perf) {
-      window.__perf = {
-        enabled: false,
-        fps: 0,
-        simMs: 0,
-        renderMs: 0,
-        drawCalls: 0,
-        visibleInstances: 0,
-        pools: { hits: 0, misses: 0 },
-        gc: 0,
-        systems: {},
-      };
-    }
-
-    this.panel = null;
-    this.lastUpdate = 0;
-    this.updateHzMs = 500; // ~2Hz
+    this.ensurePerf();
 
     // optional GC observer (best-effort)
     try {
-      if ('PerformanceObserver' in window && performance && performance.observe) {
-        // no-op, older API; fallback below
-      }
       if ('PerformanceObserver' in window) {
-        const obs = new PerformanceObserver((list) => {
+        const obs = new PerformanceObserver((list: PerformanceObserverEntryList) => {
           for (const entry of list.getEntries()) {
             if (entry.entryType === 'gc') {
-              if (!window.__perf.gc) window.__perf.gc = 0;
-              window.__perf.gc += 1;
+              const perf = this.ensurePerf();
+              if (!perf.gc) perf.gc = 0;
+              perf.gc += 1;
             }
           }
         });
         obs.observe({ entryTypes: ['gc'] });
         this._gcObserver = obs;
       }
-    } catch {}
+    } catch (e) {
+      console.warn('PerformanceObserver for GC not available:', e);
+    }
 
     if (FEATURE_FLAG) {
       // Hook F3 toggle
-      document.addEventListener('keydown', (e) => {
+      document.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'F3') {
           this.toggle();
         }
@@ -53,9 +63,10 @@ export class PerfOverlay {
     }
   }
 
-  toggle() {
-    window.__perf.enabled = !window.__perf.enabled;
-    if (window.__perf.enabled) {
+  toggle(): void {
+    const perf = this.ensurePerf();
+    perf.enabled = !perf.enabled;
+    if (perf.enabled) {
       this.ensurePanel();
       this.renderOnce();
     } else {
@@ -63,7 +74,7 @@ export class PerfOverlay {
     }
   }
 
-  ensurePanel() {
+  private ensurePanel(): void {
     if (this.panel) return;
     const el = document.createElement('div');
     el.id = 'perf-overlay';
@@ -87,16 +98,16 @@ export class PerfOverlay {
     this.panel = el;
 
     // Start a lightweight interval to update ~2Hz
-    this.interval = setInterval(() => this.renderOnce(), this.updateHzMs);
+    this.interval = window.setInterval(() => this.renderOnce(), this.updateHzMs);
   }
 
-  renderOnce() {
+  private renderOnce(): void {
     if (!this.panel) return;
     this.panel.innerHTML = this.renderContent();
   }
 
-  renderContent() {
-    const p = window.__perf;
+  private renderContent(): string {
+    const p = this.ensurePerf();
     const systems = p.systems ? Object.entries(p.systems).slice(0, 8) : [];
     const sysHtml = systems.map(([k,v]) => `<div>${k}: ${Number(v).toFixed(2)} ms</div>`).join('');
     return (
@@ -116,8 +127,8 @@ export class PerfOverlay {
     );
   }
 
-  destroy() {
-    if (this.interval) {
+  destroy(): void {
+    if (this.interval !== null) {
       clearInterval(this.interval);
       this.interval = null;
     }
@@ -130,14 +141,29 @@ export class PerfOverlay {
     }
     this.panel = null;
   }
+
+  private ensurePerf(): PerfMetrics {
+    if (!window.__perf) {
+      window.__perf = {
+        enabled: false,
+        fps: 0,
+        simMs: 0,
+        renderMs: 0,
+        drawCalls: 0,
+        visibleInstances: 0,
+        pools: { hits: 0, misses: 0 },
+        gc: 0,
+        systems: {},
+      };
+    }
+    return window.__perf;
+  }
 }
 
-export function initPerfOverlay() {
+export function initPerfOverlay(): PerfOverlay {
   // Create once, attach to window for future hooks
   if (!window.__perfOverlay) {
     window.__perfOverlay = new PerfOverlay();
   }
-  return window.__perfOverlay;
+  return window.__perfOverlay as PerfOverlay;
 }
-
-

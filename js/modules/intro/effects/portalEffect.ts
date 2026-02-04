@@ -93,10 +93,24 @@ export class PortalEffect {
      */
     setOpacity(opacity: number): void {
         if (this.portalParticles && this.portalParticles.material) {
-            (this.portalParticles.material as THREE.PointsMaterial).opacity = opacity;
+            const particleMaterial = this.portalParticles.material;
+            if (Array.isArray(particleMaterial)) {
+                particleMaterial.forEach((material) => {
+                    if ('opacity' in material) material.opacity = opacity;
+                });
+            } else if ('opacity' in particleMaterial) {
+                particleMaterial.opacity = opacity;
+            }
         }
         if (this.warpPortal && this.warpPortal.material) {
-            (this.warpPortal.material as THREE.Material).opacity = opacity;
+            const portalMaterial = this.warpPortal.material;
+            if (Array.isArray(portalMaterial)) {
+                portalMaterial.forEach((material) => {
+                    if ('opacity' in material) material.opacity = opacity;
+                });
+            } else if ('opacity' in portalMaterial) {
+                portalMaterial.opacity = opacity;
+            }
         }
     }
     

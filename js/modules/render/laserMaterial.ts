@@ -1,16 +1,20 @@
-// laserMaterial.js - TSL-based pulsing glow material for mining laser
+// laserMaterial.ts - TSL-based pulsing glow material for mining laser
 
-import { color, time, sin } from 'three/tsl';
+import { color, time, sin } from 'three/tsl'; // TSL helpers
 import * as THREE from 'three';
 
 /**
  * Create a TSL-based laser material with pulsing glow effect
- * @param {number} baseColor - Base color as hex (e.g., 0x00ffff)
- * @param {number} pulseSpeed - Speed of pulse animation (default: 8)
- * @param {number} pulseIntensity - Intensity of pulse variation (0-1, default: 0.3)
- * @returns {THREE.MeshBasicMaterial} Material with TSL colorNode and pulsing glow
+ * @param baseColor - Base color as hex (e.g., 0x00ffff)
+ * @param pulseSpeed - Speed of pulse animation (default: 8)
+ * @param pulseIntensity - Intensity of pulse variation (0-1, default: 0.3)
+ * @returns Material with TSL colorNode and pulsing glow
  */
-export function createLaserMaterial(baseColor = 0x00ffff, pulseSpeed = 8, pulseIntensity = 0.3) {
+export function createLaserMaterial(
+    baseColor: number = 0x00ffff,
+    pulseSpeed: number = 8,
+    pulseIntensity: number = 0.3
+): THREE.MeshBasicMaterial {
     const material = new THREE.MeshBasicMaterial();
 
     // Create pulsing glow effect using TSL
@@ -24,10 +28,12 @@ export function createLaserMaterial(baseColor = 0x00ffff, pulseSpeed = 8, pulseI
     // color() can take hex values directly (e.g., 0xff3030)
     // Note: TSL colorNode is experimental, fall back to standard color + emissiveMap if issues
     try {
+        // @ts-ignore: colorNode is part of TSL and might not be directly in MeshBasicMaterial type
         material.colorNode = color(baseColor).mul(pulse);
     } catch (e) {
         // Fallback: use standard material color without TSL
         material.color.setHex(baseColor);
+        console.warn('TSL colorNode not supported or failed, falling back to standard material color.', e);
     }
     
     // Transparency and additive blending for glow effect

@@ -1,6 +1,6 @@
 // gameOverScreen.js - Handles the game over UI
 
-import { getAbsolutePath } from '../../utils/pathUtils.js';
+import { getAbsolutePath } from '../../utils/pathUtils.ts';
 
 export class GameOverScreen {
     constructor() {

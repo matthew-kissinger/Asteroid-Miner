@@ -36,6 +36,8 @@ export class Spaceship {
   velocity: THREE.Vector3;
   rotation: THREE.Euler;
   thrust: ThrustState;
+  thrustPower: number;
+  strafePower: number;
   trailEffects: TrailEffects | null;
   shipScale: number;
 
@@ -89,6 +91,8 @@ export class Spaceship {
       right: false,
       boost: false
     };
+    this.thrustPower = 0;
+    this.strafePower = 0;
     this.trailEffects = null;
     this.shipScale = 2.0;
 

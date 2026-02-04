@@ -1,12 +1,87 @@
-// systemTransitionManager.js - Handles system transitions and travel logic
+// systemTransitionManager.ts - Handles system transitions and travel logic
+
+interface ResourceMultipliers {
+    iron: number;
+    gold: number;
+    platinum: number;
+}
+
+interface SkyboxParams {
+    starDensity: number;
+    nebulaDensity: number;
+    color: number;
+    texturePath?: string;
+    brightness?: number;
+    isSolarSystem?: boolean;
+    resetTime?: boolean;
+}
+
+interface StarSystemData {
+    name: string;
+    description: string;
+    classification: string;
+    starClass: string;
+    starColor: number;
+    skyboxParams: SkyboxParams;
+    resourceMultipliers: ResourceMultipliers;
+    asteroidDensity?: number;
+    lightIntensityMultiplier?: number;
+}
+
+interface StarSystemGeneratorLike {
+    getCurrentSystemResources: () => ResourceMultipliers;
+    travelToSystem: (systemId: string) => boolean;
+    getAllSystems: () => Record<string, StarSystemData>;
+}
+
+interface AsteroidBeltLike {
+    setResourceMultipliers: (resources: ResourceMultipliers) => void;
+    dispose?: () => void;
+    createAsteroidBelt?: () => void;
+    updateDensity?: (density?: number) => void;
+}
+
+interface SystemTransitionLike {
+    startTransition: (onComplete?: () => void) => void;
+}
+
+interface SkyboxLike {
+    updateForSystem?: (params: SkyboxParams) => void;
+}
+
+interface SunLike {
+    updateSunType?: (starClass: string, lightIntensityMultiplier?: number) => void;
+    updateColor?: (color: number) => void;
+    sunLight?: { _intensityMultiplier?: number };
+}
+
+interface PlanetsLike {
+    updateForSystem?: (systemId: string) => void;
+    getPlanetRegions?: () => Record<string, unknown>;
+}
+
+interface SpaceAnomaliesLike {
+    updateForSystem?: (systemData: StarSystemData) => void;
+}
+
+interface RegionManagerLike {
+    planetRegions: Record<string, unknown>;
+}
+
+interface GameGlobal {
+    spaceship?: { isDocked?: boolean };
+    controls?: { dockingSystem?: { dockWithStargate?: () => void } };
+}
 
 export class SystemTransitionManager {
+    currentSystemId: string;
+
     constructor() {
         this.currentSystemId = 'Solar System'; // Default starting system
     }
 
     // Set up handlers for star system transitions
-    setupSystemTransitionHandlers(starSystemGenerator, asteroidBelt) {
+    setupSystemTransitionHandlers(starSystemGenerator: StarSystemGeneratorLike, asteroidBelt: AsteroidBeltLike): void {
         // Apply resource multipliers from current system to asteroid belt
         if (starSystemGenerator && asteroidBelt) {
             const resources = starSystemGenerator.getCurrentSystemResources();
@@ -15,63 +90,78 @@ export class SystemTransitionManager {
     }
 
     // Travel to a new star system
-    travelToSystem(systemId, starSystemGenerator, systemTransition, updateEnvironmentCallback) {
+    travelToSystem(
+        systemId: string,
+        starSystemGenerator: StarSystemGeneratorLike,
+        systemTransition: SystemTransitionLike,
+        updateEnvironmentCallback: (systemId: string) => void
+    ): boolean {
         if (!starSystemGenerator || !systemTransition) return false;
-        
+
         // Check if the system exists and is connected to the current one
         if (!starSystemGenerator.travelToSystem(systemId)) {
             console.error(`Cannot travel to system ${systemId}`);
             return false;
         }
-        
+
         console.log(`Starting transition to system: ${systemId}`);
-        
+
         // Start the transition effect
         systemTransition.startTransition(() => {
             // This callback is called when transition is complete
             console.log(`Transition complete, updating environment for: ${systemId}`);
-            
+
             // Update the environment based on the new system
             updateEnvironmentCallback(systemId);
-            
+
             // Display welcome notification
             this.showSystemWelcomeNotification(systemId, starSystemGenerator);
-            
+
             // If player is docked, make sure the stargate interface is correctly displayed
-            if (window.game && window.game.spaceship && window.game.spaceship.isDocked) {
+            const game = (window as any).game as GameGlobal | undefined;
+            if (game?.spaceship && game.spaceship.isDocked) {
                 console.log("Player is docked after arriving in new system, showing interface");
-                
+
                 // Handle docking system to enforce proper dock state
-                if (window.game.controls && window.game.controls.dockingSystem) {
+                if (game.controls && game.controls.dockingSystem) {
                     setTimeout(() => {
                         // Trigger the docking system's docking method directly
-                        window.game.controls.dockingSystem.dockWithStargate();
+                        game.controls?.dockingSystem?.dockWithStargate && game.controls.dockingSystem.dockWithStargate();
                     }, 500); // Small delay to ensure everything is ready
                 }
             }
         });
-        
+
         return true;
     }
 
     // Update environment visuals and properties for the new system
-    updateEnvironmentForSystem(systemId, starSystemGenerator, skybox, sun, planets, asteroidBelt, spaceAnomalies, regionManager) {
+    updateEnvironmentForSystem(
+        systemId: string,
+        starSystemGenerator: StarSystemGeneratorLike,
+        skybox: SkyboxLike,
+        sun: SunLike,
+        planets: PlanetsLike,
+        asteroidBelt: AsteroidBeltLike,
+        spaceAnomalies: SpaceAnomaliesLike,
+        regionManager: RegionManagerLike
+    ): void {
         const systemData = starSystemGenerator.getAllSystems()[systemId];
         if (!systemData) {
             console.error(`No system data found for ${systemId}`);
             return;
         }
-        
+
         console.log(`Updating environment for system: ${systemId}`, systemData);
-        
+
         // Update current system ID
         this.currentSystemId = systemId;
-        
+
         // Update skybox based on system properties
         if (skybox && skybox.updateForSystem) {
             // Special case for Solar System - always enforce white skybox
             if (systemId === 'Solar System') {
-                const solarSystemParams = {
+                const solarSystemParams: SkyboxParams = {
                     starDensity: 1.0,
                     nebulaDensity: 0.5,
                     color: 0xFFFFFF,  // Ensure white color for Solar System
@@ -87,12 +177,12 @@ export class SystemTransitionManager {
         } else {
             console.warn("Skybox or updateForSystem method not available");
         }
-        
+
         // Update star (sun) color and properties
         if (sun) {
             // First check if it's a custom system with an intensity multiplier
             const lightIntensityMultiplier = systemData.lightIntensityMultiplier || 1.0;
-            
+
             // Check which update method to use
             if (sun.updateSunType && systemData.starClass) {
                 console.log(`Updating sun type for ${systemId} to ${systemData.starClass} with intensity multiplier: ${lightIntensityMultiplier}`);
@@ -100,7 +190,7 @@ export class SystemTransitionManager {
             } else if (sun.updateColor) {
                 console.log(`Updating sun color for ${systemId} to:`, systemData.starColor.toString(16));
                 sun.updateColor(systemData.starColor);
-                
+
                 // Store the multiplier for use in the update method
                 if (sun.sunLight) {
                     sun.sunLight._intensityMultiplier = lightIntensityMultiplier;
@@ -111,12 +201,12 @@ export class SystemTransitionManager {
         } else {
             console.warn("Sun not available");
         }
-        
+
         // Update planets for this system
         if (planets && planets.updateForSystem) {
             console.log(`Updating planets for ${systemId}`);
             planets.updateForSystem(systemId);
-            
+
             // Safely update planet regions if the method exists
             if (typeof planets.getPlanetRegions === 'function') {
                 try {
@@ -130,7 +220,7 @@ export class SystemTransitionManager {
         } else {
             console.warn("Planets or updateForSystem method not available");
         }
-        
+
         // Update asteroid belt based on system properties
         if (asteroidBelt) {
             // Dispose of old asteroids before creating new ones
@@ -138,19 +228,19 @@ export class SystemTransitionManager {
                 console.log(`Disposing old asteroids before updating for ${systemId}`);
                 asteroidBelt.dispose();
             }
-            
+
             // Recreate asteroid belt for new system
             if (asteroidBelt.createAsteroidBelt) {
                 console.log(`Creating new asteroids for ${systemId}`);
                 asteroidBelt.createAsteroidBelt();
             }
-            
+
             // Apply resource multipliers from system
             if (asteroidBelt.setResourceMultipliers) {
                 console.log(`Updating asteroid resources for ${systemId}:`, systemData.resourceMultipliers);
                 asteroidBelt.setResourceMultipliers(systemData.resourceMultipliers);
             }
-            
+
             // Update asteroid density if the method exists
             if (asteroidBelt.updateDensity) {
                 console.log(`Updating asteroid density for ${systemId}:`, systemData.asteroidDensity);
@@ -159,7 +249,7 @@ export class SystemTransitionManager {
         } else {
             console.warn("AsteroidBelt not available");
         }
-        
+
         // Update space anomalies for this system
         if (spaceAnomalies && spaceAnomalies.updateForSystem) {
             console.log(`Updating space anomalies for ${systemId}`);
@@ -167,15 +257,15 @@ export class SystemTransitionManager {
         } else {
             console.warn("SpaceAnomalies or updateForSystem method not available");
         }
-        
+
         console.log(`Environment updated for ${systemId}`);
     }
 
     // Show welcome notification when arriving at a new system
-    showSystemWelcomeNotification(systemId, starSystemGenerator) {
+    showSystemWelcomeNotification(systemId: string, starSystemGenerator: StarSystemGeneratorLike): void {
         const system = starSystemGenerator.getAllSystems()[systemId];
         if (!system) return;
-        
+
         // Create welcome notification
         const notification = document.createElement('div');
         notification.style.position = 'fixed';
@@ -192,7 +282,7 @@ export class SystemTransitionManager {
         notification.style.fontSize = '18px';
         notification.style.zIndex = '9999';
         notification.style.textAlign = 'center';
-        
+
         // Special welcome for Earth/Solar System
         if (systemId === 'Solar System') {
             notification.innerHTML = `
@@ -207,22 +297,22 @@ export class SystemTransitionManager {
                 <p style="font-size: 14px; margin-bottom: 0; color: #aaa;">Classification: ${system.classification} - Star Class: ${system.starClass}</p>
             `;
         }
-        
+
         // Add to DOM
         document.body.appendChild(notification);
-        
+
         // Remove after a few seconds
         setTimeout(() => {
             notification.style.opacity = '0';
             notification.style.transition = 'opacity 1s';
-            
+
             setTimeout(() => {
                 notification.remove();
             }, 1000);
         }, 5000);
     }
 
-    getCurrentSystemId() {
+    getCurrentSystemId(): string {
         return this.currentSystemId;
     }
 }

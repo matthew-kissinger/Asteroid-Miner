@@ -1,44 +1,49 @@
-// weapons.js - Creates turrets and surface details for the Star Dreadnought
+// weapons.ts - Creates turrets and surface details for the Star Dreadnought
 
 import * as THREE from 'three';
 
+interface ShieldGenerators {
+    portDome: THREE.Mesh;
+    starboardDome: THREE.Mesh;
+}
+
 export class DreadnoughtWeapons {
-    static createSurfaceDetails(scale, ship) {
+    static createSurfaceDetails(scale: number, ship: THREE.Group): void {
         // Add surface details for more visual interest
-        
+
         // Turrets along the sides
         this.createTurrets(scale, ship);
-        
+
         // Trenches and surface details
         this.createSurfaceTrenches(scale, ship);
-        
+
         // Shield generator domes
         this.createShieldGenerators(scale, ship);
     }
-    
-    static createTurrets(scale, ship) {
+
+    static createTurrets(scale: number, ship: THREE.Group): void {
         // Create turret batteries along the sides
         const turretRadius = scale * 0.008;
         const turretHeight = scale * 0.01;
         const baseRadius = scale * 0.01;
         const baseHeight = scale * 0.005;
-        
+
         // Turret material
         const turretMaterial = new THREE.MeshStandardMaterial({
             color: 0x666677,
             metalness: 0.7,
             roughness: 0.3
         });
-        
+
         // Positions for turrets (port side)
-        const portPositions = [];
+        const portPositions: number[][] = [];
         for (let i = 0; i < 12; i++) {
             const z = scale * 0.2 - (i * scale * 0.07);
             portPositions.push([-scale * 0.1, scale * 0.035, z]);
         }
-        
+
         // Create port side turrets
-        portPositions.forEach(pos => {
+        portPositions.forEach((pos: number[]) => {
             // Turret base
             const baseGeometry = new THREE.CylinderGeometry(baseRadius, baseRadius, baseHeight, 8);
             const base = new THREE.Mesh(baseGeometry, turretMaterial);
@@ -53,16 +58,16 @@ export class DreadnoughtWeapons {
             turret.rotation.z = -Math.PI / 6; // Angle outward
             ship.add(turret);
         });
-        
+
         // Positions for turrets (starboard side)
-        const starboardPositions = [];
+        const starboardPositions: number[][] = [];
         for (let i = 0; i < 12; i++) {
             const z = scale * 0.2 - (i * scale * 0.07);
             starboardPositions.push([scale * 0.1, scale * 0.035, z]);
         }
-        
+
         // Create starboard side turrets
-        starboardPositions.forEach(pos => {
+        starboardPositions.forEach((pos: number[]) => {
             // Turret base
             const baseGeometry = new THREE.CylinderGeometry(baseRadius, baseRadius, baseHeight, 8);
             const base = new THREE.Mesh(baseGeometry, turretMaterial);
@@ -78,8 +83,8 @@ export class DreadnoughtWeapons {
             ship.add(turret);
         });
     }
-    
-    static createSurfaceTrenches(scale, ship) {
+
+    static createSurfaceTrenches(scale: number, ship: THREE.Group): void {
         // Create surface trenches and details
         const trenchWidth = scale * 0.01;
         const trenchDepth = scale * 0.01;
@@ -113,8 +118,8 @@ export class DreadnoughtWeapons {
         starboardTrench.position.set(scale * 0.07, scale * 0.035, scale * 0.05);
         ship.add(starboardTrench);
     }
-    
-    static createShieldGenerators(scale, ship) {
+
+    static createShieldGenerators(scale: number, ship: THREE.Group): ShieldGenerators {
         // Create shield generator domes
         const domeRadius = scale * 0.02;
         const domeY = scale * 0.05;

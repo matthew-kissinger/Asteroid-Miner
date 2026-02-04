@@ -88,7 +88,7 @@ interface DialogueSystemLike {
     cleanup: () => void;
 }
 
-interface IntroSequenceAnimationContext {
+export type IntroSequenceAnimationContext = {
     portalEffect: PortalEffectLike;
     starDreadnought: StarDreadnoughtLike;
     camera: THREE.Camera;
@@ -98,7 +98,7 @@ interface IntroSequenceAnimationContext {
     finalPlayerPosition?: THREE.Vector3;
     playerShieldEffect?: THREE.Object3D | null;
     shieldPulseTime?: number;
-}
+};
 
 type GameWindowWithInstance = Window & {
     gameInstance?: {

@@ -7,6 +7,29 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import WebGL from 'three/addons/capabilities/WebGL.js';
 
+declare module 'three/webgpu' {
+  import * as THREE from 'three';
+
+  export interface WebGPURendererParameters extends THREE.WebGLRendererParameters {}
+
+  export class WebGPURenderer extends THREE.WebGLRenderer {
+    constructor(parameters?: WebGPURendererParameters);
+    init(): Promise<void>;
+  }
+}
+
+type PerfMetrics = {
+  enabled: boolean;
+  fps: number;
+  simMs: number;
+  renderMs: number;
+  drawCalls: number;
+  visibleInstances: number;
+  pools: { hits: number; misses: number };
+  gc: number;
+  systems: Record<string, number>;
+};
+
 declare global {
   interface Window {
     THREE: typeof THREE_NAMESPACE & {
@@ -27,9 +50,8 @@ declare global {
     __vite_compat: {
       resolveImport: (path: string) => string;
     };
-    __perf?: {
-      enabled?: boolean;
-    };
+    __perf?: PerfMetrics;
+    __perfOverlay?: unknown;
     MemoryStats?: {
       update: () => void;
       logReport: () => void;

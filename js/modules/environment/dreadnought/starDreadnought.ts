@@ -1,4 +1,4 @@
-// starDreadnought.js - Main class for the massive Star Dreadnought ship
+// starDreadnought.ts - Main class for the massive Star Dreadnought ship
 // Refactored to delegate to specialized modules
 
 import * as THREE from 'three';
@@ -11,131 +11,137 @@ import { TeleportParticles } from './teleporter/particles.js';
 import { TeleportController } from './teleporter/controller.js';
 
 export class StarDreadnought {
-    constructor(scene) {
+    scene: THREE.Scene;
+    ship: THREE.Group | null;
+    engines: DreadnoughtEngines;
+    teleportController: TeleportController;
+
+    constructor(scene: THREE.Scene) {
         this.scene = scene;
         this.ship = null;
-        
+
         // Initialize component systems
         this.engines = new DreadnoughtEngines();
         this.teleportController = new TeleportController();
-        
+
         // Create ship model
         this.createShipModel();
-        
+
         // Add to scene
-        this.scene.add(this.ship);
-        
+        this.scene.add(this.ship!);
+
         console.log("Star Dreadnought created");
     }
-    
-    createShipModel() {
+
+    createShipModel(): void {
         // Create a group for the entire ship
         this.ship = new THREE.Group();
         this.ship.name = 'starDreadnought';
-        
+
         // Set scale - this is a massive ship
         const shipScale = 1200; // Overall scale factor
-        
+
         // Delegate construction to specialized modules
         this.createStructure(shipScale);
         this.createSystems(shipScale);
         this.createTeleporter(shipScale);
     }
-    
-    createStructure(scale) {
+
+    createStructure(scale: number): void {
         // Main hull - elongated wedge shape
-        DreadnoughtHull.createMainHull(scale, this.ship);
-        
+        DreadnoughtHull.createMainHull(scale, this.ship!);
+
         // Command bridge superstructure
-        DreadnoughtBridge.createCommandBridge(scale, this.ship);
+        DreadnoughtBridge.createCommandBridge(scale, this.ship!);
     }
-    
-    createSystems(scale) {
+
+    createSystems(scale: number): void {
         // Engine array with particles and power control
-        this.engines.createEngineArray(scale, this.ship);
-        
+        this.engines.createEngineArray(scale, this.ship!);
+
         // Surface details: turrets, trenches, shield generators
-        DreadnoughtWeapons.createSurfaceDetails(scale, this.ship);
+        DreadnoughtWeapons.createSurfaceDetails(scale, this.ship!);
     }
-    
-    createTeleporter(scale) {
+
+    createTeleporter(scale: number): void {
         // Create teleport beam and impact ring
-        const teleportBeam = TeleportBeam.createTeleportBeam(scale, this.ship);
-        const impactRing = TeleportBeam.createBeamImpactRing(scale, this.ship);
-        
+        const teleportBeam = TeleportBeam.createTeleportBeam(scale, this.ship!);
+        const impactRing = TeleportBeam.createBeamImpactRing(scale, this.ship!);
+
         // Create teleport particles
-        const teleportParticles = TeleportParticles.createTeleportParticles(scale, this.ship);
-        
+        const teleportParticles = TeleportParticles.createTeleportParticles(scale, this.ship!);
+
         // Set up teleport controller with components
         this.teleportController.setComponents(teleportBeam, teleportParticles, impactRing);
     }
-    
+
     // Set engines power level (0-1)
-    setEnginesPower(power) {
+    setEnginesPower(power: number): void {
         this.engines.setEnginesPower(power);
     }
-    
+
     // Activate teleport beam
-    activateTeleportBeam() {
+    activateTeleportBeam(): void {
         this.teleportController.activateTeleportBeam();
     }
-    
+
     // Deactivate teleport beam
-    deactivateTeleportBeam() {
+    deactivateTeleportBeam(): void {
         this.teleportController.deactivateTeleportBeam();
     }
-    
+
     // Update teleport beam effect
-    updateTeleportBeam(progress) {
+    updateTeleportBeam(progress?: number): void {
         this.teleportController.updateTeleportBeam(progress);
         this.engines.updateEngineTrails();
     }
-    
+
     // Check if teleport beam is active
-    get teleportBeamActive() {
+    get teleportBeamActive(): boolean {
         return this.teleportController.isBeamActive();
     }
-    
+
     // Get ship group for external access
-    getShip() {
+    getShip(): THREE.Group | null {
         return this.ship;
     }
-    
+
     // Get engine glows for external effects
-    getEngineGlows() {
+    getEngineGlows(): THREE.Mesh[] {
         return this.engines.engineGlows;
     }
-    
+
     // Update method for any ongoing animations
-    update(deltaTime) {
+    update(_deltaTime: number): void {
         // Update engine trail animations
         this.engines.updateEngineTrails();
-        
+
         // Update teleport beam if active
         if (this.teleportController.isBeamActive()) {
             this.teleportController.updateTeleportBeam();
         }
     }
-    
+
     // Cleanup method
-    dispose() {
+    dispose(): void {
         if (this.ship) {
             this.scene.remove(this.ship);
-            
+
             // Traverse and dispose of geometries and materials
-            this.ship.traverse((child) => {
-                if (child.geometry) {
-                    child.geometry.dispose();
+            this.ship.traverse((child: THREE.Object3D) => {
+                const mesh = child as THREE.Mesh;
+                if (mesh.geometry) {
+                    mesh.geometry.dispose();
                 }
-                if (child.material) {
-                    if (Array.isArray(child.material)) {
-                        child.material.forEach(material => material.dispose());
+                if (mesh.material) {
+                    if (Array.isArray(mesh.material)) {
+                        mesh.material.forEach((material: THREE.Material) => material.dispose());
                     } else {
-                        child.material.dispose();
+                        mesh.material.dispose();
                     }
                 }
             });
-            
+
             this.ship = null;
         }
     }

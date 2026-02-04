@@ -9,7 +9,7 @@ import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { TransformComponent } from '../../components/transform.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
 import { MeshComponent } from '../../components/rendering/mesh.js';
-import { FixedArray } from '../../utils/memoryManager.js';
+import { FixedArray } from '../../utils/memoryManager.ts';
 import * as THREE from 'three';
 
 export class CombatSystem extends System {

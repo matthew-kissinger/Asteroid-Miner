@@ -1,9 +1,9 @@
-// sunShaders.js - Sun shader materials and effects
+// sunShaders.ts - Sun shader materials and effects
 
 import * as THREE from 'three';
 
 export class SunShaders {
-    static createSunMaterial() {
+    static createSunMaterial(): THREE.ShaderMaterial {
         return new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
@@ -102,7 +102,7 @@ export class SunShaders {
         });
     }
 
-    static createCoronaMaterial() {
+    static createCoronaMaterial(): THREE.ShaderMaterial {
         return new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
@@ -189,7 +189,7 @@ export class SunShaders {
         });
     }
 
-    static createOuterCoronaMaterial() {
+    static createOuterCoronaMaterial(): THREE.ShaderMaterial {
         return new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 },

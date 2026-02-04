@@ -1,48 +1,66 @@
-// stargate.js - Creates and manages the stargate
+// stargate.ts - Creates and manages the stargate
 
 import * as THREE from 'three';
 
+interface NavLightEntry {
+    light: THREE.PointLight;
+    lightMesh: THREE.Mesh;
+}
+
 export class Stargate {
-    constructor(scene) {
+    scene: THREE.Scene;
+    stargate: THREE.Group | null;
+    navLights: NavLightEntry[];
+    portalParticles: THREE.Mesh[];
+    portalShaderMaterial?: THREE.ShaderMaterial;
+    portalLight?: THREE.PointLight;
+    counterRotatingRing?: THREE.Group;
+
+    constructor(scene: THREE.Scene) {
         this.scene = scene;
         this.stargate = null;
         this.navLights = [];
         this.portalParticles = [];
         this.createStargate();
     }
-    
-    createStargate() {
+
+    createStargate(): void {
         // Create a stargate group
         const stargateGroup = new THREE.Group();
         stargateGroup.name = 'stargate';
-        
+
         // Main ring - matte black
         const ringGeometry = new THREE.TorusGeometry(1000, 200, 32, 100);
         const ringMaterial = new THREE.MeshStandardMaterial({
-          color: 0x111111,
-          roughness: 0.9,
-          metalness: 0.1,
-          emissive: 0x000000
+            color: 0x111111,
+            roughness: 0.9,
+            metalness: 0.1,
+            emissive: 0x000000
         });
         const ring = new THREE.Mesh(ringGeometry, ringMaterial);
         stargateGroup.add(ring);
-        
+
         // Neon turquoise accent rings
-        const createAccentRing = (radius, tubeRadius, position = {x: 0, y: 0, z: 0}, rotation = {x: 0, y: 0, z: 0}) => {
-          const geometry = new THREE.TorusGeometry(radius, tubeRadius, 16, 100);
-          const material = new THREE.MeshStandardMaterial({
-            color: 0x00ffff,
-            emissive: 0x00ffff,
-            emissiveIntensity: 1.5,
-            roughness: 0.2,
-            metalness: 0.8
-          });
-          const accentRing = new THREE.Mesh(geometry, material);
-          accentRing.position.set(position.x, position.y, position.z);
-          accentRing.rotation.set(rotation.x, rotation.y, rotation.z);
-          return accentRing;
+        const createAccentRing = (
+            radius: number,
+            tubeRadius: number,
+            position: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
+            rotation: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 }
+        ): THREE.Mesh => {
+            const geometry = new THREE.TorusGeometry(radius, tubeRadius, 16, 100);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 1.5,
+                roughness: 0.2,
+                metalness: 0.8
+            });
+            const accentRing = new THREE.Mesh(geometry, material);
+            accentRing.position.set(position.x, position.y, position.z);
+            accentRing.rotation.set(rotation.x, rotation.y, rotation.z);
+            return accentRing;
         };
-        
+
         // Add accent rings on outer edges - make them brighter
         const outerRing1 = createAccentRing(1060, 10);
         const outerRing2 = createAccentRing(940, 10);
@@ -51,30 +69,30 @@ export class Stargate {
         stargateGroup.add(outerRing1);
         stargateGroup.add(outerRing2);
         stargateGroup.add(innerRing);
-        
+
         // Create enhanced turquoise portal in the center
         this.createPortalEffect(stargateGroup);
-        
+
         // Add neon accent details
         const detailsGroup = this.createNeonDetails();
         stargateGroup.add(detailsGroup);
-        
+
         // Position the stargate at 2x height from the original position
         stargateGroup.position.set(0, 10000, 0);
         stargateGroup.rotation.x = Math.PI / 2; // Horizontal orientation
-        
+
         // Add to scene
         this.scene.add(stargateGroup);
         this.stargate = stargateGroup;
-        
+
         // Create a counter-rotating inner ring for additional portal effect
         this.createCounterRotatingRing(stargateGroup);
     }
-    
-    createCounterRotatingRing(parentGroup) {
+
+    createCounterRotatingRing(parentGroup: THREE.Group): void {
         // Create a separate rotating group for the inner portal structure
         const innerStructure = new THREE.Group();
-        
+
         // Add a thin ring that rotates opposite to the main stargate
         const thinRingGeometry = new THREE.TorusGeometry(820, 3, 16, 100);
         const thinRingMaterial = new THREE.MeshStandardMaterial({
@@ -86,7 +104,7 @@ export class Stargate {
             transparent: true,
             opacity: 0.7
         });
-        
+
         // Create 3 counter-rotating rings
         for (let i = 0; i < 3; i++) {
             const ring = new THREE.Mesh(thinRingGeometry, thinRingMaterial.clone());
@@ -94,20 +112,20 @@ export class Stargate {
             ring.rotation.y = Math.PI * i / 3;
             innerStructure.add(ring);
         }
-        
+
         parentGroup.add(innerStructure);
         this.counterRotatingRing = innerStructure;
     }
-    
-    createPortalEffect(parentGroup) {
+
+    createPortalEffect(parentGroup: THREE.Group): void {
         // Enhanced custom shader material for the portal
         const portalShaderMaterial = new THREE.ShaderMaterial({
-          uniforms: {
-            time: { value: 0 },
-            resolution: { value: new THREE.Vector2(1024, 1024) },
-            baseColor: { value: new THREE.Color(0x00ffff) }
-          },
-          vertexShader: `
+            uniforms: {
+                time: { value: 0 },
+                resolution: { value: new THREE.Vector2(1024, 1024) },
+                baseColor: { value: new THREE.Color(0x00ffff) }
+            },
+            vertexShader: `
             varying vec2 vUv;
             
             void main() {
@@ -115,7 +133,7 @@ export class Stargate {
               gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
           `,
-          fragmentShader: `
+            fragmentShader: `
             uniform float time;
             uniform vec2 resolution;
             uniform vec3 baseColor;
@@ -202,184 +220,185 @@ export class Stargate {
               gl_FragColor = vec4(finalColor, alpha);
             }
           `,
-          transparent: true,
-          side: THREE.DoubleSide
+            transparent: true,
+            side: THREE.DoubleSide
         });
-        
+
         // Create portal disc using the shader material
         const portalGeometry = new THREE.CircleGeometry(800, 128);
         const portal = new THREE.Mesh(portalGeometry, portalShaderMaterial);
         parentGroup.add(portal);
-        
+
         // Enhanced portal glow light
         const portalLight = new THREE.PointLight(0x00ffff, 400, 2000, 2);
         portalLight.position.set(0, 0, 0);
         parentGroup.add(portalLight);
-        
+
         // Add some more volumetric effects around the portal
-        const createPortalWisps = () => {
-          const wispGeometry = new THREE.TorusGeometry(650, 10, 8, 100);
-          const wispMaterial = new THREE.MeshStandardMaterial({
-            color: 0x00ffff,
-            emissive: 0x00ffff,
-            emissiveIntensity: 2,
-            transparent: true,
-            opacity: 0.3,
-            side: THREE.DoubleSide
-          });
-        
-          const wisp = new THREE.Mesh(wispGeometry, wispMaterial);
-          wisp.rotation.x = Math.random() * Math.PI;
-          wisp.rotation.y = Math.random() * Math.PI;
-          
-          // Store animation parameters - more dramatic for enhanced effect
-          wisp.userData = {
-            rotationSpeed: {
-              x: (Math.random() - 0.5) * 0.02,  // 10x faster rotation
-              y: (Math.random() - 0.5) * 0.02,
-              z: (Math.random() - 0.5) * 0.02
-            },
-            pulseSpeed: 0.5 + Math.random() * 0.3
-          };
-          
-          this.portalParticles.push(wisp);
-          return wisp;
+        const createPortalWisps = (): THREE.Mesh => {
+            const wispGeometry = new THREE.TorusGeometry(650, 10, 8, 100);
+            const wispMaterial = new THREE.MeshStandardMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 2,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+
+            const wisp = new THREE.Mesh(wispGeometry, wispMaterial);
+            wisp.rotation.x = Math.random() * Math.PI;
+            wisp.rotation.y = Math.random() * Math.PI;
+
+            // Store animation parameters - more dramatic for enhanced effect
+            wisp.userData = {
+                rotationSpeed: {
+                    x: (Math.random() - 0.5) * 0.02,  // 10x faster rotation
+                    y: (Math.random() - 0.5) * 0.02,
+                    z: (Math.random() - 0.5) * 0.02
+                },
+                pulseSpeed: 0.5 + Math.random() * 0.3
+            };
+
+            this.portalParticles.push(wisp);
+            return wisp;
         };
-        
+
         // Add more wisps for enhanced effect
         for (let i = 0; i < 8; i++) {
-          parentGroup.add(createPortalWisps());
+            parentGroup.add(createPortalWisps());
         }
-        
+
         // Store the shader material for animation updates
         this.portalShaderMaterial = portalShaderMaterial;
         this.portalLight = portalLight;
     }
-  
-    createNeonDetails() {
+
+    createNeonDetails(): THREE.Group {
         const detailsGroup = new THREE.Group();
-        
+
         // Create evenly spaced neon accents around the ring
-        const createNeonAccent = (angle) => {
-          const accentGroup = new THREE.Group();
-          
-          // Neon light beam
-          const beamGeometry = new THREE.CylinderGeometry(10, 10, 300, 8);
-          const beamMaterial = new THREE.MeshStandardMaterial({
-            color: 0x00ffff,
-            emissive: 0x00ffff,
-            emissiveIntensity: 1,
-            transparent: true,
-            opacity: 0.8
-          });
-          const beam = new THREE.Mesh(beamGeometry, beamMaterial);
-          beam.rotation.x = Math.PI / 2; // Align with ring
-          
-          // Light source for glow
-          const light = new THREE.PointLight(0x00ffff, 100, 400, 2);
-          light.position.set(0, 0, 0);
-          
-          accentGroup.add(beam);
-          accentGroup.add(light);
-          
-          // Position on the ring
-          accentGroup.position.x = Math.cos(angle) * 1000;
-          accentGroup.position.y = Math.sin(angle) * 1000;
-          accentGroup.rotation.z = angle - Math.PI / 2; // Orient toward center
-          
-          // Store for animation
-          light.userData = {
-            originalIntensity: light.intensity,
-            phase: Math.random() * Math.PI * 2
-          };
-          
-          this.navLights.push({ light, lightMesh: beam });
-          
-          return accentGroup;
+        const createNeonAccent = (angle: number): THREE.Group => {
+            const accentGroup = new THREE.Group();
+
+            // Neon light beam
+            const beamGeometry = new THREE.CylinderGeometry(10, 10, 300, 8);
+            const beamMaterial = new THREE.MeshStandardMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 1,
+                transparent: true,
+                opacity: 0.8
+            });
+            const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+            beam.rotation.x = Math.PI / 2; // Align with ring
+
+            // Light source for glow
+            const light = new THREE.PointLight(0x00ffff, 100, 400, 2);
+            light.position.set(0, 0, 0);
+
+            accentGroup.add(beam);
+            accentGroup.add(light);
+
+            // Position on the ring
+            accentGroup.position.x = Math.cos(angle) * 1000;
+            accentGroup.position.y = Math.sin(angle) * 1000;
+            accentGroup.rotation.z = angle - Math.PI / 2; // Orient toward center
+
+            // Store for animation
+            light.userData = {
+                originalIntensity: light.intensity,
+                phase: Math.random() * Math.PI * 2
+            };
+
+            this.navLights.push({ light, lightMesh: beam });
+
+            return accentGroup;
         };
-        
+
         // Add 8 neon accents evenly around the ring
         for (let i = 0; i < 8; i++) {
-          const angle = (i / 8) * Math.PI * 2;
-          detailsGroup.add(createNeonAccent(angle));
+            const angle = (i / 8) * Math.PI * 2;
+            detailsGroup.add(createNeonAccent(angle));
         }
-        
+
         return detailsGroup;
     }
-    
-    getPosition() {
+
+    getPosition(): THREE.Vector3 {
         // Updated to 2x height from the sun
         return new THREE.Vector3(0, 10000, 0);
     }
-    
-    getRegionInfo() {
+
+    getRegionInfo(): { center: THREE.Vector3; radius: number } {
         // Updated center position to match new height
         return {
             center: new THREE.Vector3(0, 10000, 0),
             radius: 2000
         };
     }
-    
-    update() {
+
+    update(): void {
         // Animate navigation lights with pulsing effect
         if (this.navLights) {
-          this.navLights.forEach(({ light, lightMesh }) => {
+            this.navLights.forEach(({ light, lightMesh }) => {
                 const time = Date.now() * 0.001;
-                const flicker = 0.7 + 0.3 * Math.sin(time * 2 + light.userData.phase);
-                
-                light.intensity = light.userData.originalIntensity * flicker;
-                
-            // Also update the light beam material
-            if (lightMesh.material) {
-              lightMesh.material.emissiveIntensity = flicker;
-              lightMesh.material.opacity = 0.5 + (flicker * 0.5);
-            }
-          });
+                const flicker = 0.7 + 0.3 * Math.sin(time * 2 + (light.userData as { phase?: number }).phase!);
+
+                light.intensity = (light.userData as { originalIntensity: number }).originalIntensity * flicker;
+
+                // Also update the light beam material
+                if (lightMesh.material) {
+                    const material = lightMesh.material as THREE.MeshStandardMaterial;
+                    material.emissiveIntensity = flicker;
+                    material.opacity = 0.5 + (flicker * 0.5);
+                }
+            });
         }
-        
+
         // Update shader time for the portal effect
         if (this.portalShaderMaterial) {
-          this.portalShaderMaterial.uniforms.time.value = Date.now() * 0.001;
-          
-          // Make portal light pulse with time
-          if (this.portalLight) {
-            const time = Date.now() * 0.001;
-            this.portalLight.intensity = 400 + Math.sin(time * 2.0) * 150;
-          }
+            this.portalShaderMaterial.uniforms.time.value = Date.now() * 0.001;
+
+            // Make portal light pulse with time
+            if (this.portalLight) {
+                const time = Date.now() * 0.001;
+                this.portalLight.intensity = 400 + Math.sin(time * 2.0) * 150;
+            }
         }
-        
+
         // Animate the portal wisp effects
         if (this.portalParticles) {
-          this.portalParticles.forEach(particle => {
-            const time = Date.now() * 0.001;
-            
-            // Apply rotation based on stored rotation speeds
-            if (particle.userData.rotationSpeed) {
-              particle.rotation.x += particle.userData.rotationSpeed.x;
-              particle.rotation.y += particle.userData.rotationSpeed.y;
-              particle.rotation.z += particle.userData.rotationSpeed.z;
-            }
-            
-            // Apply subtle scale pulsing if present
-            if (particle.userData.pulseSpeed) {
-              const pulse = 0.9 + 0.2 * Math.sin(time * particle.userData.pulseSpeed);
-              particle.scale.set(pulse, pulse, pulse);
-            }
-          });
+            this.portalParticles.forEach(particle => {
+                const time = Date.now() * 0.001;
+
+                // Apply rotation based on stored rotation speeds
+                if (particle.userData.rotationSpeed) {
+                    particle.rotation.x += particle.userData.rotationSpeed.x;
+                    particle.rotation.y += particle.userData.rotationSpeed.y;
+                    particle.rotation.z += particle.userData.rotationSpeed.z;
+                }
+
+                // Apply subtle scale pulsing if present
+                if (particle.userData.pulseSpeed) {
+                    const pulse = 0.9 + 0.2 * Math.sin(time * particle.userData.pulseSpeed);
+                    particle.scale.set(pulse, pulse, pulse);
+                }
+            });
         }
-        
+
         // Update counter-rotating ring
         if (this.counterRotatingRing) {
-          this.counterRotatingRing.rotation.x += 0.006; // Counter rotate
-          this.counterRotatingRing.rotation.y += 0.009;
-          this.counterRotatingRing.rotation.z -= 0.003;
+            this.counterRotatingRing.rotation.x += 0.006; // Counter rotate
+            this.counterRotatingRing.rotation.y += 0.009;
+            this.counterRotatingRing.rotation.z -= 0.003;
         }
-        
+
         // Rotate the stargate on all three axes for a more dynamic spinning effect (30x faster)
         if (this.stargate) {
-          this.stargate.rotation.x += 0.003;   // 30x faster rotation on X axis (was 0.0001)
-          this.stargate.rotation.y += 0.0045;  // 30x faster rotation on Y axis (was 0.00015)
-          this.stargate.rotation.z += 0.006;   // 30x faster rotation on Z axis (was 0.0002)
+            this.stargate.rotation.x += 0.003;   // 30x faster rotation on X axis (was 0.0001)
+            this.stargate.rotation.y += 0.0045;  // 30x faster rotation on Y axis (was 0.00015)
+            this.stargate.rotation.z += 0.006;   // 30x faster rotation on Z axis (was 0.0002)
         }
     }
-} 
+}

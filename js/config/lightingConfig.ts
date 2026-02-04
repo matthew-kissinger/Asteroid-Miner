@@ -1,7 +1,127 @@
-// lightingConfig.js - Centralized lighting configuration for fine-tuning
+import * as THREE from 'three';
+
+// lightingConfig.ts - Centralized lighting configuration for fine-tuning
 // This file contains all the key lighting parameters that define the visual aesthetic
 
-export const LIGHTING_CONFIG = {
+interface Vector3Config {
+    x: number;
+    y: number;
+    z: number;
+}
+
+interface SunConfig {
+    color: number;
+    intensity: number;
+    position: Vector3Config;
+}
+
+interface AmbientConfig {
+    skyColor: number;
+    groundColor: number;
+    intensity: number;
+}
+
+interface ShadowsConfig {
+    enabled: boolean;
+    mapSize: number;
+    type: 'Basic' | 'PCF' | 'PCFSoft' | 'VSM'; // Assuming these are the possible types
+    radius: number;
+    blurSamples: number;
+    bias: number;
+    normalBias: number;
+    frustumSize: number;
+    near: number;
+    far: number;
+}
+
+interface BloomConfig {
+    enabled: boolean;
+    strength: number;
+    radius: number;
+    threshold: number;
+}
+
+interface ToneMappingConfig {
+    type: 'No' | 'Linear' | 'Reinhard' | 'Cineon' | 'ACESFilmic'; // Common Three.js tone mapping types
+    exposure: number;
+}
+
+interface GodRaysConfig {
+    enabled: boolean;
+    density: number;
+    weight: number;
+    decay: number;
+    exposure: number;
+    samples: number;
+}
+
+interface VolumetricConfig {
+    godRays: GodRaysConfig;
+}
+
+interface MaterialPresetProps {
+    metalness?: number;
+    roughness?: number;
+    emissiveIntensity?: number;
+    clearcoat?: number;
+    sheen?: number;
+}
+
+interface AsteroidMaterials {
+    iron: MaterialPresetProps;
+    gold: MaterialPresetProps;
+    platinum: MaterialPresetProps;
+}
+
+interface PlanetMaterials {
+    rocky: MaterialPresetProps;
+    gasGiant: MaterialPresetProps;
+    terrestrial: MaterialPresetProps;
+}
+
+interface MaterialsConfig {
+    asteroids: AsteroidMaterials;
+    planets: PlanetMaterials;
+}
+
+interface PerformanceConfig {
+    shadowAutoUpdate: boolean;
+    shadowMapAutoUpdate: boolean;
+    logarithmicDepthBuffer: boolean;
+}
+
+interface SunFlickerConfig {
+    enabled: boolean;
+    minIntensity: number;
+    maxIntensity: number;
+    speed: number;
+}
+
+interface DistanceAttenuationConfig {
+    enabled: boolean;
+    maxDistance: number;
+    minExposure: number;
+    maxExposure: number;
+}
+
+interface FineTuningConfig {
+    sunFlicker: SunFlickerConfig;
+    distanceAttenuation: DistanceAttenuationConfig;
+}
+
+export interface LightingConfiguration {
+    sun: SunConfig;
+    ambient: AmbientConfig;
+    shadows: ShadowsConfig;
+    bloom: BloomConfig;
+    toneMapping: ToneMappingConfig;
+    volumetric: VolumetricConfig;
+    materials: MaterialsConfig;
+    performance: PerformanceConfig;
+    fineTuning: FineTuningConfig;
+}
+
+export const LIGHTING_CONFIG: LightingConfiguration = {
     // Main sun light configuration
     sun: {
         color: 0xFFFFFF,           // Pure white sun
@@ -128,18 +248,35 @@ export const LIGHTING_CONFIG = {
     }
 };
 
+// Minimal interfaces to allow typing in applyLightingConfig
+interface ILightingManager {
+    sunLight?: THREE.DirectionalLight & { shadow: THREE.DirectionalLightShadow };
+    ambientLight?: THREE.HemisphereLight;
+    renderer?: THREE.WebGLRenderer;
+    lightingManager?: ILightingManager; // For recursive access if lightingManager is nested
+    postProcessingManager?: IPostProcessingManager;
+}
+
+interface IPostProcessingManager {
+    adjustBloom: (strength: number, radius: number, threshold: number) => void;
+}
+
 /**
  * Helper function to apply config to lighting and post-processing managers
- * @param {Object} lightingManager - The LightingManager instance or a combined renderer instance
- * @param {Object} config - The lighting configuration to apply
- * @param {Object} postProcessingManager - Optional PostProcessingManager instance
+ * @param lightingManager - The LightingManager instance or a combined renderer instance
+ * @param config - The lighting configuration to apply
+ * @param postProcessingManager - Optional PostProcessingManager instance
  */
-export function applyLightingConfig(lightingManager, config = LIGHTING_CONFIG, postProcessingManager = null) {
+export function applyLightingConfig(
+    lightingManager: ILightingManager,
+    config: LightingConfiguration = LIGHTING_CONFIG,
+    postProcessingManager: IPostProcessingManager | null = null
+): void {
     if (!lightingManager) return;
     
     // Support passing the main Renderer instance
-    const lm = lightingManager.lightingManager || lightingManager;
-    const ppm = postProcessingManager || lightingManager.postProcessingManager;
+    const lm: ILightingManager = lightingManager.lightingManager || lightingManager;
+    const ppm: IPostProcessingManager | undefined = postProcessingManager || lm.postProcessingManager;
     
     // Update sun light
     if (lm.sunLight) {
@@ -159,7 +296,7 @@ export function applyLightingConfig(lightingManager, config = LIGHTING_CONFIG, p
     // Update ambient
     if (lm.ambientLight) {
         lm.ambientLight.color.setHex(config.ambient.skyColor);
-        lm.ambientLight.groundColor.setHex(config.ambient.groundColor);
+        (lm.ambientLight as THREE.HemisphereLight).groundColor.setHex(config.ambient.groundColor);
         lm.ambientLight.intensity = config.ambient.intensity;
     }
     

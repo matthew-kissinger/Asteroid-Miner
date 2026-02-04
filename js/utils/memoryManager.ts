@@ -5,8 +5,16 @@
 
 import * as THREE from 'three';
 
-// Typed Array Pools
-const typedArrayPools = {
+// Define the structure for typed array pools
+interface TypedArrayPools {
+    float32: Float32Array[];
+    int32: Int32Array[];
+    uint32: Uint32Array[];
+    uint16: Uint16Array[];
+    uint8: Uint8Array[];
+}
+
+const typedArrayPools: TypedArrayPools = {
     float32: [],
     int32: [],
     uint32: [],
@@ -19,10 +27,10 @@ const MAX_POOL_SIZE = 100;
 
 /**
  * Get a Float32Array from the pool or create a new one
- * @param {number} size - Length of the array
- * @returns {Float32Array} - A Float32Array of the specified size
+ * @param size - Length of the array
+ * @returns - A Float32Array of the specified size
  */
-export function getFloat32Array(size) {
+export function getFloat32Array(size: number): Float32Array {
     const pool = typedArrayPools.float32;
     
     // Find an array of appropriate size in the pool
@@ -39,9 +47,9 @@ export function getFloat32Array(size) {
 
 /**
  * Release a Float32Array back to the pool
- * @param {Float32Array} array - The array to release
+ * @param array - The array to release
  */
-export function releaseFloat32Array(array) {
+export function releaseFloat32Array(array: Float32Array): void {
     if (typedArrayPools.float32.length < MAX_POOL_SIZE) {
         // Zero out the array to prevent data leaks
         array.fill(0);
@@ -51,10 +59,10 @@ export function releaseFloat32Array(array) {
 
 /**
  * Get an Int32Array from the pool or create a new one
- * @param {number} size - Length of the array
- * @returns {Int32Array} - An Int32Array of the specified size
+ * @param size - Length of the array
+ * @returns - An Int32Array of the specified size
  */
-export function getInt32Array(size) {
+export function getInt32Array(size: number): Int32Array {
     const pool = typedArrayPools.int32;
     
     for (let i = 0; i < pool.length; i++) {
@@ -69,9 +77,9 @@ export function getInt32Array(size) {
 
 /**
  * Release an Int32Array back to the pool
- * @param {Int32Array} array - The array to release
+ * @param array - The array to release
  */
-export function releaseInt32Array(array) {
+export function releaseInt32Array(array: Int32Array): void {
     if (typedArrayPools.int32.length < MAX_POOL_SIZE) {
         array.fill(0);
         typedArrayPools.int32.push(array);
@@ -80,10 +88,10 @@ export function releaseInt32Array(array) {
 
 /**
  * Get a Uint32Array from the pool or create a new one
- * @param {number} size - Length of the array
- * @returns {Uint32Array} - A Uint32Array of the specified size
+ * @param size - Length of the array
+ * @returns - A Uint32Array of the specified size
  */
-export function getUint32Array(size) {
+export function getUint32Array(size: number): Uint32Array {
     const pool = typedArrayPools.uint32;
     
     for (let i = 0; i < pool.length; i++) {
@@ -98,9 +106,9 @@ export function getUint32Array(size) {
 
 /**
  * Release a Uint32Array back to the pool
- * @param {Uint32Array} array - The array to release
+ * @param array - The array to release
  */
-export function releaseUint32Array(array) {
+export function releaseUint32Array(array: Uint32Array): void {
     if (typedArrayPools.uint32.length < MAX_POOL_SIZE) {
         array.fill(0);
         typedArrayPools.uint32.push(array);
@@ -109,10 +117,10 @@ export function releaseUint32Array(array) {
 
 /**
  * Get a Uint16Array from the pool or create a new one
- * @param {number} size - Length of the array
- * @returns {Uint16Array} - A Uint16Array of the specified size
+ * @param size - Length of the array
+ * @returns - A Uint16Array of the specified size
  */
-export function getUint16Array(size) {
+export function getUint16Array(size: number): Uint16Array {
     const pool = typedArrayPools.uint16;
     
     for (let i = 0; i < pool.length; i++) {
@@ -127,9 +135,9 @@ export function getUint16Array(size) {
 
 /**
  * Release a Uint16Array back to the pool
- * @param {Uint16Array} array - The array to release
+ * @param array - The array to release
  */
-export function releaseUint16Array(array) {
+export function releaseUint16Array(array: Uint16Array): void {
     if (typedArrayPools.uint16.length < MAX_POOL_SIZE) {
         array.fill(0);
         typedArrayPools.uint16.push(array);
@@ -138,10 +146,10 @@ export function releaseUint16Array(array) {
 
 /**
  * Get a Uint8Array from the pool or create a new one
- * @param {number} size - Length of the array
- * @returns {Uint8Array} - A Uint8Array of the specified size
+ * @param size - Length of the array
+ * @returns - A Uint8Array of the specified size
  */
-export function getUint8Array(size) {
+export function getUint8Array(size: number): Uint8Array {
     const pool = typedArrayPools.uint8;
     
     for (let i = 0; i < pool.length; i++) {
@@ -156,9 +164,9 @@ export function getUint8Array(size) {
 
 /**
  * Release a Uint8Array back to the pool
- * @param {Uint8Array} array - The array to release
+ * @param array - The array to release
  */
-export function releaseUint8Array(array) {
+export function releaseUint8Array(array: Uint8Array): void {
     if (typedArrayPools.uint8.length < MAX_POOL_SIZE) {
         array.fill(0);
         typedArrayPools.uint8.push(array);
@@ -167,45 +175,53 @@ export function releaseUint8Array(array) {
 
 /**
  * Creates a pooled THREE.js BufferAttribute
- * @param {number} size - Number of vertices
- * @param {number} itemSize - Number of values per vertex (e.g. 3 for position, 2 for UV)
- * @returns {THREE.BufferAttribute} - A buffer attribute backed by a pooled typed array
+ * @param size - Number of vertices
+ * @param itemSize - Number of values per vertex (e.g. 3 for position, 2 for UV) 
+ * @returns - A buffer attribute backed by a pooled typed array
  */
-export function createPooledBufferAttribute(size, itemSize) {
+export function createPooledBufferAttribute(size: number, itemSize: number): THREE.BufferAttribute {
     const array = getFloat32Array(size * itemSize);
     return new THREE.BufferAttribute(array, itemSize);
 }
 
 /**
  * Releases a pooled buffer attribute back to the pool
- * @param {THREE.BufferAttribute} attribute - The buffer attribute to release
+ * @param attribute - The buffer attribute to release
  */
-export function releasePooledBufferAttribute(attribute) {
+export function releasePooledBufferAttribute(attribute: THREE.BufferAttribute | null): void {
     if (attribute && attribute.array instanceof Float32Array) {
         releaseFloat32Array(attribute.array);
-        attribute.array = null;
+        // Ensure that the reference to the array is cleared from the attribute
+        // This might be tricky as `BufferAttribute` expects `array` to be a TypedArray.
+        // Setting it to `null` might cause issues if not handled carefully downstream.
+        // For now, we'll keep the existing behavior, but note this potential area.
+        (attribute.array as any) = null; // Type assertion to allow setting to null
     }
 }
 
 /**
  * Fixed-size array implementation to avoid dynamic array resizing
  */
-export class FixedArray {
+export class FixedArray<T> {
+    private data: (T | undefined)[];
+    public length: number;
+    public capacity: number;
+    
     /**
-     * @param {number} size - Maximum size of the array
+     * @param size - Maximum size of the array
      */
-    constructor(size) {
-        this.data = new Array(size);
+    constructor(size: number) {
+        this.data = new Array<T | undefined>(size);
         this.length = 0;
         this.capacity = size;
     }
     
     /**
      * Add an item to the array
-     * @param {*} item - Item to add
-     * @returns {boolean} - True if item was added, false if array is full
+     * @param item - Item to add
+     * @returns - True if item was added, false if array is full
      */
-    push(item) {
+    push(item: T): boolean {
         if (this.length < this.capacity) {
             this.data[this.length++] = item;
             return true;
@@ -215,9 +231,9 @@ export class FixedArray {
     
     /**
      * Remove and return the last item
-     * @returns {*} - The last item or undefined if empty
+     * @returns - The last item or undefined if empty
      */
-    pop() {
+    pop(): T | undefined {
         if (this.length === 0) return undefined;
         const item = this.data[--this.length];
         this.data[this.length] = undefined; // Avoid memory leaks
@@ -226,20 +242,20 @@ export class FixedArray {
     
     /**
      * Get item at index
-     * @param {number} index - Index to retrieve
-     * @returns {*} - Item at that index
+     * @param index - Index to retrieve
+     * @returns - Item at that index
      */
-    get(index) {
+    get(index: number): T | undefined {
         if (index < 0 || index >= this.length) return undefined;
         return this.data[index];
     }
     
     /**
      * Set item at index
-     * @param {number} index - Index to set
-     * @param {*} value - Value to set
+     * @param index - Index to set
+     * @param value - Value to set
      */
-    set(index, value) {
+    set(index: number, value: T): void {
         if (index < 0 || index >= this.capacity) return;
         if (index >= this.length) this.length = index + 1;
         this.data[index] = value;
@@ -247,10 +263,10 @@ export class FixedArray {
     
     /**
      * Remove item at index
-     * @param {number} index - Index to remove
-     * @returns {boolean} - True if removal was successful
+     * @param index - Index to remove
+     * @returns - True if removal was successful
      */
-    removeAt(index) {
+    removeAt(index: number): boolean {
         if (index < 0 || index >= this.length) return false;
         
         // Shift all elements after index
@@ -266,7 +282,7 @@ export class FixedArray {
     /**
      * Clear the array
      */
-    clear() {
+    clear(): void {
         for (let i = 0; i < this.length; i++) {
             this.data[i] = undefined;
         }
@@ -275,37 +291,44 @@ export class FixedArray {
     
     /**
      * Iterate over each item
-     * @param {Function} callback - Function to call for each item
+     * @param callback - Function to call for each item
      */
-    forEach(callback) {
+    forEach(callback: (item: T, index: number, array: FixedArray<T>) => void): void {
         for (let i = 0; i < this.length; i++) {
-            callback(this.data[i], i, this);
+            const item = this.data[i];
+            if (item !== undefined) {
+                callback(item, i, this);
+            }
         }
     }
     
     /**
      * Map array items to a new array
-     * @param {Function} callback - Function to transform each item
-     * @returns {Array} - New array with transformed items
+     * @param callback - Function to transform each item
+     * @returns - New array with transformed items
      */
-    map(callback) {
-        const result = new Array(this.length);
+    map<U>(callback: (item: T, index: number, array: FixedArray<T>) => U): U[] {
+        const result: U[] = [];
         for (let i = 0; i < this.length; i++) {
-            result[i] = callback(this.data[i], i, this);
+            const item = this.data[i];
+            if (item !== undefined) {
+                result.push(callback(item, i, this));
+            }
         }
         return result;
     }
     
     /**
      * Filter items into a new array
-     * @param {Function} callback - Predicate function to test each item
-     * @returns {Array} - New array with items that passed the test
+     * @param callback - Predicate function to test each item
+     * @returns - New array with items that passed the test
      */
-    filter(callback) {
-        const result = [];
+    filter(callback: (item: T, index: number, array: FixedArray<T>) => boolean): T[] {
+        const result: T[] = [];
         for (let i = 0; i < this.length; i++) {
-            if (callback(this.data[i], i, this)) {
-                result.push(this.data[i]);
+            const item = this.data[i];
+            if (item !== undefined && callback(item, i, this)) {
+                result.push(item);
             }
         }
         return result;
@@ -317,36 +340,39 @@ export class FixedArray {
  */
 export const MemoryStats = {
     vectorPoolSize: 0,
-    objectPoolSizes: {},
-    typedArrayPoolSizes: {},
+    objectPoolSizes: {} as { [key: string]: number },
+    typedArrayPoolSizes: {} as { [key: string]: number },
     
     /**
      * Update memory statistics
      */
-    update() {
+    update(): void {
         // Vector pool stats
         if (window.vectorPool) {
             this.vectorPoolSize = window.vectorPool.pool.length;
         }
         
         // Object pool stats
-        if (window.objectPool) {
-            for (const type in window.objectPool.pools) {
-                this.objectPoolSizes[type] = window.objectPool.pools[type].objects.length;
+        if (window.objectPool?.registry?.typeToPool) { // Check for .registry and .typeToPool property
+            for (const type of Array.from(window.objectPool.registry.typeToPool.keys())) {
+                const pool = window.objectPool.registry.typeToPool.get(type);
+                if (pool) {
+                    this.objectPoolSizes[type] = pool.objects.length;
+                }
             }
         }
         
         // Typed array pool stats
         for (const type in typedArrayPools) {
-            this.typedArrayPoolSizes[type] = typedArrayPools[type].length;
+            this.typedArrayPoolSizes[type] = (typedArrayPools as any)[type].length;
         }
     },
     
     /**
      * Get a formatted report of memory usage
-     * @returns {string} - Formatted memory stats
+     * @returns - Formatted memory stats
      */
-    getReport() {
+    getReport(): string {
         this.update();
         
         let report = "Memory Pool Stats:\n";
@@ -361,7 +387,6 @@ export const MemoryStats = {
         }
         
         // Typed array pools
-        report += "Typed Array Pools:\n";
         for (const type in this.typedArrayPoolSizes) {
             report += `  ${type}: ${this.typedArrayPoolSizes[type]} arrays\n`;
         }
@@ -372,19 +397,21 @@ export const MemoryStats = {
     /**
      * Print memory stats to console
      */
-    logReport() {
+    logReport(): void {
         console.log(this.getReport());
     }
 };
 
 // Make MemoryStats globally available for debug purposes
-window.MemoryStats = MemoryStats;
+if (typeof window !== 'undefined') { // Check if window is defined (e.g., not in Node.js environment)
+  window.MemoryStats = MemoryStats;
+}
 
 // Export a no-op function that can replace often-created objects
 // to help identify memory hot spots
-export function createNoOpVector() {
+export function createNoOpVector(): { x: number; y: number; z: number } {
     if (window.DEBUG_MODE) {
         console.trace("Vector created at:");
     }
     return window.vectorPool ? window.vectorPool.get() : { x: 0, y: 0, z: 0 };
-} 
+}

@@ -6,6 +6,7 @@ import { Spaceship } from '../modules/spaceship';
 import { Physics } from '../modules/physics';
 import { Environment } from '../modules/environment';
 import { Controls } from '../modules/controls.js';
+import type { DockingSpaceship } from '../modules/controls/docking/types.ts';
 import { UI } from '../modules/ui';
 import { AudioManager } from '../modules/audio/audio.js';
 
@@ -20,8 +21,9 @@ type GameEnvironment = {
     setSpaceship: (ship: PhysicsSpaceship) => void;
 };
 
-type GameSpaceship = PhysicsSpaceship & {
-    dock: () => void;
+type GameSpaceship = PhysicsSpaceship & DockingSpaceship & {
+    thrustPower: number;
+    strafePower: number;
 };
 
 type GameUi = {

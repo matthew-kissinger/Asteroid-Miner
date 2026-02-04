@@ -1,16 +1,26 @@
 /**
- * mobileDetector.js - Utility for detecting mobile devices and touch capabilities
+ * mobileDetector.ts - Utility for detecting mobile devices and touch capabilities
  */
 
+// Extend the Navigator interface to include properties used for mobile detection
+declare global {
+    interface Navigator {
+      msMaxTouchPoints?: number; // For older IE/Edge
+    }
+}
+
 export class MobileDetector {
+    // Cache for isMobile() result
+    private static _isMobileCache: boolean | undefined = undefined;
+
     /**
      * Check if the current device is a mobile device
-     * @returns {boolean} True if the device is mobile
+     * @returns True if the device is mobile
      */
-    static isMobile() {
+    static isMobile(): boolean {
         // Store result in cache to avoid recalculation
-        if (this._isMobileCache !== undefined) {
-            return this._isMobileCache;
+        if (MobileDetector._isMobileCache !== undefined) {
+            return MobileDetector._isMobileCache;
         }
         
         // Check for mobile user agent
@@ -19,9 +29,9 @@ export class MobileDetector {
         // Check for touch capabilities - more comprehensive check
         const touchCheck = (
             'ontouchstart' in window || 
-            navigator.maxTouchPoints > 0 || 
-            navigator.msMaxTouchPoints > 0 ||
-            (window.DocumentTouch && document instanceof DocumentTouch)
+            (navigator.maxTouchPoints !== undefined && navigator.maxTouchPoints > 0) || 
+            (navigator.msMaxTouchPoints !== undefined && navigator.msMaxTouchPoints > 0) ||
+            ((window as any).DocumentTouch && document instanceof (window as any).DocumentTouch)
         );
         
         // Check screen width and orientation
@@ -30,7 +40,7 @@ export class MobileDetector {
         // Check if viewport meta tag has mobile-optimized settings
         const viewportCheck = (() => {
             const viewport = document.querySelector('meta[name=viewport]');
-            if (viewport) {
+            if (viewport instanceof HTMLMetaElement) { // Cast to HTMLMetaElement
                 return viewport.content.includes('width=device-width');
             }
             return false;
@@ -59,57 +69,57 @@ export class MobileDetector {
         //    b. Has mobile browser features, OR
         //    c. Supports device motion/orientation, OR
         //    d. Is detected as a tablet
-        this._isMobileCache = userAgentCheck || 
+        MobileDetector._isMobileCache = userAgentCheck || 
             (touchCheck && (screenCheck || mobileFeatureCheck || motionCheck || viewportCheck || isTablet));
         
-        console.log(`MobileDetector: Device detected as ${this._isMobileCache ? 'mobile' : 'desktop'}`);
+        console.log(`MobileDetector: Device detected as ${MobileDetector._isMobileCache ? 'mobile' : 'desktop'}`);
         console.log(`- UA: ${userAgentCheck}, touch: ${touchCheck}, screen: ${screenCheck}`);
         console.log(`- features: ${mobileFeatureCheck}, motion: ${motionCheck}, tablet: ${isTablet}`);
         
-        return this._isMobileCache;
+        return MobileDetector._isMobileCache!;
     }
     
     /**
      * Reset the mobile detection cache (useful after device orientation changes)
      */
-    static resetCache() {
-        this._isMobileCache = undefined;
+    static resetCache(): void {
+        MobileDetector._isMobileCache = undefined;
     }
     
     /**
      * Check if the device supports touch events
-     * @returns {boolean} True if touch is supported
+     * @returns True if touch is supported
      */
-    static hasTouch() {
+    static hasTouch(): boolean {
         return ('ontouchstart' in window) || 
-               (navigator.maxTouchPoints > 0) || 
-               (navigator.msMaxTouchPoints > 0) ||
-               (window.DocumentTouch && document instanceof DocumentTouch);
+               (navigator.maxTouchPoints !== undefined && navigator.maxTouchPoints > 0) || 
+               (navigator.msMaxTouchPoints !== undefined && navigator.msMaxTouchPoints > 0) ||
+               ((window as any).DocumentTouch && document instanceof (window as any).DocumentTouch);
     }
     
     /**
      * Get device orientation
-     * @returns {string} 'portrait' or 'landscape'
+     * @returns 'portrait' or 'landscape'
      */
-    static getOrientation() {
+    static getOrientation(): 'portrait' | 'landscape' {
         return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
     }
     
     /**
      * Add handler for orientation changes
-     * @param {Function} handler Function to call when orientation changes
+     * @param handler Function to call when orientation changes
      */
-    static addOrientationChangeHandler(handler) {
+    static addOrientationChangeHandler(handler: (orientation: 'portrait' | 'landscape') => void): void {
         // Track previous orientation
-        let prevOrientation = this.getOrientation();
+        let prevOrientation: 'portrait' | 'landscape' = MobileDetector.getOrientation();
         
         // Use both resize and orientationchange for better compatibility
         const checkOrientation = () => {
-            const currentOrientation = this.getOrientation();
+            const currentOrientation = MobileDetector.getOrientation();
             if (currentOrientation !== prevOrientation) {
                 prevOrientation = currentOrientation;
                 // Reset mobile detection cache
-                this.resetCache();
+                MobileDetector.resetCache();
                 // Call handler with new orientation
                 handler(currentOrientation);
             }

@@ -1,14 +1,22 @@
-// engines.js - Creates engine array, particles, and power control for the Star Dreadnought
+// engines.ts - Creates engine array, particles, and power control for the Star Dreadnought
 
 import * as THREE from 'three';
 
+interface EngineArrayResult {
+    engineHousing: THREE.Mesh;
+    engineGlows: THREE.Mesh[];
+}
+
 export class DreadnoughtEngines {
+    engineGlows: THREE.Mesh[];
+    engineTrailParticles: THREE.Points | null;
+
     constructor() {
         this.engineGlows = [];
         this.engineTrailParticles = null;
     }
-    
-    createEngineArray(scale, ship) {
+
+    createEngineArray(scale: number, ship: THREE.Group): EngineArrayResult {
         // Create engine array at the back of the ship
         const engineRadius = scale * 0.018;
         const engineLength = scale * 0.04;
@@ -95,23 +103,23 @@ export class DreadnoughtEngines {
         
         // Add engine trail particles
         this.createEngineTrailParticles(scale, engineZ, engineHousingWidth, ship);
-        
+
         return { engineHousing, engineGlows: this.engineGlows };
     }
-    
-    createEngineTrailParticles(scale, engineZ, width, ship) {
+
+    createEngineTrailParticles(scale: number, engineZ: number, width: number, ship: THREE.Group): void {
         const particleCount = 200;
         const particleGeometry = new THREE.BufferGeometry();
-        
+
         // Create arrays for particle properties
-        const positions = new Float32Array(particleCount * 3);
-        const colors = new Float32Array(particleCount * 3);
-        const sizes = new Float32Array(particleCount);
+        const positions: Float32Array = new Float32Array(particleCount * 3);
+        const colors: Float32Array = new Float32Array(particleCount * 3);
+        const sizes: Float32Array = new Float32Array(particleCount);
         
         // Engine positions to emit particles from
-        const enginePositions = [];
+        const enginePositions: number[] = [];
         const enginesPerRow = 5;
-        
+
         for (let i = 0; i < enginesPerRow; i++) {
             const posX = (i - (enginesPerRow - 1) / 2) * (width / (enginesPerRow - 1) * 0.8);
             enginePositions.push(posX);
@@ -131,25 +139,25 @@ export class DreadnoughtEngines {
             
             // Position behind the engine
             const trailLength = Math.random() * scale * 0.5;
-            
-            positions[i3] = engineX + offsetX;     // x
-            positions[i3 + 1] = offsetY;           // y
+
+            positions[i3] = engineX + offsetX; // x
+            positions[i3 + 1] = offsetY; // y
             positions[i3 + 2] = engineZ + engineX * 0.05 + trailLength; // z with slight angle
-            
+
             // Blue-white colors for engine glow
-            colors[i3] = 0.5 + Math.random() * 0.5;     // r
+            colors[i3] = 0.5 + Math.random() * 0.5; // r
             colors[i3 + 1] = 0.7 + Math.random() * 0.3; // g
-            colors[i3 + 2] = 1.0;                       // b
-            
+            colors[i3 + 2] = 1.0; // b
+
             // Different sizes for depth
             sizes[i] = (Math.random() * 0.5 + 0.5) * scale * 0.004;
         }
-        
+
         // Add attributes to geometry
         particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-        
+
         // Particle material with custom shader
         const particleMaterial = new THREE.ShaderMaterial({
             uniforms: {
@@ -193,85 +201,86 @@ export class DreadnoughtEngines {
             blending: THREE.AdditiveBlending,
             vertexColors: true
         });
-        
+
         // Create particle system
         this.engineTrailParticles = new THREE.Points(particleGeometry, particleMaterial);
         ship.add(this.engineTrailParticles);
     }
-    
-    createParticleTexture() {
+
+    createParticleTexture(): THREE.Texture {
         const canvas = document.createElement('canvas');
         canvas.width = 64;
         canvas.height = 64;
-        
+
         const context = canvas.getContext('2d');
-        const gradient = context.createRadialGradient(
-            32, 32, 0, 32, 32, 32
-        );
-        
+        if (!context) throw new Error('Could not get 2D context');
+
+        const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+
         gradient.addColorStop(0, 'rgba(255,255,255,1)');
         gradient.addColorStop(0.3, 'rgba(255,255,255,0.8)');
         gradient.addColorStop(0.5, 'rgba(255,255,255,0.4)');
         gradient.addColorStop(1, 'rgba(255,255,255,0)');
-        
+
         context.fillStyle = gradient;
         context.fillRect(0, 0, 64, 64);
-        
+
         const texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
         return texture;
     }
-    
+
     // Set engines power level (0-1)
-    setEnginesPower(power) {
+    setEnginesPower(power: number): void {
         // Adjust engine glow intensity based on power level
-        this.engineGlows.forEach((glow, index) => {
+        this.engineGlows.forEach((glow: THREE.Mesh, index: number) => {
             // Alternate between main glow and outer glow
             const isMainGlow = index % 2 === 0;
-            
+
+            const material = glow.material as THREE.MeshStandardMaterial;
             if (isMainGlow) {
                 // Main engine glow - brighter
-                glow.material.emissiveIntensity = 0.8 + power * 1.2;
-                glow.material.opacity = 0.5 + power * 0.5;
+                material.emissiveIntensity = 0.8 + power * 1.2;
+                material.opacity = 0.5 + power * 0.5;
             } else {
                 // Outer engine glow - softer
-                glow.material.emissiveIntensity = 0.5 + power * 0.8;
-                glow.material.opacity = 0.2 + power * 0.3;
+                material.emissiveIntensity = 0.5 + power * 0.8;
+                material.opacity = 0.2 + power * 0.3;
             }
-            
+
             // Scale the glow with power
-            const scale = 1 + power * 0.8;
-            glow.scale.set(scale, scale, scale * 1.2); // Stretch slightly on z-axis
+            const glowScale = 1 + power * 0.8;
+            glow.scale.set(glowScale, glowScale, glowScale * 1.2); // Stretch slightly on z-axis
         });
-        
+
         // Update engine trail particles
         if (this.engineTrailParticles) {
             this.engineTrailParticles.visible = power > 0.2;
-            
+
             // Scale particle sizes based on power
             if (this.engineTrailParticles.geometry.attributes.size) {
-                const sizes = this.engineTrailParticles.geometry.attributes.size.array;
-                const baseSizes = this.engineTrailParticles.userData.baseSizes || 
-                                  Array.from(sizes); // Store original sizes if not saved
-                                  
+                const sizes = this.engineTrailParticles.geometry.attributes.size.array as Float32Array;
+                const baseSizes = (this.engineTrailParticles.userData.baseSizes as Float32Array) ||
+                    Array.from(sizes); // Store original sizes if not saved
+
                 // Save original sizes
                 if (!this.engineTrailParticles.userData.baseSizes) {
                     this.engineTrailParticles.userData.baseSizes = baseSizes;
                 }
-                
+
                 // Scale sizes
                 for (let i = 0; i < sizes.length; i++) {
-                    sizes[i] = baseSizes[i] * (1 + power * 2);
+                    sizes[i] = (baseSizes as any)[i] * (1 + power * 2);
                 }
-                
+
                 this.engineTrailParticles.geometry.attributes.size.needsUpdate = true;
             }
         }
     }
-    
+
     // Update engine trail particles animation
-    updateEngineTrails() {
-        if (this.engineTrailParticles && this.engineTrailParticles.material.uniforms) {
+    updateEngineTrails(): void {
+        if (this.engineTrailParticles && this.engineTrailParticles.material instanceof THREE.ShaderMaterial) {
             this.engineTrailParticles.material.uniforms.time.value += 0.02;
         }
     }

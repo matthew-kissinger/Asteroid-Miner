@@ -1,6 +1,15 @@
-// apiClient.js - Client for interacting with the skybox generation API
+// apiClient.ts - Client for interacting with the skybox generation API
+
+type RefreshCallback = (success: boolean) => void;
 
 export class ApiClient {
+    private apiBaseUrl: string;
+    private token: string | null;
+    private tokenExpiry: string | null;
+    private clientId: string;
+    private isRefreshing: boolean;
+    private refreshCallbacks: RefreshCallback[];
+
     constructor() {
         // API configuration
         this.apiBaseUrl = this.getApiBaseUrl();
@@ -20,7 +29,7 @@ export class ApiClient {
     }
     
     // Get base URL from environment or use default
-    getApiBaseUrl() {
+    private getApiBaseUrl(): string {
         // For local development
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             return 'http://localhost:8001';
@@ -31,7 +40,7 @@ export class ApiClient {
     }
     
     // Check if token is valid and not expired
-    hasValidToken() {
+    private hasValidToken(): boolean {
         if (!this.token || !this.tokenExpiry) {
             return false;
         }
@@ -45,13 +54,13 @@ export class ApiClient {
     }
     
     // Clear token from memory
-    clearToken() {
+    private clearToken(): void {
         this.token = null;
         this.tokenExpiry = null;
     }
     
     // Get a new token from the API
-    async getToken() {
+    private async getToken(): Promise<boolean> {
         // Prevent multiple simultaneous refresh attempts
         if (this.isRefreshing) {
             return new Promise((resolve) => {
@@ -83,7 +92,10 @@ export class ApiClient {
                 throw new Error(errorMessage);
             }
             
-            const data = await response.json();
+            interface TokenResponse {
+                access_token: string;
+            }
+            const data: TokenResponse = await response.json();
             
             // Save token in memory
             this.token = data.access_token;
@@ -99,7 +111,7 @@ export class ApiClient {
             this.isRefreshing = false;
             
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error getting token:', error);
             
             // Execute callbacks with failure
@@ -112,7 +124,7 @@ export class ApiClient {
     }
     
     // Handle API response errors
-    async handleApiResponse(response) {
+    private async handleApiResponse(response: Response): Promise<boolean> {
         if (response.status === 401) {
             // Token has expired or is invalid
             this.clearToken();
@@ -142,7 +154,7 @@ export class ApiClient {
     }
     
     // Generate a skybox based on the system name and description
-    async generateSkybox(systemName, description) {
+    async generateSkybox(systemName: string, description: string): Promise<any> {
         // Get a new token if current one is invalid
         if (!this.hasValidToken()) {
             const success = await this.getToken();
@@ -175,7 +187,7 @@ export class ApiClient {
     }
     
     // Generate a planet texture based on the planet name and description
-    async generatePlanet(planetName, description) {
+    async generatePlanet(planetName: string, description: string): Promise<any> {
         // Get a new token if current one is invalid
         if (!this.hasValidToken()) {
             const success = await this.getToken();
@@ -208,7 +220,7 @@ export class ApiClient {
     }
     
     // Convert a relative image path to a full URL
-    getFullImageUrl(relativeUrl) {
+    getFullImageUrl(relativeUrl: string): string {
         // If it's already a full URL, return as is
         if (relativeUrl.startsWith('http')) {
             return relativeUrl;
@@ -223,4 +235,4 @@ export class ApiClient {
         // Join with API base URL
         return `${baseUrl}/${cleanPath}`;
     }
-} 
+}

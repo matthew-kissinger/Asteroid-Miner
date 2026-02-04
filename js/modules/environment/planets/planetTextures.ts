@@ -1,11 +1,29 @@
-// planetTextures.js - Planet texture loading and management
+// planetTextures.ts - Planet texture loading and management
 
 import * as THREE from 'three';
 
 const textureLoader = new THREE.TextureLoader();
 
+// Type definitions for planet textures
+interface PlanetTextureMap {
+    mercury: THREE.Texture;
+    venus: {
+        surface: THREE.Texture;
+        atmosphere: THREE.Texture;
+    };
+    earth: THREE.Texture;
+    mars: THREE.Texture;
+    jupiter: THREE.Texture;
+    saturn: {
+        surface: THREE.Texture;
+        rings: THREE.Texture;
+    };
+    uranus: THREE.Texture;
+    neptune: THREE.Texture;
+}
+
 // Load all planet textures
-export const planetTextures = {
+export const planetTextures: PlanetTextureMap = {
     mercury: textureLoader.load('./assets/2k_mercury.jpg'),
     venus: {
         surface: textureLoader.load('./assets/2k_venus_surface.jpg'),
@@ -35,7 +53,7 @@ planetTextures.uranus.colorSpace = THREE.SRGBColorSpace;
 planetTextures.neptune.colorSpace = THREE.SRGBColorSpace;
 
 // Load the custom procedural textures (p1-p22)
-export const proceduralTextures = [];
+export const proceduralTextures: THREE.Texture[] = [];
 for (let i = 1; i <= 22; i++) {
     const texture = textureLoader.load(`./assets/p${i}.jpeg`);
     texture.colorSpace = THREE.SRGBColorSpace;

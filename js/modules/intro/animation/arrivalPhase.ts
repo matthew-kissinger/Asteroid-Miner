@@ -1,13 +1,14 @@
 // arrivalPhase.ts - Manages the ship arrival phase of the intro sequence
 
 import * as THREE from 'three';
+import type { IntroSequenceAnimationContext } from '../../introSequence.ts';
 
 /**
  * Update the arrival phase animation (portal, ship arrival and player deployment)
  * @param {number} progress - Progress through arrival phase (0-1)
  * @param {any} context - Context object containing all necessary references
  */
-export function updateArrivalPhase(progress: number, context: any): void {
+export function updateArrivalPhase(progress: number, context: IntroSequenceAnimationContext): void {
     const {
         portalEffect,
         starDreadnought,

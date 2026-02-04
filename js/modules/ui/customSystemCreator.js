@@ -1,6 +1,6 @@
 // customSystemCreator.js - Refactored UI for creating custom star systems with AI-generated assets
 
-import { ApiClient } from '../utils/apiClient.js';
+import { ApiClient } from '../utils/apiClient.ts';
 import { StyleManager } from './components/customSystem/styles.js';
 import { ValidationManager } from './components/customSystem/validation.js';
 import { SystemDataManager } from './components/customSystem/systemData.js';
