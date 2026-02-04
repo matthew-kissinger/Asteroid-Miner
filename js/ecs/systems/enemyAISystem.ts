@@ -161,6 +161,8 @@ function applyStandardDroneMovement(
   speed: number,
   _dt: number
 ): void {
+  void _dt
+
   const amplitude = EnemyAI.spiralAmplitude[eid]
   const frequency = EnemyAI.spiralFrequency[eid]
   const phase = EnemyAI.spiralPhase[eid]
@@ -224,6 +226,8 @@ function applyHeavyDroneMovement(
   speed: number,
   _dt: number
 ): void {
+  void _dt
+
   // Heavy drones move at 70% speed, no spiral
   const heavySpeed = speed * 0.7
 
@@ -244,6 +248,9 @@ function applySwiftDroneMovement(
   speed: number,
   _dt: number
 ): void {
+  void _distToPlayer
+  void _dt
+
   // Swift drones move at 150% speed with aggressive zigzag
   const swiftSpeed = speed * 1.5
   const timeAlive = EnemyAI.timeAlive[eid]
@@ -289,6 +296,8 @@ function applySeparationInfluence(
   speed: number,
   _dt: number
 ): void {
+  void _dt
+
   const sepX = SeparationForce.x[eid]
   const sepY = SeparationForce.y[eid]
   const sepZ = SeparationForce.z[eid]
@@ -418,6 +427,8 @@ export function difficultyScalingSystem(
   enemies: number[],
   _gameTime: number
 ): void {
+  void _gameTime
+
   // Check if global difficulty manager exists
   if (
     typeof window === 'undefined' ||
