@@ -1,4 +1,4 @@
-// post.js - Post-processing effects management
+// post.ts - Post-processing effects management
 
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -9,10 +9,29 @@ import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import { ColorCorrectionShader } from 'three/addons/shaders/ColorCorrectionShader.js';
 import { FilmShader } from 'three/addons/shaders/FilmShader.js';
 import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
-import { createVolumetricLightShader, createClaudeRayShader } from './shaders.js';
+import { createVolumetricLightShader, createClaudeRayShader } from './shaders';
+
+// WebGPURenderer is not in @types/three yet, declare it
+declare class WebGPURenderer extends THREE.WebGLRenderer {}
+
+type RendererType = THREE.WebGLRenderer | WebGPURenderer;
 
 export class PostProcessingManager {
-    constructor(renderer, scene, camera) {
+    renderer: RendererType;
+    scene: THREE.Scene;
+    camera: THREE.Camera;
+    composer: EffectComposer | null;
+    bloomPass: UnrealBloomPass | null;
+    filmPass: ShaderPass | null;
+    colorCorrectionPass: ShaderPass | null;
+    vignettePass: ShaderPass | null;
+    claudeRayPass: ShaderPass | null;
+    godRayPass: ShaderPass | null;
+    useBasicRendering: boolean;
+    volumetricLightEnabled: boolean;
+    useClaudeRays: boolean;
+
+    constructor(renderer: RendererType, scene: THREE.Scene, camera: THREE.Camera) {
         this.renderer = renderer;
         this.scene = scene;
         this.camera = camera;
@@ -30,7 +49,7 @@ export class PostProcessingManager {
         this.useClaudeRays = false;
     }
 
-    setupPostProcessing() {
+    setupPostProcessing(): void {
         try {
             // Create a composer for post-processing effects
             this.composer = new EffectComposer(this.renderer);
@@ -57,7 +76,7 @@ export class PostProcessingManager {
         }
     }
 
-    setupBloomPass() {
+    setupBloomPass(): void {
         try {
             // Add bloom effect for sun, engines, etc.
             this.bloomPass = new UnrealBloomPass(
@@ -66,21 +85,21 @@ export class PostProcessingManager {
                 0.2,    // radius (further reduced from 0.3)
                 0.95    // threshold (further increased from 0.9 to only affect the very brightest parts)
             );
-            this.composer.addPass(this.bloomPass);
+            this.composer!.addPass(this.bloomPass);
         } catch (error) {
             console.warn("Error setting up UnrealBloomPass:", error);
         }
     }
 
-    setupFXAAPass() {
+    setupFXAAPass(): void {
         try {
             // Add FXAA for edge aliasing
             const fxaaPass = new ShaderPass(FXAAShader);
             if (fxaaPass.material && fxaaPass.material.uniforms && fxaaPass.material.uniforms.resolution) {
-                const pixelRatio = this.renderer.getPixelRatio();
+                const pixelRatio = 'getPixelRatio' in this.renderer ? this.renderer.getPixelRatio() : 1;
                 fxaaPass.material.uniforms.resolution.value.x = 1 / (window.innerWidth * pixelRatio);
                 fxaaPass.material.uniforms.resolution.value.y = 1 / (window.innerHeight * pixelRatio);
-                this.composer.addPass(fxaaPass);
+                this.composer!.addPass(fxaaPass);
             } else {
                 console.warn("FXAAShader uniforms not as expected, skipping pass");
             }
@@ -89,14 +108,14 @@ export class PostProcessingManager {
         }
     }
 
-    setupColorCorrectionPass() {
+    setupColorCorrectionPass(): void {
         try {
             // Add color correction effects
             this.colorCorrectionPass = new ShaderPass(ColorCorrectionShader);
             if (this.colorCorrectionPass.uniforms && this.colorCorrectionPass.uniforms.powRGB && this.colorCorrectionPass.uniforms.mulRGB) {
                 this.colorCorrectionPass.uniforms.powRGB.value = new THREE.Vector3(1.1, 1.1, 1.2); // Slightly blue tint
                 this.colorCorrectionPass.uniforms.mulRGB.value = new THREE.Vector3(1.2, 1.1, 1.0); // Warmer highlights
-                this.composer.addPass(this.colorCorrectionPass);
+                this.composer!.addPass(this.colorCorrectionPass);
             } else {
                 console.warn("ColorCorrectionShader uniforms not as expected, skipping pass");
             }
@@ -105,7 +124,7 @@ export class PostProcessingManager {
         }
     }
 
-    setupFilmPass() {
+    setupFilmPass(): void {
         try {
             // Add CRT/film effect with static scanlines
             this.filmPass = new ShaderPass(FilmShader);
@@ -114,7 +133,7 @@ export class PostProcessingManager {
                 this.filmPass.uniforms.nIntensity.value = 0.08; // Reduced noise for subtle grain
                 this.filmPass.uniforms.sIntensity.value = 0.03; // Static CRT scanlines
                 this.filmPass.uniforms.grayscale.value = 0; // Keep color
-                this.composer.addPass(this.filmPass);
+                this.composer!.addPass(this.filmPass);
             } else {
                 console.warn("FilmShader uniforms not as expected, skipping pass");
             }
@@ -123,14 +142,14 @@ export class PostProcessingManager {
         }
     }
 
-    setupVignettePass() {
+    setupVignettePass(): void {
         try {
             // Add vignette effect
             this.vignettePass = new ShaderPass(VignetteShader);
             if (this.vignettePass.uniforms && this.vignettePass.uniforms.offset && this.vignettePass.uniforms.darkness) {
                 this.vignettePass.uniforms.offset.value = 0.95;
                 this.vignettePass.uniforms.darkness.value = 1.6;
-                this.composer.addPass(this.vignettePass);
+                this.composer!.addPass(this.vignettePass);
             } else {
                 console.warn("VignetteShader uniforms not as expected, skipping pass");
             }
@@ -143,7 +162,7 @@ export class PostProcessingManager {
      * Setup for volumetric lighting (god rays) effects
      * Handles both the new realistic godray effect and the original "Claude Rays"
      */
-    setupGodRayEffects() {
+    setupGodRayEffects(): void {
         try {
             // Initialize flags for volumetric lighting effects
             this.volumetricLightEnabled = true;     // Master toggle for any god ray effect
@@ -152,13 +171,13 @@ export class PostProcessingManager {
             // Create the original "Claude Rays" effect (disabled by default)
             this.claudeRayPass = createClaudeRayShader();
             this.claudeRayPass.enabled = this.volumetricLightEnabled && this.useClaudeRays;
-            this.composer.addPass(this.claudeRayPass);
+            this.composer!.addPass(this.claudeRayPass);
             console.log("Claude Rays effect created (disabled by default)");
             
             // Create the new improved volumetric lighting effect
             this.godRayPass = createVolumetricLightShader();
             this.godRayPass.enabled = this.volumetricLightEnabled && !this.useClaudeRays;
-            this.composer.addPass(this.godRayPass);
+            this.composer!.addPass(this.godRayPass);
             console.log("New volumetric light ray effect added to post-processing chain");
         } catch (error) {
             console.warn("Error setting up volumetric light shaders:", error);
@@ -166,7 +185,7 @@ export class PostProcessingManager {
     }
 
     // Allow dynamic adjustment of post-processing settings
-    adjustBloom(strength, radius, threshold) {
+    adjustBloom(strength?: number, radius?: number, threshold?: number): void {
         if (this.bloomPass) {
             this.bloomPass.strength = strength !== undefined ? strength : this.bloomPass.strength;
             this.bloomPass.radius = radius !== undefined ? radius : this.bloomPass.radius;
@@ -175,7 +194,7 @@ export class PostProcessingManager {
     }
 
     // Update for dynamic visual effects
-    update(deltaTime) {
+    update(deltaTime: number): void {
         // Update film grain with time for animation
         if (this.filmPass && this.filmPass.uniforms && this.filmPass.uniforms.time && this.filmPass.uniforms.time.value !== undefined) {
             try {
@@ -186,24 +205,24 @@ export class PostProcessingManager {
         }
     }
 
-    handleResize() {
+    handleResize(): void {
         // Update composer size if it exists
         if (this.composer) {
             this.composer.setSize(window.innerWidth, window.innerHeight);
         
             // Update FXAA resolution
             try {
-                const pixelRatio = this.renderer.getPixelRatio();
-                const fxaaPass = this.composer.passes.find(pass => 
-                    pass.material && 
-                    pass.material.uniforms && 
-                    pass.material.uniforms.resolution &&
-                    pass.material.uniforms.resolution.value
+                const pixelRatio = 'getPixelRatio' in this.renderer ? this.renderer.getPixelRatio() : 1;
+                const fxaaPass = this.composer.passes.find(pass =>
+                    (pass as any).material &&
+                    (pass as any).material.uniforms &&
+                    (pass as any).material.uniforms.resolution &&
+                    (pass as any).material.uniforms.resolution.value
                 );
-                
+
                 if (fxaaPass) {
-                    fxaaPass.material.uniforms.resolution.value.x = 1 / (window.innerWidth * pixelRatio);
-                    fxaaPass.material.uniforms.resolution.value.y = 1 / (window.innerHeight * pixelRatio);
+                    (fxaaPass as any).material.uniforms.resolution.value.x = 1 / (window.innerWidth * pixelRatio);
+                    (fxaaPass as any).material.uniforms.resolution.value.y = 1 / (window.innerHeight * pixelRatio);
                 }
             } catch (error) {
                 console.warn("Error updating FXAA resolution:", error);
@@ -211,7 +230,7 @@ export class PostProcessingManager {
         }
     }
 
-    render() {
+    render(): void {
         if (this.composer && !this.useBasicRendering) {
             this.composer.render();
         } else {
@@ -219,13 +238,15 @@ export class PostProcessingManager {
         }
     }
 
-    dispose() {
+    dispose(): void {
         // Dispose of post-processing
         if (this.composer) {
             this.composer.passes.forEach(pass => {
-                if (pass.dispose) pass.dispose();
-                if (pass.material) {
-                    pass.material.dispose();
+                if ('dispose' in pass && typeof (pass as any).dispose === 'function') {
+                    (pass as any).dispose();
+                }
+                if ('material' in pass && (pass as any).material) {
+                    (pass as any).material.dispose();
                 }
             });
         }

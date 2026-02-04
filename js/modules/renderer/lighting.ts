@@ -1,10 +1,22 @@
-// lighting.js - Handles all lighting setup and management for the renderer
+// lighting.ts - Handles all lighting setup and management for the renderer
 
 import * as THREE from 'three';
 import { LIGHTING_CONFIG } from '../../config/lightingConfig.js';
 
+// WebGPURenderer is not in @types/three yet, declare it
+declare class WebGPURenderer extends THREE.WebGLRenderer {}
+
+type RendererType = THREE.WebGLRenderer | WebGPURenderer;
+
 export class LightingManager {
-    constructor(scene, renderer, camera) {
+    scene: THREE.Scene;
+    renderer: RendererType;
+    camera: THREE.Camera;
+    sunLight: THREE.DirectionalLight | null;
+    ambientLight: THREE.HemisphereLight | null;
+    config: typeof LIGHTING_CONFIG;
+
+    constructor(scene: THREE.Scene, renderer: RendererType, camera: THREE.Camera) {
         this.scene = scene;
         this.renderer = renderer;
         this.camera = camera;
@@ -17,19 +29,25 @@ export class LightingManager {
         this.config = LIGHTING_CONFIG;
     }
 
-    setupLighting() {
+    setupLighting(): void {
         // Configure renderer for physically correct lighting
-        this.renderer.shadowMap.enabled = this.config.shadows.enabled;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.renderer.shadowMap.autoUpdate = this.config.performance.shadowMapAutoUpdate;
-        
-        // Map string type to THREE constant
-        if (this.config.toneMapping.type === 'ACESFilmic') {
-            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        if ('shadowMap' in this.renderer) {
+            this.renderer.shadowMap.enabled = this.config.shadows.enabled;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            if ('autoUpdate' in this.renderer.shadowMap) {
+                (this.renderer.shadowMap as any).autoUpdate = this.config.performance.shadowMapAutoUpdate;
+            }
         }
         
-        this.renderer.toneMappingExposure = this.config.toneMapping.exposure;
-        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        // Map string type to THREE constant
+        if ('toneMapping' in this.renderer) {
+            if (this.config.toneMapping.type === 'ACESFilmic') {
+                this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            }
+            
+            this.renderer.toneMappingExposure = this.config.toneMapping.exposure;
+            this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        }
 
         // Create main sun directional light
         this.sunLight = new THREE.DirectionalLight(
@@ -62,7 +80,9 @@ export class LightingManager {
         this.sunLight.shadow.bias = this.config.shadows.bias;
         this.sunLight.shadow.normalBias = this.config.shadows.normalBias;
         this.sunLight.shadow.radius = this.config.shadows.radius;
-        this.sunLight.shadow.blurSamples = this.config.shadows.blurSamples;
+        if ('blurSamples' in this.sunLight.shadow) {
+            (this.sunLight.shadow as any).blurSamples = this.config.shadows.blurSamples;
+        }
 
         this.scene.add(this.sunLight);
         this.scene.add(this.sunLight.target);
@@ -82,7 +102,7 @@ export class LightingManager {
      * Update sun light direction based on sun position
      * Keep the directional light stable in world space
      */
-    updateSunPosition(sunWorldPosition) {
+    updateSunPosition(sunWorldPosition: THREE.Vector3): void {
         if (!this.sunLight) return;
 
         // The sun's directional light should maintain a fixed direction
@@ -98,7 +118,7 @@ export class LightingManager {
     /**
      * Adjust lighting intensity
      */
-    adjustLightingIntensity(factor = 1.0) {
+    adjustLightingIntensity(factor: number = 1.0): void {
         const clampedFactor = THREE.MathUtils.clamp(factor, 0.5, 2.0);
         
         if (this.sunLight) {
@@ -109,15 +129,17 @@ export class LightingManager {
     /**
      * Update exposure based on camera position
      */
-    updateExposure(cameraPosition) {
+    updateExposure(_cameraPosition: THREE.Vector3): void {
         // Keep exposure relatively constant
-        this.renderer.toneMappingExposure = this.config.toneMapping.exposure;
+        if ('toneMappingExposure' in this.renderer) {
+            this.renderer.toneMappingExposure = this.config.toneMapping.exposure;
+        }
     }
     
     /**
      * Adjust for volumetric ray type (backward compatibility)
      */
-    adjustLightingForRayType(useClaudeRays) {
+    adjustLightingForRayType(_useClaudeRays: boolean): void {
         // Keep lighting consistent
         if (this.ambientLight) {
             this.ambientLight.intensity = this.config.ambient.intensity;
@@ -127,8 +149,8 @@ export class LightingManager {
     /**
      * Set shadow quality
      */
-    setShadowQuality(quality) {
-        const sizes = {
+    setShadowQuality(quality: 'low' | 'medium' | 'high' | 'ultra'): void {
+        const sizes: Record<string, number> = {
             low: 2048,
             medium: 4096,
             high: 8192,
@@ -151,11 +173,11 @@ export class LightingManager {
     /**
      * Handle window resize
      */
-    handleResize() {
+    handleResize(): void {
         // Handled by post-processing manager
     }
     
-    dispose() {
+    dispose(): void {
         // Dispose shadows
         if (this.sunLight && this.sunLight.shadow && this.sunLight.shadow.map) {
             this.sunLight.shadow.map.dispose();
@@ -164,7 +186,7 @@ export class LightingManager {
         // Remove lights from scene
         [this.sunLight, this.ambientLight].forEach(light => {
             if (light) {
-                if (light.target) {
+                if ('target' in light && light.target) {
                     this.scene.remove(light.target);
                 }
                 this.scene.remove(light);

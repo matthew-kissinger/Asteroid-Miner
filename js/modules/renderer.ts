@@ -3,11 +3,11 @@
 import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
 import { WebGPURenderer } from 'three/webgpu';
-import { LightingManager } from './renderer/lighting.js';
-import { PostProcessingManager } from './renderer/post.js';
-import { SceneApiManager } from './renderer/sceneApi.js';
-import { RenderHelpers } from './renderer/helpers.js';
-import { VolumetricLightingManager } from './renderer/volumetricLighting.js';
+import { LightingManager } from './renderer/lighting';
+import { PostProcessingManager } from './renderer/post';
+import { SceneApiManager } from './renderer/sceneApi';
+import { RenderHelpers } from './renderer/helpers';
+import { VolumetricLightingManager } from './renderer/volumetricLighting';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 
 type RendererType = THREE.WebGLRenderer | WebGPURenderer;

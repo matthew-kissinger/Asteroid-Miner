@@ -1,9 +1,38 @@
-// volumetricLighting.js - Handles volumetric lighting effects and light position updates
+// volumetricLighting.ts - Handles volumetric lighting effects and light position updates
 
 import * as THREE from 'three';
+import { PostProcessingManager } from './post.js';
+import { SceneApiManager } from './sceneApi.js';
+
+interface VolumetricLightParams {
+    intensity?: number;
+    decay?: number;
+    density?: number;
+    weight?: number;
+    samples?: number;
+    sunColor?: number | string | THREE.Color;
+    scattering?: number;
+    attenuationMultiplier?: number;
+}
+
+interface ClaudeRayParams {
+    exposure?: number;
+    decay?: number;
+    density?: number;
+    weight?: number;
+    lightColor?: number | string | THREE.Color;
+}
 
 export class VolumetricLightingManager {
-    constructor(postProcessingManager, sceneApiManager, camera) {
+    postProcessingManager: PostProcessingManager;
+    sceneApiManager: SceneApiManager;
+    camera: THREE.Camera;
+
+    constructor(
+        postProcessingManager: PostProcessingManager,
+        sceneApiManager: SceneApiManager,
+        camera: THREE.Camera
+    ) {
         this.postProcessingManager = postProcessingManager;
         this.sceneApiManager = sceneApiManager;
         this.camera = camera;
@@ -12,7 +41,7 @@ export class VolumetricLightingManager {
     /**
      * Update volumetric light ray position if sun is present
      */
-    update() {
+    update(): void {
         if (this.postProcessingManager.volumetricLightEnabled) {
             if (this.postProcessingManager.useClaudeRays) {
                 this.updateClaudeRayPosition();
@@ -25,7 +54,7 @@ export class VolumetricLightingManager {
     /**
      * Update the light position for Claude Rays
      */
-    updateClaudeRayPosition() {
+    updateClaudeRayPosition(): void {
         try {
             // Ensure we have the required objects
             if (!this.postProcessingManager.claudeRayPass || !this.postProcessingManager.claudeRayPass.uniforms || !this.postProcessingManager.claudeRayPass.uniforms.lightPosition) {
@@ -37,7 +66,7 @@ export class VolumetricLightingManager {
             }
             
             // Try to find the sun in the scene
-            let sun = this.sceneApiManager.findSunObject();
+            const sun = this.sceneApiManager.findSunObject();
             
             if (sun) {
                 // Get sun world position
@@ -73,7 +102,7 @@ export class VolumetricLightingManager {
     /**
      * Update the light position for volumetric rays
      */
-    updateVolumetricLightPosition() {
+    updateVolumetricLightPosition(): void {
         try {
             // Ensure we have the required objects
             if (!this.postProcessingManager.godRayPass || !this.postProcessingManager.godRayPass.uniforms || !this.postProcessingManager.godRayPass.uniforms.lightPosition) {
@@ -85,7 +114,7 @@ export class VolumetricLightingManager {
             }
             
             // Try to find the sun in the scene
-            let sun = this.sceneApiManager.findSunObject();
+            const sun = this.sceneApiManager.findSunObject();
             
             if (sun) {
                 // Get sun world position
@@ -147,9 +176,9 @@ export class VolumetricLightingManager {
 
     /**
      * Toggle the type of volumetric lighting effect
-     * @param {boolean} useClaudeRays - If true, use original Claude Rays; if false, use new god rays
+     * @param useClaudeRays - If true, use original Claude Rays; if false, use new god rays
      */
-    setRayType(useClaudeRays) {
+    setRayType(useClaudeRays: boolean): void {
         this.postProcessingManager.useClaudeRays = useClaudeRays;
         
         // Enable/disable appropriate shader passes
@@ -166,9 +195,9 @@ export class VolumetricLightingManager {
     
     /**
      * Toggle volumetric light rays effect (master toggle)
-     * @param {boolean} enabled Whether to enable or disable all ray effects
+     * @param enabled Whether to enable or disable all ray effects
      */
-    setVolumetricLightEnabled(enabled) {
+    setVolumetricLightEnabled(enabled: boolean): void {
         this.postProcessingManager.volumetricLightEnabled = enabled;
         
         // Update enabled state of current ray effect
@@ -183,9 +212,9 @@ export class VolumetricLightingManager {
     
     /**
      * Update volumetric light parameters for the new god ray shader
-     * @param {Object} params Parameters to update
+     * @param params Parameters to update
      */
-    updateVolumetricLightParams(params = {}) {
+    updateVolumetricLightParams(params: VolumetricLightParams = {}): void {
         if (!this.postProcessingManager.godRayPass || !this.postProcessingManager.godRayPass.uniforms) return;
         
         const uniforms = this.postProcessingManager.godRayPass.uniforms;
@@ -202,9 +231,9 @@ export class VolumetricLightingManager {
     
     /**
      * Update Claude Ray parameters
-     * @param {Object} params Parameters to update
+     * @param params Parameters to update
      */
-    updateClaudeRayParams(params = {}) {
+    updateClaudeRayParams(params: ClaudeRayParams = {}): void {
         if (!this.postProcessingManager.claudeRayPass || !this.postProcessingManager.claudeRayPass.uniforms) return;
         
         const uniforms = this.postProcessingManager.claudeRayPass.uniforms;
@@ -218,9 +247,9 @@ export class VolumetricLightingManager {
     
     /**
      * Set overall volumetric light ray intensity with a single parameter
-     * @param {number} intensity Value from 0-1 controlling overall ray intensity
+     * @param intensity Value from 0-1 controlling overall ray intensity
      */
-    setVolumetricLightIntensity(intensity) {
+    setVolumetricLightIntensity(intensity: number): void {
         if (this.postProcessingManager.useClaudeRays) {
             // For Claude Rays
             if (!this.postProcessingManager.claudeRayPass || !this.postProcessingManager.claudeRayPass.uniforms) return;

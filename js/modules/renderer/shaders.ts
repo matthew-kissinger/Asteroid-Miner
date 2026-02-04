@@ -1,15 +1,44 @@
-// shaders.js - Custom shaders for volumetric lighting effects
+// shaders.ts - Custom shaders for volumetric lighting effects
 
 import * as THREE from 'three';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
+interface GodRayShaderUniforms {
+    tDiffuse: { value: THREE.Texture | null };
+    lightPosition: { value: THREE.Vector2 };
+    intensity: { value: number };
+    decay: { value: number };
+    density: { value: number };
+    weight: { value: number };
+    samples: { value: number };
+    sunColor: { value: THREE.Color };
+    sunDistance: { value: number };
+    sunVisibility: { value: number };
+    scattering: { value: number };
+    attenuationMultiplier: { value: number };
+}
+
+interface ClaudeRayShaderUniforms {
+    tDiffuse: { value: THREE.Texture | null };
+    lightPosition: { value: THREE.Vector2 };
+    exposure: { value: number };
+    decay: { value: number };
+    density: { value: number };
+    weight: { value: number };
+    lightColor: { value: THREE.Color };
+}
+
 /**
  * Create a volumetric light shader for realistic god ray effects
- * @returns {ShaderPass} Shader pass for new volumetric lighting
+ * @returns Shader pass for new volumetric lighting
  */
-export function createVolumetricLightShader() {
+export function createVolumetricLightShader(): ShaderPass {
     // New improved volumetric light ray shader
-    const godRayShader = {
+    const godRayShader: {
+        uniforms: GodRayShaderUniforms;
+        vertexShader: string;
+        fragmentShader: string;
+    } = {
         uniforms: {
             tDiffuse: { value: null },
             lightPosition: { value: new THREE.Vector2(0.5, 0.5) },
@@ -157,11 +186,15 @@ export function createVolumetricLightShader() {
 
 /**
  * Create the original "Claude Ray" shader (the original implementation renamed)
- * @returns {ShaderPass} Shader pass for the original effect
+ * @returns Shader pass for the original effect
  */
-export function createClaudeRayShader() {
+export function createClaudeRayShader(): ShaderPass {
     // Original volumetric light ray shader (renamed to Claude Rays)
-    const claudeRayShader = {
+    const claudeRayShader: {
+        uniforms: ClaudeRayShaderUniforms;
+        vertexShader: string;
+        fragmentShader: string;
+    } = {
         uniforms: {
             tDiffuse: { value: null },
             lightPosition: { value: new THREE.Vector2(0.5, 0.5) },

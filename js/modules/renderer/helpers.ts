@@ -1,9 +1,27 @@
-// helpers.js - Utility functions and instanced mesh management
+// helpers.ts - Utility functions and instanced mesh management
 
 import * as THREE from 'three';
 
+// WebGPURenderer is not in @types/three yet, declare it
+declare class WebGPURenderer extends THREE.WebGLRenderer {}
+
+interface InstanceData {
+    mesh: THREE.InstancedMesh;
+    count: number;
+    maxCount: number;
+    dummy: THREE.Object3D;
+}
+
+type RendererType = THREE.WebGLRenderer | WebGPURenderer;
+
 export class RenderHelpers {
-    constructor(scene) {
+    scene: THREE.Scene;
+    instancedMeshes: Map<string, InstanceData>;
+    _frameDrawCalls: number;
+    _frameVisibleInstances: number;
+    renderAlpha: number;
+
+    constructor(scene: THREE.Scene) {
         this.scene = scene;
         this.instancedMeshes = new Map();
         
@@ -15,13 +33,18 @@ export class RenderHelpers {
 
     /**
      * Create an instanced mesh for efficient rendering of many similar objects
-     * @param {string} key Unique identifier for this instanced mesh type
-     * @param {THREE.BufferGeometry} geometry The geometry to instance
-     * @param {THREE.Material} material The material to use
-     * @param {number} maxCount Maximum number of instances
-     * @returns {THREE.InstancedMesh} The created instanced mesh
+     * @param key Unique identifier for this instanced mesh type
+     * @param geometry The geometry to instance
+     * @param material The material to use
+     * @param maxCount Maximum number of instances
+     * @returns The created instanced mesh
      */
-    createInstancedMesh(key, geometry, material, maxCount) {
+    createInstancedMesh(
+        key: string,
+        geometry: THREE.BufferGeometry,
+        material: THREE.Material,
+        maxCount: number
+    ): THREE.InstancedMesh {
         const instancedMesh = new THREE.InstancedMesh(geometry, material, maxCount);
         instancedMesh.count = 0; // Start with 0 visible instances
         instancedMesh.frustumCulled = true;
@@ -39,14 +62,20 @@ export class RenderHelpers {
     
     /**
      * Add or update an instance in an instanced mesh
-     * @param {string} key The instanced mesh identifier
-     * @param {number} index Index of the instance to update (or next available)
-     * @param {THREE.Vector3} position Position of the instance
-     * @param {THREE.Quaternion} quaternion Rotation of the instance
-     * @param {THREE.Vector3} scale Scale of the instance
-     * @returns {number} The index of the instance
+     * @param key The instanced mesh identifier
+     * @param index Index of the instance to update (or next available)
+     * @param position Position of the instance
+     * @param quaternion Rotation of the instance
+     * @param scale Scale of the instance
+     * @returns The index of the instance
      */
-    updateInstance(key, index, position, quaternion, scale) {
+    updateInstance(
+        key: string,
+        index: number | undefined,
+        position: THREE.Vector3,
+        quaternion: THREE.Quaternion | null,
+        scale: THREE.Vector3 | null
+    ): number {
         const instance = this.instancedMeshes.get(key);
         if (!instance) return -1;
         
@@ -75,8 +104,8 @@ export class RenderHelpers {
     /**
      * Update instanced meshes
      */
-    updateInstancedMeshes() {
-        for (const [key, instance] of this.instancedMeshes.entries()) {
+    updateInstancedMeshes(): void {
+        for (const [, instance] of this.instancedMeshes.entries()) {
             if (instance.mesh.instanceMatrix.needsUpdate) {
                 instance.mesh.instanceMatrix.needsUpdate = false;
             }
@@ -85,10 +114,10 @@ export class RenderHelpers {
     
     /**
      * Remove an instance from an instanced mesh
-     * @param {string} key The instanced mesh identifier
-     * @param {number} index Index of the instance to remove
+     * @param key The instanced mesh identifier
+     * @param index Index of the instance to remove
      */
-    removeInstance(key, index) {
+    removeInstance(key: string, index: number): void {
         const instance = this.instancedMeshes.get(key);
         if (!instance || index >= instance.count) return;
         
@@ -111,7 +140,7 @@ export class RenderHelpers {
     /**
      * Update performance counters and render stats
      */
-    updatePerformanceCounters(renderer) {
+    updatePerformanceCounters(renderer: RendererType): number {
         // reset counters
         this._frameDrawCalls = 0;
         this._frameVisibleInstances = 0;
@@ -135,20 +164,20 @@ export class RenderHelpers {
     /**
      * Finalize performance counters after rendering
      */
-    finalizePerformanceCounters(renderer, startCalls) {
+    finalizePerformanceCounters(renderer: RendererType, startCalls: number): void {
         const endCalls = renderer.info.render.calls;
         this._frameDrawCalls = Math.max(0, endCalls - startCalls);
 
-        if (window.__perf) {
-            window.__perf.drawCalls = endCalls; // total since reset
-            window.__perf.visibleInstances = this._frameVisibleInstances;
+        if ((window as any).__perf) {
+            (window as any).__perf.drawCalls = endCalls; // total since reset
+            (window as any).__perf.visibleInstances = this._frameVisibleInstances;
         }
     }
 
     /**
      * Properly dispose of Three.js resources to prevent memory leaks
      */
-    dispose() {
+    dispose(): void {
         console.log("Disposing instanced meshes...");
         
         // Dispose of instanced meshes
@@ -171,12 +200,12 @@ export class RenderHelpers {
 
     /**
      * Helper method to dispose of materials and their textures
-     * @param {THREE.Material} material The material to dispose
+     * @param material The material to dispose
      */
-    disposeMaterial(material) {
+    disposeMaterial(material: THREE.Material): void {
         // Dispose textures
         for (const propertyName in material) {
-            const property = material[propertyName];
+            const property = (material as any)[propertyName];
             if (property && property.isTexture) {
                 property.dispose();
             }
