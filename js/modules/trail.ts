@@ -34,13 +34,11 @@ interface ThrusterEffect {
 }
 
 export class TrailEffects {
-    private scene: THREE.Scene;
     private mesh: THREE.Object3D;
     private thrusterEffects: ThrusterEffect[];
     private time: number;
-    
-    constructor(scene: THREE.Scene, mesh: THREE.Object3D) {
-        this.scene = scene;
+
+    constructor(_scene: THREE.Scene, mesh: THREE.Object3D) {
         this.mesh = mesh; // The spaceship mesh
         this.thrusterEffects = [];
         this.time = 0;

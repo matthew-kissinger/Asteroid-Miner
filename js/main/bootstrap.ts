@@ -1,6 +1,6 @@
-// bootstrap.js - DOM readiness and loading overlay management
+// bootstrap.ts - DOM readiness and loading overlay management
 
-export async function startGameMainModule() {
+export async function startGameMainModule(): Promise<void> {
     try {
         // Create loading overlay - hide the black loading screen after initialization
         const loadingOverlay = document.getElementById('loading-overlay');
@@ -22,7 +22,7 @@ export async function startGameMainModule() {
         window.game = new (await import('../main.js')).Game();
 
     } catch (error) {
-        
+
         // Show error message to user
         const errorMessage = document.createElement('div');
         errorMessage.style.position = 'fixed';
@@ -38,27 +38,30 @@ export async function startGameMainModule() {
         errorMessage.style.textAlign = 'center';
         errorMessage.style.fontFamily = 'Courier New, monospace';
         errorMessage.style.maxWidth = '80%';
-        
+
         errorMessage.innerHTML = `
             <h2>Error Starting Game</h2>
-            <p>${error.message}</p>
+            <p>${(error as Error).message}</p>
             <p>Check the console for more details (F12).</p>
             <p>You can try refreshing the page or clearing your browser cache.</p>
             <button id="reload-button" style="background: #ff3030; color: white; border: none; padding: 10px; margin-top: 20px; cursor: pointer;">Reload Page</button>
         `;
-        
+
         document.body.appendChild(errorMessage);
-        
+
         // Add event listener to reload button
-        document.getElementById('reload-button').addEventListener('click', () => {
-            // Add cache-busting parameter to the URL
-            const cacheBuster = Date.now();
-            window.location.href = window.location.pathname + '?cache=' + cacheBuster;
-        });
+        const reloadButton = document.getElementById('reload-button');
+        if (reloadButton) {
+            reloadButton.addEventListener('click', () => {
+                // Add cache-busting parameter to the URL
+                const cacheBuster = Date.now();
+                window.location.href = window.location.pathname + '?cache=' + cacheBuster;
+            });
+        }
     }
 }
 
-export function initializeDOM(callback) {
+export function initializeDOM(callback: () => void): void {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', callback);
     } else {

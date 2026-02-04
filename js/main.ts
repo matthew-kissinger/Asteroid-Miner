@@ -13,8 +13,7 @@ import { ObjectPools } from './main/objectPools.js';
 import { DifficultyManager } from './main/difficultyManager.js';
 import { HordeMode } from './main/hordeMode.js';
 import { AudioUpdater } from './main/audioUpdater.js';
-// @ts-ignore
-import { GameLifecycle } from './main/gameLifecycle.js';
+import { GameLifecycle } from './main/gameLifecycle.ts';
 
 // Import bitECS systems
 import { initECS, updateECS } from './ecs/systems/index.js';
