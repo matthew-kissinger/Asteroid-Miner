@@ -1,6 +1,7 @@
 // objectPools.js - Object pool initialization and management
 
 import * as THREE from 'three';
+import { objectPool } from '../globals/objectPool.ts';
 
 type GameRenderer = {
     renderer: {
@@ -89,7 +90,7 @@ export class ObjectPools {
                 this.hitEffectGeometry = new THREE.SphereGeometry(2, 8, 8);
             }
             
-            window.objectPool.createPool('hitEffect', (): HitEffectItem => {
+            objectPool.createPool('hitEffect', (): HitEffectItem => {
                 const material = new THREE.MeshBasicMaterial({
                     color: 0xff5500,
                     transparent: true,
@@ -132,7 +133,7 @@ export class ObjectPools {
                 transparent: true
             });
             
-            window.objectPool.createPool('particle', (): ParticlePoolItem => {
+            objectPool.createPool('particle', (): ParticlePoolItem => {
                 const mesh = new THREE.Mesh(particleGeometry, particleMaterial.clone()) as THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
                 mesh.visible = false;
                 
@@ -171,12 +172,12 @@ export class ObjectPools {
             
             // Initialize explosion effect pool
             const particleCount = 15;
-            window.objectPool.createPool('explosion', (): ExplosionPoolItem => {
+            objectPool.createPool('explosion', (): ExplosionPoolItem => {
                 const container = new THREE.Group();
                 const particles: ParticlePoolItem[] = [];
                 
                 for (let i = 0; i < particleCount; i++) {
-                    const particle = window.objectPool.get('particle') as ParticlePoolItem | null;
+                    const particle = objectPool.get('particle') as ParticlePoolItem | null;
                     if (particle) {
                         particles.push(particle);
                     }

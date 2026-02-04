@@ -4,7 +4,8 @@
  * Stores mining laser configuration and state.
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
+import { mainMessageBus } from '../../globals/messageBus.ts';
 
 export class MiningLaserComponent extends Component {
     constructor(power = 1, range = 800) {
@@ -74,8 +75,8 @@ export class MiningLaserComponent extends Component {
         this.power = Math.round(this.power * 100) / 100;
         
         // Publish upgrade event
-        if (window.mainMessageBus) {
-            window.mainMessageBus.publish('mining.laserUpgraded', {
+        if (mainMessageBus) {
+            mainMessageBus.publish('mining.laserUpgraded', {
                 component: this,
                 newPower: this.power
             });
@@ -93,8 +94,8 @@ export class MiningLaserComponent extends Component {
         this.active = false;
         
         // Notify MiningSystem about component detachment to clean up visuals
-        if (window.mainMessageBus) {
-            window.mainMessageBus.publish('mining.component.detached', {
+        if (mainMessageBus) {
+            mainMessageBus.publish('mining.component.detached', {
                 entityId: this.entity.id
             });
         }

@@ -1,3 +1,6 @@
+import type { World } from './world.js';
+import { Component } from './component.js';
+
 /**
  * Entity Class - Base entity class for ECS architecture
  * 
@@ -5,9 +8,22 @@
  * Each entity is essentially just an ID with a collection of components
  * that define its behavior and properties.
  */
-
 export class Entity {
-    constructor(id, world) {
+    public id: string;
+    public world: World;
+    public components: Map<string, Component>;
+    public tags: Set<string>;
+    
+    // Cache flags for commonly checked tags
+    private _isEnemy: boolean | undefined = undefined;
+    private _isPlayer: boolean | undefined = undefined;
+    private _isProjectile: boolean | undefined = undefined;
+    private _isPooled: boolean | undefined = undefined;
+
+    // Optional properties used by some systems
+    public collisionRadius?: number;
+
+    constructor(id: string, world: World) {
         this.id = id;
         this.world = world;
         this.components = new Map();
@@ -25,7 +41,7 @@ export class Entity {
      * @param {Component} component The component to add
      * @returns {Entity} This entity for chaining
      */
-    addComponent(component) {
+    addComponent(component: Component): this {
         component.entity = this;
         const componentType = component.type || component.constructor.name;
         this.components.set(componentType, component);
@@ -49,10 +65,10 @@ export class Entity {
     
     /**
      * Remove a component from this entity
-     * @param {Function|string} componentType The component class or name to remove
+     * @param {any} componentType The component class or name to remove
      * @returns {Entity} This entity for chaining
      */
-    removeComponent(componentType) {
+    removeComponent(componentType: any): this {
         const component = this.getComponent(componentType);
         if (component) {
             if (component.onDetached) {
@@ -61,7 +77,7 @@ export class Entity {
             component.entity = null;
 
             // Get the component type name - handle both string and class inputs
-            let componentTypeName;
+            let componentTypeName: string;
             if (typeof componentType === 'string') {
                 componentTypeName = componentType;
             } else if (componentType.type) {
@@ -85,23 +101,23 @@ export class Entity {
     
     /**
      * Get a component of the specified type
-     * @param {Function|string} componentType The component class or name to get
-     * @returns {Component|null} The component or null if not found
+     * @param {any} componentType The component class or name to get
+     * @returns {any} The component or null if not found
      */
-    getComponent(componentType) {
+    getComponent<T extends Component>(componentType: any): T | null {
         if (typeof componentType === 'string') {
-            return this.components.get(componentType);
+            return (this.components.get(componentType) as T) || null;
         }
         const typeName = componentType.type || componentType.name;
-        return this.components.get(typeName);
+        return (this.components.get(typeName) as T) || null;
     }
     
     /**
      * Check if this entity has a component of the specified type
-     * @param {Function|string} componentType The component class or name to check for
+     * @param {any} componentType The component class or name to check for
      * @returns {boolean} True if the entity has the component
      */
-    hasComponent(componentType) {
+    hasComponent(componentType: any): boolean {
         if (typeof componentType === 'string') {
             return this.components.has(componentType);
         }
@@ -113,7 +129,7 @@ export class Entity {
      * Sync internal tag cache with actual tags
      * @private
      */
-    _syncTagCache() {
+    private _syncTagCache(): void {
         // Reset all cached flags to match actual tag state
         this._isEnemy = this.tags.has('enemy');
         this._isPlayer = this.tags.has('player');
@@ -126,7 +142,7 @@ export class Entity {
      * @param {string} tag The tag to add
      * @returns {Entity} This entity for chaining
      */
-    addTag(tag) {
+    addTag(tag: string): this {
         if (!this.tags.has(tag)) {
             // Add tag to local Set
             this.tags.add(tag);
@@ -143,12 +159,12 @@ export class Entity {
                 
                 // Verify tag was added to tag index map
                 if (!this.world.entityManager.entitiesByTag.has(tag) || 
-                    !this.world.entityManager.entitiesByTag.get(tag).includes(this)) {
+                    !this.world.entityManager.entitiesByTag.get(tag)!.includes(this)) {
                     // Force add entity to tag map as fallback
                     if (!this.world.entityManager.entitiesByTag.has(tag)) {
                         this.world.entityManager.entitiesByTag.set(tag, []);
                     }
-                    this.world.entityManager.entitiesByTag.get(tag).push(this);
+                    this.world.entityManager.entitiesByTag.get(tag)!.push(this);
                 }
             }
         }
@@ -160,7 +176,7 @@ export class Entity {
      * @param {string} tag The tag to remove
      * @returns {Entity} This entity for chaining
      */
-    removeTag(tag) {
+    removeTag(tag: string): this {
         if (this.tags.has(tag)) {
             // Remove tag from local Set
             this.tags.delete(tag);
@@ -183,7 +199,7 @@ export class Entity {
      * Clear all tags from this entity
      * @returns {Entity} This entity for chaining
      */
-    clearTags() {
+    clearTags(): this {
         // Make a copy of the tags to iterate over
         const allTags = [...this.tags];
         
@@ -209,7 +225,7 @@ export class Entity {
      * @param {string} tag The tag to check for
      * @returns {boolean} True if the entity has the tag
      */
-    hasTag(tag) {
+    hasTag(tag: string): boolean {
         // Use direct Set lookup instead of potentially stale cached values
         const hasTag = this.tags.has(tag);
         

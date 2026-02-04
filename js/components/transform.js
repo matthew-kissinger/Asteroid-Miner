@@ -4,7 +4,7 @@
  * Handles spatial transformation of entities in the 3D world.
  */
 
-import { Component } from '../core/component.js';
+import { Component } from '../core/component.ts';
 import * as THREE from 'three';
 
 export class TransformComponent extends Component {

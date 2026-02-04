@@ -4,7 +4,7 @@
  * Handles storage and management of mined resources.
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 
 export class CargoComponent extends Component {
     constructor(maxCapacity = 100) {

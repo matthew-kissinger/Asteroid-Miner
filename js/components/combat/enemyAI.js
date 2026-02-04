@@ -5,7 +5,7 @@
  */
 
 import * as THREE from 'three';
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 import { TransformComponent } from '../transform.js';
 import { HealthComponent } from './healthComponent.js';
 

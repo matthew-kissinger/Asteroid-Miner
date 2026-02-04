@@ -5,7 +5,7 @@
  * including the player reference entity and basic world configuration.
  */
 
-import { World } from '../../core/world.js';
+import { World } from '../../core/world.ts';
 import * as THREE from 'three';
 
 export class WorldSetup {
@@ -48,7 +48,7 @@ export class WorldSetup {
             // Create optimized projectile store
             if (!this.world.optimizedProjectiles) {
                 try {
-                    const { OptimizedProjectileStore } = await import('../../core/optimized/OptimizedProjectileStore.js');
+                    const { OptimizedProjectileStore } = await import('../../core/optimized/OptimizedProjectileStore.ts');
                     this.world.optimizedProjectiles = new OptimizedProjectileStore(4096);
                     console.log('[COMBAT] OptimizedProjectileStore created');
                 } catch (e) {

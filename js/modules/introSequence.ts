@@ -5,7 +5,7 @@ import { StarDreadnought } from './environment/starDreadnought.js';
 import { createIntroSoundEffects } from './intro/audio/soundEffects.js';
 import { loadDialogueWavs } from './intro/audio/dialogueManager.js';
 import { PortalEffect } from './intro/effects/portalEffect.js';
-import { DialogueSystem } from './intro/ui/dialogueSystem.js';
+import { DialogueSystem } from './intro/ui/dialogueSystem.ts';
 import { updateArrivalPhase } from './intro/animation/arrivalPhase.js';
 import { updateDeparturePhase } from './intro/animation/departurePhase.js';
 

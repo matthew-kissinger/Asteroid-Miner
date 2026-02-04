@@ -4,7 +4,7 @@
  * Uses advanced shader effects to create a dynamic plasma trail with electric arcs
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 import * as THREE from 'three';
 
 export class TrailComponent extends Component {

@@ -6,7 +6,7 @@
  */
 
 import * as THREE from 'three';
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 import { TrailComponent } from '../../components/rendering/trail.js';
 import { MeshComponent } from '../../components/rendering/mesh.js';
 

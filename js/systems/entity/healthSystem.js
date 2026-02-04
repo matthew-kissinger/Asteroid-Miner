@@ -4,7 +4,7 @@
  * This system handles health updates, death processing, and damage visualization.
  */
 
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 
 export class HealthSystem extends System {
     constructor(world) {

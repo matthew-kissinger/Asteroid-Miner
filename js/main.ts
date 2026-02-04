@@ -6,6 +6,7 @@ import { StartupSequence } from './main/startupSequence.js';
 import { GameLoop } from './main/gameLoop.js';
 import { Diagnostics } from './main/diagnostics.js';
 import { GameInitializer } from './main/gameInitializer.js';
+import { mainMessageBus } from './globals/messageBus.ts';
 // Removed direct imports for ObjectPools, DifficultyManager, HordeMode, AudioUpdater, GameLifecycle
 // import { ObjectPools } from './main/objectPools.js';
 // import { DifficultyManager } from './main/difficultyManager.js';
@@ -51,7 +52,7 @@ export class Game {
         window.game = this;
         
         // Subscribe to global events
-        window.mainMessageBus.subscribe('game.over', (data: any) => {
+        mainMessageBus.subscribe('game.over', (data: any) => {
             if (this.lifecycle) {
                 this.lifecycle.gameOver(data.reason || 'Game Over');
             }
@@ -121,12 +122,12 @@ export class Game {
     }
     
     // Delegation methods
-    initIntroSequence() {
-        this.startupSequence.initIntroSequence();
+    async initIntroSequence() {
+        await this.startupSequence.initIntroSequence();
     }
     
-    startIntroSequence() {
-        this.startupSequence.startIntroSequence();
+    async startIntroSequence() {
+        await this.startupSequence.startIntroSequence();
     }
     
     completeIntroSequence() {

@@ -7,7 +7,25 @@
 
 import { validateEventPayload } from './events.js';
 
+export interface Message {
+    type: string;
+    data: any;
+    timestamp: number;
+}
+
+export type MessageCallback = (message: Message) => void;
+
+interface Listener {
+    callback: MessageCallback;
+    context: any;
+}
+
 export class MessageBus {
+    public listeners: Map<string, Listener[]>;
+    private queuedMessages: { type: string, data: any }[];
+    private dispatching: boolean;
+    private highFrequencyTypes: Set<string>;
+
     constructor() {
         this.listeners = new Map();
         this.queuedMessages = [];
@@ -21,34 +39,33 @@ export class MessageBus {
         ]);
         
         // Store this instance in a global registry for emergency access
-        if (!window.messageRegistry) {
-            window.messageRegistry = new Set();
+        if (!(window as any).messageRegistry) {
+            (window as any).messageRegistry = new Set();
         }
-        window.messageRegistry.add(this);
+        (window as any).messageRegistry.add(this);
         
         // Always ensure that mainMessageBus is set - critically important for game over events
-        if (!window.mainMessageBus) {
-            window.mainMessageBus = this;
-        } else if (window.mainMessageBus !== this) {
+        if (!(globalThis as any).mainMessageBus) {
+            (globalThis as any).mainMessageBus = this;
+        } else if ((globalThis as any).mainMessageBus !== this) {
             // If this is not the main message bus, make sure game.over events are 
             // forwarded to the main message bus for centralized handling
         }
-        
     }
     
     /**
      * Register a listener for a message type
      * @param {string} messageType The message type to listen for
-     * @param {Function} callback Function to call when message is published
-     * @param {Object} context Context to use when calling the callback
+     * @param {MessageCallback} callback Function to call when message is published
+     * @param {any} context Context to use when calling the callback
      * @returns {Function} Unsubscribe function
      */
-    subscribe(messageType, callback, context = null) {
+    subscribe(messageType: string, callback: MessageCallback, context: any = null): () => void {
         if (!this.listeners.has(messageType)) {
             this.listeners.set(messageType, []);
         }
         
-        this.listeners.get(messageType).push({
+        this.listeners.get(messageType)!.push({
             callback,
             context
         });
@@ -60,13 +77,13 @@ export class MessageBus {
     /**
      * Remove a listener
      * @param {string} messageType The message type to unsubscribe from
-     * @param {Function} callback The callback to remove
-     * @param {Object} context The context used when subscribing
+     * @param {MessageCallback} callback The callback to remove
+     * @param {any} context The context used when subscribing
      */
-    unsubscribe(messageType, callback, context = null) {
+    unsubscribe(messageType: string, callback: MessageCallback, context: any = null): void {
         if (!this.listeners.has(messageType)) return;
         
-        const listeners = this.listeners.get(messageType);
+        const listeners = this.listeners.get(messageType)!;
         const index = listeners.findIndex(listener => 
             listener.callback === callback && listener.context === context);
             
@@ -82,15 +99,15 @@ export class MessageBus {
     /**
      * Fast publish for high-frequency events with minimal overhead
      * @param {string} messageType The message type to publish
-     * @param {Object} data Data to include with the message
+     * @param {any} data Data to include with the message
      */
-    fastPublish(messageType, data = {}) {
+    fastPublish(messageType: string, data: any = {}): void {
         // Typed event validation in dev
         try { validateEventPayload && validateEventPayload(messageType, data); } catch {}
         if (!this.listeners.has(messageType)) return;
         
-        const listeners = this.listeners.get(messageType);
-        const messageObj = {
+        const listeners = this.listeners.get(messageType)!;
+        const messageObj: Message = {
             type: messageType,
             data: data,
             timestamp: Date.now()
@@ -105,9 +122,9 @@ export class MessageBus {
     /**
      * Send a message immediately
      * @param {string} messageType The message type to publish
-     * @param {Object} data Data to include with the message
+     * @param {any} data Data to include with the message
      */
-    publish(messageType, data = {}) {
+    publish(messageType: string, data: any = {}): void {
         // Typed event validation in dev
         try { validateEventPayload && validateEventPayload(messageType, data); } catch {}
         // Use fast path for high-frequency messages
@@ -115,21 +132,20 @@ export class MessageBus {
             return this.fastPublish(messageType, data);
         }
         
-        
         // Enhanced handling for game.over events to ensure they are properly processed
         if (messageType === 'game.over') {
             // Always forward game.over events to the main message bus if this isn't it
-            if (window.mainMessageBus && window.mainMessageBus !== this) {
-                window.mainMessageBus.publish(messageType, data);
+            if ((globalThis as any).mainMessageBus && (globalThis as any).mainMessageBus !== this) {
+                (globalThis as any).mainMessageBus.publish(messageType, data);
                 return; // Let the main message bus handle it
             }
             
             // Only proceed if we have listeners or we are the main message bus
             if (!this.listeners.has(messageType)) {
                 // Verify main game instance
-                if (window.game) {
+                if ((window as any).game) {
                     // Try to directly call gameOver as a last resort
-                    window.game.gameOver(data.reason || "Unknown reason");
+                    (window as any).game.gameOver(data.reason || "Unknown reason");
                 } 
                 
                 return;
@@ -148,18 +164,16 @@ export class MessageBus {
             // Set flag to prevent nested dispatch issues
             this.dispatching = true;
             
-            const listeners = this.listeners.get(messageType);
-            listeners.forEach((listener, index) => {
+            const listeners = this.listeners.get(messageType)!;
+            listeners.forEach((listener) => {
                 try {
-                    
                     listener.callback.call(listener.context, {
                         type: messageType,
                         data: data,
                         timestamp: Date.now()
                     });
-                    
                 } catch (error) {
-                    
+                    // Silently catch listener errors to prevent one listener from crashing the bus
                 }
             });
         } finally {
@@ -181,9 +195,9 @@ export class MessageBus {
     /**
      * Queue a message for next update
      * @param {string} messageType The message type to queue
-     * @param {Object} data Data to include with the message
+     * @param {any} data Data to include with the message
      */
-    queue(messageType, data = {}) {
+    queue(messageType: string, data: any = {}): void {
         this.queuedMessages.push({
             type: messageType,
             data: data
@@ -195,18 +209,17 @@ export class MessageBus {
      * @param {string} reason Reason for game over
      * @param {string} source Source of the game over event
      */
-    static triggerGameOver(reason, source) {
-        
+    static triggerGameOver(reason: string, source: string): void {
         // Try to find a message bus to use - prioritization order for reliability
-        let messageBusToUse = null;
+        let messageBusToUse: MessageBus | null = null;
         
-        // Use window.mainMessageBus if available (highest priority)
-        if (window.mainMessageBus) {
-            messageBusToUse = window.mainMessageBus;
+        // Use main message bus if available (highest priority)
+        if ((globalThis as any).mainMessageBus) {
+            messageBusToUse = (globalThis as any).mainMessageBus;
         }
         // Use window.game.messageBus if available and mainMessageBus not found
-        else if (window.game && window.game.messageBus) {
-            messageBusToUse = window.game.messageBus;
+        else if ((window as any).game && (window as any).game.messageBus) {
+            messageBusToUse = (window as any).game.messageBus;
         } 
         
         // Check if we found a message bus to use

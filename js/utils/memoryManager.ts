@@ -4,6 +4,8 @@
  */
 
 import * as THREE from 'three';
+import { DEBUG_MODE } from '../globals/debug.ts';
+import { objectPool } from '../globals/objectPool.ts';
 
 // Define the structure for typed array pools
 interface TypedArrayPools {
@@ -353,9 +355,9 @@ export const MemoryStats = {
         }
         
         // Object pool stats
-        if (window.objectPool?.registry?.typeToPool) { // Check for .registry and .typeToPool property
-            for (const type of Array.from(window.objectPool.registry.typeToPool.keys())) {
-                const pool = window.objectPool.registry.typeToPool.get(type);
+        if (objectPool?.registry?.typeToPool) { // Check for .registry and .typeToPool property
+            for (const type of Array.from(objectPool.registry.typeToPool.keys())) {
+                const pool = objectPool.registry.typeToPool.get(type);
                 if (pool) {
                     this.objectPoolSizes[type] = pool.objects.length;
                 }
@@ -410,7 +412,7 @@ if (typeof window !== 'undefined') { // Check if window is defined (e.g., not in
 // Export a no-op function that can replace often-created objects
 // to help identify memory hot spots
 export function createNoOpVector(): { x: number; y: number; z: number } {
-    if (window.DEBUG_MODE) {
+    if (DEBUG_MODE.enabled) {
         console.trace("Vector created at:");
     }
     return window.vectorPool ? window.vectorPool.get() : { x: 0, y: 0, z: 0 };

@@ -5,7 +5,7 @@
  */
 
 import * as THREE from 'three';
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 
 export class MovementSystem extends System {
     constructor(world) {

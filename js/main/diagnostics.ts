@@ -1,6 +1,8 @@
 // diagnostics.js - Performance overlay and debug toggles
 
 import { initPerfOverlay } from '../modules/debug/perfOverlay.js';
+import { DEBUG_MODE, toggleDebugMode } from '../globals/debug.ts';
+import { objectPool } from '../globals/objectPool.ts';
 
 type GameLoopLike = {
     setFrameRateCap: (limit: number) => void;
@@ -120,8 +122,8 @@ export class Diagnostics {
         
         // Add debug command to toggle debug mode
         window.toggleDebug = (): string => {
-            window.DEBUG_MODE = !window.DEBUG_MODE;
-            return `Debug mode ${window.DEBUG_MODE ? 'enabled' : 'disabled'}`;
+            toggleDebugMode();
+            return `Debug mode ${DEBUG_MODE.enabled ? 'enabled' : 'disabled'}`;
         };
         
         // Add debug command to show game state
@@ -157,15 +159,15 @@ export class Diagnostics {
         
         // Add debug command to check object pool stats
         window.poolStats = (poolName?: string) => {
-            if (window.objectPool && window.objectPool.getStats) {
+            if (objectPool && objectPool.getStats) {
                 if (poolName) {
-                    return window.objectPool.getStats(poolName);
+                    return objectPool.getStats(poolName);
                 } else {
                     // Get stats for all pools
                     const allStats: Record<string, unknown> = {};
                     const pools = ['projectile', 'enemy', 'particle', 'hitEffect', 'explosion'];
                     for (const pool of pools) {
-                        const stats = window.objectPool.getStats(pool);
+                        const stats = objectPool.getStats(pool);
                         if (stats) {
                             allStats[pool] = stats;
                         }

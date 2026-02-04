@@ -4,7 +4,7 @@
  * Defines the properties and state of a deployable space laser turret.
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 
 export class DeployableLaserComponent extends Component {
     constructor(range = 1000, fireRate = 3, accuracy = 0.5) {

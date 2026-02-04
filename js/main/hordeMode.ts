@@ -1,5 +1,8 @@
 // hordeMode.js - Horde mode management
 
+import { DEBUG_MODE } from '../globals/debug.ts';
+import { mainMessageBus } from '../globals/messageBus.ts';
+
 type HordeAudio = {
     playSound: (soundId: string) => void;
 };
@@ -42,7 +45,7 @@ export class HordeMode {
     activate(): void {
         if (this.isActive) return; // Already active
         
-        if (window.DEBUG_MODE) console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
+        if (DEBUG_MODE.enabled) console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
         this.isActive = true;
         this.startTime = performance.now();
         this.survivalTime = 0;
@@ -58,7 +61,7 @@ export class HordeMode {
         }
         
         // Notify UI to update
-        window.mainMessageBus.publish('horde.activated', {
+        mainMessageBus.publish('horde.activated', {
             startTime: this.startTime
         });
         
@@ -69,13 +72,13 @@ export class HordeMode {
         
         // Force player to undock if currently docked
         if (this.game.spaceship && this.game.spaceship.isDocked) {
-            if (window.DEBUG_MODE) console.log("Horde mode forcing undock from stargate");
+            if (DEBUG_MODE.enabled) console.log("Horde mode forcing undock from stargate");
             
             // Undock the ship
             this.game.spaceship.undock();
             
             // Notify the docking system
-            window.mainMessageBus.publish('player.requestUndock', {
+            mainMessageBus.publish('player.requestUndock', {
                 forced: true,
                 reason: "horde_mode_activation"
             });
@@ -83,7 +86,7 @@ export class HordeMode {
             // CRITICAL FIX: Explicitly show the HUD after forcing undock
             // Use a short delay to ensure undocking process is complete
             setTimeout(() => {
-                if (window.DEBUG_MODE) console.log("Horde mode ensuring HUD is visible");
+                if (DEBUG_MODE.enabled) console.log("Horde mode ensuring HUD is visible");
                 if (this.game.ui && this.game.ui.showUI) {
                     this.game.ui.showUI();
                 }

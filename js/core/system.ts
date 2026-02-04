@@ -1,16 +1,23 @@
+import type { World } from './world.js';
+import type { Entity } from './entity.js';
+
 /**
  * System Base Class - Base class for all ECS systems
  * 
  * Systems operate on entities that have specific components.
  * They contain the logic that processes entity data.
  */
-
 export class System {
-    constructor(world) {
+    public world: World;
+    public enabled: boolean = true;
+    public requiredComponents: any[] = []; // Component types required for processing
+    public priority: number = 0; // Execution order (lower = earlier)
+
+    constructor(world: World) {
         this.world = world;
         this.enabled = true;
-        this.requiredComponents = []; // Component types required for processing
-        this.priority = 0; // Execution order (lower = earlier)
+        this.requiredComponents = [];
+        this.priority = 0;
     }
     
     /**
@@ -18,7 +25,7 @@ export class System {
      * @param {Entity} entity The entity to check
      * @returns {boolean} True if entity can be processed by this system
      */
-    checkEntity(entity) {
+    checkEntity(entity: Entity): boolean {
         return this.requiredComponents.every(componentType => 
             entity.hasComponent(componentType));
     }
@@ -27,7 +34,7 @@ export class System {
      * Get all entities that match this system's requirements
      * @returns {Entity[]} Array of compatible entities
      */
-    getEntities() {
+    getEntities(): Entity[] {
         return this.world.getEntitiesWithComponents(this.requiredComponents);
     }
     
@@ -35,7 +42,7 @@ export class System {
      * Update method called each frame
      * @param {number} deltaTime Time since last update in seconds
      */
-    update(deltaTime) {
+    update(deltaTime: number): void {
         if (!this.enabled) return;
         
         const entities = this.getEntities();
@@ -49,7 +56,7 @@ export class System {
      * @param {Entity} entity The entity to process
      * @param {number} deltaTime Time since last update in seconds
      */
-    processEntity(entity, deltaTime) {
+    processEntity(_entity: Entity, _deltaTime: number): void {
         // Override in derived systems
     }
     
@@ -57,7 +64,7 @@ export class System {
      * Initialize the system
      * Called once when the system is first registered
      */
-    initialize() {
+    initialize(): void {
         // Base implementation does nothing
         // Override in derived systems for initialization logic
     }
@@ -65,14 +72,14 @@ export class System {
     /**
      * Enable this system
      */
-    enable() {
+    enable(): void {
         this.enabled = true;
     }
     
     /**
      * Disable this system
      */
-    disable() {
+    disable(): void {
         this.enabled = false;
     }
 }

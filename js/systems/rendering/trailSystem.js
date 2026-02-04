@@ -4,7 +4,7 @@
  * Handles updating all trail components and their rendering.
  */
 
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 
 export class TrailSystem extends System {
     /**

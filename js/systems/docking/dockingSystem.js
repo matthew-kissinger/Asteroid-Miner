@@ -5,7 +5,7 @@
  * and handles proximity detection and UI notifications.
  */
 
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 
 export class DockingSystem extends System {
     constructor(world) {

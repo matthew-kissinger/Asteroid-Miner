@@ -4,8 +4,9 @@
  * Listens for entity destruction and projectile hits to create explosion effects
  */
 
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 import * as THREE from 'three';
+import { objectPool } from '../../globals/objectPool.ts';
 
 export class ExplosionHandler extends System {
     constructor(world) {
@@ -130,8 +131,8 @@ export class ExplosionHandler extends System {
             }
             
             // Fallback: Use object pool
-            if (window.objectPool && window.objectPool.getExplosion) {
-                const explosion = window.objectPool.getExplosion();
+            if (objectPool && objectPool.getExplosion) {
+                const explosion = objectPool.getExplosion();
                 if (explosion) {
                     explosion.position.copy(position);
                     explosion.scale.setScalar(scale);
@@ -147,8 +148,8 @@ export class ExplosionHandler extends System {
                             if (explosion.parent) {
                                 explosion.parent.remove(explosion);
                             }
-                            if (window.objectPool && window.objectPool.releaseExplosion) {
-                                window.objectPool.releaseExplosion(explosion);
+                            if (objectPool && objectPool.releaseExplosion) {
+                                objectPool.releaseExplosion(explosion);
                             }
                         }, duration);
                     }

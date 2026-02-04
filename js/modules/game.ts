@@ -6,7 +6,7 @@ import { GameLifecycleManager } from './game/lifecycle.js';
 import { GameEventHandlers } from './game/eventHandlers.js';
 import { GameHelpers } from './game/helpers.js';
 import * as THREE from 'three';
-import { MessageBus } from '../core/messageBus.js';
+import { MessageBus } from '../core/messageBus.ts';
 import { Physics } from './physics';
 import { Spaceship } from './spaceship';
 import { Environment } from './environment';

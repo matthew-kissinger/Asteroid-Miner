@@ -4,7 +4,7 @@
  * Manages thrust forces, fuel consumption, and thruster effects.
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 
 export class ThrusterComponent extends Component {
     constructor(thrust = 10, maxVelocity = 100) {

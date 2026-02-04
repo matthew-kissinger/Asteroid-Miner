@@ -6,9 +6,18 @@
  */
 
 import { Entity } from './entity.js';
+import type { World } from './world.js';
 
 export class EntityManager {
-    constructor(world) {
+    public world: World;
+    public entities: Map<string, Entity>;
+    public entitiesByComponent: Map<string, any>;
+    public entitiesByTag: Map<string, Entity[]>;
+    private lastEntityId: number;
+    private recycledEntities: Entity[];
+    private maxRecycledEntities: number;
+
+    constructor(world: World) {
         this.world = world;
         this.entities = new Map();
         // Use WeakMap for entity tracking to allow garbage collection
@@ -26,16 +35,19 @@ export class EntityManager {
      * @param {string} name Optional name for the entity
      * @returns {Entity} The created entity
      */
-    createEntity(name = '') {
+    createEntity(name: string = ''): Entity {
         // Try to reuse a recycled entity first
-        let entity;
+        let entity: Entity;
         
         if (this.recycledEntities.length > 0) {
-            entity = this.recycledEntities.pop();
+            entity = this.recycledEntities.pop()!;
             entity.components.clear();
             entity.tags.clear();
+            // @ts-ignore - access private properties for reset
             entity._isEnemy = undefined;
+            // @ts-ignore
             entity._isPlayer = undefined;
+            // @ts-ignore
             entity._isProjectile = undefined;
         } else {
             const id = this._generateEntityId();
@@ -60,7 +72,7 @@ export class EntityManager {
      * Destroy an entity and remove all its components
      * @param {Entity|string} entityOrId The entity or entity ID to destroy
      */
-    destroyEntity(entityOrId) {
+    destroyEntity(entityOrId: Entity | string): void {
         const id = typeof entityOrId === 'string' ? entityOrId : entityOrId.id;
         const entity = this.entities.get(id.toString());
         
@@ -72,7 +84,7 @@ export class EntityManager {
         // Remove from tag maps
         entity.tags.forEach(tag => {
             if (this.entitiesByTag.has(tag)) {
-                const entities = this.entitiesByTag.get(tag);
+                const entities = this.entitiesByTag.get(tag)!;
                 const index = entities.indexOf(entity);
                 if (index !== -1) {
                     entities.splice(index, 1);
@@ -85,7 +97,7 @@ export class EntityManager {
         });
         
         // Remove all components
-        for (const [componentType, component] of entity.components.entries()) {
+        for (const [_, component] of entity.components.entries()) {
             entity.removeComponent(component.constructor);
         }
         
@@ -103,7 +115,7 @@ export class EntityManager {
      * @param {string} id The entity ID
      * @returns {Entity|undefined} The entity or undefined if not found
      */
-    getEntity(id) {
+    getEntity(id: string): Entity | undefined {
         return this.entities.get(id.toString());
     }
     
@@ -112,16 +124,16 @@ export class EntityManager {
      * @param {string} tag The tag to filter by
      * @returns {Entity[]} Array of entities with the tag
      */
-    getEntitiesByTag(tag) {
+    getEntitiesByTag(tag: string): Entity[] {
         return this.entitiesByTag.get(tag) || [];
     }
     
     /**
      * Get all entities that have all the specified components
-     * @param {Function[]} componentTypes Array of component types
+     * @param {any[]} componentTypes Array of component types
      * @returns {Entity[]} Array of entities with all components
      */
-    getEntitiesWithComponents(componentTypes) {
+    getEntitiesWithComponents(componentTypes: any[]): Entity[] {
         if (!componentTypes || componentTypes.length === 0) {
             return Array.from(this.entities.values());
         }
@@ -135,7 +147,7 @@ export class EntityManager {
      * Get all entities in the manager
      * @returns {Entity[]} Array of all entities
      */
-    getEntities() {
+    getEntities(): Entity[] {
         return Array.from(this.entities.values());
     }
     
@@ -144,12 +156,12 @@ export class EntityManager {
      * @param {Entity} entity The entity
      * @param {string} tag The tag
      */
-    onTagAdded(entity, tag) {
+    onTagAdded(entity: Entity, tag: string): void {
         if (!this.entitiesByTag.has(tag)) {
             this.entitiesByTag.set(tag, []);
         }
         
-        this.entitiesByTag.get(tag).push(entity);
+        this.entitiesByTag.get(tag)!.push(entity);
     }
     
     /**
@@ -157,9 +169,9 @@ export class EntityManager {
      * @param {Entity} entity The entity
      * @param {string} tag The tag
      */
-    onTagRemoved(entity, tag) {
+    onTagRemoved(entity: Entity, tag: string): void {
         if (this.entitiesByTag.has(tag)) {
-            const entities = this.entitiesByTag.get(tag);
+            const entities = this.entitiesByTag.get(tag)!;
             const index = entities.indexOf(entity);
             
             if (index !== -1) {
@@ -177,7 +189,7 @@ export class EntityManager {
      * @returns {string} A unique entity ID
      * @private
      */
-    _generateEntityId() {
+    private _generateEntityId(): string {
         return (++this.lastEntityId).toString();
     }
 }

@@ -1,7 +1,7 @@
 // InstancedRenderer.js - ECS-driven instanced rendering per cell × archetype
 
 import * as THREE from 'three';
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 
 export class InstancedRenderer extends System {
   constructor(world, scene) {

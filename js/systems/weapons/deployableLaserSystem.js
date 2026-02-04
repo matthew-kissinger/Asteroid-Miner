@@ -4,7 +4,7 @@
  * This system handles targeting, firing, and damage application for player-owned deployable laser turrets.
  */
 
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 import * as THREE from 'three';
 
 export class DeployableLaserSystem extends System {

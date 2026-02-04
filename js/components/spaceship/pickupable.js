@@ -4,7 +4,7 @@
  * Used for deployable items like laser turrets that can be deployed and picked up.
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 
 export class PickupableComponent extends Component {
     constructor(type = 'deployableLaser', pickupRange = 500) {

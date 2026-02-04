@@ -4,7 +4,7 @@
  * Adds mining capabilities to asteroids and other resource-bearing entities.
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 
 export class MineableComponent extends Component {
     constructor(resourceType = 'iron', amount = 100) {

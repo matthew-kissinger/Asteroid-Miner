@@ -1,5 +1,7 @@
 // difficultyManager.js - Dynamic difficulty scaling
 
+import { DEBUG_MODE } from '../globals/debug.ts';
+
 type DifficultyParams = {
     maxEnemies: number;
     spawnInterval: number;
@@ -49,7 +51,7 @@ export class DifficultyManager {
             this.params.enemyDamage = Math.floor(15 * difficultyMultiplier);
             this.params.enemySpeed = Math.min(700 * (1 + (0.2 * (this.currentLevel - 1))), 1400);
             
-            if (window.DEBUG_MODE) {
+            if (DEBUG_MODE.enabled) {
                 console.log(`Difficulty increased to level ${this.currentLevel} (${difficultyMultiplier}x)`);
                 console.log(`Parameters: maxEnemies=${this.params.maxEnemies}, spawnInterval=${this.params.spawnInterval}`);
                 console.log(`Health=${this.params.enemyHealth}, Damage=${this.params.enemyDamage}, Speed=${this.params.enemySpeed}`);

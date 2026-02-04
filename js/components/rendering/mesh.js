@@ -4,7 +4,7 @@
  * Handles the Three.js mesh and its properties.
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 import * as THREE from 'three';
 
 export class MeshComponent extends Component {

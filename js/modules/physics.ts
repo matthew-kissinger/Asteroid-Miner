@@ -1,6 +1,8 @@
 // physics.ts - Handles physics calculations and movement
 
 import * as THREE from 'three';
+import { DEBUG_MODE } from '../globals/debug.ts';
+import { mainMessageBus } from '../globals/messageBus.ts';
 
 // Type definitions for physics-related objects
 interface RotationState {
@@ -426,7 +428,7 @@ export class Physics {
             // If collision detected - uses the sum of actual ship and asteroid radii
             if (distance < (shipRadius + asteroidRadius)) {
                 // Only log collision in debug mode
-                if (window.DEBUG_MODE) {
+                if (DEBUG_MODE.enabled) {
                     console.log("Asteroid collision detected!", 
                         "Ship position:", shipPosition,
                         "Asteroid position:", asteroid.position,
@@ -504,7 +506,7 @@ export class Physics {
         this.collided = true;
         
         // Enhanced logging for collision diagnostics (only in debug mode)
-        if (window.DEBUG_MODE) {
+        if (DEBUG_MODE.enabled) {
             console.log("=== COLLISION DETECTED ===");
             console.log(`Collision type: ${type}`);
             console.log(`Ship velocity at impact: ${this.spaceship.velocity.length().toFixed(2)} units/frame`);
@@ -515,7 +517,7 @@ export class Physics {
         
         // Apply hull resistance to see if we survive the collision
         if (this.attemptCollisionRecovery(type)) {
-            if (window.DEBUG_MODE) console.log("Hull absorbed collision damage!");
+            if (DEBUG_MODE.enabled) console.log("Hull absorbed collision damage!");
             this.createRecoveryEffect();
             
             // Bounce away from the collision point
@@ -542,7 +544,7 @@ export class Physics {
             // Reset collision state after a short delay
             setTimeout(() => {
                 this.collided = false;
-                if (window.DEBUG_MODE) console.log("Collision state reset - ship ready for new collisions");
+                if (DEBUG_MODE.enabled) console.log("Collision state reset - ship ready for new collisions");
             }, 1000);
             
             return;
@@ -600,13 +602,10 @@ export class Physics {
         
         console.log("Physics: Initiating game over sequence for collision with", type);
         
-        // Use window.mainMessageBus if available
-        if (window.mainMessageBus && 
-            typeof window.mainMessageBus === 'object' &&
-            'publish' in window.mainMessageBus &&
-            typeof window.mainMessageBus.publish === 'function') {
-            console.log("Physics: Using window.mainMessageBus");
-            (window.mainMessageBus as { publish: (event: string, data: unknown) => void }).publish('game.over', {
+        // Use main message bus if available
+        if (mainMessageBus && typeof mainMessageBus.publish === 'function') {
+            console.log("Physics: Using main message bus");
+            mainMessageBus.publish('game.over', {
                 reason: explosionMessage,
                 source: "physics",
                 collisionType: type,
@@ -629,7 +628,7 @@ export class Physics {
             });
         } else {
             // Only use MessageBus.triggerGameOver if no direct access
-            import('../core/messageBus.js').then(module => {
+            import('../core/messageBus.ts').then(module => {
                 const MessageBus = (module as { MessageBus: { triggerGameOver: (message: string, source: string) => void } }).MessageBus;
                 console.log("Physics: Using MessageBus.triggerGameOver");
                 
@@ -656,28 +655,28 @@ export class Physics {
             case "asteroid":
                 // 50% base chance + 8% per hull level as requested
                 recoveryChance = 0.50 + (resistance - 1) * 0.08;
-                if (window.DEBUG_MODE) console.log(`Asteroid collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
+                if (DEBUG_MODE.enabled) console.log(`Asteroid collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
                 break;
             case "planet":
                 // Start with 10% chance, increased by hull resistance
                 recoveryChance = 0.1 + (resistance - 1) * 0.2;
-                if (window.DEBUG_MODE) console.log(`Planet collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
+                if (DEBUG_MODE.enabled) console.log(`Planet collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
                 break;
             case "sun":
                 // Almost no chance to survive sun collision
                 recoveryChance = (resistance - 1) * 0.05;
-                if (window.DEBUG_MODE) console.log(`Sun collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
+                if (DEBUG_MODE.enabled) console.log(`Sun collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
                 break;
             default:
                 recoveryChance = 0.2 + (resistance - 1) * 0.3;
-                if (window.DEBUG_MODE) console.log(`Generic collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
+                if (DEBUG_MODE.enabled) console.log(`Generic collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
         }
         
         // Random chance based on recovery probability
         const recoveryRoll = Math.random();
         const survived = recoveryRoll < recoveryChance;
         
-        if (window.DEBUG_MODE) console.log(`Recovery roll: ${recoveryRoll.toFixed(3)}, needed ${recoveryChance.toFixed(3)} or lower to survive`);
+        if (DEBUG_MODE.enabled) console.log(`Recovery roll: ${recoveryRoll.toFixed(3)}, needed ${recoveryChance.toFixed(3)} or lower to survive`);
         
         return survived;
     }

@@ -4,7 +4,7 @@
  * Tracks the spaceship's current state, including docking status, health, shield, etc.
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 
 export class ShipStateComponent extends Component {
     constructor() {

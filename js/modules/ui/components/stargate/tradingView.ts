@@ -1,5 +1,7 @@
 // tradingView.ts - Trading interface components and logic
 
+import { mainMessageBus } from '../../../../globals/messageBus.ts';
+
 interface Resources {
     iron: number;
     gold: number;
@@ -114,8 +116,8 @@ export class TradingView {
         if (this.spaceship.credits < 1000) {
             console.log("Not enough credits to purchase laser turret");
             // Show notification to the player
-            if (window.mainMessageBus) {
-                (window.mainMessageBus as any).publish('ui.notification', {
+            if (mainMessageBus) {
+                (mainMessageBus as any).publish('ui.notification', {
                     message: "Not enough credits to purchase laser turret",
                     type: "error",
                     duration: 2
@@ -141,8 +143,8 @@ export class TradingView {
         }
         
         // Show notification to the player
-        if (window.mainMessageBus) {
-            (window.mainMessageBus as any).publish('ui.notification', {
+        if (mainMessageBus) {
+            (mainMessageBus as any).publish('ui.notification', {
                 message: "Laser turret purchased",
                 type: "success",
                 duration: 2

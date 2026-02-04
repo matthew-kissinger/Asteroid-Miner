@@ -5,7 +5,7 @@
  */
 
 import * as THREE from 'three';
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
 
 export class RigidbodyComponent extends Component {
     constructor(mass = 1.0) {

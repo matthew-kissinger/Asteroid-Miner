@@ -2,6 +2,8 @@
  * Initial Spawning - Handles initial spawn delay and first enemy notification
  */
 
+import { mainMessageBus } from '../../../../globals/messageBus.ts';
+
 export class InitialSpawning {
     constructor() {
         this.initialSpawnDelay = 60; // 60-second initial delay to match game requirements
@@ -44,8 +46,8 @@ export class InitialSpawning {
     showSpawnNotification() {
         if (window.game && window.game.ui && window.game.ui.showNotification) {
             window.game.ui.showNotification('WARNING: Spectral drones have been spotted in the sector!', 5000);
-        } else if (window.mainMessageBus) {
-            window.mainMessageBus.publish('ui.notification', {
+        } else if (mainMessageBus) {
+            mainMessageBus.publish('ui.notification', {
                 message: 'WARNING: Spectral drones have been spotted in the sector!',
                 duration: 5000
             });

@@ -1,5 +1,7 @@
 // gameLifecycle.ts - Game lifecycle management (game over, cleanup, destruction)
 
+import { objectPool } from '../globals/objectPool.ts';
+
 interface GameInstance {
     spaceship: any;
     isGameOver: boolean;
@@ -73,8 +75,8 @@ export class GameLifecycle {
         // Basic cleanup when game ends
 
         // Clear pools
-        if (window.objectPool && window.objectPool.clearAllPools) {
-            window.objectPool.clearAllPools();
+        if (objectPool && objectPool.clearAllPools) {
+            objectPool.clearAllPools();
         }
 
         // Stop all audio

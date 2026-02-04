@@ -4,12 +4,13 @@
  * Handles projectile collisions, damage application, and combat effects
  */
 
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 import { HealthComponent } from '../../components/combat/healthComponent.js';
 import { TransformComponent } from '../../components/transform.js';
 import { RigidbodyComponent } from '../../components/physics/rigidbody.js';
 import { MeshComponent } from '../../components/rendering/mesh.js';
 import { FixedArray } from '../../utils/memoryManager.ts';
+import { objectPool } from '../../globals/objectPool.ts';
 import * as THREE from 'three';
 
 export class CombatSystem extends System {
@@ -354,13 +355,13 @@ export class CombatSystem extends System {
         // Create hit effect using object pool
         // Check for hit effect pool availability
         let hitEffect;
-        const objectPoolAvailable = window.objectPool && 
-                                    window.objectPool.pools && 
-                                    window.objectPool.pools['hitEffect'];
+        const objectPoolAvailable = objectPool && 
+                                    objectPool.pools && 
+                                    objectPool.pools['hitEffect'];
                                     
         if (objectPoolAvailable) {
             // Get hit effect from pool
-            hitEffect = window.objectPool.get('hitEffect', effectColor, effectSize);
+            hitEffect = objectPool.get('hitEffect', effectColor, effectSize);
         } else {
             // Fallback to creating a new effect if pool unavailable
             hitEffect = this.createNewHitEffect(effectColor, effectSize);
@@ -441,8 +442,8 @@ export class CombatSystem extends System {
                     }
                     
                     // Return to pool if using object pooling
-                    if (useObjectPool && window.objectPool && window.objectPool.pools['hitEffect']) {
-                        window.objectPool.release('hitEffect', hitEffect);
+                    if (useObjectPool && objectPool && objectPool.pools['hitEffect']) {
+                        objectPool.release('hitEffect', hitEffect);
                     } else if (!useObjectPool) {
                         // Dispose of material if not using object pooling
                         if (hitEffect.material) {

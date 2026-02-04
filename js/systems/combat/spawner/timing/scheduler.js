@@ -2,6 +2,8 @@
  * Spawn Scheduler - Manages timing, delays, and spawn rate control
  */
 
+import { mainMessageBus } from '../../../../globals/messageBus.ts';
+
 /**
  * Spawn scheduler for managing enemy spawn timing
  */
@@ -260,8 +262,8 @@ export class SpawnScheduler {
     showSpawnNotification() {
         if (window.game && window.game.ui && window.game.ui.showNotification) {
             window.game.ui.showNotification('WARNING: Spectral drones have been spotted in the sector!', 5000);
-        } else if (window.mainMessageBus) {
-            window.mainMessageBus.publish('ui.notification', {
+        } else if (mainMessageBus) {
+            mainMessageBus.publish('ui.notification', {
                 message: 'WARNING: Spectral drones have been spotted in the sector!',
                 duration: 5000
             });

@@ -5,6 +5,7 @@ import { Renderer } from '../modules/renderer.js';
 import { Spaceship } from '../modules/spaceship';
 import { Physics } from '../modules/physics';
 import { Controls } from '../modules/controls.js';
+import { DEBUG_MODE } from '../globals/debug.ts';
 import type { DockingSpaceship } from '../modules/controls/docking/types.ts';
 // import { Environment } from '../modules/environment';
 // import { UI } from '../modules/ui';
@@ -62,14 +63,14 @@ export class GameInitializer {
     
     async initializeCore(): Promise<void> {
         // Create audio manager first but don't initialize yet
-        if (window.DEBUG_MODE) console.log("Creating audio manager...");
+        if (DEBUG_MODE.enabled) console.log("Creating audio manager...");
         const { AudioManager } = await import('../modules/audio/audio.js');
         this.game.audio = new AudioManager();
         
         // Initialize renderer first
-        if (window.DEBUG_MODE) console.log("Creating renderer...");
+        if (DEBUG_MODE.enabled) console.log("Creating renderer...");
         this.game.renderer = await Renderer.create();
-        if (window.DEBUG_MODE) console.log("Renderer created, getting scene...");
+        if (DEBUG_MODE.enabled) console.log("Renderer created, getting scene...");
 
         const renderer = this.game.renderer;
         
@@ -77,14 +78,14 @@ export class GameInitializer {
         this.game.scene = renderer.scene;
         this.game.camera = renderer.camera;
         
-        if (window.DEBUG_MODE) console.log("Scene and camera references obtained");
+        if (DEBUG_MODE.enabled) console.log("Scene and camera references obtained");
         
         // Share camera reference with scene for easy access by other components
         const sceneWithCamera = this.game.scene as THREE.Scene & { camera?: THREE.Camera };
         sceneWithCamera.camera = this.game.camera;
         
         // Initialize essential components needed for the start screen
-        if (window.DEBUG_MODE) console.log("Initializing essential components...");
+        if (DEBUG_MODE.enabled) console.log("Initializing essential components...");
         
         // Initialize physics
         const physics = new Physics(this.game.scene);
@@ -99,7 +100,7 @@ export class GameInitializer {
         this.game.environment = environment;
         
         // Initialize spaceship
-        if (window.DEBUG_MODE) console.log("Creating spaceship...");
+        if (DEBUG_MODE.enabled) console.log("Creating spaceship...");
         const spaceship = new Spaceship(this.game.scene) as GameSpaceship;
         this.game.spaceship = spaceship;
         
@@ -124,7 +125,7 @@ export class GameInitializer {
         this.game.ui.setControls(this.game.controls);
         
         // Initialize settings
-        if (window.DEBUG_MODE) console.log("Initializing settings...");
+        if (DEBUG_MODE.enabled) console.log("Initializing settings...");
         await this.game.ui.initializeSettings(this.game);
     }
     

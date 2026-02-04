@@ -1,6 +1,7 @@
 // startupSequence.js - Asset preloads and intro flow management
 
 import * as THREE from 'three';
+import { mainMessageBus } from '../globals/messageBus.ts';
 // import { IntroSequence } from '../modules/introSequence.js'; // Removed direct import
 
 type AudioContextLike = {
@@ -309,8 +310,8 @@ export class StartupSequence {
         }
         
         // Emit event for other systems
-        if (window.mainMessageBus) {
-            window.mainMessageBus.publish('intro.completed', {});
+        if (mainMessageBus) {
+            mainMessageBus.publish('intro.completed', {});
         }
         
     }

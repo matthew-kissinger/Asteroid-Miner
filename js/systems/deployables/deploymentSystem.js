@@ -4,7 +4,7 @@
  * This system manages the deployment of items like laser turrets and their pickup.
  */
 
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 import * as THREE from 'three';
 
 export class DeploymentSystem extends System {

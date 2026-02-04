@@ -14,6 +14,8 @@ import { MobileHUD } from './ui/mobileHUD.ts';
 // import { StartScreen } from './ui/startScreen.ts';
 import { MemoryStats } from '../utils/memoryManager.js';
 import { MobileDetector } from '../utils/mobileDetector.js';
+import { DEBUG_MODE } from '../globals/debug.ts';
+import { mainMessageBus } from '../globals/messageBus.ts';
 
 // Type definitions for UI-related objects
 type SpaceshipForUI = any;
@@ -191,7 +193,7 @@ export class UI {
         this.startScreen = null;
         
         // Initialize performance monitoring if in debug mode
-        if (window.DEBUG_MODE) {
+        if (DEBUG_MODE.enabled) {
             this.initializePerformanceMonitor();
         }
         
@@ -293,7 +295,7 @@ export class UI {
         }
         
         // Listen for UI notification events
-        window.mainMessageBus?.subscribe('ui.notification', this.handleNotification.bind(this));
+        mainMessageBus?.subscribe('ui.notification', this.handleNotification.bind(this));
         
         // Add resize handler to update mobile detection
         window.addEventListener('resize', () => {

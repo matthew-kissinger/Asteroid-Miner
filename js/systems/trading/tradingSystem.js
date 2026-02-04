@@ -5,7 +5,7 @@
  * that occur when docked with the stargate.
  */
 
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
 
 export class TradingSystem extends System {
     constructor(world) {

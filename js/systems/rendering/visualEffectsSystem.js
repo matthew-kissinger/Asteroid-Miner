@@ -6,7 +6,8 @@
  */
 
 import * as THREE from 'three';
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
+import { objectPool } from '../../globals/objectPool.ts';
 
 export class VisualEffectsSystem extends System {
     constructor(world) {
@@ -111,9 +112,9 @@ export class VisualEffectsSystem extends System {
         const particles = [];
         
         // Check if pooling system is available
-        const usePooling = window.objectPool && 
-                          window.objectPool.pools && 
-                          window.objectPool.pools['explosionParticle'];
+        const usePooling = objectPool && 
+                          objectPool.pools && 
+                          objectPool.pools['explosionParticle'];
         
         // Create particles with properties
         for (let i = 0; i < particleCount; i++) {
@@ -122,7 +123,7 @@ export class VisualEffectsSystem extends System {
             
             if (usePooling) {
                 // Get particle from pool
-                particle = window.objectPool.get('explosionParticle');
+                particle = objectPool.get('explosionParticle');
                 
                 if (particle) {
                     // Position randomly within explosion radius
@@ -215,7 +216,7 @@ export class VisualEffectsSystem extends System {
                     if (effect.usePooling) {
                         // Return particles to pool
                         effect.particles.forEach(particle => {
-                            window.objectPool.release('explosionParticle', particle);
+                            objectPool.release('explosionParticle', particle);
                         });
                     }
                     // Remove container from scene

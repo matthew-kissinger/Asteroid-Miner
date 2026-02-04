@@ -5,7 +5,8 @@
  */
 
 import * as THREE from 'three';
-import { System } from '../../core/system.js';
+import { System } from '../../core/system.ts';
+import { DEBUG_MODE, setDebugMode } from '../../globals/debug.ts';
 
 export class RenderSystem extends System {
     constructor(world, scene, camera, renderer) {
@@ -246,7 +247,7 @@ export class RenderSystem extends System {
         } catch (error) {
             console.error('Error updating frustum:', error);
             // If we can't update the frustum, we'll disable culling by setting DEBUG_MODE
-            window.DEBUG_MODE = true;
+            setDebugMode(true);
         }
     }
     
@@ -262,7 +263,7 @@ export class RenderSystem extends System {
         
         // During development, or for this fix, ALWAYS assume everything is visible to aid debugging
         // Force to true to bypass the culling system entirely
-        window.DEBUG_MODE = true;
+        setDebugMode(true);
         return true;
         
         // Safely check if position is valid before creating a sphere
@@ -295,7 +296,7 @@ export class RenderSystem extends System {
         this.updateFrustum();
         
         // Try to scan for entities that should be tracked but aren't
-        if (window.DEBUG_MODE && this.world.time % 5 < deltaTime) {
+        if (DEBUG_MODE.enabled && this.world.time % 5 < deltaTime) {
             this.scanForMissingEntities();
         }
         
@@ -322,7 +323,7 @@ export class RenderSystem extends System {
             transform.needsUpdate = false;
             
             // Force visibility in debug mode
-            if (window.DEBUG_MODE) {
+            if (DEBUG_MODE.enabled) {
                 meshComponent.mesh.visible = true;
                 continue;
             }
@@ -358,7 +359,7 @@ export class RenderSystem extends System {
         }
         
         // Diagnostics - log mesh counts periodically
-        if (window.DEBUG_MODE && this.world.time % 5 < deltaTime) {
+        if (DEBUG_MODE.enabled && this.world.time % 5 < deltaTime) {
             console.log(`RenderSystem: ${this.meshEntities.size} entities being managed`);
         }
         

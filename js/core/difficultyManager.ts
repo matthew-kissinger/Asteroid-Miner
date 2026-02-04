@@ -4,8 +4,25 @@
  * Controls enemy parameters based on survival time thresholds
  */
 
+interface DifficultyThreshold {
+    level: number;
+    time: number;
+    maxEnemies: number;
+    enemyHealth: number;
+    enemyDamage: number;
+    enemySpeed: number;
+    spawnInterval: number;
+}
+
 export class DifficultyManager {
-    constructor(game, enemySystem) {
+    private game: any;
+    private enemySystem: any;
+    public gameTime: number;
+    public currentLevel: number;
+    private DIFFICULTY_THRESHOLDS: DifficultyThreshold[];
+    public params: DifficultyThreshold;
+
+    constructor(game: any, enemySystem: any) {
         this.game = game;
         this.enemySystem = enemySystem;
         
@@ -34,7 +51,7 @@ export class DifficultyManager {
      * Update game time and check for difficulty changes
      * @param {number} deltaTime Time since last update in seconds
      */
-    update(deltaTime) {
+    update(deltaTime: number): void {
         // Update game time
         this.gameTime += deltaTime;
         
@@ -53,7 +70,7 @@ export class DifficultyManager {
     /**
      * Update the current difficulty level based on game time
      */
-    updateDifficultyLevel() {
+    updateDifficultyLevel(): void {
         // Find the highest difficulty level for the current game time
         let newLevel = 1;
         
@@ -84,7 +101,7 @@ export class DifficultyManager {
     /**
      * Apply the current difficulty parameters to the enemy system
      */
-    applyDifficultyParameters() {
+    applyDifficultyParameters(): void {
         if (!this.enemySystem) return;
         
         // Update enemy system parameters
@@ -103,7 +120,7 @@ export class DifficultyManager {
      * Get the current difficulty level (1-based)
      * @returns {number} Current difficulty level
      */
-    getCurrentLevel() {
+    getCurrentLevel(): number {
         return this.currentLevel;
     }
     
@@ -111,7 +128,7 @@ export class DifficultyManager {
      * Get the time until next difficulty increase
      * @returns {number} Seconds until next level or -1 if at max level
      */
-    getTimeUntilNextLevel() {
+    getTimeUntilNextLevel(): number {
         if (this.currentLevel >= this.DIFFICULTY_THRESHOLDS.length) {
             return -1; // Already at max level
         }
@@ -119,4 +136,4 @@ export class DifficultyManager {
         const nextLevelThreshold = this.DIFFICULTY_THRESHOLDS[this.currentLevel].time;
         return Math.max(0, nextLevelThreshold - this.gameTime);
     }
-} 
+}

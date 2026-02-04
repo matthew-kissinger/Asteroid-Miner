@@ -4,7 +4,8 @@
  * Manages health, shields, and damage application for both players and enemies
  */
 
-import { Component } from '../../core/component.js';
+import { Component } from '../../core/component.ts';
+import { mainMessageBus } from '../../globals/messageBus.ts';
 
 export class HealthComponent extends Component {
     constructor(maxHealth = 100, maxShield = 0) {
@@ -39,9 +40,9 @@ export class HealthComponent extends Component {
             if (this.entity.world && this.entity.world.messageBus) {
                 this.entity.world.messageBus.subscribe('player.syncHealth', this.handleSyncHealth.bind(this));
                 this.entity.world.messageBus.subscribe('player.undocked', this.handleSyncHealth.bind(this));
-            } else if (window.mainMessageBus) {
-                window.mainMessageBus.subscribe('player.syncHealth', this.handleSyncHealth.bind(this));
-                window.mainMessageBus.subscribe('player.undocked', this.handleSyncHealth.bind(this));
+            } else if (mainMessageBus) {
+                mainMessageBus.subscribe('player.syncHealth', this.handleSyncHealth.bind(this));
+                mainMessageBus.subscribe('player.undocked', this.handleSyncHealth.bind(this));
             }
         }
     }
@@ -160,7 +161,7 @@ export class HealthComponent extends Component {
                         });
                     } else {
                         // Import MessageBus to use the static method if needed
-                        import('../../core/messageBus.js').then(module => {
+                        import('../../core/messageBus.ts').then(module => {
                             const MessageBus = module.MessageBus;
                             
                             // Use the static method for handling
