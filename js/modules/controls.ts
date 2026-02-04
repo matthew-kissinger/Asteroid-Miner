@@ -1,11 +1,11 @@
 // controls.ts - Main controls module that integrates all control components
 
-import { InputHandler } from './controls/inputHandler.js';
-import { GamepadHandler } from './controls/gamepadHandler.js';
-import { MiningSystem } from './controls/miningSystem.js';
-import { TargetingSystem } from './controls/targetingSystem.js';
-import { DockingSystem } from './controls/dockingSystem.js';
-import { TouchControls } from './controls/touchControls.js';
+import { InputHandler } from './controls/inputHandler.ts';
+import { GamepadHandler } from './controls/gamepadHandler.ts';
+import { MiningSystem } from './controls/miningSystem.ts';
+import { TargetingSystem } from './controls/targetingSystem.ts';
+import { DockingSystem } from './controls/dockingSystem.ts';
+import { TouchControls } from './controls/touchControls.ts';
 import { MobileDetector } from '../utils/mobileDetector.js';
 import * as THREE from 'three';
 

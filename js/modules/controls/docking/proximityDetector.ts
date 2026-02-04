@@ -1,12 +1,41 @@
 // proximityDetector.js - Handles stargate proximity detection
 
+type ProximitySpaceship = {
+    isDocked: boolean;
+    mesh?: {
+        position: {
+            distanceTo: (pos: unknown) => number;
+        };
+    };
+};
+
+type ProximityStargate = {
+    getPosition: () => unknown;
+};
+
+type ProximityUI = {
+    stargateInterface?: {
+        showDockingPrompt?: () => void;
+        hideDockingPrompt?: () => void;
+    };
+    controls?: {
+        isMobile?: boolean;
+        touchControls?: {
+            showDockButton?: () => void;
+            hideDockButton?: () => void;
+        };
+    };
+};
+
 export class ProximityDetector {
+    nearStargate: boolean;
+
     constructor() {
         this.nearStargate = false;
     }
 
     // Check if spaceship is within docking range of stargate
-    checkStargateProximity(spaceship, stargate, ui) {
+    checkStargateProximity(spaceship: ProximitySpaceship, stargate: ProximityStargate, ui: ProximityUI): void {
         if (spaceship.isDocked) return;
         
         if (!stargate || !spaceship || !spaceship.mesh) return;

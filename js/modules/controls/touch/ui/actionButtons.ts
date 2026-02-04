@@ -1,6 +1,18 @@
 // actionButtons.js - Action button creation and styling
 
 export class ActionButtons {
+    buttons: {
+        fire: HTMLDivElement | null;
+        mine: HTMLDivElement | null;
+        target: HTMLDivElement | null;
+        dock: HTMLDivElement | null;
+        deployLaser: HTMLDivElement | null;
+    };
+    containers: {
+        left: HTMLDivElement | null;
+        right: HTMLDivElement | null;
+    };
+
     constructor() {
         this.buttons = {
             fire: null,
@@ -15,7 +27,13 @@ export class ActionButtons {
         };
     }
 
-    createActionButtons() {
+    createActionButtons(): {
+        fire: HTMLDivElement | null;
+        mine: HTMLDivElement | null;
+        target: HTMLDivElement | null;
+        dock: HTMLDivElement | null;
+        deployLaser: HTMLDivElement | null;
+    } {
         this.createButtonContainers();
         this.createFireButton();
         this.createMineButton();
@@ -26,7 +44,7 @@ export class ActionButtons {
         return this.buttons;
     }
 
-    createButtonContainers() {
+    createButtonContainers(): void {
         // Create a container for left side action buttons
         const leftActionButtonsContainer = document.createElement('div');
         leftActionButtonsContainer.id = 'mobile-action-buttons-left';
@@ -54,22 +72,22 @@ export class ActionButtons {
         this.containers.right = rightActionButtonsContainer;
     }
 
-    createFireButton() {
+    createFireButton(): HTMLDivElement | null {
         this.buttons.fire = this.createActionButton(this.containers.left, 'FIRE', 'rgba(255, 80, 80, 0.8)');
         return this.buttons.fire;
     }
 
-    createMineButton() {
+    createMineButton(): HTMLDivElement | null {
         this.buttons.mine = this.createActionButton(this.containers.left, 'MINE', 'rgba(120, 220, 232, 0.8)');
         return this.buttons.mine;
     }
 
-    createTargetButton() {
+    createTargetButton(): HTMLDivElement | null {
         this.buttons.target = this.createActionButton(this.containers.right, 'TARGET', 'rgba(255, 215, 0, 0.8)');
         return this.buttons.target;
     }
 
-    createDockButton() {
+    createDockButton(): HTMLDivElement | null {
         // Create dock button (only shown when near stargate)
         this.buttons.dock = this.createActionButton(null, 'DOCK', 'rgba(51, 153, 255, 0.8)');
         this.buttons.dock.style.position = 'absolute';
@@ -86,12 +104,12 @@ export class ActionButtons {
         return this.buttons.dock;
     }
 
-    createDeployLaserButton() {
+    createDeployLaserButton(): HTMLDivElement | null {
         this.buttons.deployLaser = this.createActionButton(this.containers.right, 'DEPLOY', 'rgba(255, 100, 100, 0.8)');
         return this.buttons.deployLaser;
     }
 
-    createActionButton(parent, text, color) {
+    createActionButton(parent: HTMLDivElement | null, text: string, color: string): HTMLDivElement {
         const button = document.createElement('div');
         button.className = 'mobile-action-button';
         button.textContent = text;
@@ -124,7 +142,7 @@ export class ActionButtons {
         return button;
     }
 
-    showDockButton() {
+    showDockButton(): void {
         if (this.buttons.dock) {
             // FIX: Make sure display is set before other properties
             this.buttons.dock.style.display = 'flex';
@@ -167,25 +185,25 @@ export class ActionButtons {
         }
     }
 
-    hideDockButton() {
+    hideDockButton(): void {
         if (this.buttons.dock) {
             this.buttons.dock.style.display = 'none';
         }
     }
 
-    hideButtons() {
+    hideButtons(): void {
         if (this.containers.left) this.containers.left.style.display = 'none';
         if (this.containers.right) this.containers.right.style.display = 'none';
         this.hideDockButton();
     }
 
-    showButtons() {
+    showButtons(): void {
         if (this.containers.left) this.containers.left.style.display = 'flex';
         if (this.containers.right) this.containers.right.style.display = 'flex';
     }
 
     // Helper method to add events to buttons
-    addButtonEvents(button, startHandler, endHandler = null) {
+    addButtonEvents(button: HTMLElement | null, startHandler: () => void, endHandler: (() => void) | null = null): void {
         if (!button) {
             console.error("ActionButtons: Cannot add events to null button");
             return;
@@ -194,27 +212,27 @@ export class ActionButtons {
         // For continuous actions (like firing and mining)
         if (endHandler) {
             // Touch events with passive: false to allow preventDefault
-            button.addEventListener('touchstart', (e) => {
+            button.addEventListener('touchstart', (e: TouchEvent) => {
                 e.preventDefault();
                 button.style.transform = 'scale(0.95) translateZ(0)';
                 startHandler();
             }, { passive: false });
             
-            button.addEventListener('touchend', (e) => {
+            button.addEventListener('touchend', (e: TouchEvent) => {
                 e.preventDefault();
                 button.style.transform = 'scale(1) translateZ(0)';
                 endHandler();
             }, { passive: false });
             
             // Add pointer events
-            button.addEventListener('pointerdown', (e) => {
+            button.addEventListener('pointerdown', (e: PointerEvent) => {
                 e.preventDefault();
                 if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
                 button.style.transform = 'scale(0.95) translateZ(0)';
                 startHandler();
             });
             
-            button.addEventListener('pointerup', (e) => {
+            button.addEventListener('pointerup', (e: PointerEvent) => {
                 e.preventDefault();
                 if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
                 button.style.transform = 'scale(1) translateZ(0)';
@@ -222,12 +240,12 @@ export class ActionButtons {
             });
             
             // Keep mouse events for backward compatibility
-            button.addEventListener('mousedown', (e) => {
+            button.addEventListener('mousedown', () => {
                 button.style.transform = 'scale(0.95) translateZ(0)';
                 startHandler();
             });
             
-            button.addEventListener('mouseup', (e) => {
+            button.addEventListener('mouseup', () => {
                 button.style.transform = 'scale(1) translateZ(0)';
                 endHandler();
             });
@@ -235,7 +253,7 @@ export class ActionButtons {
         // For single actions (like targeting and docking)
         else {
             // Touch events
-            button.addEventListener('touchstart', (e) => {
+            button.addEventListener('touchstart', (e: TouchEvent) => {
                 e.preventDefault();
                 button.style.transform = 'scale(0.95) translateZ(0)';
                 
@@ -245,7 +263,7 @@ export class ActionButtons {
                 }
             }, { passive: false });
             
-            button.addEventListener('touchend', (e) => {
+            button.addEventListener('touchend', (e: TouchEvent) => {
                 e.preventDefault();
                 button.style.transform = 'scale(1) translateZ(0)';
                 
@@ -258,7 +276,7 @@ export class ActionButtons {
             }, { passive: false });
             
             // Add pointer events
-            button.addEventListener('pointerdown', (e) => {
+            button.addEventListener('pointerdown', (e: PointerEvent) => {
                 e.preventDefault();
                 if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
                 button.style.transform = 'scale(0.95) translateZ(0)';
@@ -269,7 +287,7 @@ export class ActionButtons {
                 }
             });
             
-            button.addEventListener('pointerup', (e) => {
+            button.addEventListener('pointerup', (e: PointerEvent) => {
                 e.preventDefault();
                 if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
                 button.style.transform = 'scale(1) translateZ(0)';
@@ -283,11 +301,11 @@ export class ActionButtons {
             });
             
             // Keep mouse events for backward compatibility
-            button.addEventListener('mousedown', (e) => {
+            button.addEventListener('mousedown', () => {
                 button.style.transform = 'scale(0.95) translateZ(0)';
             });
             
-            button.addEventListener('mouseup', (e) => {
+            button.addEventListener('mouseup', () => {
                 button.style.transform = 'scale(1) translateZ(0)';
                 startHandler();
             });

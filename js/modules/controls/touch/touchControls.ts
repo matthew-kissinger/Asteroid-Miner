@@ -1,15 +1,55 @@
 // touchControls.js - Main coordinator for touch controls on mobile devices
 
-import { JoystickZones } from './ui/joystickZones.js';
-import { ActionButtons } from './ui/actionButtons.js';
-import { JoystickHandler } from './input/joystickHandler.js';
-import { GestureDetector } from './input/gestureDetector.js';
-import { MiningHandler } from './actions/miningHandler.js';
-import { WeaponHandler } from './actions/weaponHandler.js';
-import { SystemActions } from './actions/systemActions.js';
+import { JoystickZones } from './ui/joystickZones.ts';
+import { ActionButtons } from './ui/actionButtons.ts';
+import { JoystickHandler } from './input/joystickHandler.ts';
+import { GestureDetector } from './input/gestureDetector.ts';
+import { MiningHandler } from './actions/miningHandler.ts';
+import { WeaponHandler } from './actions/weaponHandler.ts';
+import { SystemActions } from './actions/systemActions.ts';
+
+type TouchSpaceship = {
+    isDocked: boolean;
+    thrust?: {
+        forward: boolean;
+        backward: boolean;
+        left: boolean;
+        right: boolean;
+        boost: boolean;
+    };
+};
+
+type TouchPhysics = {
+    updateRotation?: (deltaX: number, deltaY: number) => void;
+};
+
+type TouchControlsSystems = {
+    miningSystem?: unknown;
+    targetingSystem?: unknown;
+    dockingSystem?: unknown;
+    weaponSystem?: unknown;
+    spaceship?: TouchSpaceship;
+};
+
+type GameWindow = Window & {
+    game?: {
+        introSequenceActive?: boolean;
+    };
+};
 
 export class TouchControls {
-    constructor(spaceship, physics) {
+    spaceship: TouchSpaceship;
+    physics: TouchPhysics;
+    isInitialized: boolean;
+    joystickZones: JoystickZones;
+    actionButtons: ActionButtons;
+    joystickHandler: JoystickHandler;
+    gestureDetector: GestureDetector;
+    miningHandler: MiningHandler;
+    weaponHandler: WeaponHandler;
+    systemActions: SystemActions;
+
+    constructor(spaceship: TouchSpaceship, physics: TouchPhysics) {
         this.spaceship = spaceship;
         this.physics = physics;
         this.isInitialized = false;
@@ -32,7 +72,7 @@ export class TouchControls {
         this.initializeAsync();
     }
     
-    async initializeAsync() {
+    async initializeAsync(): Promise<void> {
         try {
             await this.joystickHandler.loadNippleJS();
             this.setupTouchControls();
@@ -42,7 +82,7 @@ export class TouchControls {
     }
     
     // Method to set the systems we need to interact with
-    setControlSystems(controls) {
+    setControlSystems(controls: TouchControlsSystems) {
         console.log("TouchControls: Setting control systems");
         
         if (!controls) {
@@ -76,7 +116,7 @@ export class TouchControls {
         return this; // For method chaining
     }
     
-    createCrosshair() {
+    createCrosshair(): void {
         // Create a small crosshair in the center of the screen
         const crosshair = document.createElement('div');
         crosshair.id = 'mobile-crosshair';
@@ -99,7 +139,7 @@ export class TouchControls {
         document.body.appendChild(crosshair);
     }
     
-    setupTouchControls() {
+    setupTouchControls(): void {
         // Create UI zones and buttons
         const zones = this.joystickZones.createJoystickZones();
         const buttons = this.actionButtons.createActionButtons();
@@ -114,7 +154,7 @@ export class TouchControls {
         }, 100);
     }
     
-    setupButtonEvents(buttons) {
+    setupButtonEvents(buttons: { fire: HTMLElement | null; mine: HTMLElement | null; target: HTMLElement | null; dock: HTMLElement | null; deployLaser: HTMLElement | null }): void {
         // Setup fire button events
         this.actionButtons.addButtonEvents(
             buttons.fire,
@@ -151,16 +191,17 @@ export class TouchControls {
         );
     }
     
-    hide() {
+    hide(): void {
         this.joystickZones.hideZones();
         this.actionButtons.hideButtons();
         this.gestureDetector.disable();
     }
     
-    show() {
+    show(): void {
         // Only show controls when not docked and not in intro sequence
+        const windowWithGame = window as GameWindow;
         if ((this.spaceship && this.spaceship.isDocked) || 
-            (window.game && window.game.introSequenceActive)) {
+            (windowWithGame.game && windowWithGame.game.introSequenceActive)) {
             console.log("TouchControls: Not showing controls during docked state or intro sequence");
             return;
         }
@@ -170,7 +211,7 @@ export class TouchControls {
         this.gestureDetector.enable();
     }
     
-    update() {
+    update(): void {
         // Update dock button visibility based on proximity to stargate
         if (this.systemActions.shouldShowDock(this.spaceship)) {
             this.actionButtons.showDockButton();
@@ -180,11 +221,11 @@ export class TouchControls {
     }
     
     // Compatibility methods for existing API
-    showDockButton() {
+    showDockButton(): void {
         this.actionButtons.showDockButton();
     }
     
-    hideDockButton() {
+    hideDockButton(): void {
         this.actionButtons.hideDockButton();
     }
 }

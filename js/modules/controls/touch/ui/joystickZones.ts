@@ -1,12 +1,15 @@
 // joystickZones.js - Joystick UI zone creation and management
 
 export class JoystickZones {
+    leftJoystickZone: HTMLDivElement | null;
+    rightJoystickZone: HTMLDivElement | null;
+
     constructor() {
         this.leftJoystickZone = null;
         this.rightJoystickZone = null;
     }
 
-    createJoystickZones() {
+    createJoystickZones(): { leftZone: HTMLDivElement | null; rightZone: HTMLDivElement | null } {
         this.createLeftJoystickZone();
         this.createRightJoystickZone();
         return {
@@ -15,7 +18,7 @@ export class JoystickZones {
         };
     }
 
-    createLeftJoystickZone() {
+    createLeftJoystickZone(): HTMLDivElement {
         // Create left joystick zone (thrust control)
         const leftJoystickZone = document.createElement('div');
         leftJoystickZone.id = 'leftJoystickZone';
@@ -27,9 +30,9 @@ export class JoystickZones {
         leftJoystickZone.style.zIndex = '1000';
         
         // Prevent default browser behavior to avoid scrolling when using joysticks
-        leftJoystickZone.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
-        leftJoystickZone.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-        leftJoystickZone.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
+        leftJoystickZone.addEventListener('touchstart', (e: TouchEvent) => e.preventDefault(), { passive: false });
+        leftJoystickZone.addEventListener('touchmove', (e: TouchEvent) => e.preventDefault(), { passive: false });
+        leftJoystickZone.addEventListener('touchend', (e: TouchEvent) => e.preventDefault(), { passive: false });
         
         document.body.appendChild(leftJoystickZone);
         this.leftJoystickZone = leftJoystickZone;
@@ -37,7 +40,7 @@ export class JoystickZones {
         return leftJoystickZone;
     }
 
-    createRightJoystickZone() {
+    createRightJoystickZone(): HTMLDivElement {
         // Create right joystick zone (rotation control)
         const rightJoystickZone = document.createElement('div');
         rightJoystickZone.id = 'rightJoystickZone';
@@ -49,9 +52,9 @@ export class JoystickZones {
         rightJoystickZone.style.zIndex = '1000';
         
         // Prevent default browser behavior to avoid scrolling when using joysticks
-        rightJoystickZone.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
-        rightJoystickZone.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-        rightJoystickZone.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
+        rightJoystickZone.addEventListener('touchstart', (e: TouchEvent) => e.preventDefault(), { passive: false });
+        rightJoystickZone.addEventListener('touchmove', (e: TouchEvent) => e.preventDefault(), { passive: false });
+        rightJoystickZone.addEventListener('touchend', (e: TouchEvent) => e.preventDefault(), { passive: false });
         
         document.body.appendChild(rightJoystickZone);
         this.rightJoystickZone = rightJoystickZone;
@@ -59,21 +62,21 @@ export class JoystickZones {
         return rightJoystickZone;
     }
 
-    hideZones() {
+    hideZones(): void {
         if (this.leftJoystickZone) this.leftJoystickZone.style.display = 'none';
         if (this.rightJoystickZone) this.rightJoystickZone.style.display = 'none';
     }
 
-    showZones() {
+    showZones(): void {
         if (this.leftJoystickZone) this.leftJoystickZone.style.display = 'block';
         if (this.rightJoystickZone) this.rightJoystickZone.style.display = 'block';
     }
 
-    getLeftZone() {
+    getLeftZone(): HTMLDivElement | null {
         return this.leftJoystickZone;
     }
 
-    getRightZone() {
+    getRightZone(): HTMLDivElement | null {
         return this.rightJoystickZone;
     }
 }

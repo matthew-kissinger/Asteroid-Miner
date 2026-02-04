@@ -1,21 +1,70 @@
 // miningHandler.js - Mining action handlers for touch controls
 
+type MiningAsteroid = {
+    resourceType?: string;
+    mesh?: {
+        position?: {
+            toArray?: () => number[];
+            distanceTo?: (pos: unknown) => number;
+        };
+    };
+};
+
+type MiningSystem = {
+    isMining?: boolean;
+    setTargetAsteroid: (asteroid: MiningAsteroid) => void;
+    startMining: () => void;
+    stopMining: () => void;
+};
+
+type TargetingSystem = {
+    getCurrentTarget: () => MiningAsteroid | null;
+    isLockOnEnabled: () => boolean;
+    toggleLockOn: () => void;
+    findNearestTarget: () => MiningAsteroid | null;
+};
+
+type MiningSpaceship = {
+    mesh?: {
+        position?: {
+            distanceTo?: (pos: unknown) => number;
+        };
+    };
+};
+
+type GameWindow = Window & {
+    game?: {
+        environment?: {
+            asteroids?: MiningAsteroid[];
+        };
+    };
+    gameInstance?: {
+        environment?: {
+            asteroids?: MiningAsteroid[];
+        };
+    };
+};
+
 export class MiningHandler {
-    constructor(spaceship) {
+    spaceship: MiningSpaceship | null;
+    miningSystem: MiningSystem | null;
+    targetingSystem: TargetingSystem | null;
+
+    constructor(spaceship: MiningSpaceship | null) {
         this.spaceship = spaceship;
         this.miningSystem = null;
         this.targetingSystem = null;
     }
 
-    setMiningSystem(miningSystem) {
+    setMiningSystem(miningSystem: MiningSystem | null): void {
         this.miningSystem = miningSystem;
     }
 
-    setTargetingSystem(targetingSystem) {
+    setTargetingSystem(targetingSystem: TargetingSystem | null): void {
         this.targetingSystem = targetingSystem;
     }
 
-    handleMiningStart() {
+    handleMiningStart(): void {
         try {
             console.log("MiningHandler: handleMiningStart called");
             
@@ -58,7 +107,8 @@ export class MiningHandler {
                 console.error("MiningHandler: Target asteroid is missing required properties", targetAsteroid);
                 
                 // Try a different approach - get all asteroids from environment
-                const game = window.gameInstance || window.game;
+                const windowWithGame = window as GameWindow;
+                const game = windowWithGame.gameInstance || windowWithGame.game;
                 if (game && game.environment && game.environment.asteroids && game.environment.asteroids.length > 0) {
                     console.log("MiningHandler: Attempting to get asteroid directly from environment");
                     // Find closest asteroid
@@ -119,7 +169,7 @@ export class MiningHandler {
         }
     }
 
-    handleMiningEnd() {
+    handleMiningEnd(): void {
         try {
             console.log("MiningHandler: handleMiningEnd called");
             

@@ -1,20 +1,48 @@
 // systemActions.js - System action handlers (docking, targeting, deployment) for touch controls
 
+type DockingSystem = {
+    dockWithStargate: () => void;
+    nearStargate?: boolean;
+};
+
+type TargetingSystem = {
+    toggleLockOn: () => void;
+};
+
+type GameWindow = Window & {
+    mainMessageBus?: {
+        publish: (event: string, data?: unknown) => void;
+    };
+    game?: {
+        controls?: {
+            dockingSystem?: DockingSystem;
+        };
+    };
+    gameInstance?: {
+        controls?: {
+            dockingSystem?: DockingSystem;
+        };
+    };
+};
+
 export class SystemActions {
+    dockingSystem: DockingSystem | null;
+    targetingSystem: TargetingSystem | null;
+
     constructor() {
         this.dockingSystem = null;
         this.targetingSystem = null;
     }
 
-    setDockingSystem(dockingSystem) {
+    setDockingSystem(dockingSystem: DockingSystem | null): void {
         this.dockingSystem = dockingSystem;
     }
 
-    setTargetingSystem(targetingSystem) {
+    setTargetingSystem(targetingSystem: TargetingSystem | null): void {
         this.targetingSystem = targetingSystem;
     }
 
-    handleDocking() {
+    handleDocking(): void {
         if (!this.dockingSystem) {
             console.error("SystemActions: Docking system not available");
             return;
@@ -26,7 +54,7 @@ export class SystemActions {
         this.dockingSystem.dockWithStargate();
     }
 
-    handleTargeting() {
+    handleTargeting(): void {
         if (!this.targetingSystem) {
             console.error("SystemActions: Targeting system not available");
             return;
@@ -39,20 +67,22 @@ export class SystemActions {
     /**
      * Handle deploying a laser turret
      */
-    handleDeployLaser() {
+    handleDeployLaser(): void {
         console.log("SystemActions: Deploying laser turret");
         
         // Publish deploy laser event
-        if (window.mainMessageBus) {
-            window.mainMessageBus.publish('input.deployLaser', {});
+        const windowWithGame = window as GameWindow;
+        if (windowWithGame.mainMessageBus) {
+            windowWithGame.mainMessageBus.publish('input.deployLaser', {});
         }
     }
 
     // Helper method to check if dock should be visible
-    shouldShowDock(spaceship) {
+    shouldShowDock(spaceship: { isDocked?: boolean } | null): boolean {
         if (!this.dockingSystem || !spaceship) {
             // Fallback to window.game if the direct reference isn't set yet
-            const game = window.gameInstance || window.game;
+            const windowWithGame = window as GameWindow;
+            const game = windowWithGame.gameInstance || windowWithGame.game;
             if (game && game.controls && game.controls.dockingSystem && spaceship) {
                 const dockingSystem = game.controls.dockingSystem;
                 return dockingSystem.nearStargate && !spaceship.isDocked;

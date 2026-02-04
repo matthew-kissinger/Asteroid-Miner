@@ -7,8 +7,52 @@ import { ResourceExtraction } from './mining/resourceExtraction.ts';
 import { UIUpdates } from './mining/uiUpdates.ts';
 import { VisualEffects } from './mining/visualEffects.ts';
 
+type MiningSpaceship = {
+    miningEfficiency?: number;
+    mesh: {
+        position: THREE.Vector3;
+    };
+    shield?: number;
+    maxShield?: number;
+    hull?: number;
+    maxHull?: number;
+    syncValuesToHealthComponent?: () => void;
+};
+
+type MiningAsteroid = {
+    resourceType?: string;
+    mesh: THREE.Object3D & {
+        position: THREE.Vector3;
+    };
+};
+
+type GameWindow = Window & {
+    game?: {
+        audio?: {
+            playSound: (id: string) => void;
+            stopSound: (id: string) => void;
+        };
+    };
+};
+
 export class MiningSystem {
-    constructor(spaceship, scene) {
+    spaceship: MiningSpaceship;
+    scene: THREE.Scene;
+    isMining: boolean;
+    targetAsteroid: MiningAsteroid | null;
+    miningProgress: number;
+    lastDestroyedAsteroid: MiningAsteroid | null;
+    miningSpeedByType: Record<string, number>;
+    miningSpeed: number;
+    miningDistance: number;
+    miningCooldown: number;
+    laserControl: LaserControl;
+    targetValidation: TargetValidation;
+    resourceExtraction: ResourceExtraction;
+    uiUpdates: UIUpdates;
+    visualEffects: VisualEffects;
+
+    constructor(spaceship: MiningSpaceship, scene: THREE.Scene) {
         this.spaceship = spaceship;
         this.scene = scene;
         this.isMining = false;
@@ -36,18 +80,18 @@ export class MiningSystem {
     }
     
     // Helper method to get the mining efficiency from the spaceship
-    getMiningEfficiency() {
+    getMiningEfficiency(): number {
         return this.spaceship && this.spaceship.miningEfficiency 
             ? this.spaceship.miningEfficiency 
             : 1.0; // Default value if spaceship property not available
     }
     
     // Expose resources from the resource extraction module
-    get resources() {
+    get resources(): ReturnType<ResourceExtraction['getResources']> {
         return this.resourceExtraction.getResources();
     }
     
-    setTargetAsteroid(asteroid) {
+    setTargetAsteroid(asteroid: MiningAsteroid): boolean {
         try {
             console.log("MiningSystem: setTargetAsteroid called", asteroid);
             
@@ -81,7 +125,7 @@ export class MiningSystem {
         }
     }
     
-    startMining() {
+    startMining(): void {
         try {
             console.log("MiningSystem: startMining called");
             
@@ -122,10 +166,11 @@ export class MiningSystem {
             this.updateMiningStatusWithTime();
             
             // Trigger laser sound
-            if (window.game && window.game.audio) {
-                window.game.audio.playSound('mining-laser');
-            } else if (window.game && window.game.audio) {
-                window.game.audio.playSound('laser');
+            const windowWithGame = window as GameWindow;
+            if (windowWithGame.game && windowWithGame.game.audio) {
+                windowWithGame.game.audio.playSound('mining-laser');
+            } else if (windowWithGame.game && windowWithGame.game.audio) {
+                windowWithGame.game.audio.playSound('laser');
             }
             
             console.log("MiningSystem: Mining successfully started");
@@ -136,7 +181,7 @@ export class MiningSystem {
     }
     
     // Update the mining status with time estimate
-    updateMiningStatusWithTime() {
+    updateMiningStatusWithTime(): void {
         this.uiUpdates.updateMiningStatusWithTime(
             this.targetAsteroid, 
             this.miningSpeed, 
@@ -144,7 +189,7 @@ export class MiningSystem {
         );
     }
     
-    stopMining() {
+    stopMining(): void {
         if (!this.isMining) return;
         
         this.isMining = false;
@@ -166,12 +211,13 @@ export class MiningSystem {
         this.uiUpdates.resetMiningStatus();
         
         // Stop laser sound
-        if (window.game && window.game.audio) {
-            window.game.audio.stopSound('mining-laser');
+        const windowWithGame = window as GameWindow;
+        if (windowWithGame.game && windowWithGame.game.audio) {
+            windowWithGame.game.audio.stopSound('mining-laser');
         }
     }
     
-    update(deltaTime = 1/60) {
+    update(deltaTime = 1/60): void {
         // Update mining cooldown
         if (this.miningCooldown > 0) {
             this.miningCooldown--;
@@ -191,7 +237,7 @@ export class MiningSystem {
         }
     }
     
-    updateMining(deltaTime = 1/60) {
+    updateMining(deltaTime = 1/60): void {
         // Make sure we have a target asteroid
         if (!this.targetAsteroid || !this.isMining) {
             this.stopMining();
@@ -243,7 +289,7 @@ export class MiningSystem {
     
     
     // New method to retrieve the last destroyed asteroid and reset the property
-    getLastDestroyedAsteroid() {
+    getLastDestroyedAsteroid(): MiningAsteroid | null {
         const destroyedAsteroid = this.lastDestroyedAsteroid;
         this.lastDestroyedAsteroid = null; // Reset after getting it
         return destroyedAsteroid;

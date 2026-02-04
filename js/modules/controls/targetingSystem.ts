@@ -2,8 +2,57 @@
 
 import * as THREE from 'three';
 
+type Asteroid = {
+    minable: boolean;
+    resourceType?: string;
+    mesh: THREE.Object3D & {
+        position: THREE.Vector3;
+        visible: boolean;
+        parent?: THREE.Object3D | null;
+    };
+};
+
+type Environment = {
+    asteroids: Asteroid[];
+};
+
+type SceneWithCamera = THREE.Scene & {
+    camera: THREE.Camera;
+};
+
+type GameWindow = Window & {
+    game?: {
+        environment?: Environment;
+    };
+    gameInstance?: {
+        environment?: Environment;
+    };
+};
+
 export class TargetingSystem {
-    constructor(spaceship, scene, environment) {
+    spaceship: {
+        mesh: {
+            position: THREE.Vector3;
+        };
+        scanRange?: number;
+    };
+    scene: SceneWithCamera;
+    environment: Environment;
+    lockOnEnabled: boolean;
+    nearbyAsteroids: Asteroid[];
+    currentLockOnIndex: number;
+    targetAsteroid: Asteroid | null;
+    scanRadius: number;
+    targetReticle!: THREE.Mesh;
+    offScreenContainer: HTMLDivElement | null = null;
+    offScreenIndicator: HTMLDivElement | null = null;
+    scanRadiusCounter?: number;
+    rescanCounter?: number;
+    lookAtCounter?: number;
+    pulseTime?: number;
+    uiUpdateCounter?: number;
+
+    constructor(spaceship: TargetingSystem['spaceship'], scene: SceneWithCamera, environment: Environment) {
         this.spaceship = spaceship;
         this.scene = scene;
         this.environment = environment;
@@ -19,7 +68,7 @@ export class TargetingSystem {
         this.createOffScreenIndicators();
     }
     
-    createTargetReticle() {
+    createTargetReticle(): void {
         // Create the target indicator geometry (outer ring)
         const ringGeometry = new THREE.RingGeometry(150, 180, 32);
         const ringMaterial = new THREE.MeshBasicMaterial({
@@ -47,14 +96,14 @@ export class TargetingSystem {
     }
     
     // Helper method to get the current scan radius from the spaceship
-    getScanRadius() {
+    getScanRadius(): number {
         // Increase default scan radius by 5x (from 1000 to 5000)
         return this.spaceship && this.spaceship.scanRange 
             ? this.spaceship.scanRange * 5 
             : 5000; // Default value increased by 5x
     }
     
-    toggleLockOn() {
+    toggleLockOn(): boolean {
         this.lockOnEnabled = !this.lockOnEnabled;
         
         if (this.lockOnEnabled) {
@@ -101,7 +150,7 @@ export class TargetingSystem {
         return this.lockOnEnabled;
     }
     
-    scanForAsteroids() {
+    scanForAsteroids(): boolean {
         this.nearbyAsteroids = [];
         const shipPosition = this.spaceship.mesh.position;
         
@@ -171,7 +220,7 @@ export class TargetingSystem {
         }
     }
     
-    cycleLockOnTarget() {
+    cycleLockOnTarget(_direction?: number): Asteroid | null {
         if (!this.lockOnEnabled || this.nearbyAsteroids.length === 0) return null;
         
         // Move to next target
@@ -179,7 +228,7 @@ export class TargetingSystem {
         return this.updateLockedOnTarget();
     }
     
-    updateLockedOnTarget() {
+    updateLockedOnTarget(): Asteroid | null {
         this.targetAsteroid = this.nearbyAsteroids[this.currentLockOnIndex];
         
         if (this.targetAsteroid) {
@@ -197,16 +246,19 @@ export class TargetingSystem {
             
             // Ensure proper scale and visibility
             this.targetReticle.scale.set(1, 1, 1);
-            this.targetReticle.material.opacity = 0.8;
+            (this.targetReticle.material as THREE.MeshBasicMaterial).opacity = 0.8;
             if (this.targetReticle.children.length > 0) {
-                this.targetReticle.children[0].material.opacity = 0.8;
+                const child = this.targetReticle.children[0] as THREE.Mesh;
+                if (child.material && 'opacity' in child.material) {
+                    (child.material as THREE.MeshBasicMaterial).opacity = 0.8;
+                }
             }
         }
         
         return this.targetAsteroid;
     }
     
-    getCurrentTarget() {
+    getCurrentTarget(): Asteroid | null {
         try {
             console.log("TargetingSystem: getCurrentTarget called");
             
@@ -231,11 +283,11 @@ export class TargetingSystem {
         }
     }
     
-    isLockOnEnabled() {
+    isLockOnEnabled(): boolean {
         return this.lockOnEnabled === true;
     }
     
-    findNearestTarget() {
+    findNearestTarget(): Asteroid | null {
         try {
             if (!this.spaceship || !this.spaceship.mesh || !this.spaceship.mesh.position) {
                 return null;
@@ -245,7 +297,8 @@ export class TargetingSystem {
             let asteroids = [];
             
             // Try to get asteroids from the game environment
-            const game = window.gameInstance || window.game;
+            const windowWithGame = window as GameWindow;
+            const game = windowWithGame.gameInstance || windowWithGame.game;
             if (game && game.environment && Array.isArray(game.environment.asteroids)) {
                 asteroids = game.environment.asteroids;
             } else {
@@ -291,7 +344,7 @@ export class TargetingSystem {
         }
     }
     
-    update() {
+    update(): void {
         // Only update scan radius every 30 frames for performance
         if (!this.scanRadiusCounter) this.scanRadiusCounter = 0;
         this.scanRadiusCounter++;
@@ -342,7 +395,7 @@ export class TargetingSystem {
             this.pulseTime += 0.02;  // Fixed time step
             const pulseValue = Math.sin(this.pulseTime);
             const opacity = 0.7 + 0.2 * pulseValue;  // Less dramatic pulsing
-            this.targetReticle.material.opacity = opacity;
+            (this.targetReticle.material as THREE.MeshBasicMaterial).opacity = opacity;
             
             // Update UI less frequently for performance
             if (!this.uiUpdateCounter) this.uiUpdateCounter = 0;
@@ -381,7 +434,7 @@ export class TargetingSystem {
         }
     }
     
-    setTarget(target) {
+    setTarget(target: Asteroid): boolean | void {
         try {
             console.log("TargetingSystem: setTarget called", target);
             
@@ -430,7 +483,7 @@ export class TargetingSystem {
         }
     }
     
-    calculateDistanceToTarget() {
+    calculateDistanceToTarget(): number {
         try {
             if (!this.targetAsteroid || !this.targetAsteroid.mesh || !this.targetAsteroid.mesh.position) {
                 console.error("TargetingSystem: Cannot calculate distance - invalid target asteroid");
@@ -451,7 +504,7 @@ export class TargetingSystem {
     }
     
     // Add methods for off-screen indicators
-    createOffScreenIndicators() {
+    createOffScreenIndicators(): void {
         // Create container for off-screen indicators
         this.offScreenContainer = document.createElement('div');
         this.offScreenContainer.id = 'off-screen-indicators';
@@ -479,7 +532,7 @@ export class TargetingSystem {
         this.offScreenContainer.appendChild(this.offScreenIndicator);
     }
     
-    hideOffScreenIndicators() {
+    hideOffScreenIndicators(): void {
         if (this.offScreenContainer) {
             this.offScreenContainer.style.display = 'none';
         }
@@ -488,7 +541,7 @@ export class TargetingSystem {
         }
     }
     
-    showOffScreenIndicator(screenPosition, targetDirection) {
+    showOffScreenIndicator(screenPosition: THREE.Vector2, targetDirection: THREE.Vector2): void {
         if (!this.offScreenContainer || !this.offScreenIndicator) return;
         
         // Show container
@@ -530,7 +583,7 @@ export class TargetingSystem {
     }
     
     // Helper methods for screen position calculations
-    isTargetOnScreen() {
+    isTargetOnScreen(): boolean {
         if (!this.targetAsteroid || !this.targetAsteroid.mesh) return false;
         
         const screenPosition = this.getScreenPosition(this.targetAsteroid.mesh.position);
@@ -543,7 +596,7 @@ export class TargetingSystem {
                screenPosition.y <= 1 - margin;
     }
     
-    getScreenPosition(worldPosition) {
+    getScreenPosition(worldPosition: THREE.Vector3): THREE.Vector2 {
         // Create a copy of the position
         const tempVector = new THREE.Vector3().copy(worldPosition);
         
@@ -553,7 +606,7 @@ export class TargetingSystem {
         return new THREE.Vector2(tempVector.x, tempVector.y);
     }
     
-    getTargetDirection() {
+    getTargetDirection(): THREE.Vector2 {
         // Get normalized direction vector from screen center to target
         const screenPosition = this.getScreenPosition(this.targetAsteroid.mesh.position);
         

@@ -1,6 +1,21 @@
 // gestureDetector.js - Touch gesture recognition for mobile controls
 
+type GesturePosition = {
+    x: number;
+    y: number;
+};
+
+type GestureCallback = (data: unknown) => void;
+
 export class GestureDetector {
+    isEnabled: boolean;
+    gestureCallbacks: Map<string, GestureCallback>;
+    touchStartTime: number;
+    touchStartPos: GesturePosition;
+    touchEndPos: GesturePosition;
+    swipeThreshold: number;
+    tapTimeout: number;
+
     constructor() {
         this.isEnabled = false;
         this.gestureCallbacks = new Map();
@@ -11,7 +26,7 @@ export class GestureDetector {
         this.tapTimeout = 300; // maximum time for tap
     }
 
-    enable() {
+    enable(): void {
         if (this.isEnabled) return;
         
         this.isEnabled = true;
@@ -22,7 +37,7 @@ export class GestureDetector {
         document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
     }
 
-    disable() {
+    disable(): void {
         if (!this.isEnabled) return;
         
         this.isEnabled = false;
@@ -33,7 +48,7 @@ export class GestureDetector {
         document.removeEventListener('touchend', this.handleTouchEnd.bind(this));
     }
 
-    handleTouchStart(event) {
+    handleTouchStart(event: TouchEvent): void {
         if (!this.isEnabled) return;
         
         // Ignore if touch is on a UI element (joystick or button)
@@ -47,7 +62,7 @@ export class GestureDetector {
         };
     }
 
-    handleTouchMove(event) {
+    handleTouchMove(event: TouchEvent): void {
         if (!this.isEnabled) return;
         
         // Ignore if touch is on a UI element
@@ -57,7 +72,7 @@ export class GestureDetector {
         event.preventDefault();
     }
 
-    handleTouchEnd(event) {
+    handleTouchEnd(event: TouchEvent): void {
         if (!this.isEnabled) return;
         
         // Ignore if touch is on a UI element
@@ -90,7 +105,7 @@ export class GestureDetector {
         }
     }
 
-    isTouchOnUIElement(target) {
+    isTouchOnUIElement(target: EventTarget | null): boolean {
         // Check if touch is on joystick zones or action buttons
         const uiSelectors = [
             '#leftJoystickZone',
@@ -101,7 +116,7 @@ export class GestureDetector {
         ];
         
         for (const selector of uiSelectors) {
-            if (target.closest && target.closest(selector)) {
+            if (target && 'closest' in target && typeof (target as Element).closest === 'function' && (target as Element).closest(selector)) {
                 return true;
             }
         }
@@ -109,13 +124,13 @@ export class GestureDetector {
         return false;
     }
 
-    calculateDistance(pos1, pos2) {
+    calculateDistance(pos1: GesturePosition, pos2: GesturePosition): number {
         const dx = pos2.x - pos1.x;
         const dy = pos2.y - pos1.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    getSwipeDirection(startPos, endPos) {
+    getSwipeDirection(startPos: GesturePosition, endPos: GesturePosition): string {
         const dx = endPos.x - startPos.x;
         const dy = endPos.y - startPos.y;
         
@@ -126,7 +141,7 @@ export class GestureDetector {
         }
     }
 
-    triggerGesture(gestureType, data) {
+    triggerGesture(gestureType: string, data: unknown): void {
         const callback = this.gestureCallbacks.get(gestureType);
         if (callback && typeof callback === 'function') {
             callback(data);
@@ -134,17 +149,17 @@ export class GestureDetector {
     }
 
     // Register callbacks for specific gestures
-    onGesture(gestureType, callback) {
+    onGesture(gestureType: string, callback: GestureCallback): void {
         this.gestureCallbacks.set(gestureType, callback);
     }
 
     // Remove gesture callback
-    offGesture(gestureType) {
+    offGesture(gestureType: string): void {
         this.gestureCallbacks.delete(gestureType);
     }
 
     // Clear all gesture callbacks
-    clearGestures() {
+    clearGestures(): void {
         this.gestureCallbacks.clear();
     }
 }

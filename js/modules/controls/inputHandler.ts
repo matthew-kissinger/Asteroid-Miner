@@ -1,7 +1,34 @@
 // inputHandler.js - Handles keyboard and mouse input
 
+type SpaceshipInput = {
+    isDocked: boolean;
+    thrust: {
+        forward: boolean;
+        backward: boolean;
+        right: boolean;
+        left: boolean;
+        boost: boolean;
+    };
+};
+
+type PhysicsInput = {
+    updateRotation: (deltaX: number, deltaY: number) => void;
+};
+
+type GameWindow = Window & {
+    game?: {
+        introSequenceActive?: boolean;
+    };
+    inputIntent?: number;
+};
+
 export class InputHandler {
-    constructor(spaceship, physics) {
+    spaceship: SpaceshipInput;
+    physics: PhysicsInput;
+    isPointerLocked: boolean;
+    mouseSensitivity: number;
+
+    constructor(spaceship: SpaceshipInput, physics: PhysicsInput) {
         this.spaceship = spaceship;
         this.physics = physics;
         this.isPointerLocked = false;
@@ -11,24 +38,26 @@ export class InputHandler {
         this.setupPointerLock();
     }
     
-    setupKeyboardControls() {
+    setupKeyboardControls(): void {
         // Keyboard controls
-        document.addEventListener('keydown', e => {
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
+            const windowWithGame = window as GameWindow;
             // Ignore inputs when docked or intro sequence is active
-            if (this.spaceship.isDocked || (window.game && window.game.introSequenceActive)) return;
+            if (this.spaceship.isDocked || (windowWithGame.game && windowWithGame.game.introSequenceActive)) return;
             
             switch (e.key.toLowerCase()) {
-                case 'w': window.inputIntent = (window.inputIntent||0) | 1; break;
-                case 's': window.inputIntent = (window.inputIntent||0) | 2; break;
-                case 'a': window.inputIntent = (window.inputIntent||0) | 4; break;
-                case 'd': window.inputIntent = (window.inputIntent||0) | 8; break;
-                case 'shift': window.inputIntent = (window.inputIntent||0) | 16; break;
+                case 'w': windowWithGame.inputIntent = (windowWithGame.inputIntent || 0) | 1; break;
+                case 's': windowWithGame.inputIntent = (windowWithGame.inputIntent || 0) | 2; break;
+                case 'a': windowWithGame.inputIntent = (windowWithGame.inputIntent || 0) | 4; break;
+                case 'd': windowWithGame.inputIntent = (windowWithGame.inputIntent || 0) | 8; break;
+                case 'shift': windowWithGame.inputIntent = (windowWithGame.inputIntent || 0) | 16; break;
             }
         });
         
-        document.addEventListener('keyup', e => {
+        document.addEventListener('keyup', (e: KeyboardEvent) => {
+            const windowWithGame = window as GameWindow;
             // Still process key up events when intro is active to prevent stuck keys
-            if (window.game && window.game.introSequenceActive) {
+            if (windowWithGame.game && windowWithGame.game.introSequenceActive) {
                 // Force reset all thrusters during intro sequence
                 this.spaceship.thrust.forward = false;
                 this.spaceship.thrust.backward = false;
@@ -38,7 +67,7 @@ export class InputHandler {
                 return;
             }
             
-            const clearBit = (bit) => { window.inputIntent = (window.inputIntent||0) & ~bit; };
+            const clearBit = (bit: number) => { windowWithGame.inputIntent = (windowWithGame.inputIntent || 0) & ~bit; };
             switch (e.key.toLowerCase()) {
                 case 'w': clearBit(1); break;
                 case 's': clearBit(2); break;
@@ -49,12 +78,12 @@ export class InputHandler {
         });
     }
     
-    setupPointerLock() {
+    setupPointerLock(): void {
         // Get the canvas element (it's the first canvas in the document)
-        const canvas = document.querySelector('canvas');
+        const canvas = document.querySelector('canvas') as HTMLCanvasElement;
         
         // Request pointer lock when clicking on the canvas
-        canvas.addEventListener('pointerdown', (e) => {
+        canvas.addEventListener('pointerdown', (e: PointerEvent) => {
             e.preventDefault(); // Prevent default to avoid unwanted behavior
             if (!this.isPointerLocked && !this.spaceship.isDocked) {
                 canvas.requestPointerLock();
@@ -101,9 +130,10 @@ export class InputHandler {
         });
     }
     
-    handlePointerMove(e) {
+    handlePointerMove(e: PointerEvent): void {
+        const windowWithGame = window as GameWindow;
         // Skip mouse movement handling during intro sequence
-        if (window.game && window.game.introSequenceActive) return;
+        if (windowWithGame.game && windowWithGame.game.introSequenceActive) return;
         
         if (!this.isPointerLocked) return;
         
@@ -119,11 +149,11 @@ export class InputHandler {
         );
     }
     
-    isLocked() {
+    isLocked(): boolean {
         return this.isPointerLocked;
     }
     
-    exitPointerLock() {
+    exitPointerLock(): void {
         if (document.exitPointerLock) {
             document.exitPointerLock();
         }

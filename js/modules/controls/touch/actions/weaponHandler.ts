@@ -1,15 +1,43 @@
 // weaponHandler.js - Weapon firing handlers for touch controls
 
+type WeaponSystem = {
+    setFiring?: (active: boolean) => void;
+    isWeaponActive?: boolean;
+};
+
+type GameWindow = Window & {
+    game?: {
+        combat?: WeaponSystem;
+        weaponSystem?: WeaponSystem;
+        controls?: {
+            weaponSystem?: WeaponSystem;
+        };
+        audio?: {
+            playSound: (id: string) => void;
+            stopSound: (id: string) => void;
+        };
+    };
+    gameInstance?: {
+        combat?: WeaponSystem;
+        audio?: {
+            playSound: (id: string) => void;
+            stopSound: (id: string) => void;
+        };
+    };
+};
+
 export class WeaponHandler {
+    weaponSystem: WeaponSystem | null;
+
     constructor() {
         this.weaponSystem = null;
     }
 
-    setWeaponSystem(weaponSystem) {
+    setWeaponSystem(weaponSystem: WeaponSystem | null) {
         this.weaponSystem = weaponSystem;
     }
 
-    handleFiringStart() {
+    handleFiringStart(): void {
         try {
             // First try local reference to weapon system (which is actually the Combat class)
             if (this.weaponSystem) {
@@ -22,7 +50,8 @@ export class WeaponHandler {
                 }
                 
                 // Try to play sound if available
-                const game = window.gameInstance || window.game;
+                const windowWithGame = window as GameWindow;
+                const game = windowWithGame.gameInstance || windowWithGame.game;
                 if (game && game.audio) {
                     game.audio.playSound('laser');
                 }
@@ -30,7 +59,8 @@ export class WeaponHandler {
             }
             
             // Fallback to global game reference
-            const game = window.gameInstance || window.game;
+            const windowWithGame = window as GameWindow;
+            const game = windowWithGame.gameInstance || windowWithGame.game;
             if (!game) {
                 console.error("WeaponHandler: No game reference found");
                 return;
@@ -83,7 +113,7 @@ export class WeaponHandler {
         }
     }
 
-    handleFiringEnd() {
+    handleFiringEnd(): void {
         try {
             // First try local reference to weapon system (which is actually the Combat class)
             if (this.weaponSystem) {
@@ -96,7 +126,8 @@ export class WeaponHandler {
                 }
                 
                 // Try to stop sound if available
-                const game = window.gameInstance || window.game;
+                const windowWithGame = window as GameWindow;
+                const game = windowWithGame.gameInstance || windowWithGame.game;
                 if (game && game.audio) {
                     game.audio.stopSound('laser');
                 }
@@ -104,7 +135,8 @@ export class WeaponHandler {
             }
             
             // Fallback to global game reference
-            const game = window.gameInstance || window.game;
+            const windowWithGame = window as GameWindow;
+            const game = windowWithGame.gameInstance || windowWithGame.game;
             if (!game) {
                 console.error("WeaponHandler: No game reference found");
                 return;

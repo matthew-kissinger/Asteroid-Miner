@@ -1,13 +1,75 @@
 // uiIntegration.js - Handles UI integration for docking system
 
+type DockingSpaceship = {
+    isDocked: boolean;
+    credits: number;
+    fuelUpgradeCost: number;
+    engineUpgradeCost: number;
+    miningUpgradeCost: number;
+    hullUpgradeCost: number;
+    scannerUpgradeCost: number;
+    miningEfficiency: number;
+    refuel: () => number;
+    repairShield: () => number;
+    repairHull: () => number;
+    upgradeFuelTank: () => void;
+    upgradeEngine: () => void;
+    upgradeMiningLaser: () => void;
+    upgradeHull: () => void;
+    upgradeScanner: () => void;
+};
+
+type DockingUI = {
+    stargateInterface?: {
+        showDockingPrompt?: () => void;
+        hideDockingPrompt?: () => void;
+        updateStargateUI?: (spaceship: DockingSpaceship, resources: ResourceInventory | null) => void;
+        hideStargateUI?: () => void;
+    };
+    controls?: {
+        miningSystem?: {
+            miningSpeedByType: Record<string, number>;
+        };
+        isMobile?: boolean;
+        touchControls?: {
+            showDockButton?: () => void;
+            hideDockButton?: () => void;
+        };
+    };
+    stargate?: unknown;
+    hideUI?: () => void;
+    showUI?: () => void;
+};
+
+type ResourceInventory = {
+    iron: number;
+    gold: number;
+    platinum: number;
+};
+
+type GameWindow = Window & {
+    game?: {
+        ui?: {
+            starMap?: {
+                hide?: () => void;
+            };
+            customSystemCreator?: {
+                hide?: () => void;
+            };
+        };
+    };
+};
+
 export class UIIntegration {
+    resources: ResourceInventory | null;
+
     constructor() {
         this.resources = null;
     }
 
-    setupDockingControls(proximityDetector, dockingLogic, spaceship, ui) {
+    setupDockingControls(proximityDetector: { isNearStargate: () => boolean }, dockingLogic: { dockWithStargate: (spaceship: DockingSpaceship, stargate: unknown, ui: DockingUI) => void }, spaceship: DockingSpaceship, ui: DockingUI): void {
         // Add docking key handler (Q key)
-        document.addEventListener('keydown', e => {
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
             if (e.key.toLowerCase() === 'q') {
                 if (proximityDetector.isNearStargate() && !spaceship.isDocked) {
                     console.log("Q key pressed: Docking with stargate");
@@ -24,7 +86,7 @@ export class UIIntegration {
         this.setupStargateUIControls(spaceship, ui);
     }
 
-    setupStargateUIControls(spaceship, ui) {
+    setupStargateUIControls(spaceship: DockingSpaceship, ui: DockingUI): void {
         // Set up refuel button
         const refuelBtn = document.getElementById('refuel-btn');
         if (refuelBtn) {
@@ -68,23 +130,23 @@ export class UIIntegration {
         this.setupUpgradeButtons(spaceship, ui);
     }
 
-    setupUndockButton() {
+    setupUndockButton(): void {
         const undockBtn = document.getElementById('undock-btn');
         if (undockBtn) {
             // The undock handler will be set up by the main docking system
             // This is just for mobile-specific touch handling
-            undockBtn.addEventListener('touchstart', (e) => {
+            undockBtn.addEventListener('touchstart', (e: TouchEvent) => {
                 console.log("Touch started on undock button");
                 e.stopPropagation();
             }, { passive: false });
         }
     }
 
-    setupSellingButtons(spaceship, ui) {
+    setupSellingButtons(spaceship: DockingSpaceship, ui: DockingUI): void {
         const sellIronBtn = document.getElementById('sell-iron');
         if (sellIronBtn) {
             sellIronBtn.addEventListener('click', () => {
-                if (this.resources.iron > 0) {
+                if (this.resources && this.resources.iron > 0) {
                     spaceship.credits += this.resources.iron * 10;
                     this.resources.iron = 0;
                     this.updateStargateUI(spaceship, ui);
@@ -95,7 +157,7 @@ export class UIIntegration {
         const sellGoldBtn = document.getElementById('sell-gold');
         if (sellGoldBtn) {
             sellGoldBtn.addEventListener('click', () => {
-                if (this.resources.gold > 0) {
+                if (this.resources && this.resources.gold > 0) {
                     spaceship.credits += this.resources.gold * 50;
                     this.resources.gold = 0;
                     this.updateStargateUI(spaceship, ui);
@@ -106,7 +168,7 @@ export class UIIntegration {
         const sellPlatinumBtn = document.getElementById('sell-platinum');
         if (sellPlatinumBtn) {
             sellPlatinumBtn.addEventListener('click', () => {
-                if (this.resources.platinum > 0) {
+                if (this.resources && this.resources.platinum > 0) {
                     spaceship.credits += this.resources.platinum * 200;
                     this.resources.platinum = 0;
                     this.updateStargateUI(spaceship, ui);
@@ -115,7 +177,7 @@ export class UIIntegration {
         }
     }
 
-    setupUpgradeButtons(spaceship, ui) {
+    setupUpgradeButtons(spaceship: DockingSpaceship, ui: DockingUI): void {
         // Fuel tank upgrade button handler
         this.setupUpgradeButton('upgrade-fuel-tank', 
             () => spaceship.fuelUpgradeCost,
@@ -148,7 +210,13 @@ export class UIIntegration {
     }
 
     // Helper method to set up an upgrade button with a given cost getter and upgrade function
-    setupUpgradeButton(buttonId, costGetter, upgradeFunction, spaceship, ui) {
+    setupUpgradeButton(
+        buttonId: string,
+        costGetter: () => number,
+        upgradeFunction: () => void,
+        spaceship: DockingSpaceship,
+        ui: DockingUI
+    ): void {
         const button = document.getElementById(buttonId);
         if (button) {
             button.addEventListener('click', () => {
@@ -170,7 +238,7 @@ export class UIIntegration {
     }
 
     // Method to update the mining system when mining efficiency is upgraded
-    updateMiningSystem(spaceship, ui) {
+    updateMiningSystem(spaceship: DockingSpaceship, ui: DockingUI): void {
         // Find the mining system through the Controls object to pass the new efficiency
         if (ui && ui.controls && ui.controls.miningSystem) {
             // Apply the mining efficiency to the mining speed
@@ -187,14 +255,14 @@ export class UIIntegration {
         }
     }
 
-    updateStargateUI(spaceship, ui) {
+    updateStargateUI(spaceship: DockingSpaceship, ui: DockingUI): void {
         if (ui && ui.stargateInterface) {
             ui.stargateInterface.updateStargateUI(spaceship, this.resources);
         }
     }
 
     // Optimized method to hide UI elements using a single reflow
-    hideStargateUI(ui) {
+    hideStargateUI(ui: DockingUI): void {
         if (ui && ui.stargateInterface) {
             // Use CSS class for better performance
             document.body.classList.add('undocking');
@@ -204,7 +272,7 @@ export class UIIntegration {
     }
 
     // Optimized method to show game UI elements using a single reflow
-    showGameUI(ui) {
+    showGameUI(ui: DockingUI): void {
         if (ui) {
             // Use CSS class for better performance
             document.body.classList.remove('undocking');
@@ -214,7 +282,7 @@ export class UIIntegration {
     }
 
     // Method to close any open modal UI that might conflict with undocking
-    closeAllModals() {
+    closeAllModals(): void {
         try {
             // Close custom system creator if it's open
             const customSystemCreator = document.getElementById('custom-system-creator');
@@ -230,15 +298,16 @@ export class UIIntegration {
                 }
                 
                 // Force game objects to clean up their modal state
-                if (window.game && window.game.ui) {
+                const windowWithGame = window as GameWindow;
+                if (windowWithGame.game && windowWithGame.game.ui) {
                     // Check for star map
-                    if (window.game.ui.starMap && typeof window.game.ui.starMap.hide === 'function') {
-                        window.game.ui.starMap.hide();
+                    if (windowWithGame.game.ui.starMap && typeof windowWithGame.game.ui.starMap.hide === 'function') {
+                        windowWithGame.game.ui.starMap.hide();
                     }
                     
                     // Check for custom system creator
-                    if (window.game.ui.customSystemCreator && typeof window.game.ui.customSystemCreator.hide === 'function') {
-                        window.game.ui.customSystemCreator.hide();
+                    if (windowWithGame.game.ui.customSystemCreator && typeof windowWithGame.game.ui.customSystemCreator.hide === 'function') {
+                        windowWithGame.game.ui.customSystemCreator.hide();
                     }
                     
                     // Cleanup any modal state on the body
@@ -272,7 +341,7 @@ export class UIIntegration {
     }
 
     // Setter for resources to allow dependency injection
-    setResources(resources) {
+    setResources(resources: ResourceInventory): void {
         this.resources = resources;
     }
 }

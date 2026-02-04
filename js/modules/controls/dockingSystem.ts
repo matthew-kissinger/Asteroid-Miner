@@ -1,11 +1,59 @@
 // dockingSystem.js - Handles stargate docking and trading
 
-import { ProximityDetector } from './docking/proximityDetector.js';
-import { DockingLogic } from './docking/dockingLogic.js';
-import { UIIntegration } from './docking/uiIntegration.js';
+import { ProximityDetector } from './docking/proximityDetector.ts';
+import { DockingLogic } from './docking/dockingLogic.ts';
+import { UIIntegration } from './docking/uiIntegration.ts';
+
+type DockingSpaceship = {
+    isDocked: boolean;
+    undockLocation?: {
+        set: (x: number, y: number, z: number) => void;
+    };
+    world?: {
+        messageBus?: {
+            publish: (event: string, data?: unknown) => void;
+        };
+    };
+    mesh?: {
+        position: {
+            clone: () => unknown;
+        };
+    };
+};
+
+type DockingUI = {
+    stargateInterface?: {
+        showStargateUI?: () => void;
+        updateStargateUI?: (spaceship: DockingSpaceship, resources: unknown) => void;
+        hideStargateUI?: () => void;
+        showDockingPrompt?: () => void;
+        hideDockingPrompt?: () => void;
+    };
+    hideUI?: () => void;
+    showUI?: () => void;
+    controls?: {
+        isMobile?: boolean;
+        touchControls?: {
+            showDockButton?: () => void;
+            hideDockButton?: () => void;
+        };
+        miningSystem?: unknown;
+    };
+    stargate?: unknown;
+};
 
 export class DockingSystem {
-    constructor(spaceship, stargate, ui) {
+    spaceship: DockingSpaceship;
+    stargate: unknown;
+    ui: DockingUI;
+    proximityDetector: ProximityDetector;
+    dockingLogic: DockingLogic;
+    uiIntegration: UIIntegration;
+    isDocked: boolean;
+    nearStargate?: boolean;
+    resources?: unknown;
+
+    constructor(spaceship: DockingSpaceship, stargate: unknown, ui: DockingUI) {
         this.spaceship = spaceship;
         this.stargate = stargate;
         this.ui = ui;
@@ -36,7 +84,7 @@ export class DockingSystem {
         }
     }
     
-    setupDockingControls() {
+    setupDockingControls(): void {
         // Delegate to UI integration module
         this.uiIntegration.setupDockingControls(
             this.proximityDetector, 
@@ -49,16 +97,16 @@ export class DockingSystem {
         this.setupUndockButton();
     }
     
-    setupStargateUIControls() {
+    setupStargateUIControls(): void {
         // Delegate to UI integration module
         this.uiIntegration.setupStargateUIControls(this.spaceship, this.ui);
     }
     
-    setupUndockButton() {
+    setupUndockButton(): void {
         const undockBtn = document.getElementById('undock-btn');
         if (undockBtn) {
             // Use both click and touchend events for better Android compatibility
-            const handleUndock = (e) => {
+            const handleUndock = (e: Event) => {
                 // Prevent any default action that might interfere
                 e.preventDefault();
                 e.stopPropagation();
@@ -85,7 +133,7 @@ export class DockingSystem {
         }
     }
     
-    dockWithStargate() {
+    dockWithStargate(): void {
         this.dockingLogic.dockWithStargate(this.spaceship, this.stargate, this.ui);
         this.isDocked = true;
         
@@ -93,7 +141,7 @@ export class DockingSystem {
         this.updateStargateUI();
     }
     
-    async undockFromStargate() {
+    async undockFromStargate(): Promise<void> {
         await this.dockingLogic.undockFromStargate(
             this.spaceship, 
             this.ui,
@@ -104,22 +152,22 @@ export class DockingSystem {
         this.isDocked = false;
     }
     
-    updateStargateUI() {
+    updateStargateUI(): void {
         this.uiIntegration.updateStargateUI(this.spaceship, this.ui);
     }
     
-    checkStargateProximity() {
+    checkStargateProximity(): void {
         this.proximityDetector.checkStargateProximity(this.spaceship, this.stargate, this.ui);
         this.nearStargate = this.proximityDetector.isNearStargate();
     }
     
-    update() {
+    update(): void {
         // Check if near stargate for docking
         this.checkStargateProximity();
     }
     
     // Setter for resources to allow dependency injection
-    setResources(resources) {
+    setResources(resources: unknown): void {
         this.resources = resources;
         this.uiIntegration.setResources(resources);
     }

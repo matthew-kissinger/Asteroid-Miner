@@ -1,6 +1,59 @@
 // dockingLogic.js - Core docking and undocking logic
 
+type MessageBus = {
+    publish: (event: string, data?: unknown) => void;
+};
+
+type DockingSpaceship = {
+    isDocked: boolean;
+    dock: () => void;
+    undock: () => unknown;
+    mesh: {
+        position: {
+            clone: () => unknown;
+        };
+    };
+    world?: {
+        messageBus?: MessageBus;
+    };
+    shield: number;
+    maxShield: number;
+    hull: number;
+    maxHull: number;
+    syncValuesToHealthComponent: () => void;
+};
+
+type DockingUI = {
+    stargateInterface?: {
+        showStargateUI?: () => void;
+        updateStargateUI?: (spaceship: DockingSpaceship, resources: unknown) => void;
+        hideStargateUI?: () => void;
+    };
+    hideUI?: () => void;
+    showUI?: () => void;
+};
+
+type GameWindow = Window & {
+    game?: {
+        messageBus?: MessageBus;
+        ui?: {
+            starMap?: {
+                hide?: () => void;
+            };
+            customSystemCreator?: {
+                hide?: () => void;
+            };
+        };
+    };
+    mainMessageBus?: MessageBus;
+};
+
 export class DockingLogic {
+    isDocked: boolean;
+    dockingAvailable: boolean;
+    autoPointerLockOnUndock: boolean;
+    preUndockShieldValue: number;
+
     constructor() {
         this.isDocked = false;
         this.dockingAvailable = false;
@@ -9,14 +62,14 @@ export class DockingLogic {
     }
 
     // Method to detect mobile devices
-    isMobileDevice() {
+    isMobileDevice(): boolean {
         return ('ontouchstart' in window) || 
                (navigator.maxTouchPoints > 0) || 
                (navigator.msMaxTouchPoints > 0) ||
                (window.innerWidth < 900);
     }
 
-    dockWithStargate(spaceship, stargate, ui) {
+    dockWithStargate(spaceship: DockingSpaceship, stargate: unknown, ui: DockingUI): void {
         console.log("Docking with stargate");
         
         // Only update ship state if it's not already docked
@@ -79,7 +132,7 @@ export class DockingLogic {
     }
 
     // Helper to wrap steps in requestAnimationFrame for smoother UI updates
-    async performStep(stepFunction, stepName) {
+    async performStep(stepFunction: () => void, stepName: string): Promise<void> {
         return new Promise(resolve => {
             requestAnimationFrame(() => {
                 try {
@@ -94,12 +147,12 @@ export class DockingLogic {
     }
 
     // Helper to yield control to the browser
-    async yieldToBrowser() {
+    async yieldToBrowser(): Promise<void> {
         return new Promise(resolve => requestAnimationFrame(resolve));
     }
 
     // Optimized method to reset mobile styles
-    resetMobileStyles() {
+    resetMobileStyles(): void {
         // Immediately remove problematic classes for Android
         if (this.isMobileDevice()) {
             document.body.classList.remove('undocking', 'modal-open');
@@ -131,7 +184,7 @@ export class DockingLogic {
     }
 
     // Helper method to request pointer lock
-    requestPointerLock() {
+    requestPointerLock(): void {
         // Find the canvas element (it should be the first one in the document)
         const canvas = document.querySelector('canvas');
         if (canvas && !document.pointerLockElement) {
@@ -143,7 +196,14 @@ export class DockingLogic {
         }
     }
 
-    async undockFromStargate(spaceship, ui, closeAllModalsCallback, hideStargateUICallback, showGameUICallback) {
+    async undockFromStargate(
+        spaceship: DockingSpaceship,
+        ui: DockingUI,
+        closeAllModalsCallback: () => void,
+        hideStargateUICallback: () => void,
+        showGameUICallback: () => void
+    ): Promise<void> {
+        void ui;
         if (!spaceship.isDocked) {
             console.log("Not docked, can't undock");
             return;
@@ -210,7 +270,8 @@ export class DockingLogic {
             };
 
             // Publish to appropriate message bus
-            const messageBus = window.game?.messageBus || window.mainMessageBus;
+            const windowWithGame = window as GameWindow;
+            const messageBus = windowWithGame.game?.messageBus || windowWithGame.mainMessageBus;
             if (messageBus) {
                 messageBus.publish('player.undocked', healthData);
                 console.log("Published player.undocked event with health values:", healthData);

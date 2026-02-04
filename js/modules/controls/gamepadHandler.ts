@@ -1,8 +1,96 @@
 // gamepadHandler.js - Handles gamepad/controller input
 // Supports Xbox, PlayStation, and generic controllers
 
+type SpaceshipInput = {
+    isDocked: boolean;
+    thrust: {
+        forward: boolean;
+        backward: boolean;
+        left: boolean;
+        right: boolean;
+        boost: boolean;
+    };
+    thrustPower: number;
+    strafePower: number;
+};
+
+type PhysicsInput = {
+    updateRotation: (deltaX: number, deltaY: number) => void;
+};
+
+type TargetingSystem = {
+    toggleLockOn: () => void;
+    cycleLockOnTarget?: (direction?: number) => unknown;
+    getCurrentTarget?: () => unknown;
+};
+
+type MiningSystem = {
+    isMining: boolean;
+    stopMining: () => void;
+    startMining: () => void;
+    setTargetAsteroid: (target: unknown) => void;
+};
+
+type DockingSystem = {
+    canDock?: () => boolean;
+    initiateDocking?: () => void;
+};
+
+type ControlsInput = {
+    targetingSystem?: TargetingSystem;
+    miningSystem?: MiningSystem;
+    dockingSystem?: DockingSystem;
+    weaponSystem?: unknown;
+};
+
+type GameWindow = Window & {
+    game?: {
+        introSequenceActive?: boolean;
+        deployTurret?: () => void;
+        deployShieldDrone?: () => void;
+        togglePause?: () => void;
+        combat?: {
+            setFiring: (isFiring: boolean) => void;
+        };
+    };
+    gameInstance?: {
+        combat?: {
+            setFiring: (isFiring: boolean) => void;
+        };
+    };
+};
+
 export class GamepadHandler {
-    constructor(spaceship, physics, controls) {
+    spaceship: SpaceshipInput;
+    physics: PhysicsInput;
+    controls: ControlsInput;
+    gamepads: Record<number, Gamepad>;
+    activeGamepadIndex: number | null;
+    enabled: boolean;
+    vibrationEnabled: boolean;
+    deadZone: number;
+    triggerDeadZone: number;
+    lookSensitivity: number;
+    movementSensitivity: number;
+    rotationSmoothing: {
+        targetX: number;
+        targetY: number;
+        currentX: number;
+        currentY: number;
+        smoothingFactor: number;
+    };
+    buttonMap: Record<string, number>;
+    axisMap: Record<string, number>;
+    buttonStates: Record<number, boolean>;
+    previousButtonStates: Record<number, boolean>;
+    wasFiring: boolean;
+    debugMode: boolean;
+    debugDisplay: HTMLDivElement | null;
+    rightStickXAxis: number;
+    rightStickYAxis: number;
+    axisDetectionMode: boolean;
+
+    constructor(spaceship: SpaceshipInput, physics: PhysicsInput, controls: ControlsInput) {
         this.spaceship = spaceship;
         this.physics = physics;
         this.controls = controls; // Reference to main controls for mining/targeting/etc
@@ -80,9 +168,14 @@ export class GamepadHandler {
         // Debug mode for testing
         this.debugMode = false; // Disabled now that we found the correct mapping
         this.debugDisplay = null;
+
+        // Right stick axes (default mapping)
+        this.rightStickXAxis = 3;
+        this.rightStickYAxis = 4;
+        this.axisDetectionMode = false;
     }
     
-    init() {
+    init(): void {
         // Check for gamepad support
         if (!('getGamepads' in navigator)) {
             console.warn('Gamepad API not supported in this browser');
@@ -90,13 +183,13 @@ export class GamepadHandler {
         }
         
         // Listen for gamepad connections
-        window.addEventListener('gamepadconnected', (e) => {
+        window.addEventListener('gamepadconnected', (e: GamepadEvent) => {
             console.log(`Gamepad connected: ${e.gamepad.id} (index: ${e.gamepad.index})`);
             this.onGamepadConnected(e.gamepad);
         });
         
         // Listen for gamepad disconnections
-        window.addEventListener('gamepaddisconnected', (e) => {
+        window.addEventListener('gamepaddisconnected', (e: GamepadEvent) => {
             console.log(`Gamepad disconnected: ${e.gamepad.id} (index: ${e.gamepad.index})`);
             this.onGamepadDisconnected(e.gamepad);
         });
@@ -107,7 +200,7 @@ export class GamepadHandler {
         console.log('Gamepad handler initialized - ready for controller input');
     }
     
-    scanForGamepads() {
+    scanForGamepads(): void {
         const gamepads = navigator.getGamepads();
         for (let i = 0; i < gamepads.length; i++) {
             if (gamepads[i]) {
@@ -116,7 +209,7 @@ export class GamepadHandler {
         }
     }
     
-    onGamepadConnected(gamepad) {
+    onGamepadConnected(gamepad: Gamepad): void {
         this.gamepads[gamepad.index] = gamepad;
         
         // Set as active if no active gamepad
@@ -129,7 +222,7 @@ export class GamepadHandler {
         }
     }
     
-    onGamepadDisconnected(gamepad) {
+    onGamepadDisconnected(gamepad: Gamepad): void {
         delete this.gamepads[gamepad.index];
         
         // If this was the active gamepad, find another
@@ -140,13 +233,13 @@ export class GamepadHandler {
             // Try to find another connected gamepad
             for (let index in this.gamepads) {
                 this.activeGamepadIndex = parseInt(index);
-                this.showNotification(`Switched to controller: ${this.getGamepadName(this.gamepads[index])}`);
+                this.showNotification(`Switched to controller: ${this.getGamepadName(this.gamepads[parseInt(index, 10)])}`);
                 break;
             }
         }
     }
     
-    getGamepadName(gamepad) {
+    getGamepadName(gamepad: Gamepad): string {
         // Simplify gamepad names for display
         const name = gamepad.id.toLowerCase();
         if (name.includes('xbox')) return 'Xbox Controller';
@@ -155,7 +248,7 @@ export class GamepadHandler {
         return 'Generic Controller';
     }
     
-    update(deltaTime) {
+    update(deltaTime: number): void {
         if (!this.enabled || this.activeGamepadIndex === null) return;
         
         // Get fresh gamepad state (must call this each frame)
@@ -170,7 +263,8 @@ export class GamepadHandler {
         }
         
         // Skip input during intro sequence or when docked
-        if ((window.game && window.game.introSequenceActive) || this.spaceship.isDocked) {
+        const windowWithGame = window as GameWindow;
+        if ((windowWithGame.game && windowWithGame.game.introSequenceActive) || this.spaceship.isDocked) {
             // Reset all controls
             this.resetControls();
             return;
@@ -197,7 +291,7 @@ export class GamepadHandler {
         this.handleTriggers(gamepad);
     }
     
-    handleMovement(gamepad) {
+    handleMovement(gamepad: Gamepad): void {
         // Left stick - movement
         const leftX = this.applyDeadZone(gamepad.axes[this.axisMap.LEFT_STICK_X]);
         const leftY = this.applyDeadZone(gamepad.axes[this.axisMap.LEFT_STICK_Y]);
@@ -237,15 +331,16 @@ export class GamepadHandler {
         }
     }
     
-    handleCameraLook(gamepad, deltaTime) {
+    handleCameraLook(gamepad: Gamepad, deltaTime: number): void {
         // YOUR CONTROLLER: Right stick is on axes 3 (horizontal) and 4 (vertical)
+        void deltaTime;
         const rightStickX = this.applyDeadZone(gamepad.axes[3] || 0); // Horizontal movement
         const rightStickY = this.applyDeadZone(gamepad.axes[4] || 0); // Vertical movement
         
         // Apply response curve for finer control
         // This makes small movements even smaller (for precision aiming)
         // and keeps large movements responsive (for quick turns)
-        const applyCurve = (value) => {
+        const applyCurve = (value: number) => {
             const sign = Math.sign(value);
             const abs = Math.abs(value);
             // Quadratic curve for the first 50%, linear for the rest
@@ -279,7 +374,8 @@ export class GamepadHandler {
         }
     }
     
-    handleButtons(gamepad) {
+    handleButtons(gamepad: Gamepad): void {
+        void gamepad;
         // A button - Toggle targeting system
         if (this.wasButtonPressed(this.buttonMap.A)) {
             if (this.controls && this.controls.targetingSystem) {
@@ -295,7 +391,7 @@ export class GamepadHandler {
                     this.controls.miningSystem.stopMining();
                 } else {
                     // Not mining - try to start
-                    const target = this.controls.targetingSystem.getCurrentTarget();
+                    const target = this.controls.targetingSystem.getCurrentTarget?.();
                     if (target) {
                         this.controls.miningSystem.setTargetAsteroid(target);
                         this.controls.miningSystem.startMining();
@@ -306,15 +402,16 @@ export class GamepadHandler {
         
         // X button - Dock when near stargate
         if (this.wasButtonPressed(this.buttonMap.X)) {
-            if (this.controls && this.controls.dockingSystem && this.controls.dockingSystem.canDock()) {
-                this.controls.dockingSystem.initiateDocking();
+            if (this.controls && this.controls.dockingSystem && this.controls.dockingSystem.canDock && this.controls.dockingSystem.canDock()) {
+                this.controls.dockingSystem.initiateDocking?.();
             }
         }
         
         // Y button - Deploy turret
         if (this.wasButtonPressed(this.buttonMap.Y)) {
-            if (window.game && window.game.deployTurret) {
-                window.game.deployTurret();
+            const windowWithGame = window as GameWindow;
+            if (windowWithGame.game && windowWithGame.game.deployTurret) {
+                windowWithGame.game.deployTurret();
             }
         }
         
@@ -322,14 +419,14 @@ export class GamepadHandler {
         if (this.wasButtonPressed(this.buttonMap.LB)) {
             // Previous target
             if (this.controls && this.controls.targetingSystem) {
-                this.controls.targetingSystem.cycleLockOnTarget(-1);
+                this.controls.targetingSystem.cycleLockOnTarget?.(-1);
             }
         }
         
         if (this.wasButtonPressed(this.buttonMap.RB)) {
             // Next target
             if (this.controls && this.controls.targetingSystem) {
-                const target = this.controls.targetingSystem.cycleLockOnTarget(1);
+                const target = this.controls.targetingSystem.cycleLockOnTarget?.(1);
                 if (target && this.controls.miningSystem) {
                     this.controls.miningSystem.setTargetAsteroid(target);
                 }
@@ -341,27 +438,30 @@ export class GamepadHandler {
         // D-Pad for quick actions
         if (this.wasButtonPressed(this.buttonMap.DPAD_UP)) {
             // Deploy turret
-            if (window.game && window.game.deployTurret) {
-                window.game.deployTurret();
+            const windowWithGame = window as GameWindow;
+            if (windowWithGame.game && windowWithGame.game.deployTurret) {
+                windowWithGame.game.deployTurret();
             }
         }
         
         if (this.wasButtonPressed(this.buttonMap.DPAD_DOWN)) {
             // Deploy shield drone
-            if (window.game && window.game.deployShieldDrone) {
-                window.game.deployShieldDrone();
+            const windowWithGame = window as GameWindow;
+            if (windowWithGame.game && windowWithGame.game.deployShieldDrone) {
+                windowWithGame.game.deployShieldDrone();
             }
         }
         
         // Start button - Pause/Menu
         if (this.wasButtonPressed(this.buttonMap.START)) {
-            if (window.game && window.game.togglePause) {
-                window.game.togglePause();
+            const windowWithGame = window as GameWindow;
+            if (windowWithGame.game && windowWithGame.game.togglePause) {
+                windowWithGame.game.togglePause();
             }
         }
     }
     
-    handleTriggers(gamepad) {
+    handleTriggers(gamepad: Gamepad): void {
         // Check triggers - most controllers use buttons 6 and 7
         let rtValue = 0;
         let ltValue = 0;
@@ -388,16 +488,18 @@ export class GamepadHandler {
         if (rtValue > this.triggerDeadZone) {
             if (!this.wasFiring) {
                 // Start firing
-                if (window.game && window.game.combat) {
-                    window.game.combat.setFiring(true);
+                const windowWithGame = window as GameWindow;
+                if (windowWithGame.game && windowWithGame.game.combat) {
+                    windowWithGame.game.combat.setFiring(true);
                     this.wasFiring = true;
                 }
             }
         } else {
             if (this.wasFiring) {
                 // Stop firing
-                if (window.game && window.game.combat) {
-                    window.game.combat.setFiring(false);
+                const windowWithGame = window as GameWindow;
+                if (windowWithGame.game && windowWithGame.game.combat) {
+                    windowWithGame.game.combat.setFiring(false);
                     this.wasFiring = false;
                 }
             }
@@ -407,7 +509,7 @@ export class GamepadHandler {
         // Disabled for now to avoid conflicts - use B button instead
     }
     
-    applyDeadZone(value) {
+    applyDeadZone(value: number): number {
         if (Math.abs(value) < this.deadZone) {
             return 0;
         }
@@ -416,24 +518,25 @@ export class GamepadHandler {
         return sign * ((Math.abs(value) - this.deadZone) / (1 - this.deadZone));
     }
     
-    wasButtonPressed(buttonIndex) {
+    wasButtonPressed(buttonIndex: number): boolean {
         // Returns true only on the frame the button was pressed (not held)
         return this.buttonStates[buttonIndex] && !this.previousButtonStates[buttonIndex];
     }
     
-    wasButtonReleased(buttonIndex) {
+    wasButtonReleased(buttonIndex: number): boolean {
         // Returns true only on the frame the button was released
         return !this.buttonStates[buttonIndex] && this.previousButtonStates[buttonIndex];
     }
     
-    vibrate(intensity = 0.5, duration = 100) {
+    vibrate(intensity = 0.5, duration = 100): void {
         if (!this.vibrationEnabled || this.activeGamepadIndex === null) return;
         
         const gamepads = navigator.getGamepads();
         const gamepad = gamepads[this.activeGamepadIndex];
+        const hapticsGamepad = gamepad as Gamepad & { vibrationActuator?: GamepadHapticActuator };
         
-        if (gamepad && gamepad.vibrationActuator) {
-            gamepad.vibrationActuator.playEffect('dual-rumble', {
+        if (hapticsGamepad && hapticsGamepad.vibrationActuator) {
+            hapticsGamepad.vibrationActuator.playEffect('dual-rumble', {
                 startDelay: 0,
                 duration: duration,
                 weakMagnitude: intensity * 0.5,
@@ -442,7 +545,7 @@ export class GamepadHandler {
         }
     }
     
-    resetControls() {
+    resetControls(): void {
         // Reset all spaceship controls
         this.spaceship.thrust.forward = false;
         this.spaceship.thrust.backward = false;
@@ -453,7 +556,7 @@ export class GamepadHandler {
         this.spaceship.strafePower = 1.0;
     }
     
-    showNotification(message) {
+    showNotification(message: string): void {
         // Show a temporary notification for gamepad events
         const notification = document.createElement('div');
         notification.style.position = 'fixed';
@@ -481,28 +584,28 @@ export class GamepadHandler {
     }
     
     // Settings methods
-    setLookSensitivity(value) {
+    setLookSensitivity(value: number): void {
         this.lookSensitivity = Math.max(0.1, Math.min(5.0, value));
     }
     
-    setMovementSensitivity(value) {
+    setMovementSensitivity(value: number): void {
         this.movementSensitivity = Math.max(0.1, Math.min(2.0, value));
     }
     
-    setDeadZone(value) {
+    setDeadZone(value: number): void {
         this.deadZone = Math.max(0.05, Math.min(0.3, value));
     }
     
-    setVibration(enabled) {
+    setVibration(enabled: boolean): void {
         this.vibrationEnabled = enabled;
     }
     
-    isConnected() {
+    isConnected(): boolean {
         return this.activeGamepadIndex !== null;
     }
     
     // Debug methods for testing
-    toggleDebug() {
+    toggleDebug(): void {
         this.debugMode = !this.debugMode;
         
         if (this.debugMode) {
@@ -512,7 +615,7 @@ export class GamepadHandler {
         }
     }
     
-    createDebugDisplay() {
+    createDebugDisplay(): void {
         if (this.debugDisplay) return;
         
         this.debugDisplay = document.createElement('div');
@@ -534,14 +637,14 @@ export class GamepadHandler {
         document.body.appendChild(this.debugDisplay);
     }
     
-    removeDebugDisplay() {
+    removeDebugDisplay(): void {
         if (this.debugDisplay) {
             this.debugDisplay.remove();
             this.debugDisplay = null;
         }
     }
     
-    updateDebugDisplay(gamepad) {
+    updateDebugDisplay(gamepad: Gamepad): void {
         if (!this.debugDisplay) {
             this.createDebugDisplay();
         }
@@ -588,7 +691,7 @@ export class GamepadHandler {
     }
     
     // Method to swap right stick axes if they're incorrect
-    swapRightStickAxes() {
+    swapRightStickAxes(): void {
         const temp = this.rightStickXAxis;
         this.rightStickXAxis = this.rightStickYAxis;
         this.rightStickYAxis = temp;

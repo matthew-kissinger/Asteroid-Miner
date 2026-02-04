@@ -1,7 +1,59 @@
 // joystickHandler.js - Nipple.js integration and joystick input handling
 
+type TouchSpaceship = {
+    isDocked: boolean;
+    thrust: {
+        forward: boolean;
+        backward: boolean;
+        left: boolean;
+        right: boolean;
+        boost: boolean;
+    };
+};
+
+type TouchPhysics = {
+    updateRotation: (deltaX: number, deltaY: number) => void;
+};
+
+type NippleOptions = {
+    zone: HTMLElement | null;
+    mode: string;
+    position: { left: string; top: string };
+    color: string;
+    size: number;
+    threshold: number;
+    dynamicPage: boolean;
+    fadeTime: number;
+    lockX: boolean;
+    lockY: boolean;
+};
+
+type NippleData = {
+    force: number;
+    angle: { radian: number };
+    vector: { x: number; y: number };
+};
+
+type NippleManager = {
+    on: (event: string, handler: (evt: unknown, data: NippleData) => void) => NippleManager;
+    destroy: () => void;
+};
+
+type NippleWindow = Window & {
+    nipplejs?: {
+        create: (options: NippleOptions) => NippleManager;
+    };
+};
+
 export class JoystickHandler {
-    constructor(spaceship, physics) {
+    spaceship: TouchSpaceship;
+    physics: TouchPhysics;
+    leftJoystick: NippleManager | null;
+    rightJoystick: NippleManager | null;
+    threshold: number;
+    isNippleLoaded: boolean;
+
+    constructor(spaceship: TouchSpaceship, physics: TouchPhysics) {
         this.spaceship = spaceship;
         this.physics = physics;
         this.leftJoystick = null;
@@ -10,10 +62,11 @@ export class JoystickHandler {
         this.isNippleLoaded = false;
     }
 
-    async loadNippleJS() {
+    async loadNippleJS(): Promise<void> {
         return new Promise((resolve, reject) => {
             // Check if nipple.js is already loaded
-            if (window.nipplejs) {
+            const windowWithNipple = window as NippleWindow;
+            if (windowWithNipple.nipplejs) {
                 this.isNippleLoaded = true;
                 resolve();
                 return;
@@ -36,14 +89,15 @@ export class JoystickHandler {
         });
     }
 
-    initializeJoysticks(leftZone, rightZone) {
-        if (!window.nipplejs || !this.isNippleLoaded) {
+    initializeJoysticks(leftZone: HTMLElement | null, rightZone: HTMLElement | null): boolean {
+        const windowWithNipple = window as NippleWindow;
+        if (!windowWithNipple.nipplejs || !this.isNippleLoaded) {
             console.error('nipplejs is not loaded');
             return false;
         }
         
         // Initialize left joystick (thrust control)
-        this.leftJoystick = window.nipplejs.create({
+        this.leftJoystick = windowWithNipple.nipplejs.create({
             zone: leftZone,
             mode: 'static',
             position: { left: '50%', top: '50%' },
@@ -57,7 +111,7 @@ export class JoystickHandler {
         });
         
         // Initialize right joystick (rotation control)
-        this.rightJoystick = window.nipplejs.create({
+        this.rightJoystick = windowWithNipple.nipplejs.create({
             zone: rightZone,
             mode: 'static',
             position: { left: '50%', top: '50%' },
@@ -75,7 +129,7 @@ export class JoystickHandler {
         return true;
     }
 
-    setupJoystickEvents() {
+    setupJoystickEvents(): void {
         if (!this.leftJoystick || !this.rightJoystick) {
             console.error('Joysticks not initialized');
             return;
@@ -96,7 +150,7 @@ export class JoystickHandler {
         });
     }
 
-    handleThrustJoystick(data) {
+    handleThrustJoystick(data: NippleData): void {
         if (this.spaceship.isDocked) return;
         
         // Reset thrust directions
@@ -130,7 +184,7 @@ export class JoystickHandler {
         this.spaceship.thrust.boost = force > 1.5;
     }
 
-    handleRotationJoystick(data) {
+    handleRotationJoystick(data: NippleData): void {
         if (this.spaceship.isDocked) return;
         
         // Extract the X and Y components of the joystick vector
@@ -143,7 +197,7 @@ export class JoystickHandler {
         this.physics.updateRotation(xMove, yMove);
     }
 
-    resetThrust() {
+    resetThrust(): void {
         if (!this.spaceship) return;
         
         this.spaceship.thrust.forward = false;
@@ -153,7 +207,7 @@ export class JoystickHandler {
         this.spaceship.thrust.boost = false;
     }
 
-    destroy() {
+    destroy(): void {
         if (this.leftJoystick) {
             this.leftJoystick.destroy();
             this.leftJoystick = null;
