@@ -38,6 +38,10 @@ export {
   getMeshRegistry,
   addTrackedEntity,
   removeTrackedEntity,
+  addEnemy,
+  addProjectile,
+  addEntityWithHealth,
+  setPlayerEntity,
 } from './ecsRunner'
 
 // Enemy AI system

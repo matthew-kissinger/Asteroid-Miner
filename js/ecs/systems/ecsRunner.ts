@@ -15,6 +15,15 @@ import {
   createMeshRegistry,
   registerMesh,
   type MeshRegistry,
+  enemyDetectionSystem,
+  enemyPursuitSystem,
+  enemySeparationSystem,
+  difficultyScalingSystem,
+  enemyCollisionAttackSystem,
+  projectileCollisionSystem,
+  damageApplicationSystem,
+  shieldRegenSystem,
+  lifetimeSystem,
 } from './index'
 import {
   Position,
@@ -28,6 +37,17 @@ import { createGameEntity } from '../world'
 
 // Track all bitECS entities
 const entities: number[] = []
+
+// Track entity categories for systems
+const enemies: number[] = []
+const projectiles: number[] = []
+const entitiesWithHealth: number[] = []
+
+// Track player entity (if any)
+let playerEntityId = -1
+
+// Track game time for difficulty scaling
+let gameTime = 0
 
 // Mesh registry for render sync
 let meshRegistry: MeshRegistry | null = null
@@ -89,8 +109,11 @@ export function initECS(scene?: THREE.Scene): void {
  * Update bitECS systems
  *
  * Runs all bitECS systems in order:
- * 1. Physics systems (thrust, drag, integration, collision)
- * 2. Render sync (ECS -> Three.js)
+ * 1. Physics systems (thrust, drag, integration)
+ * 2. AI systems (detection, pursuit, separation, difficulty, collision attack)
+ * 3. Combat systems (projectile collision, damage, shield regen, lifetime)
+ * 4. Collision system (general collision detection)
+ * 5. Render sync (ECS -> Three.js)
  *
  * @param deltaTime - Time step in seconds
  */
@@ -103,13 +126,52 @@ export function updateECS(deltaTime: number): void {
   // Skip if no entities
   if (entities.length === 0) return
 
-  // Run physics systems
+  // Update game time
+  gameTime += deltaTime
+
+  // 1. Physics systems
   applyThrustSystem(entities, deltaTime)
   applyDragSystem(entities, deltaTime)
   integratePositionSystem(entities, deltaTime)
+
+  // 2. Enemy AI systems
+  if (enemies.length > 0) {
+    enemyDetectionSystem(enemies, playerEntityId)
+    enemyPursuitSystem(enemies, playerEntityId, deltaTime)
+    enemySeparationSystem(enemies)
+    difficultyScalingSystem(enemies, gameTime)
+    enemyCollisionAttackSystem(enemies, playerEntityId)
+  }
+
+  // 3. Combat systems
+  if (projectiles.length > 0 && enemies.length > 0) {
+    // Detect projectile-enemy collisions
+    const collisionEvents = projectileCollisionSystem(projectiles, enemies)
+
+    // Apply damage from collisions
+    if (collisionEvents.length > 0) {
+      damageApplicationSystem(collisionEvents)
+    }
+  }
+
+  // Shield regeneration for all entities with health
+  if (entitiesWithHealth.length > 0) {
+    shieldRegenSystem(entitiesWithHealth, deltaTime)
+  }
+
+  // Lifetime system for all entities (returns expired IDs)
+  const expiredEntities = lifetimeSystem(entities, deltaTime)
+
+  // Clean up expired entities
+  for (const eid of expiredEntities) {
+    removeTrackedEntity(eid)
+    // TODO: Trigger cleanup/removal from scene when entity management is integrated
+  }
+
+  // 4. General collision system
   collisionSystem(entities)
 
-  // Sync ECS data to Three.js meshes
+  // 5. Sync ECS data to Three.js meshes (must be last)
   renderSyncSystem(entities, meshRegistry)
 }
 
@@ -130,11 +192,72 @@ export function addTrackedEntity(eid: number): void {
 }
 
 /**
- * Remove an entity from the tracked list
+ * Remove an entity from the tracked list and all category lists
  */
 export function removeTrackedEntity(eid: number): void {
+  // Remove from main entities list
   const index = entities.indexOf(eid)
   if (index !== -1) {
     entities.splice(index, 1)
   }
+
+  // Remove from category lists
+  const enemyIndex = enemies.indexOf(eid)
+  if (enemyIndex !== -1) {
+    enemies.splice(enemyIndex, 1)
+  }
+
+  const projectileIndex = projectiles.indexOf(eid)
+  if (projectileIndex !== -1) {
+    projectiles.splice(projectileIndex, 1)
+  }
+
+  const healthIndex = entitiesWithHealth.indexOf(eid)
+  if (healthIndex !== -1) {
+    entitiesWithHealth.splice(healthIndex, 1)
+  }
+
+  // Clear player reference if it's the player
+  if (eid === playerEntityId) {
+    playerEntityId = -1
+  }
+}
+
+/**
+ * Add an entity to the enemy category
+ */
+export function addEnemy(eid: number): void {
+  addTrackedEntity(eid)
+  if (enemies.indexOf(eid) === -1) {
+    enemies.push(eid)
+  }
+}
+
+/**
+ * Add an entity to the projectile category
+ */
+export function addProjectile(eid: number): void {
+  addTrackedEntity(eid)
+  if (projectiles.indexOf(eid) === -1) {
+    projectiles.push(eid)
+  }
+}
+
+/**
+ * Add an entity to the health category
+ */
+export function addEntityWithHealth(eid: number): void {
+  addTrackedEntity(eid)
+  if (entitiesWithHealth.indexOf(eid) === -1) {
+    entitiesWithHealth.push(eid)
+  }
+}
+
+/**
+ * Set the player entity ID
+ */
+export function setPlayerEntity(eid: number): void {
+  playerEntityId = eid
+  addTrackedEntity(eid)
+  addEntityWithHealth(eid)
 }
