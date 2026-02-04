@@ -1,12 +1,70 @@
-// systemData.js - System data structures, presets, configurations
+// systemData.ts - System data structures, presets, configurations
+
+type StarClass = {
+    value: string;
+    label: string;
+    color: number;
+    selected?: boolean;
+};
+
+type PlanetDefaults = {
+    size: { min: number; max: number; default: number };
+    distance: { min: number; max: number; default: number };
+    speed: { min: number; max: number; default: number };
+    rings: boolean;
+};
+
+type PlanetData = {
+    name: string;
+    textureUrl?: string | null;
+    description?: string;
+    size: number;
+    distance: number;
+    speed: number;
+    color: number;
+    rings: boolean;
+};
+
+type SystemData = {
+    id: string;
+    name: string;
+    starClass: string;
+    classification: string;
+    description: string;
+    skyboxUrl: string;
+    lightIntensityMultiplier: number;
+    planetData: PlanetData[];
+};
+
+type SystemPreset = {
+    name: string;
+    starClass: string;
+    skyboxDescription: string;
+    planets: {
+        name: string;
+        description: string;
+        size: number;
+        distance: number;
+        speed: number;
+        rings: boolean;
+    }[];
+};
+
+type ValidationResult = {
+    isValid: boolean;
+    errors: string[];
+};
 
 export class SystemDataManager {
+    starClasses: StarClass[];
+    planetDefaults: PlanetDefaults;
+
     constructor() {
         this.starClasses = this.getStarClasses();
         this.planetDefaults = this.getPlanetDefaults();
     }
 
-    getStarClasses() {
+    getStarClasses(): StarClass[] {
         return [
             { value: 'O', label: 'O - Blue Giant (Hot, Blue)', color: 0x9bb0ff },
             { value: 'B', label: 'B - Blue-White', color: 0xaabfff },
@@ -18,7 +76,7 @@ export class SystemDataManager {
         ];
     }
 
-    getPlanetDefaults() {
+    getPlanetDefaults(): PlanetDefaults {
         return {
             size: { min: 300, max: 1000, default: 450 },
             distance: { min: 4000, max: 60000, default: 8000 },
@@ -27,12 +85,18 @@ export class SystemDataManager {
         };
     }
 
-    getStarColorForClass(starClass) {
+    getStarColorForClass(starClass: string): number {
         const starClassData = this.starClasses.find(sc => sc.value === starClass);
         return starClassData ? starClassData.color : 0xfff4ea; // Default to G-class if undefined
     }
 
-    createSystemData(systemName, starClass, skyboxUrl, planets, lightIntensityMultiplier = 0.8) {
+    createSystemData(
+        systemName: string,
+        starClass: string,
+        skyboxUrl: string,
+        planets: { name: string; description?: string; textureUrl?: string | null; size: number; distance: number; speed: number; rings: boolean }[],
+        lightIntensityMultiplier: number = 0.8
+    ): SystemData {
         return {
             id: `Custom-${Date.now()}`,
             name: systemName,
@@ -41,7 +105,7 @@ export class SystemDataManager {
             description: `Custom star system with ${planets.length} planets`,
             skyboxUrl: skyboxUrl,
             lightIntensityMultiplier: lightIntensityMultiplier,
-            planetData: planets.map((planet, i) => {
+            planetData: planets.map((planet) => {
                 return {
                     name: planet.name,
                     textureUrl: planet.textureUrl || null,
@@ -55,16 +119,23 @@ export class SystemDataManager {
         };
     }
 
-    calculatePlanetDistance(planetIndex, baseDistance = 4000, increment = 6000) {
+    calculatePlanetDistance(planetIndex: number, baseDistance: number = 4000, increment: number = 6000): number {
         return baseDistance + planetIndex * increment;
     }
 
-    convertSpeedSliderToOrbitSpeed(sliderValue) {
+    convertSpeedSliderToOrbitSpeed(sliderValue: number): number {
         // Convert 1-10 range to 0.001-0.002 range
         return 0.001 + (sliderValue - 1) * (0.001 / 9);
     }
 
-    getDefaultPlanetData(planetIndex) {
+    getDefaultPlanetData(planetIndex: number): {
+        name: string;
+        description: string;
+        size: number;
+        distance: number;
+        speed: number;
+        rings: boolean;
+    } {
         return {
             name: '',
             description: '',
@@ -75,7 +146,7 @@ export class SystemDataManager {
         };
     }
 
-    getSystemPresets() {
+    getSystemPresets(): Record<string, SystemPreset> {
         return {
             solar: {
                 name: 'Sol System',
@@ -149,8 +220,8 @@ export class SystemDataManager {
         };
     }
 
-    validateSystemData(systemData) {
-        const errors = [];
+    validateSystemData(systemData: SystemData): ValidationResult {
+        const errors: string[] = [];
 
         if (!systemData.name || systemData.name.trim().length < 3) {
             errors.push('System name must be at least 3 characters long');

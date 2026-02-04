@@ -6,19 +6,12 @@
 
 import * as THREE from 'three';
 
-// @ts-ignore - JS modules without types
 import { TransformComponent } from '../components/transform.js';
-// @ts-ignore - JS modules without types
 import { RigidbodyComponent } from '../components/physics/rigidbody.js';
-// @ts-ignore - JS modules without types
 import { MeshComponent } from '../components/rendering/mesh.js';
-// @ts-ignore - JS modules without types
 import { ThrusterComponent } from '../components/spaceship/thruster.js';
-// @ts-ignore - JS modules without types
 import { MiningLaserComponent } from '../components/spaceship/miningLaser.js';
-// @ts-ignore - JS modules without types
 import { CargoComponent } from '../components/spaceship/cargo.js';
-// @ts-ignore - JS modules without types
 import { MineableComponent } from '../components/mining/mineable.js';
 
 interface GameEntity {

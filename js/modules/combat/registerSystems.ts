@@ -5,23 +5,14 @@
  * order required to maintain compatibility with existing behavior.
  */
 
-// @ts-ignore
 import { CombatSystem } from '../../systems/combat/combatSystem.js';
-// @ts-ignore
 import { EnemySystem } from '../../systems/combat/enemySystem.js';
-// @ts-ignore
 import { RenderSystem } from '../../systems/rendering/renderSystem.js';
-// @ts-ignore
 import { CollisionSystem } from '../../systems/physics/collisionSystem.js';
-// @ts-ignore
 import { VisualEffectsSystem } from '../../systems/rendering/visualEffectsSystem.js';
-// @ts-ignore
 import { TrailSystem } from '../../systems/rendering/trailSystem.js';
-// @ts-ignore
 import { DeployableLaserSystem } from '../../systems/weapons/deployableLaserSystem.js';
-// @ts-ignore
 import { DeploymentSystem } from '../../systems/deployables/deploymentSystem.js';
-// @ts-ignore
 import { ExplosionHandler } from '../../systems/effects/explosionHandler.js';
 import * as THREE from 'three';
 
@@ -81,7 +72,6 @@ export class SystemRegistrar {
             
             // 5. Register the instanced renderer first
             try {
-                // @ts-ignore
                 const { InstancedRenderer } = await import('../../systems/rendering/InstancedRenderer.js');
                 this.registeredSystems.instancedRenderer = new InstancedRenderer(world, scene);
                 world.registerSystem(this.registeredSystems.instancedRenderer);
@@ -180,8 +170,8 @@ export class SystemRegistrar {
     async importAndRegisterSystem(path: string, className: string, world: any, scene: any = null): Promise<any> {
         try {
             // Add vite-ignore to allow dynamic imports
-            // @ts-ignore
-            const module = await import(/* @vite-ignore */ path);
+            type SystemConstructor = new (...args: any[]) => any;
+            const module = await import(/* @vite-ignore */ path) as Record<string, SystemConstructor>;
             if (!module[className]) {
                 console.error(`[COMBAT] System class ${className} not found in module ${path}`);
                 return null;

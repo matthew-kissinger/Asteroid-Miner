@@ -6,13 +6,9 @@
  */
 
 import * as THREE from 'three';
-// @ts-ignore
 import { ExplosionEffects } from './effects/explosionEffects.js';
-// @ts-ignore
 import { MaterialManager } from './effects/materialManager.js';
-// @ts-ignore
 import { GeometryManager } from './effects/geometryManager.js';
-// @ts-ignore
 import { ProjectileEffects } from './effects/projectileEffects.js';
 
 export class EffectsManager {

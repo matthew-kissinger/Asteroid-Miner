@@ -79,8 +79,9 @@ export class ProjectileEffects {
 
         for (let i = 0; i < numPoints; i++) {
             const ratio = i / (numPoints -1); // Distribute particles along the trail length
-            // @ts-ignore
-            const particle = poolManager.getTrailParticle(i % (window as any).game.trailParticleGeometries.length); // Cycle through available geometries
+            const trailGeometries = (window as any).game?.trailParticleGeometries as unknown[] | undefined;
+            const geometryIndex = trailGeometries && trailGeometries.length > 0 ? i % trailGeometries.length : 0;
+            const particle = poolManager.getTrailParticle(geometryIndex); // Cycle through available geometries
             
             if (!particle) {
                 console.warn(`Failed to get trail particle ${i} from pool.`);

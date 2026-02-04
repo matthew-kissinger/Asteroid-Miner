@@ -39,8 +39,7 @@ export class AudioManager {
         // Exposed properties for compatibility
         this.sounds = this.audioLoader.getAllSounds();
         this.music = this.musicPlaylist.getTracks();
-        // @ts-ignore - Accessing private for legacy compatibility
-        this.activeNodes = this.audioContextManager.activeNodes;
+        this.activeNodes = (this.audioContextManager as any).activeNodes;
         this.activeSounds = this.soundPlayer.activeSounds;
         
         // Set up compatibility layer for intro sequence

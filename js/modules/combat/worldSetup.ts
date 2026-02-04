@@ -5,7 +5,6 @@
  * including the player reference entity and basic world configuration.
  */
 
-// @ts-ignore
 import { World } from '../../core/world.js';
 import * as THREE from 'three';
 
@@ -49,7 +48,6 @@ export class WorldSetup {
             // Create optimized projectile store
             if (!this.world.optimizedProjectiles) {
                 try {
-                    // @ts-ignore
                     const { OptimizedProjectileStore } = await import('../../core/optimized/OptimizedProjectileStore.js');
                     this.world.optimizedProjectiles = new OptimizedProjectileStore(4096);
                     console.log('[COMBAT] OptimizedProjectileStore created');
@@ -130,7 +128,6 @@ export class WorldSetup {
             let TransformComponent: any, HealthComponent: any;
             
             try {
-                // @ts-ignore
                 const transformModule = await import('../../components/transform.js');
                 TransformComponent = transformModule.TransformComponent;
                 console.log("[COMBAT] Successfully imported TransformComponent");
@@ -150,7 +147,6 @@ export class WorldSetup {
             }
             
             try {
-                // @ts-ignore
                 const healthModule = await import('../../components/combat/healthComponent.js');
                 HealthComponent = healthModule.HealthComponent;
                 console.log("[COMBAT] Successfully imported HealthComponent");

@@ -15,7 +15,7 @@ export function createLaserMaterial(
     pulseSpeed: number = 8,
     pulseIntensity: number = 0.3
 ): THREE.MeshBasicMaterial {
-    const material = new THREE.MeshBasicMaterial();
+    const material = new THREE.MeshBasicMaterial() as THREE.MeshBasicMaterial & { colorNode?: unknown };
 
     // Create pulsing glow effect using TSL
     // sin(time * pulseSpeed) gives oscillation between -1 and 1
@@ -28,7 +28,6 @@ export function createLaserMaterial(
     // color() can take hex values directly (e.g., 0xff3030)
     // Note: TSL colorNode is experimental, fall back to standard color + emissiveMap if issues
     try {
-        // @ts-ignore: colorNode is part of TSL and might not be directly in MeshBasicMaterial type
         material.colorNode = color(baseColor).mul(pulse);
     } catch (e) {
         // Fallback: use standard material color without TSL

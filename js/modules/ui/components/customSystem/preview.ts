@@ -1,49 +1,62 @@
-// preview.js - System preview rendering and visualization
+// preview.ts - System preview rendering and visualization
+
+import type { ApiClient } from '../../../utils/apiClient.ts';
+
+type GeneratedPlanetPreview = {
+    name: string;
+    url: string | null;
+};
 
 export class PreviewManager {
-    constructor(isMobile = false) {
+    isMobile: boolean;
+
+    constructor(isMobile: boolean = false) {
         this.isMobile = isMobile;
     }
 
-    showSystemPreview(generatedSkyboxUrl, generatedPlanetUrls, apiClient) {
+    showSystemPreview(
+        generatedSkyboxUrl: string | null,
+        generatedPlanetUrls: GeneratedPlanetPreview[],
+        apiClient: ApiClient | null
+    ): void {
         this.updateSkyboxPreview(generatedSkyboxUrl, apiClient);
         this.updatePlanetPreviews(generatedPlanetUrls, apiClient);
         this.showPreviewUI();
     }
 
-    updateSkyboxPreview(skyboxUrl, apiClient) {
-        const skyboxPreviewImg = document.getElementById('skybox-preview-img');
+    updateSkyboxPreview(skyboxUrl: string | null, apiClient: ApiClient | null): void {
+        const skyboxPreviewImg = document.getElementById('skybox-preview-img') as HTMLImageElement | null;
         if (skyboxPreviewImg && skyboxUrl && apiClient) {
             skyboxPreviewImg.src = apiClient.getFullImageUrl(skyboxUrl);
         }
     }
 
-    updatePlanetPreviews(planetUrls, apiClient) {
+    updatePlanetPreviews(planetUrls: GeneratedPlanetPreview[], apiClient: ApiClient | null): void {
         const planetsPreview = document.getElementById('planets-preview');
         if (!planetsPreview) return;
 
         planetsPreview.innerHTML = '';
-        
+
         if (!planetUrls || !Array.isArray(planetUrls)) return;
 
         planetUrls.forEach(planet => {
             const planetDiv = document.createElement('div');
             planetDiv.className = 'planet-preview';
-            
-            const planetImageSrc = apiClient && planet.url ? 
-                apiClient.getFullImageUrl(planet.url) : 
+
+            const planetImageSrc = apiClient && planet.url ?
+                apiClient.getFullImageUrl(planet.url) :
                 planet.url || '';
 
             planetDiv.innerHTML = `
                 <h4>${planet.name || 'Unknown Planet'}</h4>
                 <img src="${planetImageSrc}" alt="${planet.name || 'Planet'}" loading="lazy">
             `;
-            
+
             planetsPreview.appendChild(planetDiv);
         });
     }
 
-    showPreviewUI() {
+    showPreviewUI(): void {
         const generationProgress = document.getElementById('generation-progress');
         const systemPreview = document.getElementById('system-preview');
 
@@ -65,7 +78,7 @@ export class PreviewManager {
         }
     }
 
-    hidePreview() {
+    hidePreview(): void {
         const systemPreview = document.getElementById('system-preview');
         const systemForm = document.getElementById('system-creator-form');
 
@@ -78,7 +91,7 @@ export class PreviewManager {
         }
     }
 
-    showProgress(message = 'Initializing...') {
+    showProgress(message: string = 'Initializing...'): void {
         const systemForm = document.getElementById('system-creator-form');
         const generationProgress = document.getElementById('generation-progress');
         const generationStatus = document.getElementById('generation-status');
@@ -96,7 +109,7 @@ export class PreviewManager {
         }
     }
 
-    hideProgress() {
+    hideProgress(): void {
         const generationProgress = document.getElementById('generation-progress');
         const systemForm = document.getElementById('system-creator-form');
 
@@ -109,7 +122,7 @@ export class PreviewManager {
         }
     }
 
-    updateGenerationStatus(message) {
+    updateGenerationStatus(message: string): void {
         const generationStatus = document.getElementById('generation-status');
         if (generationStatus) {
             generationStatus.textContent = message;
@@ -117,12 +130,12 @@ export class PreviewManager {
         }
     }
 
-    createPlanetPreviewElement(planet, apiClient) {
+    createPlanetPreviewElement(planet: GeneratedPlanetPreview, apiClient: ApiClient | null): HTMLDivElement {
         const planetDiv = document.createElement('div');
         planetDiv.className = 'planet-preview';
-        
-        const imageUrl = apiClient && planet.url ? 
-            apiClient.getFullImageUrl(planet.url) : 
+
+        const imageUrl = apiClient && planet.url ?
+            apiClient.getFullImageUrl(planet.url) :
             planet.url || '';
 
         // Add error handling for image loading
@@ -130,8 +143,8 @@ export class PreviewManager {
         img.src = imageUrl;
         img.alt = planet.name || 'Planet';
         img.loading = 'lazy';
-        
-        img.onerror = () => {
+
+        img.onerror = (): void => {
             img.style.display = 'none';
             const errorMsg = document.createElement('div');
             errorMsg.className = 'image-error';
@@ -151,8 +164,8 @@ export class PreviewManager {
         return planetDiv;
     }
 
-    clearPreviews() {
-        const skyboxPreviewImg = document.getElementById('skybox-preview-img');
+    clearPreviews(): void {
+        const skyboxPreviewImg = document.getElementById('skybox-preview-img') as HTMLImageElement | null;
         const planetsPreview = document.getElementById('planets-preview');
 
         if (skyboxPreviewImg) {
@@ -164,17 +177,17 @@ export class PreviewManager {
         }
     }
 
-    isPreviewVisible() {
+    isPreviewVisible(): boolean {
         const systemPreview = document.getElementById('system-preview');
-        return systemPreview && systemPreview.style.display !== 'none';
+        return systemPreview !== null && systemPreview.style.display !== 'none';
     }
 
-    isProgressVisible() {
+    isProgressVisible(): boolean {
         const generationProgress = document.getElementById('generation-progress');
-        return generationProgress && generationProgress.style.display !== 'none';
+        return generationProgress !== null && generationProgress.style.display !== 'none';
     }
 
-    resetToForm() {
+    resetToForm(): void {
         this.hidePreview();
         this.hideProgress();
         this.clearPreviews();

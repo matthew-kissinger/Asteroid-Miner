@@ -1,25 +1,27 @@
-// helpers.js - Utility functions and data formatting
+// helpers.ts - Utility functions and data formatting
 
 export class HelperManager {
+    scrollTimeout: number | null;
+
     constructor() {
         this.scrollTimeout = null;
     }
 
-    detectMobile() {
-        return ('ontouchstart' in window) || 
-               (navigator.maxTouchPoints > 0) || 
-               (navigator.msMaxTouchPoints > 0) ||
+    detectMobile(): boolean {
+        return ('ontouchstart' in window) ||
+               (navigator.maxTouchPoints > 0) ||
+               ((navigator as any).msMaxTouchPoints > 0) ||
                (window.innerWidth < 900);
     }
 
-    playUISound() {
+    playUISound(): void {
         // Play UI sound if audio is available
         if (window.game && window.game.audio) {
             window.game.audio.playSound('boink');
         }
     }
 
-    formatSliderValue(value, type = 'default') {
+    formatSliderValue(value: number, type: string = 'default'): string {
         switch (type) {
             case 'speed':
                 // Convert 1-10 range to 0.001-0.002 range
@@ -27,29 +29,29 @@ export class HelperManager {
                 return speed.toFixed(4);
             case 'size':
             case 'distance':
-                return parseInt(value).toString();
+                return parseInt(value.toString()).toString();
             default:
                 return value.toString();
         }
     }
 
-    calculateDefaultDistance(planetIndex, baseDistance = 4000, increment = 6000) {
+    calculateDefaultDistance(planetIndex: number, baseDistance: number = 4000, increment: number = 6000): number {
         return baseDistance + planetIndex * increment;
     }
 
-    convertSpeedSliderValue(sliderValue) {
+    convertSpeedSliderValue(sliderValue: number): number {
         // Convert 1-10 range to 0.001-0.002 range
         return 0.001 + (sliderValue - 1) * (0.001 / 9);
     }
 
-    cleanupScrolling() {
+    cleanupScrolling(): void {
         if (this.scrollTimeout) {
             clearTimeout(this.scrollTimeout);
             this.scrollTimeout = null;
         }
     }
 
-    safeScrollTo(element, options = {}) {
+    safeScrollTo(element: HTMLElement | null, options: ScrollIntoViewOptions = {}): void {
         if (!element) return;
 
         this.cleanupScrolling();
@@ -69,48 +71,52 @@ export class HelperManager {
         }, 100);
     }
 
-    generateUniqueId(prefix = 'custom') {
+    generateUniqueId(prefix: string = 'custom'): string {
         return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
 
-    debounce(func, wait, immediate = false) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
+    debounce<T extends (...args: any[]) => any>(
+        func: T,
+        wait: number,
+        immediate: boolean = false
+    ): (...args: Parameters<T>) => void {
+        let timeout: number | null;
+        return function executedFunction(...args: Parameters<T>): void {
+            const later = (): void => {
                 timeout = null;
                 if (!immediate) func(...args);
             };
             const callNow = immediate && !timeout;
-            clearTimeout(timeout);
+            if (timeout) clearTimeout(timeout);
             timeout = setTimeout(later, wait);
             if (callNow) func(...args);
         };
     }
 
-    throttle(func, limit) {
-        let inThrottle;
-        return function(...args) {
+    throttle<T extends (...args: any[]) => any>(func: T, limit: number): (...args: Parameters<T>) => void {
+        let inThrottle: boolean;
+        return function(...args: Parameters<T>): void {
             if (!inThrottle) {
-                func.apply(this, args);
+                func(...args);
                 inThrottle = true;
                 setTimeout(() => inThrottle = false, limit);
             }
         };
     }
 
-    sanitizeInput(input, maxLength = null) {
+    sanitizeInput(input: string | any, maxLength: number | null = null): string {
         if (typeof input !== 'string') return '';
-        
+
         let sanitized = input.trim();
-        
+
         if (maxLength && sanitized.length > maxLength) {
             sanitized = sanitized.substring(0, maxLength);
         }
-        
+
         return sanitized;
     }
 
-    validateURL(url) {
+    validateURL(url: string): boolean {
         try {
             new URL(url);
             return true;
@@ -119,64 +125,79 @@ export class HelperManager {
         }
     }
 
-    formatFileSize(bytes) {
+    formatFileSize(bytes: number): string {
         if (bytes === 0) return '0 Bytes';
-        
+
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        
+
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    deepClone(obj) {
+    deepClone<T>(obj: T): T {
         if (obj === null || typeof obj !== 'object') return obj;
-        if (obj instanceof Date) return new Date(obj.getTime());
-        if (obj instanceof Array) return obj.map(item => this.deepClone(item));
+        if (obj instanceof Date) return new Date(obj.getTime()) as T;
+        if (obj instanceof Array) return obj.map(item => this.deepClone(item)) as T;
         if (typeof obj === 'object') {
-            const clonedObj = {};
+            const clonedObj: any = {};
             Object.keys(obj).forEach(key => {
-                clonedObj[key] = this.deepClone(obj[key]);
+                clonedObj[key] = this.deepClone((obj as any)[key]);
             });
-            return clonedObj;
+            return clonedObj as T;
         }
+        return obj;
     }
 
-    createElement(tag, className = '', content = '', attributes = {}) {
+    createElement(
+        tag: string,
+        className: string = '',
+        content: string = '',
+        attributes: Record<string, string> = {}
+    ): HTMLElement {
         const element = document.createElement(tag);
-        
+
         if (className) {
             element.className = className;
         }
-        
+
         if (content) {
             element.textContent = content;
         }
-        
+
         Object.entries(attributes).forEach(([key, value]) => {
             element.setAttribute(key, value);
         });
-        
+
         return element;
     }
 
-    removeElement(element) {
+    removeElement(element: HTMLElement | null): void {
         if (element && element.parentNode) {
             element.parentNode.removeChild(element);
         }
     }
 
-    findElementById(id, container = document) {
-        return container.getElementById ? container.getElementById(id) : container.querySelector(`#${id}`);
+    findElementById(id: string, container: Document | HTMLElement = document): HTMLElement | null {
+        if ('getElementById' in container && container.getElementById) {
+            return container.getElementById(id);
+        }
+        return container.querySelector(`#${id}`);
     }
 
-    findElementsByClass(className, container = document) {
-        return container.getElementsByClassName ? 
-            Array.from(container.getElementsByClassName(className)) :
-            Array.from(container.querySelectorAll(`.${className}`));
+    findElementsByClass(className: string, container: Document | HTMLElement = document): HTMLElement[] {
+        if ('getElementsByClassName' in container && container.getElementsByClassName) {
+            return Array.from(container.getElementsByClassName(className)) as HTMLElement[];
+        }
+        return Array.from(container.querySelectorAll(`.${className}`));
     }
 
-    addEventListenerSafe(element, event, handler, options = {}) {
+    addEventListenerSafe(
+        element: HTMLElement | null,
+        event: string,
+        handler: EventListener,
+        options: AddEventListenerOptions = {}
+    ): boolean {
         if (element && typeof element.addEventListener === 'function') {
             element.addEventListener(event, handler, options);
             return true;
@@ -184,7 +205,12 @@ export class HelperManager {
         return false;
     }
 
-    removeEventListenerSafe(element, event, handler, options = {}) {
+    removeEventListenerSafe(
+        element: HTMLElement | null,
+        event: string,
+        handler: EventListener,
+        options: EventListenerOptions = {}
+    ): boolean {
         if (element && typeof element.removeEventListener === 'function') {
             element.removeEventListener(event, handler, options);
             return true;
@@ -192,9 +218,16 @@ export class HelperManager {
         return false;
     }
 
-    getElementDimensions(element) {
-        if (!element) return { width: 0, height: 0 };
-        
+    getElementDimensions(element: HTMLElement | null): {
+        width: number;
+        height: number;
+        top: number;
+        left: number;
+        bottom: number;
+        right: number;
+    } {
+        if (!element) return { width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0 };
+
         const rect = element.getBoundingClientRect();
         return {
             width: rect.width,
@@ -206,18 +239,18 @@ export class HelperManager {
         };
     }
 
-    isElementVisible(element) {
+    isElementVisible(element: HTMLElement | null): boolean {
         if (!element) return false;
-        
+
         const style = window.getComputedStyle(element);
-        return style.display !== 'none' && 
-               style.visibility !== 'hidden' && 
+        return style.display !== 'none' &&
+               style.visibility !== 'hidden' &&
                style.opacity !== '0';
     }
 
-    scrollToTop(container, smooth = true) {
+    scrollToTop(container: HTMLElement | null, smooth: boolean = true): void {
         if (!container) return;
-        
+
         if (smooth && container.scrollTo) {
             container.scrollTo({
                 top: 0,
@@ -228,48 +261,48 @@ export class HelperManager {
         }
     }
 
-    addClassSafe(element, className) {
+    addClassSafe(element: HTMLElement | null, className: string): void {
         if (element && element.classList) {
             element.classList.add(className);
         }
     }
 
-    removeClassSafe(element, className) {
+    removeClassSafe(element: HTMLElement | null, className: string): void {
         if (element && element.classList) {
             element.classList.remove(className);
         }
     }
 
-    toggleClassSafe(element, className) {
+    toggleClassSafe(element: HTMLElement | null, className: string): void {
         if (element && element.classList) {
             element.classList.toggle(className);
         }
     }
 
-    hasClassSafe(element, className) {
-        return element && element.classList && element.classList.contains(className);
+    hasClassSafe(element: HTMLElement | null, className: string): boolean {
+        return element !== null && element.classList !== undefined && element.classList.contains(className);
     }
 
-    setStyleSafe(element, property, value) {
+    setStyleSafe(element: HTMLElement | null, property: string, value: string): void {
         if (element && element.style) {
-            element.style[property] = value;
+            (element.style as any)[property] = value;
         }
     }
 
-    getStyleSafe(element, property) {
+    getStyleSafe(element: HTMLElement | null, property: string): string | null {
         if (element && element.style) {
-            return element.style[property];
+            return (element.style as any)[property];
         }
         return null;
     }
 
-    forceReflow(element) {
+    forceReflow(element: HTMLElement | null): void {
         if (element) {
             void element.offsetHeight; // Force reflow
         }
     }
 
-    waitForElement(selector, timeout = 5000) {
+    waitForElement(selector: string, timeout: number = 5000): Promise<Element> {
         return new Promise((resolve, reject) => {
             const element = document.querySelector(selector);
             if (element) {
@@ -277,7 +310,7 @@ export class HelperManager {
                 return;
             }
 
-            const observer = new MutationObserver((mutations, obs) => {
+            const observer = new MutationObserver((_mutations, obs) => {
                 const element = document.querySelector(selector);
                 if (element) {
                     obs.disconnect();
@@ -297,20 +330,20 @@ export class HelperManager {
         });
     }
 
-    async waitFor(condition, timeout = 5000, interval = 100) {
+    async waitFor(condition: () => boolean, timeout: number = 5000, interval: number = 100): Promise<boolean> {
         const startTime = Date.now();
-        
+
         while (Date.now() - startTime < timeout) {
             if (condition()) {
                 return true;
             }
             await new Promise(resolve => setTimeout(resolve, interval));
         }
-        
+
         throw new Error('Condition not met within timeout');
     }
 
-    cleanup() {
+    cleanup(): void {
         this.cleanupScrolling();
     }
 }

@@ -1,5 +1,4 @@
 // game.ts - Enhanced game logic with combat systems (refactored with delegation pattern)
-// @ts-ignore - legacy module not included in TS project
 import { GameInitializer } from './game/initialization.js';
 import { GameStateManager } from './game/stateManager.js';
 import { GameSystemCoordinator } from './game/systemCoordinator.js';

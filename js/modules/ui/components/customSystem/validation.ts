@@ -1,11 +1,30 @@
-// validation.js - Form validation, constraints, error handling
+// validation.ts - Form validation, constraints, error handling
+
+type ValidationResult = {
+    isValid: boolean;
+    message?: string;
+};
+
+type PlanetDataCollectionResult = {
+    planets: {
+        name: string;
+        description: string;
+        size: number;
+        distance: number;
+        speed: number;
+        rings: boolean;
+    }[];
+    errors: string[];
+};
 
 export class ValidationManager {
-    constructor(isMobile = false) {
+    isMobile: boolean;
+
+    constructor(isMobile: boolean = false) {
         this.isMobile = isMobile;
     }
 
-    validateSystemForm(systemNameInput, skyboxDescription) {
+    validateSystemForm(systemNameInput: HTMLInputElement, skyboxDescription: HTMLTextAreaElement): ValidationResult {
         const systemName = systemNameInput.value.trim();
         const skyboxDesc = skyboxDescription.value.trim();
 
@@ -28,9 +47,9 @@ export class ValidationManager {
         return { isValid: true };
     }
 
-    validatePlanetData(planetDiv, planetIndex) {
-        const nameInput = planetDiv.querySelector(`input[id^="planet-name-"]`);
-        const descInput = planetDiv.querySelector(`textarea[id^="planet-description-"]`);
+    validatePlanetData(planetDiv: HTMLElement, planetIndex: number): ValidationResult {
+        const nameInput = planetDiv.querySelector<HTMLInputElement>(`input[id^="planet-name-"]`);
+        const descInput = planetDiv.querySelector<HTMLTextAreaElement>(`textarea[id^="planet-description-"]`);
 
         if (!nameInput || !descInput) {
             return { isValid: false, message: `Planet ${planetIndex} is missing required fields.` };
@@ -58,26 +77,40 @@ export class ValidationManager {
         return { isValid: true };
     }
 
-    collectPlanetData(planetInputs) {
-        const planets = [];
-        const errors = [];
+    collectPlanetData(planetInputs: HTMLCollectionOf<Element>): PlanetDataCollectionResult {
+        const planets: {
+            name: string;
+            description: string;
+            size: number;
+            distance: number;
+            speed: number;
+            rings: boolean;
+        }[] = [];
+        const errors: string[] = [];
 
         for (let i = 0; i < planetInputs.length; i++) {
-            const planetDiv = planetInputs[i];
+            const planetDiv = planetInputs[i] as HTMLElement;
             const planetIndex = i + 1;
 
             const validation = this.validatePlanetData(planetDiv, planetIndex);
             if (!validation.isValid) {
-                errors.push(validation.message);
+                if (validation.message) {
+                    errors.push(validation.message);
+                }
                 continue;
             }
 
-            const nameInput = planetDiv.querySelector(`input[id^="planet-name-"]`);
-            const descInput = planetDiv.querySelector(`textarea[id^="planet-description-"]`);
-            const sizeInput = planetDiv.querySelector(`input[id^="planet-size-"]`);
-            const distanceInput = planetDiv.querySelector(`input[id^="planet-distance-"]`);
-            const speedInput = planetDiv.querySelector(`input[id^="planet-speed-"]`);
-            const ringsInput = planetDiv.querySelector(`input[id^="planet-rings-"]`);
+            const nameInput = planetDiv.querySelector<HTMLInputElement>(`input[id^="planet-name-"]`);
+            const descInput = planetDiv.querySelector<HTMLTextAreaElement>(`textarea[id^="planet-description-"]`);
+            const sizeInput = planetDiv.querySelector<HTMLInputElement>(`input[id^="planet-size-"]`);
+            const distanceInput = planetDiv.querySelector<HTMLInputElement>(`input[id^="planet-distance-"]`);
+            const speedInput = planetDiv.querySelector<HTMLInputElement>(`input[id^="planet-speed-"]`);
+            const ringsInput = planetDiv.querySelector<HTMLInputElement>(`input[id^="planet-rings-"]`);
+
+            if (!nameInput || !descInput || !sizeInput || !distanceInput || !speedInput || !ringsInput) {
+                errors.push(`Planet ${planetIndex} is missing required input fields.`);
+                continue;
+            }
 
             // Calculate speed from slider (1-10 to 0.001-0.002)
             const speedValue = parseFloat(speedInput.value);
@@ -96,7 +129,7 @@ export class ValidationManager {
         return { planets, errors };
     }
 
-    addCharacterCounter(textarea, maxChars) {
+    addCharacterCounter(textarea: HTMLTextAreaElement, maxChars: number): void {
         if (!textarea || !this.isMobile) return;
 
         // Create counter element
@@ -104,7 +137,7 @@ export class ValidationManager {
         counter.className = 'char-counter';
 
         // Update counter text
-        const updateCounter = () => {
+        const updateCounter = (): void => {
             const remaining = maxChars - textarea.value.length;
             counter.textContent = `${remaining} characters remaining`;
 
@@ -120,13 +153,13 @@ export class ValidationManager {
             // Enforce character limit
             if (remaining < 0) {
                 textarea.value = textarea.value.substring(0, maxChars);
-                counter.textContent = "0 characters remaining";
+                counter.textContent = '0 characters remaining';
             }
         };
 
         // Add event listeners
         textarea.addEventListener('input', updateCounter);
-        textarea.addEventListener('keydown', (e) => {
+        textarea.addEventListener('keydown', (e: KeyboardEvent) => {
             // Allow deletion even at max characters
             if (textarea.value.length >= maxChars &&
                 e.key !== 'Backspace' &&
@@ -143,26 +176,26 @@ export class ValidationManager {
         updateCounter();
 
         // Add counter after textarea
-        textarea.parentNode.insertBefore(counter, textarea.nextSibling);
+        textarea.parentNode?.insertBefore(counter, textarea.nextSibling);
 
         // Set maxlength attribute (fallback)
         textarea.setAttribute('maxlength', maxChars.toString());
     }
 
-    setupCharacterCounters(skyboxDescription, planetDescriptions) {
+    setupCharacterCounters(skyboxDescription: HTMLTextAreaElement, _planetDescriptions: HTMLElement): void {
         if (!this.isMobile) return;
 
         // Skybox description
         this.addCharacterCounter(skyboxDescription, 250);
 
         // Add counter to first planet and set up event listener for future planets
-        const firstPlanetDesc = document.getElementById('planet-description-1');
+        const firstPlanetDesc = document.getElementById('planet-description-1') as HTMLTextAreaElement | null;
         if (firstPlanetDesc) {
             this.addCharacterCounter(firstPlanetDesc, 150);
         }
     }
 
-    validatePlanetCount(planetInputs) {
+    validatePlanetCount(planetInputs: HTMLCollectionOf<Element>): ValidationResult {
         if (planetInputs.length === 0) {
             return { isValid: false, message: 'Please add at least one planet to your system.' };
         }
@@ -174,7 +207,7 @@ export class ValidationManager {
         return { isValid: true };
     }
 
-    showMobileAlert(message, playUISound = null) {
+    showMobileAlert(message: string, playUISound: (() => void) | null = null): void {
         if (this.isMobile) {
             // Create a custom alert overlay for mobile
             const alertOverlay = document.createElement('div');
@@ -229,7 +262,7 @@ export class ValidationManager {
                 document.body.removeChild(alertOverlay);
             });
 
-            okButton.addEventListener('touchend', (e) => {
+            okButton.addEventListener('touchend', (e: TouchEvent) => {
                 e.preventDefault();
                 document.body.removeChild(alertOverlay);
                 if (playUISound) {

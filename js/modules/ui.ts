@@ -11,7 +11,6 @@ import { StarMap } from './ui/starMap.ts';
 import { BlackjackGame } from './ui/blackjackGame.ts';
 import { Settings } from './ui/settings.ts';
 import { StartScreen } from './ui/startScreen.ts';
-// @ts-ignore - importing from unconverted JS modules
 import { MemoryStats } from '../utils/memoryManager.js';
 import { MobileDetector } from '../utils/mobileDetector.js';
 

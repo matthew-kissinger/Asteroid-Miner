@@ -37,11 +37,14 @@ export class ExplosionEffects {
                     color: 0xff6600,
                     transparent: true,
                     opacity: 0.9,
-                    // @ts-ignore - Emissive is not on MeshBasicMaterial, but the original JS used it
-                    emissive: 0xff3300,
-                    emissiveIntensity: 2,
                     blending: THREE.AdditiveBlending
                 });
+                const emissiveMaterial = material as THREE.MeshBasicMaterial & {
+                    emissive?: THREE.ColorRepresentation;
+                    emissiveIntensity?: number;
+                };
+                emissiveMaterial.emissive = 0xff3300;
+                emissiveMaterial.emissiveIntensity = 2;
                 
                 explosion = new THREE.Mesh(geometry, material);
                 explosion.position.copy(position);

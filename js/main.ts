@@ -1,8 +1,5 @@
 // main.ts - Main entry point for the game (ultra-lean refactored version)
 
-// @ts-ignore
-import { Combat } from './modules/combat.js';
-
 // Import refactored modules
 import { initializeGlobals } from './main/globals.js';
 import { StartupSequence } from './main/startupSequence.js';
@@ -41,6 +38,8 @@ export class Game {
     world: any;
     renderer: any;
     audio: any;
+    private _environment: any;
+    private _controls: any;
 
     constructor() {
         // Initialize globals first
@@ -99,7 +98,6 @@ export class Game {
             this.diagnostics = new Diagnostics(this);
 
             // Initialize bitECS systems (pass scene for test entity mesh)
-            // @ts-ignore - renderer.scene exists after core initialization
             initECS(this.renderer?.scene);
 
             // Start the initialization sequence
@@ -228,14 +226,10 @@ export class Game {
     }
     
     // Explicitly typed helper for combat
-    // @ts-ignore - dynamic properties
-    get environment() { return this._environment; }
-    // @ts-ignore
-    set environment(v) { this._environment = v; }
-    // @ts-ignore
-    get controls() { return this._controls; }
-    // @ts-ignore
-    set controls(v) { this._controls = v; }
+    get environment(): any { return this._environment; }
+    set environment(v: any) { this._environment = v; }
+    get controls(): any { return this._controls; }
+    set controls(v: any) { this._controls = v; }
 
     updateCombat(deltaTime: number) {
         // Ensure the combat system's player entity is always up to date
@@ -332,7 +326,6 @@ async function startGameMainModule() {
 
 
         // Create game instance (globals initialized in constructor)
-        // @ts-ignore
         window.game = new Game();
         await window.game.initialize();
 

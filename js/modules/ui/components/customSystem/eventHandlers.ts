@@ -132,7 +132,7 @@ export class EventHandlerManager {
         this.handlers.set('clickOutside', clickOutsideHandler as EventHandler);
     }
 
-    setupMobileHandlers(container: HTMLElement, elements: ElementRefs): void {
+    setupMobileHandlers(container: HTMLElement, _elements: ElementRefs): void {
         // Touch start on container to close (mobile)
         const touchCloseHandler = (e: TouchEvent): void => {
             if (e.target === container) {

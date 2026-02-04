@@ -1,13 +1,13 @@
 // customSystemCreator.js - Refactored UI for creating custom star systems with AI-generated assets
 
 import { ApiClient } from '../utils/apiClient.ts';
-import { StyleManager } from './components/customSystem/styles.js';
-import { ValidationManager } from './components/customSystem/validation.js';
-import { SystemDataManager } from './components/customSystem/systemData.js';
-import { FormViewManager } from './components/customSystem/formView.js';
-import { PreviewManager } from './components/customSystem/preview.js';
-import { EventHandlerManager } from './components/customSystem/eventHandlers.js';
-import { HelperManager } from './components/customSystem/helpers.js';
+import { StyleManager } from './components/customSystem/styles.ts';
+import { ValidationManager } from './components/customSystem/validation.ts';
+import { SystemDataManager } from './components/customSystem/systemData.ts';
+import { FormViewManager } from './components/customSystem/formView.ts';
+import { PreviewManager } from './components/customSystem/preview.ts';
+import { EventHandlerManager } from './components/customSystem/eventHandlers.ts';
+import { HelperManager } from './components/customSystem/helpers.ts';
 
 type ApiImageResponse = {
     success: boolean;
@@ -150,11 +150,18 @@ export class CustomSystemCreator {
         if (this.container) {
             this.formViewManager.addRippleEffect(this.container);
         }
-        this.validationManager.setupCharacterCounters(this.skyboxDescription, this.planetDescriptions);
+        if (this.skyboxDescription && this.planetDescriptions) {
+            this.validationManager.setupCharacterCounters(this.skyboxDescription, this.planetDescriptions);
+        }
     }
     
     setupEventHandlers(): void {
-        if (!this.container) return;
+        if (!this.container || !this.closeBtn || !this.addPlanetBtn || !this.generateSystemBtn || 
+            !this.travelToSystemBtn || !this.regenerateSystemBtn || !this.systemForm || 
+            !this.systemPreview || !this.systemNameInput || !this.skyboxDescription) {
+            return;
+        }
+        
         const elements = {
             closeBtn: this.closeBtn,
             addPlanetBtn: this.addPlanetBtn,
@@ -183,7 +190,7 @@ export class CustomSystemCreator {
         
         // Add character counter for new planet description if mobile
         if (this.isMobile) {
-            const planetDesc = planetDiv.querySelector(`textarea[id^="planet-description-"]`);
+            const planetDesc = planetDiv.querySelector<HTMLTextAreaElement>(`textarea[id^="planet-description-"]`);
             if (planetDesc) {
                 this.validationManager.addCharacterCounter(planetDesc, 150);
             }
@@ -201,13 +208,15 @@ export class CustomSystemCreator {
     
     async generateSystem(): Promise<void> {
         // Validate inputs
+        if (!this.systemNameInput || !this.skyboxDescription) return;
+        
         const systemValidation = this.validationManager.validateSystemForm(
             this.systemNameInput, 
             this.skyboxDescription
         );
         
         if (!systemValidation.isValid) {
-            this.validationManager.showMobileAlert(systemValidation.message, this.playUISound.bind(this) as unknown as null);
+            this.validationManager.showMobileAlert(systemValidation.message || 'Validation failed', this.playUISound.bind(this) as unknown as null);
             return;
         }
         
@@ -217,7 +226,7 @@ export class CustomSystemCreator {
         const planetValidation = this.validationManager.validatePlanetCount(planetInputs);
         
         if (!planetValidation.isValid) {
-            this.validationManager.showMobileAlert(planetValidation.message, this.playUISound.bind(this) as unknown as null);
+            this.validationManager.showMobileAlert(planetValidation.message || 'Planet validation failed', this.playUISound.bind(this) as unknown as null);
             return;
         }
         
@@ -365,7 +374,7 @@ export class CustomSystemCreator {
     
     setupMobileShow(): void {
         if (!this.container) return;
-        const modalContent = this.container.querySelector('.modal-content');
+        const modalContent = this.container.querySelector<HTMLElement>('.modal-content');
         if (modalContent) {
             this.helpers.scrollToTop(modalContent);
             this.helpers.setStyleSafe(modalContent, 'overflowY', 'auto');

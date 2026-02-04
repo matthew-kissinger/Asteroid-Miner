@@ -1,16 +1,19 @@
-// styles.js - CSS styles for the custom system creator
+// styles.ts - CSS styles for the custom system creator
 
 export class StyleManager {
-    constructor(isMobile = false) {
+    isMobile: boolean;
+    stylesInjected: boolean;
+
+    constructor(isMobile: boolean = false) {
         this.isMobile = isMobile;
         this.stylesInjected = false;
     }
 
-    injectStyles() {
+    injectStyles(): void {
         if (this.stylesInjected) return;
 
         this.injectBaseStyles();
-        
+
         if (this.isMobile) {
             this.injectMobileStyles();
         }
@@ -18,7 +21,7 @@ export class StyleManager {
         this.stylesInjected = true;
     }
 
-    injectBaseStyles() {
+    injectBaseStyles(): void {
         if (!document.getElementById('custom-system-creator-styles')) {
             const style = document.createElement('style');
             style.id = 'custom-system-creator-styles';
@@ -28,12 +31,12 @@ export class StyleManager {
                     align-items: center;
                     margin-bottom: 10px;
                 }
-                
+
                 .property-row label {
                     flex: 0 0 150px;
                     margin-right: 10px;
                 }
-                
+
                 .property-row .slider {
                     flex: 1;
                     height: 10px;
@@ -41,13 +44,13 @@ export class StyleManager {
                     outline: none;
                     border-radius: 5px;
                 }
-                
+
                 .property-row .slider-value {
                     flex: 0 0 60px;
                     margin-left: 10px;
                     text-align: right;
                 }
-                
+
                 .planet-properties {
                     background: rgba(0, 0, 0, 0.2);
                     padding: 15px;
@@ -55,13 +58,13 @@ export class StyleManager {
                     margin-top: 10px;
                     margin-bottom: 15px;
                 }
-                
+
                 .help-text {
                     font-size: 12px;
                     color: #aaa;
                     margin-top: 5px;
                 }
-                
+
                 select.form-control {
                     width: 100%;
                     padding: 8px;
@@ -70,17 +73,17 @@ export class StyleManager {
                     color: white;
                     border: 1px solid #3a5472;
                 }
-                
+
                 /* Active slider styles */
                 .slider-active {
                     background: #3a5472 !important;
                 }
-                
+
                 /* Add smooth transitions */
                 #custom-system-creator button {
                     transition: all 0.2s ease;
                 }
-                
+
                 #custom-system-creator button:active {
                     transform: scale(0.95);
                 }
@@ -97,7 +100,7 @@ export class StyleManager {
         }
     }
 
-    injectMobileStyles() {
+    injectMobileStyles(): void {
         if (!document.getElementById('custom-system-creator-mobile-styles')) {
             const style = document.createElement('style');
             style.id = 'custom-system-creator-mobile-styles';
@@ -108,59 +111,59 @@ export class StyleManager {
                         border-radius: 10px;
                         padding-bottom: 120px;
                     }
-                    
+
                     #custom-system-creator .form-group {
                         margin-bottom: 24px;
                     }
-                    
+
                     #custom-system-creator label {
                         font-size: 16px;
                         margin-bottom: 10px;
                         display: block;
                     }
-                    
+
                     #custom-system-creator .property-row {
                         flex-direction: column;
                         align-items: flex-start;
                         margin-bottom: 20px;
                     }
-                    
+
                     #custom-system-creator .property-row label {
                         margin-bottom: 10px;
                         width: 100%;
                     }
-                    
+
                     #custom-system-creator .slider {
                         width: 100%;
                         margin: 10px 0;
                     }
-                    
+
                     #custom-system-creator .slider-value {
                         margin-top: 5px;
                         align-self: flex-end;
                     }
-                    
+
                     #custom-system-creator .planet-input {
                         padding: 20px;
                         margin-bottom: 30px;
                     }
-                    
+
                     #custom-system-creator input[type="text"],
                     #custom-system-creator textarea,
                     #custom-system-creator select {
                         font-size: 16px !important;
                         padding: 14px !important;
                     }
-                    
+
                     #custom-system-creator .planet-preview {
                         flex: 0 0 100%;
                         margin-bottom: 15px;
                     }
-                    
+
                     #custom-system-creator .form-actions {
                         text-align: center;
                     }
-                    
+
                     /* Better slider for touch */
                     #custom-system-creator input[type="range"] {
                         -webkit-appearance: none;
@@ -170,7 +173,7 @@ export class StyleManager {
                         padding: 0;
                         outline: none;
                     }
-                    
+
                     #custom-system-creator input[type="range"]::-webkit-slider-thumb {
                         -webkit-appearance: none;
                         width: 30px;
@@ -179,7 +182,7 @@ export class StyleManager {
                         background: #4a9dff;
                         cursor: pointer;
                     }
-                    
+
                     #custom-system-creator input[type="range"]::-moz-range-thumb {
                         width: 30px;
                         height: 30px;
@@ -188,14 +191,14 @@ export class StyleManager {
                         cursor: pointer;
                         border: none;
                     }
-                    
+
                     /* Touch ripple effect for buttons */
                     .ripple {
                         position: relative;
                         overflow: hidden;
                         transform: translate3d(0, 0, 0);
                     }
-                    
+
                     .ripple:after {
                         content: "";
                         display: block;
@@ -212,13 +215,13 @@ export class StyleManager {
                         opacity: 0;
                         transition: transform .5s, opacity 1s;
                     }
-                    
+
                     .ripple:active:after {
                         transform: scale(0, 0);
                         opacity: .3;
                         transition: 0s;
                     }
-                    
+
                     /* Character counter for text areas */
                     .char-counter {
                         font-size: 12px;
@@ -226,11 +229,11 @@ export class StyleManager {
                         text-align: right;
                         margin-top: 5px;
                     }
-                    
+
                     .char-counter.warning {
                         color: #ff9900;
                     }
-                    
+
                     .char-counter.error {
                         color: #ff3030;
                     }
@@ -240,8 +243,8 @@ export class StyleManager {
         }
     }
 
-    getMobileStyles(type = '') {
-        const styles = {
+    getMobileStyles(type?: string): Record<string, string> {
+        const styles: Record<string, string> = {
             modalContent: this.isMobile ? 'width: 94%; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 100px; overscroll-behavior: contain;' : '',
             closeBtn: this.isMobile ? 'font-size: 28px; padding: 12px; min-height: 48px; min-width: 48px;' : '',
             modalBody: this.isMobile ? 'padding-bottom: 150px;' : '',
@@ -260,14 +263,14 @@ export class StyleManager {
             formActions: this.isMobile ? 'padding-bottom: 30px;' : ''
         };
 
-        return type ? styles[type] : styles;
+        return type ? { [type]: styles[type] } : styles;
     }
 
-    getTextareaRows(defaultRows) {
+    getTextareaRows(defaultRows: number): number {
         return this.isMobile ? Math.max(2, defaultRows - 1) : defaultRows;
     }
 
-    cleanup() {
+    cleanup(): void {
         const stylesToRemove = [
             'custom-system-creator-styles',
             'custom-system-creator-mobile-styles',
