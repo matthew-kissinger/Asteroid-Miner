@@ -13,8 +13,11 @@
 import {
   Position,
   Velocity,
+  AngularVelocity,
   Rotation,
   Rigidbody,
+  Force,
+  Torque,
   Thrust,
   Thruster,
   Collider,
@@ -225,6 +228,171 @@ export function collisionSystem(entities: number[]): void {
 }
 
 /**
+ * Integrate forces into velocity (F = ma)
+ *
+ * Converts accumulated forces into velocity changes.
+ * Forces are cleared at the end of each frame.
+ */
+export function integrateForcesSystem(entities: number[], dt: number): void {
+  for (const eid of entities) {
+    if (!hasForce(eid) || !hasVelocity(eid) || !hasRigidbody(eid)) continue
+
+    // Skip kinematic entities
+    if (Rigidbody.isKinematic[eid]) continue
+
+    const mass = Rigidbody.mass[eid] || 1
+
+    // Calculate acceleration: a = F / m
+    const ax = Force.x[eid] / mass
+    const ay = Force.y[eid] / mass
+    const az = Force.z[eid] / mass
+
+    // Apply acceleration to velocity: v += a * dt
+    Velocity.x[eid] += ax * dt
+    Velocity.y[eid] += ay * dt
+    Velocity.z[eid] += az * dt
+
+    // Clear forces for next frame
+    Force.x[eid] = 0
+    Force.y[eid] = 0
+    Force.z[eid] = 0
+  }
+}
+
+/**
+ * Integrate torque into angular velocity
+ *
+ * Converts accumulated torque into angular velocity changes.
+ * Torque is cleared at the end of each frame.
+ */
+export function integrateTorqueSystem(entities: number[], dt: number): void {
+  for (const eid of entities) {
+    if (!hasTorque(eid) || !hasAngularVelocity(eid) || !hasRigidbody(eid))
+      continue
+
+    // Skip kinematic entities or frozen rotation
+    if (Rigidbody.isKinematic[eid] || Rigidbody.freezeRotation[eid]) continue
+
+    const mass = Rigidbody.mass[eid] || 1
+
+    // Calculate angular acceleration: α = τ / I
+    // For simplicity, use mass as moment of inertia
+    const alphax = Torque.x[eid] / mass
+    const alphay = Torque.y[eid] / mass
+    const alphaz = Torque.z[eid] / mass
+
+    // Apply angular acceleration to angular velocity: ω += α * dt
+    AngularVelocity.x[eid] += alphax * dt
+    AngularVelocity.y[eid] += alphay * dt
+    AngularVelocity.z[eid] += alphaz * dt
+
+    // Clear torque for next frame
+    Torque.x[eid] = 0
+    Torque.y[eid] = 0
+    Torque.z[eid] = 0
+  }
+}
+
+/**
+ * Apply angular drag to angular velocity
+ *
+ * Similar to linear drag but for rotational motion.
+ */
+export function applyAngularDragSystem(entities: number[], dt: number): void {
+  for (const eid of entities) {
+    if (!hasAngularVelocity(eid) || !hasRigidbody(eid)) continue
+
+    const angularDrag = Rigidbody.angularDrag[eid]
+    if (angularDrag <= 0) continue
+
+    // Apply angular drag as exponential decay
+    const dragFactor = Math.max(0, 1 - angularDrag * dt)
+    AngularVelocity.x[eid] *= dragFactor
+    AngularVelocity.y[eid] *= dragFactor
+    AngularVelocity.z[eid] *= dragFactor
+
+    // Zero out very small angular velocities
+    if (Math.abs(AngularVelocity.x[eid]) < 0.001) AngularVelocity.x[eid] = 0
+    if (Math.abs(AngularVelocity.y[eid]) < 0.001) AngularVelocity.y[eid] = 0
+    if (Math.abs(AngularVelocity.z[eid]) < 0.001) AngularVelocity.z[eid] = 0
+  }
+}
+
+/**
+ * Integrate angular velocity into rotation (quaternion update)
+ *
+ * Converts angular velocity (Euler) to quaternion rotation changes.
+ * This matches the legacy MovementSystem implementation.
+ */
+export function integrateAngularVelocitySystem(
+  entities: number[],
+  dt: number
+): void {
+  for (const eid of entities) {
+    if (
+      !hasAngularVelocity(eid) ||
+      !hasRotation(eid) ||
+      !hasRigidbody(eid)
+    )
+      continue
+
+    // Skip if rotation is frozen
+    if (Rigidbody.freezeRotation[eid]) continue
+
+    // Get angular velocity
+    const angVelX = AngularVelocity.x[eid] * dt
+    const angVelY = AngularVelocity.y[eid] * dt
+    const angVelZ = AngularVelocity.z[eid] * dt
+
+    // Skip if no angular velocity
+    if (
+      Math.abs(angVelX) < 0.0001 &&
+      Math.abs(angVelY) < 0.0001 &&
+      Math.abs(angVelZ) < 0.0001
+    )
+      continue
+
+    // Convert angular velocity change to quaternion
+    // This uses the same approach as the legacy system:
+    // 1. Create Euler from angular change
+    // 2. Convert to quaternion
+    // 3. Multiply with current rotation
+    const rotationDelta = eulerToQuaternion(angVelX, angVelY, angVelZ)
+
+    // Apply rotation change: q_new = q_current * q_delta
+    const qx = Rotation.x[eid]
+    const qy = Rotation.y[eid]
+    const qz = Rotation.z[eid]
+    const qw = Rotation.w[eid]
+
+    const dx = rotationDelta.x
+    const dy = rotationDelta.y
+    const dz = rotationDelta.z
+    const dw = rotationDelta.w
+
+    // Quaternion multiplication
+    Rotation.x[eid] = qw * dx + qx * dw + qy * dz - qz * dy
+    Rotation.y[eid] = qw * dy - qx * dz + qy * dw + qz * dx
+    Rotation.z[eid] = qw * dz + qx * dy - qy * dx + qz * dw
+    Rotation.w[eid] = qw * dw - qx * dx - qy * dy - qz * dz
+
+    // Normalize quaternion to prevent drift
+    const len = Math.sqrt(
+      Rotation.x[eid] ** 2 +
+        Rotation.y[eid] ** 2 +
+        Rotation.z[eid] ** 2 +
+        Rotation.w[eid] ** 2
+    )
+    if (len > 0) {
+      Rotation.x[eid] /= len
+      Rotation.y[eid] /= len
+      Rotation.z[eid] /= len
+      Rotation.w[eid] /= len
+    }
+  }
+}
+
+/**
  * Main physics system - runs all physics subsystems
  *
  * @param entities - Array of entity IDs to process
@@ -235,9 +403,13 @@ export function physicsSystem(entities: number[], dt: number): void {
   const normalizedDt = dt * 60
 
   // Run physics subsystems in order
+  integrateForcesSystem(entities, normalizedDt) // NEW: Force → velocity
+  integrateTorqueSystem(entities, normalizedDt) // NEW: Torque → angular velocity
   applyThrustSystem(entities, normalizedDt)
   applyDragSystem(entities, normalizedDt)
+  applyAngularDragSystem(entities, normalizedDt) // NEW: Angular drag
   integratePositionSystem(entities, normalizedDt)
+  integrateAngularVelocitySystem(entities, normalizedDt) // NEW: Angular velocity → rotation
   collisionSystem(entities)
 }
 
@@ -273,6 +445,33 @@ function rotateVector(
 }
 
 /**
+ * Convert Euler angles (radians) to quaternion
+ *
+ * This matches the Three.js Quaternion.setFromEuler implementation.
+ */
+function eulerToQuaternion(
+  x: number,
+  y: number,
+  z: number
+): { x: number; y: number; z: number; w: number } {
+  // Compute half angles
+  const cx = Math.cos(x * 0.5)
+  const cy = Math.cos(y * 0.5)
+  const cz = Math.cos(z * 0.5)
+  const sx = Math.sin(x * 0.5)
+  const sy = Math.sin(y * 0.5)
+  const sz = Math.sin(z * 0.5)
+
+  // XYZ order (Three.js default)
+  return {
+    x: sx * cy * cz + cx * sy * sz,
+    y: cx * sy * cz - sx * cy * sz,
+    z: cx * cy * sz + sx * sy * cz,
+    w: cx * cy * cz - sx * sy * sz,
+  }
+}
+
+/**
  * Component existence checks
  *
  * bitECS v0.4.0 doesn't have built-in component existence checks.
@@ -287,6 +486,22 @@ function hasPosition(eid: number): boolean {
 
 function hasVelocity(eid: number): boolean {
   return eid < Velocity.x.length
+}
+
+function hasAngularVelocity(eid: number): boolean {
+  return eid < AngularVelocity.x.length
+}
+
+function hasRotation(eid: number): boolean {
+  return eid < Rotation.x.length
+}
+
+function hasForce(eid: number): boolean {
+  return eid < Force.x.length
+}
+
+function hasTorque(eid: number): boolean {
+  return eid < Torque.x.length
 }
 
 function hasThrust(eid: number): boolean {

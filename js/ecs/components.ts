@@ -43,6 +43,16 @@ export const Velocity = {
 }
 
 /**
+ * Angular velocity (rotation rate in radians/second)
+ * Stored as Euler angles for simplicity
+ */
+export const AngularVelocity = {
+  x: new Float32Array(10000),
+  y: new Float32Array(10000),
+  z: new Float32Array(10000)
+}
+
+/**
  * Rotation as quaternion (most efficient for 3D rotation math)
  */
 export const Rotation = {
@@ -92,7 +102,27 @@ export const Renderable = {
 export const Rigidbody = {
   mass: new Float32Array(10000),
   drag: new Float32Array(10000),         // Linear drag (space friction)
-  angularDrag: new Float32Array(10000)   // Angular damping
+  angularDrag: new Float32Array(10000),  // Angular damping
+  isKinematic: new Uint8Array(10000),    // 0 = dynamic, 1 = kinematic (no physics)
+  freezeRotation: new Uint8Array(10000)  // 0 = normal, 1 = freeze rotation
+}
+
+/**
+ * Force accumulator (cleared each frame)
+ */
+export const Force = {
+  x: new Float32Array(10000),
+  y: new Float32Array(10000),
+  z: new Float32Array(10000)
+}
+
+/**
+ * Torque accumulator (cleared each frame)
+ */
+export const Torque = {
+  x: new Float32Array(10000),
+  y: new Float32Array(10000),
+  z: new Float32Array(10000)
 }
 
 /**
@@ -324,6 +354,7 @@ export const AllComponents = {
   // Transform
   Position,
   Velocity,
+  AngularVelocity,
   Rotation,
   Scale,
 
@@ -333,6 +364,8 @@ export const AllComponents = {
 
   // Physics
   Rigidbody,
+  Force,
+  Torque,
   Collider,
 
   // Combat
