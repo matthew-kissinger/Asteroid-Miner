@@ -22,6 +22,15 @@ export {
   type MeshRegistry,
 } from './renderSyncSystem'
 
+// Combat systems
+export {
+  projectileCollisionSystem,
+  damageApplicationSystem,
+  shieldRegenSystem,
+  lifetimeSystem,
+  type CollisionEvent,
+} from './combatSystem'
+
 // ECS Runner
 export {
   initECS,
@@ -30,3 +39,12 @@ export {
   addTrackedEntity,
   removeTrackedEntity,
 } from './ecsRunner'
+
+// Enemy AI system
+export {
+  enemyDetectionSystem,
+  enemyPursuitSystem,
+  enemySeparationSystem,
+  difficultyScalingSystem,
+  enemyCollisionAttackSystem,
+} from './enemyAISystem'
