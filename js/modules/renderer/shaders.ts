@@ -1,4 +1,17 @@
 // shaders.ts - Custom shaders for volumetric lighting effects
+//
+// NOTE: These shaders use GLSL via ShaderPass (not TSL) because:
+// - ShaderPass expects raw GLSL/WGSL strings, not TSL nodes
+// - TSL post-processing (Three.js 2026+) requires a different architecture:
+//   * TSL material nodes work on mesh materials, not screen-space effects
+//   * Custom TSL post-processing requires NodePostProcessing (experimental)
+//   * Converting would require rewriting PostProcessingManager to use TSL functions
+// - For now, GLSL ShaderPass is the standard approach in r180
+//
+// TODO (Phase 4): Migrate to TSL post-processing when:
+// 1. NodePostProcessing stabilizes in Three.js
+// 2. Custom TSL post-processing passes are documented
+// 3. We refactor PostProcessingManager to use pass() and TSL nodes
 
 import * as THREE from 'three';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
