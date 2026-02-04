@@ -6,9 +6,9 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 1 Complete, Phase 2 ~98% Done
+## Current State: Phase 1 Complete, Phase 2 ~99% Done
 
-Phase 1 is done. Phase 2 is nearly complete - only ui/ (66 JS files) remains unconverted. All other subsystems fully converted to TypeScript: controls (17 files), renderer/ (6 files), audio (7 files), pooling (14 files), spaceship/ (7 files), game/ (5 files), combat (12 files), main/ (12 files), intro/ (6 files), environment/ (39 files), scattered (7 files). 153 TS files total. Build succeeds. Typecheck has 15 errors (6 diagnostics.ts, 1 gameInitializer.ts, 8 intro/arrivalPhase.ts).
+Phase 1 is done. Phase 2 is nearly complete. The ui/ subsystem is partially converted: top-level files (13), hud/ (6 of 7), settings/ (7), stargate/ (7+7 terminal), starmap/ (4) are now TypeScript. Remaining JS: blackjack/ (7), combat/ (7), customSystem/ (7), hud/displays.js (1) = 22 files. Plus 18 stale JS files (stargate+starmap) coexist with their TS replacements and need deletion. 197 TS files total. Build succeeds. Typecheck has ~69 errors (mostly in newly converted ui/ files - implicit any, DOM types). Previous 15 errors (diagnostics/gameInitializer/arrivalPhase) are fixed.
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured)
@@ -47,15 +47,17 @@ Phase 1 is done. Phase 2 is nearly complete - only ui/ (66 JS files) remains unc
 - Intro/ subsystem fully converted to TypeScript (6 files, 6d8f9fa)
 - Environment/ subsystem fully converted to TypeScript (39 files, d945b03 + d9afbc0)
 - Scattered JS files converted to TypeScript (7 files: lightingConfig, perfOverlay, laserMaterial, apiClient, memoryManager, mobileDetector, pathUtils - baf5249)
+- Previous 15 typecheck errors fixed (diagnostics, gameInitializer, arrivalPhase - dedf603)
+- UI top-level files converted to TypeScript (13 files, 33412a0) - includes hud/ (6 of 7), settings/ (7), stargate/ (14), starmap/ (4)
 
 **Remaining Problems:**
-- **Typecheck has 15 errors** - 6 in diagnostics.ts (PerfMetrics type mismatch on window.__perf), 1 in gameInitializer.ts (Physics vs PhysicsType scene incompatibility), 8 in intro/arrivalPhase.ts (nullable mesh, missing clone on VectorLike).
-- **Partial TypeScript** - 153 TS files, 66 JS files remain in ui/ (plus 57 legacy ECS JS files slated for deletion). 50 @ts-ignore suppressions across converted modules.
+- **Typecheck has ~69 errors** - Mostly in newly converted ui/ files (hud/eventHandlers.ts, settings/helpers.ts, settings/graphicsSettings.ts, hud/minimap.ts, stargate/terminalView.ts, etc.). Previous 15 errors (diagnostics/gameInitializer/arrivalPhase) are now fixed.
+- **Partial TypeScript** - 197 TS files, 22 unconverted JS files remain in ui/ (blackjack 7, combat 7, customSystem 7, hud/displays.js 1), plus 18 stale JS files needing deletion, plus 57 legacy ECS JS files slated for deletion. 50 @ts-ignore suppressions across converted modules.
 - **Dual ECS running** - Both bitECS (via ecsRunner.ts) and legacy ECS (js/core/) run each frame in parallel. Legacy ECS still drives the actual game; bitECS runs a test entity.
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts (volumetric light + claude rays). Pending TSL conversion.
 - **Global state** - ~645 `window.*` usages across the codebase
-- **Large bundle** - Main chunk is 1,109 kB after minification (combat chunk split out at 146 kB). Needs further code splitting.
-- **Unconverted subsystems** - ui/ (66 JS, 17,454 lines) is the ONLY remaining unconverted subsystem.
+- **Large bundle** - Main chunk is 1,112 kB after minification (combat chunk split out at 146 kB). Needs further code splitting.
+- **Unconverted subsystems** - ui/ has 22 unconverted JS files remaining (blackjack/ 7, combat/ 7, customSystem/ 7, hud/displays.js 1) plus 18 stale JS files needing deletion.
 - **Legacy ECS** - js/core/ (12 files), js/components/ (13 files), js/systems/ (32 files) still active. Will be deleted when bitECS fully replaces them.
 
 ## Target Stack (2026 Best Practices)
@@ -182,10 +184,16 @@ Health.current[eid] = Health.max[eid]
 19. ~~Convert intro/ subsystem to TypeScript~~ Done (6 files, 6d8f9fa)
 20. ~~Convert environment/ subsystem to TypeScript~~ Done (39 files, d945b03 + d9afbc0)
 21. ~~Convert scattered JS files to TypeScript~~ Done (7 files, baf5249)
-22. Convert ui/ subsystem to TypeScript (66 files, 17,454 lines - ONLY remaining JS)
-23. Fix 15 typecheck errors (6 diagnostics.ts, 1 gameInitializer.ts, 8 intro/arrivalPhase.ts)
-21. Create remaining bitECS systems (combat, AI, mining)
-22. Delete old custom ECS (js/core/, js/components/, js/systems/)
+22. ~~Convert ui/ top-level + hud + settings + stargate + starmap to TypeScript~~ Done (44 files, 33412a0)
+23. ~~Fix 15 typecheck errors (diagnostics, gameInitializer, arrivalPhase)~~ Done (dedf603)
+24. Delete 18 stale JS files in stargate/ + starmap/ (TS replacements exist)
+25. Convert ui/components/blackjack to TypeScript (7 files, ~2,669 lines)
+26. Convert ui/components/combat to TypeScript (7 files, ~2,708 lines)
+27. Convert ui/components/customSystem to TypeScript (7 files, ~1,885 lines)
+28. Convert ui/components/hud/displays.js to TypeScript (1 file, 469 lines)
+29. Fix ~69 typecheck errors in newly converted ui/ files
+30. Create remaining bitECS systems (combat, AI, mining)
+31. Delete old custom ECS (js/core/, js/components/, js/systems/)
 
 ### Phase 3: Game Feel Overhaul
 1. **Controller tuning**
@@ -345,7 +353,7 @@ js/
 │   ├── game/            # 5 TS files (fully converted, 4ec0b63)
 │   ├── renderer/        # 6 TS files (fully converted, 5b661ee)
 │   ├── environment/     # 39 TS files (fully converted, d945b03 + d9afbc0)
-│   ├── ui/              # 66 JS files (ONLY unconverted subsystem - 17,454 lines)
+│   ├── ui/              # 44 TS + 22 unconverted JS + 18 stale JS to delete
 │   └── intro/           # 6 TS files (fully converted, 6d8f9fa)
 ├── systems/             # Legacy ECS systems (32 JS files - to be deleted)
 ├── components/          # Legacy components (13 JS files - to be deleted)
@@ -421,7 +429,8 @@ After overhaul:
 - ~~**Renderer/ uncommitted TS files.**~~ RESOLVED - Fixed typecheck errors, committed TS files, deleted stale JS (5b661ee).
 - ~~**Audio "done" task was a no-op.**~~ RESOLVED - Retried with gemini, fully converted (8b59957).
 - ~~**Pooling "done" task (9eebf151) produced no commit.**~~ RESOLVED - Retried with codex, fully converted (14 files, 7e81a49).
-- **Intro "done" task (4546b3a8) by cline was a no-op.** All 6 JS files remain unconverted. Fifth cline no-op. DO NOT USE cline for any tasks.
+- ~~**Intro "done" task (4546b3a8) by cline was a no-op.**~~ RESOLVED - Retried with gemini/flash (6d8f9fa).
+- **cursor/cline "done" tasks may not actually convert.** e569f774 (cursor, customSystem+stargate+starmap) was marked done but customSystem has zero TS files. e56d6b84 (cline, combat+blackjack) also marked done but no TS files exist. Always verify actual file state.
 - ~~**lightingConfig.js is drifted.**~~ RESOLVED - Config wired to lighting.js, values in sync (sun: 3.0, ambient: 0.3).
 - ~~**Stale physics.js coexists with physics.ts.**~~ RESOLVED - physics.js deleted, imports updated.
 - ~~**Stale renderer.js and controls.js coexist with .ts versions.**~~ RESOLVED - Stale .js files deleted, imports updated (d168865).
