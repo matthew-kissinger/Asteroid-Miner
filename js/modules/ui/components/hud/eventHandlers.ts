@@ -1,8 +1,11 @@
 // eventHandlers.js - Event handling and updates for HUD components
 
-import { HUDStyles } from './styles.js';
+import { HUDStyles } from './styles.ts';
 
 export class HUDEventHandlers {
+    animationFrames: number[];
+    glitchInterval: ReturnType<typeof setInterval> | null;
+    scanline: HTMLDivElement | null;
     constructor() {
         this.animationFrames = [];
         this.glitchInterval = null;
@@ -12,7 +15,7 @@ export class HUDEventHandlers {
     /**
      * Initialize startup animation and effects
      */
-    animateHudIn() {
+    animateHudIn(): void {
         // Add glitch effect for initialization
         this.addStartupGlitchEffect();
         

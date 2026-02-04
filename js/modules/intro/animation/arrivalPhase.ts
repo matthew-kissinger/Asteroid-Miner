@@ -42,10 +42,12 @@ export function updateArrivalPhase(progress: number, context: IntroSequenceAnima
         // Make ship visible when it first emerges
         if (progress >= 0.2 && !starDreadnought.ship.visible) {
             starDreadnought.ship.visible = true;
-            flashOverlay(0.3);
-            
+            if (flashOverlay) {
+                flashOverlay(0.3);
+            }
+
             // Play arrival sound using Tone.js
-            if (introSounds.shipArrival) {
+            if (introSounds.shipArrival?.play) {
                 introSounds.shipArrival.play();
             }
         }
@@ -109,9 +111,9 @@ export function updateArrivalPhase(progress: number, context: IntroSequenceAnima
         // Activate teleport beam if not already active
         if (progress < 0.75 && !starDreadnought.teleportBeamActive) {
             starDreadnought.activateTeleportBeam();
-            
+
             // Play teleport sound using Tone.js
-            if (introSounds.teleport) {
+            if (introSounds.teleport?.play) {
                 introSounds.teleport.play();
             }
         }
@@ -120,15 +122,15 @@ export function updateArrivalPhase(progress: number, context: IntroSequenceAnima
         starDreadnought.updateTeleportBeam(progress);
         
         // Deploy player ship
-        if (progress > 0.8 && spaceship && !spaceship.mesh.visible) {
+        if (progress > 0.8 && spaceship && spaceship.mesh && !spaceship.mesh.visible) {
             // Position player ship BELOW dreadnought but ABOVE the asteroid belt
             const dreadPos = starDreadnought.ship.position;
             spaceship.mesh.position.set(
-                dreadPos.x, 
+                dreadPos.x,
                 dreadPos.y - 2000, // 2000 units below dreadnought
                 dreadPos.z
             );
-            
+
             // Properly undock the ship - this is critical to update game state
             if (spaceship.isDocked) {
                 console.log("Undocking player ship during intro sequence");
@@ -137,15 +139,21 @@ export function updateArrivalPhase(progress: number, context: IntroSequenceAnima
             } else {
                 spaceship.mesh.visible = true;
             }
-            
-            // Store final player position
-            context.finalPlayerPosition = spaceship.mesh.position.clone();
-            
+
+            // Store final player position (convert to THREE.Vector3 for reliable clone)
+            context.finalPlayerPosition = new THREE.Vector3(
+                spaceship.mesh.position.x,
+                spaceship.mesh.position.y,
+                spaceship.mesh.position.z
+            );
+
             // Add shield effect to player ship
             createPlayerShieldEffect(spaceship, context);
-            
+
             // Flash effect for ship appearance
-            flashOverlay(0.3);
+            if (flashOverlay) {
+                flashOverlay(0.3);
+            }
         }
         
         // Teleport beam view camera

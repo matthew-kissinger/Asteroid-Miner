@@ -55,7 +55,17 @@ export class Diagnostics {
     setupDiagnostics(): void {
         // Perf overlay & sink
         initPerfOverlay();
-        const perf = window.__perf ?? (window.__perf = {});
+        const perf = window.__perf ?? (window.__perf = {
+            enabled: false,
+            fps: 0,
+            simMs: 0,
+            renderMs: 0,
+            drawCalls: 0,
+            visibleInstances: 0,
+            pools: { hits: 0, misses: 0 },
+            gc: 0,
+            systems: {}
+        });
         perf.enabled = false;
         
         // Add debug command for FPS limit

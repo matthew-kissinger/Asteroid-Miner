@@ -113,7 +113,7 @@ export class GameInitializer {
         this.game.ui.setAudio(this.game.audio);
         
         // Initialize controls last, as it depends on other components
-        this.game.controls = new Controls(spaceship, physics, environment as any, this.game.ui);
+        this.game.controls = new Controls(spaceship, physics as any, environment as any, this.game.ui);
         
         // Share controls reference with UI for bidirectional communication
         this.game.ui.setControls(this.game.controls);
