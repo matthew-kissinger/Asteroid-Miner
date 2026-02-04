@@ -85,11 +85,11 @@ export class SystemActions {
             const game = windowWithGame.gameInstance || windowWithGame.game;
             if (game && game.controls && game.controls.dockingSystem && spaceship) {
                 const dockingSystem = game.controls.dockingSystem;
-                return dockingSystem.nearStargate && !spaceship.isDocked;
+                return !!dockingSystem.nearStargate && !spaceship.isDocked;
             }
             return false;
         }
         
-        return this.dockingSystem.nearStargate && !spaceship.isDocked;
+        return !!this.dockingSystem.nearStargate && !spaceship.isDocked;
     }
 }

@@ -1,51 +1,6 @@
 // uiIntegration.js - Handles UI integration for docking system
 
-type DockingSpaceship = {
-    isDocked: boolean;
-    credits: number;
-    fuelUpgradeCost: number;
-    engineUpgradeCost: number;
-    miningUpgradeCost: number;
-    hullUpgradeCost: number;
-    scannerUpgradeCost: number;
-    miningEfficiency: number;
-    refuel: () => number;
-    repairShield: () => number;
-    repairHull: () => number;
-    upgradeFuelTank: () => void;
-    upgradeEngine: () => void;
-    upgradeMiningLaser: () => void;
-    upgradeHull: () => void;
-    upgradeScanner: () => void;
-};
-
-type DockingUI = {
-    stargateInterface?: {
-        showDockingPrompt?: () => void;
-        hideDockingPrompt?: () => void;
-        updateStargateUI?: (spaceship: DockingSpaceship, resources: ResourceInventory | null) => void;
-        hideStargateUI?: () => void;
-    };
-    controls?: {
-        miningSystem?: {
-            miningSpeedByType: Record<string, number>;
-        };
-        isMobile?: boolean;
-        touchControls?: {
-            showDockButton?: () => void;
-            hideDockButton?: () => void;
-        };
-    };
-    stargate?: unknown;
-    hideUI?: () => void;
-    showUI?: () => void;
-};
-
-type ResourceInventory = {
-    iron: number;
-    gold: number;
-    platinum: number;
-};
+import type { DockingSpaceship, DockingUI, ResourceInventory } from './types.ts';
 
 type GameWindow = Window & {
     game?: {
@@ -257,7 +212,7 @@ export class UIIntegration {
 
     updateStargateUI(spaceship: DockingSpaceship, ui: DockingUI): void {
         if (ui && ui.stargateInterface) {
-            ui.stargateInterface.updateStargateUI(spaceship, this.resources);
+            ui.stargateInterface.updateStargateUI?.(spaceship, this.resources);
         }
     }
 
@@ -266,7 +221,7 @@ export class UIIntegration {
         if (ui && ui.stargateInterface) {
             // Use CSS class for better performance
             document.body.classList.add('undocking');
-            ui.stargateInterface.hideStargateUI();
+            ui.stargateInterface.hideStargateUI?.();
             console.log("Hiding stargate interface");
         }
     }
@@ -276,7 +231,7 @@ export class UIIntegration {
         if (ui) {
             // Use CSS class for better performance
             document.body.classList.remove('undocking');
-            ui.showUI();
+            ui.showUI?.();
             console.log("Showing game UI");
         }
     }
@@ -289,7 +244,7 @@ export class UIIntegration {
             if (customSystemCreator && window.getComputedStyle(customSystemCreator).display !== 'none') {
                 console.log("Closing custom system creator before undocking");
                 // See if we can find the close button and simulate a click
-                const closeBtn = customSystemCreator.querySelector('#close-system-creator');
+                const closeBtn = customSystemCreator.querySelector('#close-system-creator') as HTMLElement | null;
                 if (closeBtn) {
                     closeBtn.click();
                 } else {
@@ -319,7 +274,7 @@ export class UIIntegration {
             const starMap = document.getElementById('star-map');
             if (starMap && window.getComputedStyle(starMap).display !== 'none') {
                 console.log("Closing star map before undocking");
-                const closeStarMapBtn = starMap.querySelector('#close-star-map');
+                const closeStarMapBtn = starMap.querySelector('#close-star-map') as HTMLElement | null;
                 if (closeStarMapBtn) {
                     closeStarMapBtn.click();
                 } else {
@@ -330,9 +285,10 @@ export class UIIntegration {
             // Close any other modals
             const allModals = document.querySelectorAll('.modal-container');
             allModals.forEach(modal => {
-                if (window.getComputedStyle(modal).display !== 'none') {
-                    console.log("Closing modal before undocking:", modal.id || 'unnamed modal');
-                    modal.style.display = 'none';
+                const modalElement = modal as HTMLElement;
+                if (window.getComputedStyle(modalElement).display !== 'none') {
+                    console.log("Closing modal before undocking:", modalElement.id || 'unnamed modal');
+                    modalElement.style.display = 'none';
                 }
             });
         } catch (err) {

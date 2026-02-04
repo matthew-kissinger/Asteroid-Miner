@@ -203,8 +203,9 @@ export class GamepadHandler {
     scanForGamepads(): void {
         const gamepads = navigator.getGamepads();
         for (let i = 0; i < gamepads.length; i++) {
-            if (gamepads[i]) {
-                this.onGamepadConnected(gamepads[i]);
+            const gamepad = gamepads[i];
+            if (gamepad) {
+                this.onGamepadConnected(gamepad);
             }
         }
     }
@@ -687,7 +688,9 @@ export class GamepadHandler {
         
         html += `<br><small>Press F8 to swap X/Y axes</small>`;
         
-        this.debugDisplay.innerHTML = html;
+        if (this.debugDisplay) {
+            this.debugDisplay.innerHTML = html;
+        }
     }
     
     // Method to swap right stick axes if they're incorrect

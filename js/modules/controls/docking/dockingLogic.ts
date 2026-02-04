@@ -1,37 +1,6 @@
 // dockingLogic.js - Core docking and undocking logic
 
-type MessageBus = {
-    publish: (event: string, data?: unknown) => void;
-};
-
-type DockingSpaceship = {
-    isDocked: boolean;
-    dock: () => void;
-    undock: () => unknown;
-    mesh: {
-        position: {
-            clone: () => unknown;
-        };
-    };
-    world?: {
-        messageBus?: MessageBus;
-    };
-    shield: number;
-    maxShield: number;
-    hull: number;
-    maxHull: number;
-    syncValuesToHealthComponent: () => void;
-};
-
-type DockingUI = {
-    stargateInterface?: {
-        showStargateUI?: () => void;
-        updateStargateUI?: (spaceship: DockingSpaceship, resources: unknown) => void;
-        hideStargateUI?: () => void;
-    };
-    hideUI?: () => void;
-    showUI?: () => void;
-};
+import type { DockingSpaceship, DockingUI, MessageBus } from './types.ts';
 
 type GameWindow = Window & {
     game?: {
@@ -65,7 +34,6 @@ export class DockingLogic {
     isMobileDevice(): boolean {
         return ('ontouchstart' in window) || 
                (navigator.maxTouchPoints > 0) || 
-               (navigator.msMaxTouchPoints > 0) ||
                (window.innerWidth < 900);
     }
 
@@ -105,7 +73,7 @@ export class DockingLogic {
         // Show the stargate UI
         if (ui && ui.stargateInterface) {
             console.log("Showing stargate UI...");
-            ui.stargateInterface.showStargateUI();
+            ui.stargateInterface.showStargateUI?.();
             
             // Double-check visibility on mobile with a small delay
             if (this.isMobileDevice()) {
@@ -121,7 +89,7 @@ export class DockingLogic {
         
         // Hide game UI elements
         if (ui) {
-            ui.hideUI();
+            ui.hideUI?.();
         }
         
         // Exit pointer lock so cursor is visible for UI interactions
@@ -148,7 +116,7 @@ export class DockingLogic {
 
     // Helper to yield control to the browser
     async yieldToBrowser(): Promise<void> {
-        return new Promise(resolve => requestAnimationFrame(resolve));
+        return new Promise(resolve => requestAnimationFrame(() => resolve()));
     }
 
     // Optimized method to reset mobile styles
@@ -168,16 +136,17 @@ export class DockingLogic {
             document.body.style.width = 'auto';
             document.body.style.touchAction = 'auto';
             document.body.style.pointerEvents = 'auto';
-            document.body.style.webkitOverflowScrolling = 'touch';
+            document.body.style.setProperty('-webkit-overflow-scrolling', 'touch');
             
             // FIX: Ensure all restrictive classes are removed to prevent touch event issues
             document.body.classList.remove('modal-open', 'undocking');
             
             // Reset scrollable containers in a single pass
             document.querySelectorAll('.modal-content, #stargate-ui, #star-map').forEach(container => {
-                if (container && container.style) {
-                    container.style.cssText = 'overflow: auto; -webkit-overflow-scrolling: touch;';
-                    container.scrollTop = 0;
+                const element = container as HTMLElement;
+                if (element && element.style) {
+                    element.style.cssText = 'overflow: auto; -webkit-overflow-scrolling: touch;';
+                    element.scrollTop = 0;
                 }
             });
         });
@@ -247,7 +216,7 @@ export class DockingLogic {
 
             // Step 4: Perform core undock logic
             console.log("Performing core undock...");
-            const newPosition = spaceship.undock();
+            spaceship.undock();
             
             // Step 5: Sync health values immediately
             console.log("Syncing health values...");

@@ -8,23 +8,30 @@ import { DockingSystem } from './controls/dockingSystem.ts';
 import { TouchControls } from './controls/touchControls.ts';
 import { MobileDetector } from '../utils/mobileDetector.js';
 import * as THREE from 'three';
+import type { DockingSpaceship, DockingUI, ResourceInventory } from './controls/docking/types.ts';
 
 // Type definitions for dependencies
-type SpaceshipType = {
-    isDocked: boolean;
-    mesh: {
-        position: THREE.Vector3;
+type SceneWithCamera = THREE.Scene & {
+    camera: THREE.Camera;
+};
+
+type SpaceshipType = DockingSpaceship & {
+    thrust: {
+        forward: boolean;
+        backward: boolean;
+        right: boolean;
+        left: boolean;
+        boost: boolean;
     };
-    miningEfficiency?: number;
-    world?: {
-        messageBus?: {
-            publish: (event: string, data?: any) => void;
-        };
-    };
+    thrustPower: number;
+    strafePower: number;
+    mesh: THREE.Object3D;
+    scanRange?: number;
 };
 
 type PhysicsType = {
-    scene: THREE.Scene;
+    scene: SceneWithCamera;
+    updateRotation: (deltaX: number, deltaY: number) => void;
 };
 
 type EnvironmentType = {
@@ -32,20 +39,16 @@ type EnvironmentType = {
     asteroidBelt?: {
         removeAsteroid: (asteroid: any) => void;
     };
+    asteroids: any[];
     checkAnomalyCollision: (position: THREE.Vector3) => any;
     collectAnomalyOrb: (anomaly: any) => any;
 };
 
-type UIType = {
+type UIType = DockingUI & {
     setControls: (controls: Controls) => void;
 };
 
-type ResourcesType = {
-    orbs: {
-        [rarity: string]: number;
-    };
-    [key: string]: any;
-};
+type ResourcesType = ResourceInventory;
 
 type AnomalyType = {
     position: THREE.Vector3;
@@ -61,6 +64,25 @@ type OrbData = {
     value: number;
 };
 
+type GamepadControlsInput = {
+    targetingSystem?: {
+        toggleLockOn: () => void;
+        cycleLockOnTarget?: (direction?: number) => unknown;
+        getCurrentTarget?: () => unknown;
+    };
+    miningSystem?: {
+        isMining: boolean;
+        stopMining: () => void;
+        startMining: () => void;
+        setTargetAsteroid: (target: unknown) => void;
+    };
+    dockingSystem?: {
+        canDock?: () => boolean;
+        initiateDocking?: () => void;
+    };
+    weaponSystem?: unknown;
+};
+
 interface MinimalInputHandler {
     isLocked: () => boolean;
     exitPointerLock: () => void;
@@ -74,7 +96,7 @@ export class Controls {
     isMobile: boolean;
     _wasDocked: boolean;
     weaponSystem: any;
-    scene: THREE.Scene;
+    scene: SceneWithCamera;
     inputHandler: InputHandler | MinimalInputHandler;
     gamepadHandler?: GamepadHandler;
     touchControls?: TouchControls;
@@ -108,7 +130,7 @@ export class Controls {
             
             // Initialize gamepad support for desktop
             console.log("Initializing gamepad support");
-            this.gamepadHandler = new GamepadHandler(spaceship, physics, this);
+            this.gamepadHandler = new GamepadHandler(spaceship, physics, this as GamepadControlsInput);
         } else {
             console.log("Initializing touch controls for mobile");
             this.touchControls = new TouchControls(spaceship, physics);
@@ -132,7 +154,8 @@ export class Controls {
         
         // Pass control systems to touch controls if on mobile
         if (this.isMobile && this.touchControls) {
-            this.touchControls.setControlSystems(this);
+            type TouchControlsSystemsInput = Parameters<TouchControls['setControlSystems']>[0];
+            this.touchControls.setControlSystems(this as TouchControlsSystemsInput);
         }
         
         // Connect upgrade systems - share references for easier updates
@@ -320,12 +343,15 @@ export class Controls {
 
         // Add orb to inventory
         if (!this.resources.orbs) {
-            this.resources.orbs = {};
+            this.resources.orbs = {
+                common: 0,
+                uncommon: 0,
+                rare: 0,
+                epic: 0,
+                legendary: 0
+            };
         }
-        if (!this.resources.orbs[orbData.rarity]) {
-            this.resources.orbs[orbData.rarity] = 0;
-        }
-        this.resources.orbs[orbData.rarity]++;
+        this.resources.orbs[orbData.rarity] = (this.resources.orbs[orbData.rarity] || 0) + 1;
         
         // Show notification with value and rarity
         let rarityColor: string;

@@ -10,24 +10,63 @@ import { SystemActions } from './actions/systemActions.ts';
 
 type TouchSpaceship = {
     isDocked: boolean;
-    thrust?: {
+    thrust: {
         forward: boolean;
         backward: boolean;
         left: boolean;
         right: boolean;
         boost: boolean;
     };
+    mesh?: {
+        position?: {
+            distanceTo?: (pos: unknown) => number;
+        };
+    };
 };
 
 type TouchPhysics = {
-    updateRotation?: (deltaX: number, deltaY: number) => void;
+    updateRotation: (deltaX: number, deltaY: number) => void;
+};
+
+type MiningSystem = {
+    isMining?: boolean;
+    setTargetAsteroid: (asteroid: unknown) => void;
+    startMining: () => void;
+    stopMining: () => void;
+};
+
+type MiningAsteroid = {
+    resourceType?: string;
+    mesh?: {
+        position?: {
+            toArray?: () => number[];
+            distanceTo?: (pos: unknown) => number;
+        };
+    };
+};
+
+type TargetingSystem = {
+    getCurrentTarget: () => MiningAsteroid | null;
+    isLockOnEnabled: () => boolean;
+    toggleLockOn: () => void;
+    findNearestTarget: () => MiningAsteroid | null;
+};
+
+type DockingSystem = {
+    dockWithStargate: () => void;
+    nearStargate?: boolean;
+};
+
+type WeaponSystem = {
+    setFiring?: (active: boolean) => void;
+    isWeaponActive?: boolean;
 };
 
 type TouchControlsSystems = {
-    miningSystem?: unknown;
-    targetingSystem?: unknown;
-    dockingSystem?: unknown;
-    weaponSystem?: unknown;
+    miningSystem?: MiningSystem | null;
+    targetingSystem?: TargetingSystem | null;
+    dockingSystem?: DockingSystem | null;
+    weaponSystem?: WeaponSystem | null;
     spaceship?: TouchSpaceship;
 };
 
@@ -91,11 +130,11 @@ export class TouchControls {
         }
         
         // Set systems for action handlers
-        this.miningHandler.setMiningSystem(controls.miningSystem);
-        this.miningHandler.setTargetingSystem(controls.targetingSystem);
-        this.weaponHandler.setWeaponSystem(controls.weaponSystem);
-        this.systemActions.setDockingSystem(controls.dockingSystem);
-        this.systemActions.setTargetingSystem(controls.targetingSystem);
+        this.miningHandler.setMiningSystem(controls.miningSystem ?? null);
+        this.miningHandler.setTargetingSystem(controls.targetingSystem ?? null);
+        this.weaponHandler.setWeaponSystem(controls.weaponSystem ?? null);
+        this.systemActions.setDockingSystem(controls.dockingSystem ?? null);
+        this.systemActions.setTargetingSystem(controls.targetingSystem ?? null);
         
         // Log system connections
         const systemStatus = {

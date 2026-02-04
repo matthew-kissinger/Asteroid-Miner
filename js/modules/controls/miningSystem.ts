@@ -9,9 +9,7 @@ import { VisualEffects } from './mining/visualEffects.ts';
 
 type MiningSpaceship = {
     miningEfficiency?: number;
-    mesh: {
-        position: THREE.Vector3;
-    };
+    mesh: THREE.Object3D;
     shield?: number;
     maxShield?: number;
     hull?: number;
@@ -21,9 +19,7 @@ type MiningSpaceship = {
 
 type MiningAsteroid = {
     resourceType?: string;
-    mesh: THREE.Object3D & {
-        position: THREE.Vector3;
-    };
+    mesh: THREE.Object3D;
 };
 
 type GameWindow = Window & {

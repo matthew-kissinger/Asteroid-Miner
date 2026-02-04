@@ -4,19 +4,21 @@
 import { TouchControls as RefactoredTouchControls } from './touch/touchControls.ts';
 
 type TouchSpaceship = {
-    isDocked?: boolean;
+    isDocked: boolean;
+    thrust: {
+        forward: boolean;
+        backward: boolean;
+        left: boolean;
+        right: boolean;
+        boost: boolean;
+    };
 };
 
 type TouchPhysics = {
-    updateRotation?: (deltaX: number, deltaY: number) => void;
+    updateRotation: (deltaX: number, deltaY: number) => void;
 };
 
-type ControlsInput = {
-    miningSystem?: unknown;
-    targetingSystem?: unknown;
-    dockingSystem?: unknown;
-    weaponSystem?: unknown;
-};
+type ControlsInput = Parameters<RefactoredTouchControls['setControlSystems']>[0];
 
 export class TouchControls extends RefactoredTouchControls {
     leftJoystick: unknown;

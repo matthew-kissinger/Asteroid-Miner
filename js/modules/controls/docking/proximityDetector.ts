@@ -1,31 +1,6 @@
 // proximityDetector.js - Handles stargate proximity detection
 
-type ProximitySpaceship = {
-    isDocked: boolean;
-    mesh?: {
-        position: {
-            distanceTo: (pos: unknown) => number;
-        };
-    };
-};
-
-type ProximityStargate = {
-    getPosition: () => unknown;
-};
-
-type ProximityUI = {
-    stargateInterface?: {
-        showDockingPrompt?: () => void;
-        hideDockingPrompt?: () => void;
-    };
-    controls?: {
-        isMobile?: boolean;
-        touchControls?: {
-            showDockButton?: () => void;
-            hideDockButton?: () => void;
-        };
-    };
-};
+import type { ProximitySpaceship, ProximityStargate, ProximityUI } from './types.ts';
 
 export class ProximityDetector {
     nearStargate: boolean;
@@ -48,22 +23,22 @@ export class ProximityDetector {
         if (distance < 2000) { // Within docking range (4x the original 500)
             this.nearStargate = true;
             if (ui && ui.stargateInterface) {
-                ui.stargateInterface.showDockingPrompt();
+                ui.stargateInterface.showDockingPrompt?.();
             }
             // Also show the dock button in touch controls for mobile
             if (ui && ui.controls && ui.controls.isMobile && 
                 ui.controls.touchControls) {
-                ui.controls.touchControls.showDockButton();
+                ui.controls.touchControls.showDockButton?.();
             }
         } else {
             this.nearStargate = false;
             if (ui && ui.stargateInterface) {
-                ui.stargateInterface.hideDockingPrompt();
+                ui.stargateInterface.hideDockingPrompt?.();
             }
             // Also hide the dock button in touch controls for mobile
             if (ui && ui.controls && ui.controls.isMobile && 
                 ui.controls.touchControls) {
-                ui.controls.touchControls.hideDockButton();
+                ui.controls.touchControls.hideDockButton?.();
             }
         }
     }

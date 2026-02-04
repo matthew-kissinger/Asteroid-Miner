@@ -16,6 +16,11 @@ type Environment = {
     asteroids: Asteroid[];
 };
 
+type NearbyAsteroid = {
+    asteroid: Asteroid;
+    distance: number;
+};
+
 type SceneWithCamera = THREE.Scene & {
     camera: THREE.Camera;
 };
@@ -46,6 +51,8 @@ export class TargetingSystem {
     targetReticle!: THREE.Mesh;
     offScreenContainer: HTMLDivElement | null = null;
     offScreenIndicator: HTMLDivElement | null = null;
+    targetDisplay: HTMLElement | null = null;
+    targetInfoElement: HTMLElement | null = null;
     scanRadiusCounter?: number;
     rescanCounter?: number;
     lookAtCounter?: number;
@@ -62,6 +69,8 @@ export class TargetingSystem {
         this.currentLockOnIndex = -1;
         this.targetAsteroid = null;
         this.scanRadius = this.getScanRadius(); // Get initial scan radius from spaceship
+        this.targetDisplay = document.getElementById('target-display');
+        this.targetInfoElement = document.getElementById('target-info');
         
         this.createTargetReticle();
         // Create off-screen indicators
@@ -156,6 +165,7 @@ export class TargetingSystem {
         
         // Create raycaster for line-of-sight validation
         const raycaster = new THREE.Raycaster();
+        const nearby: NearbyAsteroid[] = [];
         
         // Find all asteroids within scan radius
         const asteroids = this.environment.asteroids;
@@ -180,7 +190,7 @@ export class TargetingSystem {
                 
                 // If the first intersection is our target asteroid, it's visible
                 if (intersects.length > 0 && intersects[0].object === asteroid.mesh) {
-                    this.nearbyAsteroids.push({
+                    nearby.push({
                         asteroid: asteroid,
                         distance: distance
                     });
@@ -189,10 +199,10 @@ export class TargetingSystem {
         });
         
         // Sort by distance
-        this.nearbyAsteroids.sort((a, b) => a.distance - b.distance);
+        nearby.sort((a, b) => a.distance - b.distance);
         
         // Extract just the asteroid objects after sorting
-        this.nearbyAsteroids = this.nearbyAsteroids.map(item => item.asteroid);
+        this.nearbyAsteroids = nearby.map(item => item.asteroid);
         
         // Set current target if we found asteroids
         if (this.nearbyAsteroids.length > 0) {
@@ -361,7 +371,6 @@ export class TargetingSystem {
             
             if (this.rescanCounter >= 120) {
                 this.rescanCounter = 0;
-                const previousCount = this.nearbyAsteroids.length;
                 this.scanForAsteroids();
                 
                 // If we found new asteroids and don't have a target, auto-select one
@@ -424,9 +433,8 @@ export class TargetingSystem {
             if (this.uiUpdateCounter === 15) {  // Check half-way through UI update cycle
                 const isOnScreen = this.isTargetOnScreen();
                 if (!isOnScreen) {
-                    const screenPosition = this.getScreenPosition(this.targetAsteroid.mesh.position);
                     const targetDirection = this.getTargetDirection();
-                    this.showOffScreenIndicator(screenPosition, targetDirection);
+                    this.showOffScreenIndicator(targetDirection);
                 } else {
                     this.hideOffScreenIndicators();
                 }
@@ -541,7 +549,7 @@ export class TargetingSystem {
         }
     }
     
-    showOffScreenIndicator(screenPosition: THREE.Vector2, targetDirection: THREE.Vector2): void {
+    showOffScreenIndicator(targetDirection: THREE.Vector2): void {
         if (!this.offScreenContainer || !this.offScreenIndicator) return;
         
         // Show container
@@ -608,6 +616,9 @@ export class TargetingSystem {
     
     getTargetDirection(): THREE.Vector2 {
         // Get normalized direction vector from screen center to target
+        if (!this.targetAsteroid) {
+            return new THREE.Vector2(0, 0);
+        }
         const screenPosition = this.getScreenPosition(this.targetAsteroid.mesh.position);
         
         // Create a direction vector from screen center to target position

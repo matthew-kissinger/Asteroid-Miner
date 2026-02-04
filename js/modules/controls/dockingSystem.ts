@@ -3,57 +3,20 @@
 import { ProximityDetector } from './docking/proximityDetector.ts';
 import { DockingLogic } from './docking/dockingLogic.ts';
 import { UIIntegration } from './docking/uiIntegration.ts';
-
-type DockingSpaceship = {
-    isDocked: boolean;
-    undockLocation?: {
-        set: (x: number, y: number, z: number) => void;
-    };
-    world?: {
-        messageBus?: {
-            publish: (event: string, data?: unknown) => void;
-        };
-    };
-    mesh?: {
-        position: {
-            clone: () => unknown;
-        };
-    };
-};
-
-type DockingUI = {
-    stargateInterface?: {
-        showStargateUI?: () => void;
-        updateStargateUI?: (spaceship: DockingSpaceship, resources: unknown) => void;
-        hideStargateUI?: () => void;
-        showDockingPrompt?: () => void;
-        hideDockingPrompt?: () => void;
-    };
-    hideUI?: () => void;
-    showUI?: () => void;
-    controls?: {
-        isMobile?: boolean;
-        touchControls?: {
-            showDockButton?: () => void;
-            hideDockButton?: () => void;
-        };
-        miningSystem?: unknown;
-    };
-    stargate?: unknown;
-};
+import type { DockingSpaceship, DockingUI, ResourceInventory, ProximityStargate } from './docking/types.ts';
 
 export class DockingSystem {
     spaceship: DockingSpaceship;
-    stargate: unknown;
+    stargate: ProximityStargate;
     ui: DockingUI;
     proximityDetector: ProximityDetector;
     dockingLogic: DockingLogic;
     uiIntegration: UIIntegration;
     isDocked: boolean;
     nearStargate?: boolean;
-    resources?: unknown;
+    resources?: ResourceInventory;
 
-    constructor(spaceship: DockingSpaceship, stargate: unknown, ui: DockingUI) {
+    constructor(spaceship: DockingSpaceship, stargate: ProximityStargate, ui: DockingUI) {
         this.spaceship = spaceship;
         this.stargate = stargate;
         this.ui = ui;
@@ -167,7 +130,7 @@ export class DockingSystem {
     }
     
     // Setter for resources to allow dependency injection
-    setResources(resources: unknown): void {
+    setResources(resources: ResourceInventory): void {
         this.resources = resources;
         this.uiIntegration.setResources(resources);
     }

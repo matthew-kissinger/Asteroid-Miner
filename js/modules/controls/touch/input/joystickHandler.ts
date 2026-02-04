@@ -137,6 +137,7 @@ export class JoystickHandler {
 
         // Left joystick events (thrust)
         this.leftJoystick.on('move', (evt, data) => {
+            void evt;
             this.handleThrustJoystick(data);
         }).on('end', () => {
             this.resetThrust();
@@ -144,6 +145,7 @@ export class JoystickHandler {
         
         // Right joystick events (rotation)
         this.rightJoystick.on('move', (evt, data) => {
+            void evt;
             this.handleRotationJoystick(data);
         }).on('end', () => {
             // Do nothing on end - rotation is not continuous

@@ -152,9 +152,10 @@ export class MiningHandler {
             // Log asteroid details
             console.log("MiningHandler: Target set for mining:", {
                 resourceType: targetAsteroid.resourceType || "unknown",
-                position: targetAsteroid.mesh ? targetAsteroid.mesh.position.toArray() : "no mesh",
-                distance: targetAsteroid.mesh && this.spaceship && this.spaceship.mesh ? 
-                    targetAsteroid.mesh.position.distanceTo(this.spaceship.mesh.position) : "unknown"
+                position: targetAsteroid.mesh?.position?.toArray?.() ?? "no mesh",
+                distance: targetAsteroid.mesh?.position?.distanceTo && this.spaceship?.mesh?.position
+                    ? targetAsteroid.mesh.position.distanceTo(this.spaceship.mesh.position)
+                    : "unknown"
             });
             
             // Start mining

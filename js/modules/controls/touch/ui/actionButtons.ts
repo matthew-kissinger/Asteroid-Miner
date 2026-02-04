@@ -132,7 +132,7 @@ export class ActionButtons {
         
         // Add hardware acceleration for better performance on mobile
         button.style.transform = 'translateZ(0)';
-        button.style.webkitTapHighlightColor = 'transparent';
+        button.style.setProperty('-webkit-tap-highlight-color', 'transparent');
         button.style.backfaceVisibility = 'hidden';
         
         if (parent) {
