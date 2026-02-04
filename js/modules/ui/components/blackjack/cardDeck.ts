@@ -2,7 +2,16 @@
  * Blackjack Card Deck - Card deck management, shuffling, dealing logic
  */
 
+export type CardSuit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
+export type CardValue = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
+export type BlackjackCard = {
+    suit: CardSuit;
+    value: CardValue;
+};
+
 export class BlackjackCardDeck {
+    deck: BlackjackCard[];
+
     constructor() {
         this.deck = [];
         this.createDeck();
@@ -11,9 +20,9 @@ export class BlackjackCardDeck {
     /**
      * Create a fresh deck of cards
      */
-    createDeck() {
-        const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
-        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+    createDeck(): void {
+        const suits: CardSuit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
+        const values: CardValue[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
         
         this.deck = [];
         
@@ -32,7 +41,7 @@ export class BlackjackCardDeck {
     /**
      * Shuffle the deck using Fisher-Yates algorithm
      */
-    shuffle() {
+    shuffle(): void {
         for (let i = this.deck.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
@@ -43,11 +52,16 @@ export class BlackjackCardDeck {
      * Draw a card from the deck
      * @returns {Object} A card object
      */
-    drawCard() {
+    drawCard(): BlackjackCard {
         if (this.deck.length === 0) {
             this.createDeck();
         }
-        return this.deck.pop();
+        const card = this.deck.pop();
+        if (!card) {
+            this.createDeck();
+            return this.deck.pop() as BlackjackCard;
+        }
+        return card;
     }
 
     /**
@@ -55,7 +69,7 @@ export class BlackjackCardDeck {
      * @param {Object} card - The card object
      * @returns {number} The value of the card in Blackjack
      */
-    getCardValue(card) {
+    getCardValue(card: BlackjackCard): number {
         if (card.value === 'A') {
             return 11;
         } else if (['J', 'Q', 'K'].includes(card.value)) {
@@ -69,7 +83,7 @@ export class BlackjackCardDeck {
      * Check if deck is empty
      * @returns {boolean} True if deck is empty
      */
-    isEmpty() {
+    isEmpty(): boolean {
         return this.deck.length === 0;
     }
 
@@ -77,14 +91,14 @@ export class BlackjackCardDeck {
      * Get remaining cards count
      * @returns {number} Number of cards left in deck
      */
-    getRemainingCards() {
+    getRemainingCards(): number {
         return this.deck.length;
     }
 
     /**
      * Reset deck (create new and shuffle)
      */
-    reset() {
+    reset(): void {
         this.createDeck();
     }
 }

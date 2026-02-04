@@ -3,9 +3,22 @@
  */
 
 import { BlackjackStyles } from './styles.js';
+import type { BlackjackCard, CardSuit } from './cardDeck.js';
+
+type BlackjackSpaceship = {
+    cargo?: {
+        iron?: number;
+        gold?: number;
+        platinum?: number;
+    };
+};
 
 export class BlackjackGameView {
-    constructor(isMobile = false) {
+    isMobile: boolean;
+    styles: BlackjackStyles;
+    cardSymbols: Record<CardSuit, string>;
+
+    constructor(isMobile: boolean = false) {
         this.isMobile = isMobile;
         this.styles = new BlackjackStyles(isMobile);
         this.cardSymbols = {
@@ -19,8 +32,8 @@ export class BlackjackGameView {
     /**
      * Create the main game UI container
      */
-    createGameUI() {
-        const gameUI = document.createElement('div');
+    createGameUI(): HTMLDivElement {
+        const gameUI: HTMLDivElement = document.createElement('div');
         gameUI.id = 'blackjack-game';
         
         // Apply main UI styles
@@ -28,7 +41,7 @@ export class BlackjackGameView {
         this.styles.applyStyles(gameUI, this.styles.getMobileStyles());
         
         // Add scanline effect
-        const scanlines = document.createElement('div');
+        const scanlines: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(scanlines, this.styles.getScanlineStyles());
         gameUI.appendChild(scanlines);
         
@@ -47,18 +60,18 @@ export class BlackjackGameView {
     /**
      * Create the header section
      */
-    createHeader() {
-        const header = document.createElement('div');
+    createHeader(): HTMLDivElement {
+        const header: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(header, this.styles.getHeaderStyles());
         
         // Title
-        const title = document.createElement('h2');
+        const title: HTMLHeadingElement = document.createElement('h2');
         title.textContent = 'STELLAR BLACKJACK';
         this.styles.applyStyles(title, this.styles.getTitleStyles());
         header.appendChild(title);
         
         // Subtitle
-        const subtitle = document.createElement('div');
+        const subtitle: HTMLDivElement = document.createElement('div');
         subtitle.textContent = 'WAGER RESOURCES • WIN BIG • BEAT THE DEALER';
         this.styles.applyStyles(subtitle, this.styles.getSubtitleStyles());
         header.appendChild(subtitle);
@@ -73,8 +86,8 @@ export class BlackjackGameView {
     /**
      * Create the close button
      */
-    createCloseButton() {
-        const closeBtn = document.createElement('button');
+    createCloseButton(): HTMLButtonElement {
+        const closeBtn: HTMLButtonElement = document.createElement('button');
         closeBtn.textContent = '×';
         this.styles.applyStyles(closeBtn, this.styles.getCloseButtonStyles());
         return closeBtn;
@@ -83,8 +96,8 @@ export class BlackjackGameView {
     /**
      * Create the main game area
      */
-    createGameArea() {
-        const gameArea = document.createElement('div');
+    createGameArea(): HTMLDivElement {
+        const gameArea: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(gameArea, this.styles.getGameAreaStyles());
         
         // Dealer area
@@ -109,8 +122,8 @@ export class BlackjackGameView {
     /**
      * Create the dealer area
      */
-    createDealerArea() {
-        const dealerArea = document.createElement('div');
+    createDealerArea(): HTMLDivElement {
+        const dealerArea: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(dealerArea, this.styles.getDealerAreaStyles());
         
         // Dealer header
@@ -118,13 +131,13 @@ export class BlackjackGameView {
         dealerArea.appendChild(dealerHeader);
         
         // Dealer cards container
-        const dealerCards = document.createElement('div');
+        const dealerCards: HTMLDivElement = document.createElement('div');
         dealerCards.id = 'dealer-cards';
         this.styles.applyStyles(dealerCards, this.styles.getCardsContainerStyles());
         dealerArea.appendChild(dealerCards);
         
         // Dealer speech bubble
-        const speechBubble = document.createElement('div');
+        const speechBubble: HTMLDivElement = document.createElement('div');
         speechBubble.id = 'dealer-speech';
         this.styles.applyStyles(speechBubble, this.styles.getSpeechBubbleStyles());
         dealerArea.appendChild(speechBubble);
@@ -135,8 +148,8 @@ export class BlackjackGameView {
     /**
      * Create the player area
      */
-    createPlayerArea() {
-        const playerArea = document.createElement('div');
+    createPlayerArea(): HTMLDivElement {
+        const playerArea: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(playerArea, this.styles.getPlayerAreaStyles());
         
         // Player header
@@ -144,7 +157,7 @@ export class BlackjackGameView {
         playerArea.appendChild(playerHeader);
         
         // Player cards container
-        const playerCards = document.createElement('div');
+        const playerCards: HTMLDivElement = document.createElement('div');
         playerCards.id = 'player-cards';
         this.styles.applyStyles(playerCards, this.styles.getCardsContainerStyles());
         playerArea.appendChild(playerCards);
@@ -155,19 +168,19 @@ export class BlackjackGameView {
     /**
      * Create area header (dealer/player)
      */
-    createAreaHeader(title, scoreId, isPlayer) {
-        const header = document.createElement('div');
+    createAreaHeader(title: string, scoreId: string, isPlayer: boolean): HTMLDivElement {
+        const header: HTMLDivElement = document.createElement('div');
         header.className = isPlayer ? 'player-header' : 'dealer-header';
         this.styles.applyStyles(header, this.styles.getAreaHeaderStyles());
         
         // Title
-        const titleElement = document.createElement('div');
+        const titleElement: HTMLDivElement = document.createElement('div');
         titleElement.textContent = title;
         this.styles.applyStyles(titleElement, isPlayer ? this.styles.getPlayerTitleStyles() : this.styles.getDealerTitleStyles());
         header.appendChild(titleElement);
         
         // Score
-        const score = document.createElement('div');
+        const score: HTMLDivElement = document.createElement('div');
         score.id = scoreId;
         score.textContent = '0';
         this.styles.applyStyles(score, this.styles.getScoreStyles(isPlayer));
@@ -179,11 +192,11 @@ export class BlackjackGameView {
     /**
      * Create the status area
      */
-    createStatusArea() {
-        const statusArea = document.createElement('div');
+    createStatusArea(): HTMLDivElement {
+        const statusArea: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(statusArea, this.styles.getStatusAreaStyles());
         
-        const gameStatus = document.createElement('div');
+        const gameStatus: HTMLDivElement = document.createElement('div');
         gameStatus.id = 'game-status';
         gameStatus.textContent = 'PLACE YOUR BET TO BEGIN';
         this.styles.applyStyles(gameStatus, this.styles.getGameStatusStyles());
@@ -195,8 +208,8 @@ export class BlackjackGameView {
     /**
      * Create the controls area
      */
-    createControlsArea() {
-        const controlsArea = document.createElement('div');
+    createControlsArea(): HTMLDivElement {
+        const controlsArea: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(controlsArea, this.styles.getControlsAreaStyles());
         
         // Betting controls
@@ -213,13 +226,13 @@ export class BlackjackGameView {
     /**
      * Create betting controls
      */
-    createBettingControls() {
-        const bettingControls = document.createElement('div');
+    createBettingControls(): HTMLDivElement {
+        const bettingControls: HTMLDivElement = document.createElement('div');
         bettingControls.id = 'betting-controls';
         this.styles.applyStyles(bettingControls, this.styles.getBettingControlsStyles());
         
         // Betting title
-        const bettingTitle = document.createElement('div');
+        const bettingTitle: HTMLDivElement = document.createElement('div');
         bettingTitle.textContent = 'PLACE YOUR BET';
         this.styles.applyStyles(bettingTitle, this.styles.getBettingTitleStyles());
         bettingControls.appendChild(bettingTitle);
@@ -238,11 +251,11 @@ export class BlackjackGameView {
     /**
      * Create resource selection buttons
      */
-    createResourceOptions() {
-        const resourceOptions = document.createElement('div');
+    createResourceOptions(): HTMLDivElement {
+        const resourceOptions: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(resourceOptions, this.styles.getResourceOptionsStyles());
         
-        const resources = [
+        const resources: Array<{ name: 'iron' | 'gold' | 'platinum'; color: string }> = [
             { name: 'iron', color: 'rgba(150, 150, 150, 1)' },
             { name: 'gold', color: 'rgba(255, 215, 0, 1)' },
             { name: 'platinum', color: 'rgba(229, 228, 226, 1)' }
@@ -259,21 +272,21 @@ export class BlackjackGameView {
     /**
      * Create a resource button
      */
-    createResourceButton(resource, color) {
-        const btn = document.createElement('button');
+    createResourceButton(resource: 'iron' | 'gold' | 'platinum', color: string): HTMLButtonElement {
+        const btn: HTMLButtonElement = document.createElement('button');
         btn.className = 'resource-btn';
         btn.dataset.resource = resource;
         this.styles.applyStyles(btn, this.styles.getResourceButtonStyles(color));
         
         // Resource name
-        const resourceName = document.createElement('span');
+        const resourceName: HTMLSpanElement = document.createElement('span');
         resourceName.textContent = resource.toUpperCase();
         resourceName.style.fontWeight = 'bold';
         resourceName.style.fontSize = '12px';
         btn.appendChild(resourceName);
         
         // Resource amount
-        const resourceAmount = document.createElement('span');
+        const resourceAmount: HTMLSpanElement = document.createElement('span');
         resourceAmount.className = `${resource}-amount`;
         resourceAmount.textContent = '0 UNITS';
         resourceAmount.style.fontSize = '10px';
@@ -287,26 +300,26 @@ export class BlackjackGameView {
     /**
      * Create bet amount controls
      */
-    createBetAmountControls() {
-        const betAmountControls = document.createElement('div');
+    createBetAmountControls(): HTMLDivElement {
+        const betAmountControls: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(betAmountControls, this.styles.getBetAmountControlsStyles());
         
         // Bet amount display
-        const betAmountDisplay = document.createElement('div');
+        const betAmountDisplay: HTMLDivElement = document.createElement('div');
         betAmountDisplay.id = 'bet-amount';
         betAmountDisplay.textContent = '0';
         this.styles.applyStyles(betAmountDisplay, this.styles.getBetAmountDisplayStyles());
         betAmountControls.appendChild(betAmountDisplay);
         
         // Decrease button
-        const decreaseBtn = document.createElement('button');
+        const decreaseBtn: HTMLButtonElement = document.createElement('button');
         decreaseBtn.textContent = '-';
         decreaseBtn.id = 'decrease-bet-btn';
         this.styles.applyStyles(decreaseBtn, this.styles.getControlButtonStyles());
         betAmountControls.appendChild(decreaseBtn);
         
         // Increase button
-        const increaseBtn = document.createElement('button');
+        const increaseBtn: HTMLButtonElement = document.createElement('button');
         increaseBtn.textContent = '+';
         increaseBtn.id = 'increase-bet-btn';
         this.styles.applyStyles(increaseBtn, this.styles.getControlButtonStyles());
@@ -318,8 +331,8 @@ export class BlackjackGameView {
     /**
      * Create game action buttons
      */
-    createGameActions() {
-        const gameActions = document.createElement('div');
+    createGameActions(): HTMLDivElement {
+        const gameActions: HTMLDivElement = document.createElement('div');
         this.styles.applyStyles(gameActions, this.styles.getGameActionsStyles());
         
         const actionButtons = [
@@ -340,8 +353,8 @@ export class BlackjackGameView {
     /**
      * Create an action button
      */
-    createActionButton(id, text, color) {
-        const button = document.createElement('button');
+    createActionButton(id: string, text: string, color: string): HTMLButtonElement {
+        const button: HTMLButtonElement = document.createElement('button');
         button.id = id;
         button.textContent = text;
         this.styles.applyStyles(button, this.styles.getActionButtonStyles(color));
@@ -353,8 +366,8 @@ export class BlackjackGameView {
     /**
      * Create a visual card element
      */
-    createCardElement(card, faceDown = false) {
-        const cardEl = document.createElement('div');
+    createCardElement(card: BlackjackCard, faceDown: boolean = false): HTMLDivElement {
+        const cardEl: HTMLDivElement = document.createElement('div');
         cardEl.className = 'card';
         this.styles.applyStyles(cardEl, this.styles.getCardStyles(faceDown));
         
@@ -370,46 +383,46 @@ export class BlackjackGameView {
     /**
      * Create face-up card content
      */
-    createFaceUpCard(cardEl, card) {
+    createFaceUpCard(cardEl: HTMLDivElement, card: BlackjackCard): void {
         const color = this.styles.getCardColor(card.suit);
         
         // Card value at top-left
-        const topValue = document.createElement('div');
+        const topValue: HTMLDivElement = document.createElement('div');
         topValue.textContent = card.value;
         topValue.style.color = color;
         this.styles.applyStyles(topValue, this.styles.getCardValueStyles('top'));
         cardEl.appendChild(topValue);
         
         // Suit at top-right
-        const topSuit = document.createElement('div');
+        const topSuit: HTMLDivElement = document.createElement('div');
         topSuit.textContent = this.cardSymbols[card.suit];
         topSuit.style.color = color;
         this.styles.applyStyles(topSuit, this.styles.getCardSuitStyles('top'));
         cardEl.appendChild(topSuit);
         
         // Center symbol
-        const centerSymbol = document.createElement('div');
+        const centerSymbol: HTMLDivElement = document.createElement('div');
         centerSymbol.textContent = this.cardSymbols[card.suit];
         centerSymbol.style.color = color;
         this.styles.applyStyles(centerSymbol, this.styles.getCenterSymbolStyles());
         cardEl.appendChild(centerSymbol);
         
         // Value at bottom-right (rotated)
-        const bottomValue = document.createElement('div');
+        const bottomValue: HTMLDivElement = document.createElement('div');
         bottomValue.textContent = card.value;
         bottomValue.style.color = color;
         this.styles.applyStyles(bottomValue, this.styles.getCardValueStyles('bottom'));
         cardEl.appendChild(bottomValue);
         
         // Suit at bottom-left (rotated)
-        const bottomSuit = document.createElement('div');
+        const bottomSuit: HTMLDivElement = document.createElement('div');
         bottomSuit.textContent = this.cardSymbols[card.suit];
         bottomSuit.style.color = color;
         this.styles.applyStyles(bottomSuit, this.styles.getCardSuitStyles('bottom'));
         cardEl.appendChild(bottomSuit);
         
         // Card background pattern
-        const pattern = document.createElement('div');
+        const pattern: HTMLDivElement = document.createElement('div');
         pattern.style.position = 'absolute';
         pattern.style.inset = '0';
         pattern.style.opacity = '0.05';
@@ -419,7 +432,7 @@ export class BlackjackGameView {
         cardEl.appendChild(pattern);
         
         // Holographic effect
-        const holoEffect = document.createElement('div');
+        const holoEffect: HTMLDivElement = document.createElement('div');
         holoEffect.style.position = 'absolute';
         holoEffect.style.inset = '0';
         holoEffect.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.1) 100%)';
@@ -430,9 +443,9 @@ export class BlackjackGameView {
     /**
      * Create face-down card content
      */
-    createFaceDownCard(cardEl) {
+    createFaceDownCard(cardEl: HTMLDivElement): void {
         // Back design for face-down card
-        const backDesign = document.createElement('div');
+        const backDesign: HTMLDivElement = document.createElement('div');
         backDesign.style.width = '80%';
         backDesign.style.height = '80%';
         backDesign.style.border = '2px solid rgba(51, 170, 255, 0.4)';
@@ -442,7 +455,7 @@ export class BlackjackGameView {
         cardEl.appendChild(backDesign);
         
         // Logo in center of back
-        const logo = document.createElement('div');
+        const logo: HTMLDivElement = document.createElement('div');
         logo.style.position = 'absolute';
         logo.style.fontWeight = 'bold';
         logo.style.fontSize = this.isMobile ? '12px' : '14px';
@@ -454,7 +467,7 @@ export class BlackjackGameView {
     /**
      * Show the game UI
      */
-    show(gameUI) {
+    show(gameUI: HTMLDivElement | null): void {
         if (gameUI) {
             gameUI.style.display = 'block';
         }
@@ -463,7 +476,7 @@ export class BlackjackGameView {
     /**
      * Hide the game UI
      */
-    hide(gameUI) {
+    hide(gameUI: HTMLDivElement | null): void {
         if (gameUI) {
             gameUI.style.display = 'none';
         }
@@ -472,7 +485,7 @@ export class BlackjackGameView {
     /**
      * Update resource display
      */
-    updateResourceDisplay(spaceship) {
+    updateResourceDisplay(spaceship: BlackjackSpaceship): void {
         if (spaceship && spaceship.cargo) {
             // Ensure cargo has all resources initialized
             if (spaceship.cargo.iron === undefined) spaceship.cargo.iron = 0;
@@ -480,17 +493,17 @@ export class BlackjackGameView {
             if (spaceship.cargo.platinum === undefined) spaceship.cargo.platinum = 0;
             
             // Update resource amounts
-            const ironElement = document.querySelector('.iron-amount');
+            const ironElement = document.querySelector('.iron-amount') as HTMLSpanElement | null;
             if (ironElement) {
                 ironElement.textContent = `${spaceship.cargo.iron} UNITS`;
             }
             
-            const goldElement = document.querySelector('.gold-amount');
+            const goldElement = document.querySelector('.gold-amount') as HTMLSpanElement | null;
             if (goldElement) {
                 goldElement.textContent = `${spaceship.cargo.gold} UNITS`;
             }
             
-            const platinumElement = document.querySelector('.platinum-amount');
+            const platinumElement = document.querySelector('.platinum-amount') as HTMLSpanElement | null;
             if (platinumElement) {
                 platinumElement.textContent = `${spaceship.cargo.platinum} UNITS`;
             }
@@ -500,18 +513,18 @@ export class BlackjackGameView {
     /**
      * Update score display
      */
-    updateScore(score, isPlayer = true) {
-        const scoreElement = document.getElementById(isPlayer ? 'player-score' : 'dealer-score');
+    updateScore(score: number, isPlayer: boolean = true): void {
+        const scoreElement = document.getElementById(isPlayer ? 'player-score' : 'dealer-score') as HTMLDivElement | null;
         if (scoreElement) {
-            scoreElement.textContent = score;
+            scoreElement.textContent = String(score);
         }
     }
 
     /**
      * Update game status
      */
-    updateGameStatus(message) {
-        const statusElement = document.getElementById('game-status');
+    updateGameStatus(message: string): void {
+        const statusElement = document.getElementById('game-status') as HTMLDivElement | null;
         if (statusElement) {
             statusElement.textContent = message;
         }
@@ -520,18 +533,18 @@ export class BlackjackGameView {
     /**
      * Update bet amount display
      */
-    updateBetAmount(amount) {
-        const betElement = document.getElementById('bet-amount');
+    updateBetAmount(amount: string | number): void {
+        const betElement = document.getElementById('bet-amount') as HTMLDivElement | null;
         if (betElement) {
-            betElement.textContent = amount;
+            betElement.textContent = String(amount);
         }
     }
 
     /**
      * Clear cards from an area
      */
-    clearCards(isPlayer = true) {
-        const cardsContainer = document.getElementById(isPlayer ? 'player-cards' : 'dealer-cards');
+    clearCards(isPlayer: boolean = true): void {
+        const cardsContainer = document.getElementById(isPlayer ? 'player-cards' : 'dealer-cards') as HTMLDivElement | null;
         if (cardsContainer) {
             cardsContainer.innerHTML = '';
         }
@@ -540,8 +553,8 @@ export class BlackjackGameView {
     /**
      * Add card to an area
      */
-    addCard(card, faceDown = false, isPlayer = true) {
-        const cardsContainer = document.getElementById(isPlayer ? 'player-cards' : 'dealer-cards');
+    addCard(card: BlackjackCard, faceDown: boolean = false, isPlayer: boolean = true): HTMLDivElement | null {
+        const cardsContainer = document.getElementById(isPlayer ? 'player-cards' : 'dealer-cards') as HTMLDivElement | null;
         if (cardsContainer) {
             const cardEl = this.createCardElement(card, faceDown);
             if (faceDown) {
@@ -562,8 +575,8 @@ export class BlackjackGameView {
     /**
      * Show dealer speech
      */
-    showDealerSpeech(message, duration = 4000) {
-        const speechBubble = document.getElementById('dealer-speech');
+    showDealerSpeech(message: string, duration: number = 4000): void {
+        const speechBubble = document.getElementById('dealer-speech') as HTMLDivElement | null;
         if (speechBubble) {
             speechBubble.textContent = message;
             speechBubble.style.display = 'block';
@@ -577,14 +590,14 @@ export class BlackjackGameView {
     /**
      * Reveal dealer's face-down card
      */
-    revealDealerCard(card) {
-        const faceDownEl = document.getElementById('face-down-card');
+    revealDealerCard(card: BlackjackCard): HTMLDivElement | null {
+        const faceDownEl = document.getElementById('face-down-card') as HTMLDivElement | null;
         if (faceDownEl) {
             faceDownEl.remove();
             
             // Create and add the face-up version
             const cardEl = this.createCardElement(card);
-            const dealerCards = document.getElementById('dealer-cards');
+            const dealerCards = document.getElementById('dealer-cards') as HTMLDivElement | null;
             if (dealerCards) {
                 dealerCards.appendChild(cardEl);
                 

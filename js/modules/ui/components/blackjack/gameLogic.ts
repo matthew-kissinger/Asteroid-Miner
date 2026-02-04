@@ -2,7 +2,18 @@
  * Blackjack Game Logic - Blackjack rules, hand evaluation, win conditions
  */
 
+import type { BlackjackCard } from './cardDeck.js';
+
+type GameResult = 'win' | 'blackjack' | 'lose' | 'bust' | 'push';
+type DealerPhraseType = 'win' | 'lose' | 'blackjack' | 'push';
+
 export class BlackjackGameLogic {
+    gameActive: boolean;
+    playerHand: BlackjackCard[];
+    dealerHand: BlackjackCard[];
+    gameResult: GameResult | null;
+    dealerPhrases: Record<DealerPhraseType, string[]>;
+
     constructor() {
         // Game state
         this.gameActive = false;
@@ -46,7 +57,7 @@ export class BlackjackGameLogic {
      * @param {Array} hand - Array of card objects
      * @returns {number} The total score of the hand
      */
-    calculateScore(hand) {
+    calculateScore(hand: BlackjackCard[]): number {
         let score = 0;
         let aces = 0;
         
@@ -74,7 +85,7 @@ export class BlackjackGameLogic {
      * Calculate the dealer's visible score (excluding face-down card)
      * @returns {number} The visible score
      */
-    calculateVisibleDealerScore() {
+    calculateVisibleDealerScore(): number {
         if (this.dealerHand.length <= 1) {
             return this.dealerHand.length ? this.getCardValue(this.dealerHand[0]) : 0;
         }
@@ -88,7 +99,7 @@ export class BlackjackGameLogic {
      * @param {Object} card - The card object
      * @returns {number} The value of the card in Blackjack
      */
-    getCardValue(card) {
+    getCardValue(card: BlackjackCard): number {
         if (card.value === 'A') {
             return 11;
         } else if (['J', 'Q', 'K'].includes(card.value)) {
@@ -103,7 +114,7 @@ export class BlackjackGameLogic {
      * @param {Array} hand - Array of card objects
      * @returns {boolean} True if hand is blackjack
      */
-    isBlackjack(hand) {
+    isBlackjack(hand: BlackjackCard[]): boolean {
         return hand.length === 2 && this.calculateScore(hand) === 21;
     }
 
@@ -112,7 +123,7 @@ export class BlackjackGameLogic {
      * @param {Array} hand - Array of card objects
      * @returns {boolean} True if hand is bust
      */
-    isBust(hand) {
+    isBust(hand: BlackjackCard[]): boolean {
         return this.calculateScore(hand) > 21;
     }
 
@@ -120,7 +131,7 @@ export class BlackjackGameLogic {
      * Check for natural blackjack
      * @returns {string|null} Game result or null if game continues
      */
-    checkForNaturalBlackjack() {
+    checkForNaturalBlackjack(): GameResult | null {
         const playerScore = this.calculateScore(this.playerHand);
         const dealerScore = this.calculateScore(this.dealerHand);
         
@@ -144,7 +155,7 @@ export class BlackjackGameLogic {
      * Determine if dealer should hit (dealer hits on soft 17)
      * @returns {boolean} True if dealer should hit
      */
-    shouldDealerHit() {
+    shouldDealerHit(): boolean {
         const dealerScore = this.calculateScore(this.dealerHand);
         return dealerScore < 17;
     }
@@ -153,7 +164,7 @@ export class BlackjackGameLogic {
      * Determine the outcome of the game
      * @returns {string} Game result
      */
-    determineOutcome() {
+    determineOutcome(): GameResult {
         const playerScore = this.calculateScore(this.playerHand);
         const dealerScore = this.calculateScore(this.dealerHand);
         
@@ -178,7 +189,7 @@ export class BlackjackGameLogic {
      * @param {number} maxBetAmount - Maximum possible bet amount
      * @returns {boolean} True if can double down
      */
-    canDoubleDown(currentBetAmount, maxBetAmount) {
+    canDoubleDown(currentBetAmount: number, maxBetAmount: number): boolean {
         return this.playerHand.length === 2 && currentBetAmount * 2 <= maxBetAmount;
     }
 
@@ -187,7 +198,7 @@ export class BlackjackGameLogic {
      * @param {string} type - Type of phrase (win, lose, blackjack, push)
      * @returns {string} Random phrase
      */
-    getDealerPhrase(type) {
+    getDealerPhrase(type: DealerPhraseType): string {
         const phrases = this.dealerPhrases[type];
         if (phrases && phrases.length > 0) {
             return phrases[Math.floor(Math.random() * phrases.length)];
@@ -198,7 +209,7 @@ export class BlackjackGameLogic {
     /**
      * Reset game state
      */
-    reset() {
+    reset(): void {
         this.gameActive = false;
         this.playerHand = [];
         this.dealerHand = [];
@@ -208,7 +219,7 @@ export class BlackjackGameLogic {
     /**
      * Start a new game
      */
-    startGame() {
+    startGame(): void {
         this.gameActive = true;
         this.playerHand = [];
         this.dealerHand = [];
@@ -219,7 +230,7 @@ export class BlackjackGameLogic {
      * Add card to player hand
      * @param {Object} card - Card object
      */
-    addCardToPlayer(card) {
+    addCardToPlayer(card: BlackjackCard): void {
         this.playerHand.push(card);
     }
 
@@ -227,7 +238,7 @@ export class BlackjackGameLogic {
      * Add card to dealer hand
      * @param {Object} card - Card object
      */
-    addCardToDealer(card) {
+    addCardToDealer(card: BlackjackCard): void {
         this.dealerHand.push(card);
     }
 
@@ -235,7 +246,7 @@ export class BlackjackGameLogic {
      * End the game
      * @param {string} result - Game result
      */
-    endGame(result) {
+    endGame(result: GameResult): void {
         this.gameActive = false;
         this.gameResult = result;
     }
@@ -244,7 +255,7 @@ export class BlackjackGameLogic {
      * Get player score
      * @returns {number} Player's current score
      */
-    getPlayerScore() {
+    getPlayerScore(): number {
         return this.calculateScore(this.playerHand);
     }
 
@@ -252,7 +263,7 @@ export class BlackjackGameLogic {
      * Get dealer score
      * @returns {number} Dealer's current score
      */
-    getDealerScore() {
+    getDealerScore(): number {
         return this.calculateScore(this.dealerHand);
     }
 
@@ -260,7 +271,7 @@ export class BlackjackGameLogic {
      * Get player hand
      * @returns {Array} Player's hand
      */
-    getPlayerHand() {
+    getPlayerHand(): BlackjackCard[] {
         return [...this.playerHand];
     }
 
@@ -268,7 +279,7 @@ export class BlackjackGameLogic {
      * Get dealer hand
      * @returns {Array} Dealer's hand
      */
-    getDealerHand() {
+    getDealerHand(): BlackjackCard[] {
         return [...this.dealerHand];
     }
 
@@ -276,7 +287,7 @@ export class BlackjackGameLogic {
      * Get last card in dealer hand (usually the face-down card)
      * @returns {Object|null} Last dealer card
      */
-    getLastDealerCard() {
+    getLastDealerCard(): BlackjackCard | null {
         return this.dealerHand.length > 0 ? this.dealerHand[this.dealerHand.length - 1] : null;
     }
 
@@ -284,7 +295,7 @@ export class BlackjackGameLogic {
      * Check if game is active
      * @returns {boolean} True if game is active
      */
-    isGameActive() {
+    isGameActive(): boolean {
         return this.gameActive;
     }
 
@@ -292,7 +303,7 @@ export class BlackjackGameLogic {
      * Get game result
      * @returns {string|null} Game result
      */
-    getGameResult() {
+    getGameResult(): GameResult | null {
         return this.gameResult;
     }
 }

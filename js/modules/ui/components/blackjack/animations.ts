@@ -2,8 +2,27 @@
  * Blackjack Animations - Card animations, chip movements, visual effects
  */
 
+type BlackjackAudio = {
+    playSound?: (sound: string) => void;
+};
+
+export type BlackjackSoundType =
+    | 'deal'
+    | 'hit'
+    | 'stand'
+    | 'double'
+    | 'flip'
+    | 'win'
+    | 'blackjack'
+    | 'lose'
+    | 'bust'
+    | 'push'
+    | 'boink';
+
 export class BlackjackAnimations {
-    constructor(audio = null) {
+    audio: BlackjackAudio | null;
+
+    constructor(audio: BlackjackAudio | null = null) {
         this.audio = audio;
     }
 
@@ -12,7 +31,7 @@ export class BlackjackAnimations {
      * @param {HTMLElement} cardElement - The card element to animate
      * @param {number} delay - Animation delay in ms
      */
-    animateCardDeal(cardElement, delay = 50) {
+    animateCardDeal(cardElement: HTMLElement | null, delay: number = 50): void {
         if (!cardElement) return;
         
         // Initial state
@@ -32,7 +51,7 @@ export class BlackjackAnimations {
      * @param {HTMLElement} cardElement - The card element to animate
      * @param {Function} callback - Callback to execute at flip midpoint
      */
-    animateCardFlip(cardElement, callback = null) {
+    animateCardFlip(cardElement: HTMLElement | null, callback: (() => void) | null = null): void {
         if (!cardElement) return;
         
         // First half of flip
@@ -50,7 +69,7 @@ export class BlackjackAnimations {
      * Animate button press
      * @param {HTMLElement} buttonElement - The button element to animate
      */
-    animateButtonPress(buttonElement) {
+    animateButtonPress(buttonElement: HTMLElement | null): void {
         if (!buttonElement) return;
         
         // Scale down slightly
@@ -67,7 +86,7 @@ export class BlackjackAnimations {
      * Animate resource button selection
      * @param {HTMLElement} buttonElement - The button element to animate
      */
-    animateResourceSelection(buttonElement) {
+    animateResourceSelection(buttonElement: HTMLElement | null): void {
         if (!buttonElement) return;
         
         // Pulse effect
@@ -80,7 +99,7 @@ export class BlackjackAnimations {
      * Remove resource button selection animation
      * @param {HTMLElement} buttonElement - The button element to reset
      */
-    removeResourceSelection(buttonElement) {
+    removeResourceSelection(buttonElement: HTMLElement | null): void {
         if (!buttonElement) return;
         
         buttonElement.style.transform = 'scale(1)';
@@ -92,7 +111,7 @@ export class BlackjackAnimations {
      * @param {HTMLElement} betElement - The bet display element
      * @param {string} newAmount - The new amount to display
      */
-    animateBetChange(betElement, newAmount) {
+    animateBetChange(betElement: HTMLElement | null, newAmount: string | number): void {
         if (!betElement) return;
         
         // Scale up briefly
@@ -101,7 +120,7 @@ export class BlackjackAnimations {
         
         // Update text and scale back
         setTimeout(() => {
-            betElement.textContent = newAmount;
+        betElement.textContent = String(newAmount);
             betElement.style.transform = 'scale(1)';
         }, 75);
     }
@@ -112,7 +131,7 @@ export class BlackjackAnimations {
      * @param {string} newScore - The new score to display
      * @param {boolean} isBust - Whether this score is a bust
      */
-    animateScoreUpdate(scoreElement, newScore, isBust = false) {
+    animateScoreUpdate(scoreElement: HTMLElement | null, newScore: string, isBust: boolean = false): void {
         if (!scoreElement) return;
         
         // Color flash effect
@@ -137,7 +156,11 @@ export class BlackjackAnimations {
      * @param {string} message - The new status message
      * @param {string} type - Type of message (win, lose, push, etc.)
      */
-    animateStatusUpdate(statusElement, message, type = 'normal') {
+    animateStatusUpdate(
+        statusElement: HTMLElement | null,
+        message: string,
+        type: 'win' | 'blackjack' | 'lose' | 'bust' | 'push' | 'normal' = 'normal'
+    ): void {
         if (!statusElement) return;
         
         // Determine colors based on type
@@ -179,7 +202,7 @@ export class BlackjackAnimations {
      * @param {HTMLElement} speechElement - The speech bubble element
      * @param {string} message - The message to display
      */
-    animateSpeechBubble(speechElement, message) {
+    animateSpeechBubble(speechElement: HTMLElement | null, message: string): void {
         if (!speechElement) return;
         
         speechElement.textContent = message;
@@ -199,7 +222,7 @@ export class BlackjackAnimations {
      * Animate speech bubble disappearance
      * @param {HTMLElement} speechElement - The speech bubble element
      */
-    hideSpeechBubble(speechElement) {
+    hideSpeechBubble(speechElement: HTMLElement | null): void {
         if (!speechElement) return;
         
         speechElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
@@ -215,7 +238,7 @@ export class BlackjackAnimations {
      * Animate win celebration
      * @param {HTMLElement} gameUI - The main game UI element
      */
-    animateWinCelebration(gameUI) {
+    animateWinCelebration(gameUI: HTMLElement | null): void {
         if (!gameUI) return;
         
         // Add a glow effect
@@ -232,7 +255,7 @@ export class BlackjackAnimations {
      * Animate lose effect
      * @param {HTMLElement} gameUI - The main game UI element
      */
-    animateLoseEffect(gameUI) {
+    animateLoseEffect(gameUI: HTMLElement | null): void {
         if (!gameUI) return;
         
         // Add a red glow effect
@@ -249,7 +272,7 @@ export class BlackjackAnimations {
      * Animate blackjack celebration
      * @param {HTMLElement} gameUI - The main game UI element
      */
-    animateBlackjackCelebration(gameUI) {
+    animateBlackjackCelebration(gameUI: HTMLElement | null): void {
         if (!gameUI) return;
         
         // Intense glow and slight scale
@@ -269,7 +292,7 @@ export class BlackjackAnimations {
      * @param {HTMLElement} cardElement - The card element
      * @param {boolean} isHovering - Whether mouse is hovering
      */
-    animateCardHover(cardElement, isHovering) {
+    animateCardHover(cardElement: HTMLElement | null, isHovering: boolean): void {
         if (!cardElement) return;
         
         if (isHovering) {
@@ -286,43 +309,44 @@ export class BlackjackAnimations {
      * Play card game sound with audio context
      * @param {string} type - The type of sound to play
      */
-    playCardSound(type) {
-        if (!this.audio) return;
+    playCardSound(type: BlackjackSoundType): void {
+        const audio = this.audio;
+        if (!audio) return;
         
         switch (type) {
             case 'deal':
-                this.audio.playSound('boink');
+                audio.playSound?.('boink');
                 break;
             case 'hit':
-                this.audio.playSound('boink');
+                audio.playSound?.('boink');
                 break;
             case 'stand':
-                this.audio.playSound('boink');
+                audio.playSound?.('boink');
                 break;
             case 'double':
                 // Play two sounds in quick succession
-                this.audio.playSound('boink');
-                setTimeout(() => this.audio.playSound('boink'), 150);
+                audio.playSound?.('boink');
+                setTimeout(() => audio.playSound?.('boink'), 150);
                 break;
             case 'flip':
-                this.audio.playSound('boink');
+                audio.playSound?.('boink');
                 break;
             case 'win':
-                this.audio.playSound('phaserUp');
+                audio.playSound?.('phaserUp');
                 break;
             case 'blackjack':
                 // Play multiple sounds for celebration
-                this.audio.playSound('phaserUp');
-                setTimeout(() => this.audio.playSound('phaserUp'), 300);
+                audio.playSound?.('phaserUp');
+                setTimeout(() => audio.playSound?.('phaserUp'), 300);
                 break;
             case 'lose':
-                this.audio.playSound('phaserDown');
+                audio.playSound?.('phaserDown');
                 break;
             case 'bust':
-                this.audio.playSound('phaserDown');
+                audio.playSound?.('phaserDown');
                 break;
             case 'push':
-                this.audio.playSound('boink');
+                audio.playSound?.('boink');
                 break;
         }
     }
@@ -332,7 +356,7 @@ export class BlackjackAnimations {
      * @param {Array} animations - Array of animation functions
      * @param {number} delay - Delay between animations
      */
-    chainAnimations(animations, delay = 300) {
+    chainAnimations(animations: Array<() => void>, delay: number = 300): void {
         animations.forEach((animation, index) => {
             setTimeout(() => {
                 if (typeof animation === 'function') {
@@ -346,7 +370,7 @@ export class BlackjackAnimations {
      * Reset all animations on an element
      * @param {HTMLElement} element - The element to reset
      */
-    resetAnimations(element) {
+    resetAnimations(element: HTMLElement | null): void {
         if (!element) return;
         
         element.style.transition = '';

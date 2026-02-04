@@ -2,15 +2,19 @@
  * Blackjack Game Styles - CSS styling and visual theming
  */
 
+type StyleMap = Record<string, string>;
+
 export class BlackjackStyles {
-    constructor(isMobile = false) {
+    isMobile: boolean;
+
+    constructor(isMobile: boolean = false) {
         this.isMobile = isMobile;
     }
 
     /**
      * Get main game UI styles
      */
-    getGameUIStyles() {
+    getGameUIStyles(): StyleMap {
         return {
             position: 'absolute',
             top: '50%',
@@ -38,7 +42,7 @@ export class BlackjackStyles {
     /**
      * Get mobile-specific styles
      */
-    getMobileStyles() {
+    getMobileStyles(): StyleMap {
         if (!this.isMobile) return {};
         
         return {
@@ -51,7 +55,7 @@ export class BlackjackStyles {
     /**
      * Get scanline effect styles
      */
-    getScanlineStyles() {
+    getScanlineStyles(): StyleMap {
         return {
             position: 'absolute',
             top: '0',
@@ -69,7 +73,7 @@ export class BlackjackStyles {
     /**
      * Get header styles
      */
-    getHeaderStyles() {
+    getHeaderStyles(): StyleMap {
         return {
             textAlign: 'center',
             marginBottom: '20px',
@@ -80,7 +84,7 @@ export class BlackjackStyles {
     /**
      * Get title styles
      */
-    getTitleStyles() {
+    getTitleStyles(): StyleMap {
         return {
             color: '#30cfd0',
             textShadow: '0 0 10px rgba(48, 207, 208, 0.7)',
@@ -92,7 +96,7 @@ export class BlackjackStyles {
     /**
      * Get subtitle styles
      */
-    getSubtitleStyles() {
+    getSubtitleStyles(): StyleMap {
         return {
             color: 'rgba(255, 255, 255, 0.6)',
             fontSize: this.isMobile ? '12px' : '14px',
@@ -103,8 +107,8 @@ export class BlackjackStyles {
     /**
      * Get close button styles
      */
-    getCloseButtonStyles() {
-        const baseStyles = {
+    getCloseButtonStyles(): StyleMap {
+        const baseStyles: StyleMap = {
             position: 'absolute',
             top: '0',
             right: '0',
@@ -142,7 +146,7 @@ export class BlackjackStyles {
     /**
      * Get game area styles
      */
-    getGameAreaStyles() {
+    getGameAreaStyles(): StyleMap {
         return {
             display: 'flex',
             flexDirection: 'column',
@@ -153,7 +157,7 @@ export class BlackjackStyles {
     /**
      * Get dealer/player area styles
      */
-    getPlayerAreaStyles() {
+    getPlayerAreaStyles(): StyleMap {
         return {
             flex: '1',
             border: '1px solid rgba(51, 170, 255, 0.3)',
@@ -167,7 +171,7 @@ export class BlackjackStyles {
     /**
      * Get dealer area styles
      */
-    getDealerAreaStyles() {
+    getDealerAreaStyles(): StyleMap {
         return {
             ...this.getPlayerAreaStyles(),
             background: 'linear-gradient(to bottom, rgba(9, 30, 42, 0.6), rgba(9, 30, 42, 0.4))'
@@ -177,7 +181,7 @@ export class BlackjackStyles {
     /**
      * Get area header styles
      */
-    getAreaHeaderStyles() {
+    getAreaHeaderStyles(): StyleMap {
         return {
             display: 'flex',
             justifyContent: 'space-between',
@@ -188,7 +192,7 @@ export class BlackjackStyles {
     /**
      * Get dealer title styles
      */
-    getDealerTitleStyles() {
+    getDealerTitleStyles(): StyleMap {
         return {
             color: '#33aaff',
             fontWeight: 'bold'
@@ -198,7 +202,7 @@ export class BlackjackStyles {
     /**
      * Get player title styles
      */
-    getPlayerTitleStyles() {
+    getPlayerTitleStyles(): StyleMap {
         return {
             color: '#30cfd0',
             fontWeight: 'bold'
@@ -208,7 +212,7 @@ export class BlackjackStyles {
     /**
      * Get score display styles
      */
-    getScoreStyles(isPlayer = false) {
+    getScoreStyles(isPlayer: boolean = false): StyleMap {
         return {
             color: '#fff',
             fontWeight: 'bold',
@@ -221,7 +225,7 @@ export class BlackjackStyles {
     /**
      * Get cards container styles
      */
-    getCardsContainerStyles() {
+    getCardsContainerStyles(): StyleMap {
         return {
             display: 'flex',
             gap: '15px',
@@ -234,7 +238,7 @@ export class BlackjackStyles {
     /**
      * Get card element styles
      */
-    getCardStyles(faceDown = false) {
+    getCardStyles(faceDown: boolean = false): StyleMap {
         return {
             width: this.isMobile ? '70px' : '100px',
             height: this.isMobile ? '105px' : '150px',
@@ -259,8 +263,8 @@ export class BlackjackStyles {
     /**
      * Get card value styles
      */
-    getCardValueStyles(position = 'top') {
-        const baseStyles = {
+    getCardValueStyles(position: 'top' | 'bottom' = 'top'): StyleMap {
+        const baseStyles: StyleMap = {
             position: 'absolute',
             fontSize: this.isMobile ? '14px' : '20px',
             fontWeight: 'bold'
@@ -285,8 +289,8 @@ export class BlackjackStyles {
     /**
      * Get card suit styles
      */
-    getCardSuitStyles(position = 'top') {
-        const baseStyles = {
+    getCardSuitStyles(position: 'top' | 'bottom' = 'top'): StyleMap {
+        const baseStyles: StyleMap = {
             position: 'absolute',
             fontSize: this.isMobile ? '12px' : '16px'
         };
@@ -310,7 +314,7 @@ export class BlackjackStyles {
     /**
      * Get center symbol styles
      */
-    getCenterSymbolStyles() {
+    getCenterSymbolStyles(): StyleMap {
         return {
             fontSize: this.isMobile ? '28px' : '40px',
             lineHeight: '1',
@@ -321,14 +325,14 @@ export class BlackjackStyles {
     /**
      * Get card color based on suit
      */
-    getCardColor(suit) {
+    getCardColor(suit: 'hearts' | 'diamonds' | 'clubs' | 'spades'): string {
         return ['hearts', 'diamonds'].includes(suit) ? '#e55c8a' : '#30cfd0';
     }
 
     /**
      * Get speech bubble styles
      */
-    getSpeechBubbleStyles() {
+    getSpeechBubbleStyles(): StyleMap {
         return {
             position: this.isMobile ? 'relative' : 'absolute',
             bottom: this.isMobile ? 'auto' : '15px',
@@ -349,7 +353,7 @@ export class BlackjackStyles {
     /**
      * Get status area styles
      */
-    getStatusAreaStyles() {
+    getStatusAreaStyles(): StyleMap {
         return {
             height: '60px',
             display: 'flex',
@@ -362,7 +366,7 @@ export class BlackjackStyles {
     /**
      * Get game status styles
      */
-    getGameStatusStyles() {
+    getGameStatusStyles(): StyleMap {
         return {
             padding: '8px 20px',
             borderRadius: '20px',
@@ -380,7 +384,7 @@ export class BlackjackStyles {
     /**
      * Get controls area styles
      */
-    getControlsAreaStyles() {
+    getControlsAreaStyles(): StyleMap {
         return {
             display: 'flex',
             justifyContent: 'space-between',
@@ -394,7 +398,7 @@ export class BlackjackStyles {
     /**
      * Get betting controls styles
      */
-    getBettingControlsStyles() {
+    getBettingControlsStyles(): StyleMap {
         return {
             display: 'flex',
             flexDirection: 'column',
@@ -405,7 +409,7 @@ export class BlackjackStyles {
     /**
      * Get betting title styles
      */
-    getBettingTitleStyles() {
+    getBettingTitleStyles(): StyleMap {
         return {
             marginBottom: '10px',
             color: 'rgba(255, 255, 255, 0.8)',
@@ -416,7 +420,7 @@ export class BlackjackStyles {
     /**
      * Get resource options styles
      */
-    getResourceOptionsStyles() {
+    getResourceOptionsStyles(): StyleMap {
         return {
             display: 'flex',
             gap: '10px'
@@ -426,7 +430,7 @@ export class BlackjackStyles {
     /**
      * Get resource button styles
      */
-    getResourceButtonStyles(color) {
+    getResourceButtonStyles(color: string): StyleMap {
         return {
             flex: '1',
             padding: this.isMobile ? '10px 5px' : '8px 5px',
@@ -446,7 +450,7 @@ export class BlackjackStyles {
     /**
      * Get resource button hover styles
      */
-    getResourceButtonHoverStyles(color) {
+    getResourceButtonHoverStyles(color: string): StyleMap {
         return {
             backgroundColor: 'rgba(25, 60, 80, 0.8)',
             boxShadow: `0 0 15px ${color}`
@@ -456,7 +460,7 @@ export class BlackjackStyles {
     /**
      * Get bet amount controls styles
      */
-    getBetAmountControlsStyles() {
+    getBetAmountControlsStyles(): StyleMap {
         return {
             display: 'flex',
             marginTop: '10px',
@@ -467,7 +471,7 @@ export class BlackjackStyles {
     /**
      * Get bet amount display styles
      */
-    getBetAmountDisplayStyles() {
+    getBetAmountDisplayStyles(): StyleMap {
         return {
             flex: '1',
             backgroundColor: 'rgba(15, 40, 55, 0.8)',
@@ -482,7 +486,7 @@ export class BlackjackStyles {
     /**
      * Get control button styles
      */
-    getControlButtonStyles() {
+    getControlButtonStyles(): StyleMap {
         return {
             width: this.isMobile ? '50px' : '40px',
             height: this.isMobile ? '40px' : 'auto',
@@ -498,7 +502,7 @@ export class BlackjackStyles {
     /**
      * Get control button hover styles
      */
-    getControlButtonHoverStyles() {
+    getControlButtonHoverStyles(): StyleMap {
         return {
             backgroundColor: 'rgba(25, 60, 80, 0.8)',
             boxShadow: '0 0 10px rgba(51, 170, 255, 0.3)'
@@ -508,7 +512,7 @@ export class BlackjackStyles {
     /**
      * Get game actions styles
      */
-    getGameActionsStyles() {
+    getGameActionsStyles(): StyleMap {
         return {
             display: 'flex',
             gap: '15px',
@@ -521,7 +525,7 @@ export class BlackjackStyles {
     /**
      * Get action button styles
      */
-    getActionButtonStyles(color) {
+    getActionButtonStyles(color: string): StyleMap {
         return {
             padding: this.isMobile ? '15px 20px' : '12px 18px',
             backgroundColor: 'rgba(15, 40, 55, 0.8)',
@@ -540,7 +544,7 @@ export class BlackjackStyles {
     /**
      * Get action button hover styles
      */
-    getActionButtonHoverStyles(color) {
+    getActionButtonHoverStyles(color: string): StyleMap {
         return {
             backgroundColor: 'rgba(25, 60, 80, 0.8)',
             boxShadow: `0 0 15px ${color}`
@@ -550,7 +554,7 @@ export class BlackjackStyles {
     /**
      * Apply styles to an element
      */
-    applyStyles(element, styles) {
+    applyStyles(element: HTMLElement, styles: StyleMap): void {
         Object.assign(element.style, styles);
     }
 }

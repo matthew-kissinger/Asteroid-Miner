@@ -28,11 +28,13 @@ type BlackjackSpaceship = {
     };
 };
 
+type ResourceType = 'iron' | 'gold' | 'platinum';
 type BlackjackGameResult = 'win' | 'blackjack' | 'lose' | 'bust' | 'push';
 type BlackjackBet = {
-    amount: string | number;
-    resource?: string | null;
+    amount: number;
+    resource?: ResourceType | null;
 };
+type DealerPhraseType = 'win' | 'lose' | 'blackjack' | 'push';
 
 export class BlackjackGame {
     scene: unknown;
@@ -168,7 +170,7 @@ export class BlackjackGame {
     /**
      * Select a resource for betting
      */
-    selectBetResource(resource: string): void {
+    selectBetResource(resource: ResourceType): void {
         this.betting.selectBetResource(resource);
         const currentBet = this.betting.getCurrentBet() as BlackjackBet;
         this.view.updateBetAmount(currentBet.amount);
@@ -368,7 +370,7 @@ export class BlackjackGame {
         this.gameLogic.endGame(result);
         
         let statusMessage = '';
-        let speechType: BlackjackGameResult | 'lose' = result;
+        let speechType: DealerPhraseType = result === 'bust' ? 'lose' : result;
         
         switch (result) {
             case 'win':

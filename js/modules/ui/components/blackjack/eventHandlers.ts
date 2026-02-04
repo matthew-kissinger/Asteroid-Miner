@@ -2,8 +2,73 @@
  * Blackjack Event Handlers - User interactions, button clicks, game events
  */
 
+import type { BlackjackSoundType } from './animations.js';
+
+type ResourceType = 'iron' | 'gold' | 'platinum';
+type BlackjackBet = {
+    resource: ResourceType | null;
+    amount: number;
+};
+type BlackjackSpaceship = {
+    cargo?: {
+        iron?: number;
+        gold?: number;
+        platinum?: number;
+    };
+};
+
+type BlackjackGameLike = {
+    hide: () => void;
+    selectBetResource: (resource: ResourceType) => void;
+    startGame: () => void;
+    hit: () => void;
+    stand: () => void;
+    doubleDown: () => void;
+    gameUI: HTMLDivElement | null;
+    spaceship: BlackjackSpaceship;
+    animations: {
+        animateButtonPress: (buttonElement: HTMLElement | null) => void;
+        animateResourceSelection: (buttonElement: HTMLElement | null) => void;
+        removeResourceSelection: (buttonElement: HTMLElement | null) => void;
+        animateBetChange: (betElement: HTMLElement | null, newAmount: string | number) => void;
+        playCardSound: (type: BlackjackSoundType) => void;
+    };
+    betting: {
+        getResourceColor: (resource: ResourceType) => string;
+        getCurrentBet: () => BlackjackBet;
+        decreaseBet: () => boolean;
+        increaseBet: () => boolean;
+        canAffordDoubleDown: () => boolean;
+        hasValidBet: () => boolean;
+    };
+    gameLogic: {
+        isGameActive: () => boolean;
+        getPlayerHand: () => Array<unknown>;
+    };
+    view: {
+        updateBetAmount: (amount: string | number) => void;
+        updateResourceDisplay: (spaceship: BlackjackSpaceship) => void;
+        styles: {
+            getControlButtonHoverStyles: () => Record<string, string>;
+            getActionButtonHoverStyles: (color: string) => Record<string, string>;
+        };
+        isMobile: boolean;
+    };
+};
+
+type ListenerRecord = {
+    element: EventTarget;
+    event: string;
+    handler: EventListenerOrEventListenerObject;
+    options?: boolean | AddEventListenerOptions;
+};
+
 export class BlackjackEventHandlers {
-    constructor(game, isMobile = false) {
+    game: BlackjackGameLike;
+    isMobile: boolean;
+    eventListeners: Map<string, ListenerRecord[]>;
+
+    constructor(game: BlackjackGameLike, isMobile: boolean = false) {
         this.game = game;
         this.isMobile = isMobile;
         this.eventListeners = new Map();
@@ -12,7 +77,7 @@ export class BlackjackEventHandlers {
     /**
      * Set up all event handlers for the game
      */
-    setupEventHandlers() {
+    setupEventHandlers(): void {
         this.setupCloseButtonHandler();
         this.setupResourceButtonHandlers();
         this.setupBetControlHandlers();
@@ -23,8 +88,8 @@ export class BlackjackEventHandlers {
     /**
      * Setup close button event handler
      */
-    setupCloseButtonHandler() {
-        const closeBtn = document.querySelector('#blackjack-game button');
+    setupCloseButtonHandler(): void {
+        const closeBtn = document.querySelector('#blackjack-game button') as HTMLButtonElement | null;
         if (closeBtn) {
             const handler = () => this.game.hide();
             this.addEventHandler(closeBtn, 'click', handler);
@@ -34,17 +99,20 @@ export class BlackjackEventHandlers {
     /**
      * Setup resource button event handlers
      */
-    setupResourceButtonHandlers() {
-        const resourceButtons = document.querySelectorAll('.resource-btn');
+    setupResourceButtonHandlers(): void {
+        const resourceButtons = document.querySelectorAll<HTMLButtonElement>('.resource-btn');
         
         resourceButtons.forEach(btn => {
             const resource = btn.dataset.resource;
+            if (!resource) {
+                return;
+            }
             
             // Create hover effects
             const addHoverEffect = () => {
                 if (this.game.gameLogic.isGameActive()) return;
                 
-                const color = this.game.betting.getResourceColor(resource);
+                const color = this.game.betting.getResourceColor(resource as ResourceType);
                 btn.style.backgroundColor = 'rgba(25, 60, 80, 0.8)';
                 btn.style.boxShadow = `0 0 15px ${color}`;
             };
@@ -52,7 +120,7 @@ export class BlackjackEventHandlers {
             const removeHoverEffect = () => {
                 if (this.game.gameLogic.isGameActive()) return;
                 
-                const color = this.game.betting.getResourceColor(resource);
+                const color = this.game.betting.getResourceColor(resource as ResourceType);
                 btn.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
                 btn.style.boxShadow = `0 0 10px rgba(${color.split('(')[1].split(')')[0]}, 0.3)`;
             };
@@ -60,12 +128,12 @@ export class BlackjackEventHandlers {
             // Click/tap handler
             const clickHandler = () => {
                 if (!this.game.gameLogic.isGameActive()) {
-                    this.game.selectBetResource(resource);
+                    this.game.selectBetResource(resource as ResourceType);
                     this.game.animations.playCardSound('boink');
                     
                     // Update button styling
-                    document.querySelectorAll('.resource-btn').forEach(button => {
-                        this.game.animations.removeResourceSelection(button);
+                    document.querySelectorAll<HTMLElement>('.resource-btn').forEach(button => {
+                        this.game.animations.removeResourceSelection(button as HTMLElement);
                     });
                     
                     this.game.animations.animateResourceSelection(btn);
@@ -80,7 +148,7 @@ export class BlackjackEventHandlers {
             // Touch events for mobile
             if (this.isMobile) {
                 this.addEventHandler(btn, 'touchstart', addHoverEffect, {passive: true});
-                this.addEventHandler(btn, 'touchend', (e) => {
+                this.addEventHandler(btn, 'touchend', (e: Event) => {
                     removeHoverEffect();
                     e.preventDefault();
                     clickHandler();
@@ -92,17 +160,18 @@ export class BlackjackEventHandlers {
     /**
      * Setup bet control event handlers (+ and - buttons)
      */
-    setupBetControlHandlers() {
-        const decreaseBtn = document.getElementById('decrease-bet-btn');
-        const increaseBtn = document.getElementById('increase-bet-btn');
+    setupBetControlHandlers(): void {
+        const decreaseBtn = document.getElementById('decrease-bet-btn') as HTMLButtonElement | null;
+        const increaseBtn = document.getElementById('increase-bet-btn') as HTMLButtonElement | null;
         
         if (decreaseBtn) {
             const handler = () => {
                 if (!this.game.gameLogic.isGameActive() && this.game.betting.getCurrentBet().resource) {
                     if (this.game.betting.decreaseBet()) {
                         this.game.view.updateBetAmount(this.game.betting.getCurrentBet().amount);
+                        const betAmount = document.getElementById('bet-amount') as HTMLDivElement | null;
                         this.game.animations.animateBetChange(
-                            document.getElementById('bet-amount'),
+                            betAmount,
                             this.game.betting.getCurrentBet().amount
                         );
                         this.game.animations.playCardSound('boink');
@@ -118,8 +187,9 @@ export class BlackjackEventHandlers {
                 if (!this.game.gameLogic.isGameActive() && this.game.betting.getCurrentBet().resource) {
                     if (this.game.betting.increaseBet()) {
                         this.game.view.updateBetAmount(this.game.betting.getCurrentBet().amount);
+                        const betAmount = document.getElementById('bet-amount') as HTMLDivElement | null;
                         this.game.animations.animateBetChange(
-                            document.getElementById('bet-amount'),
+                            betAmount,
                             this.game.betting.getCurrentBet().amount
                         );
                         this.game.animations.playCardSound('boink');
@@ -134,7 +204,7 @@ export class BlackjackEventHandlers {
     /**
      * Setup action button event handlers (Deal, Hit, Stand, Double)
      */
-    setupActionButtonHandlers() {
+    setupActionButtonHandlers(): void {
         const actionButtons = [
             { id: 'deal-btn', handler: () => this.game.startGame() },
             { id: 'hit-btn', handler: () => this.game.hit() },
@@ -143,7 +213,7 @@ export class BlackjackEventHandlers {
         ];
         
         actionButtons.forEach(action => {
-            const button = document.getElementById(action.id);
+            const button = document.getElementById(action.id) as HTMLButtonElement | null;
             if (button) {
                 const clickHandler = () => {
                     if (!button.disabled) {
@@ -161,13 +231,13 @@ export class BlackjackEventHandlers {
     /**
      * Setup mobile-specific event handlers
      */
-    setupMobileEventHandlers() {
+    setupMobileEventHandlers(): void {
         if (!this.isMobile) return;
         
         // Prevent scrolling when touching the game area
-        const gameUI = document.getElementById('blackjack-game');
+        const gameUI = document.getElementById('blackjack-game') as HTMLDivElement | null;
         if (gameUI) {
-            this.addEventHandler(gameUI, 'touchmove', (e) => {
+            this.addEventHandler(gameUI, 'touchmove', (e: Event) => {
                 e.preventDefault();
             }, {passive: false});
         }
@@ -183,7 +253,7 @@ export class BlackjackEventHandlers {
     /**
      * Setup control button with hover and touch effects
      */
-    setupControlButton(button, clickHandler) {
+    setupControlButton(button: HTMLButtonElement, clickHandler: () => void): void {
         const addHoverEffect = () => {
             if (!button.disabled) {
                 const hoverStyles = this.game.view.styles.getControlButtonHoverStyles();
@@ -206,7 +276,7 @@ export class BlackjackEventHandlers {
         // Touch events
         if (this.isMobile) {
             this.addEventHandler(button, 'touchstart', addHoverEffect, {passive: true});
-            this.addEventHandler(button, 'touchend', (e) => {
+            this.addEventHandler(button, 'touchend', (e: Event) => {
                 removeHoverEffect();
                 e.preventDefault();
                 clickHandler();
@@ -217,7 +287,7 @@ export class BlackjackEventHandlers {
     /**
      * Setup action button with hover and touch effects
      */
-    setupActionButton(button, clickHandler) {
+    setupActionButton(button: HTMLButtonElement, clickHandler: () => void): void {
         const color = this.getButtonColor(button.id);
         
         const enableHoverEffects = () => {
@@ -242,7 +312,7 @@ export class BlackjackEventHandlers {
         // Touch events
         if (this.isMobile) {
             this.addEventHandler(button, 'touchstart', enableHoverEffects, {passive: true});
-            this.addEventHandler(button, 'touchend', (e) => {
+            this.addEventHandler(button, 'touchend', (e: Event) => {
                 disableHoverEffects();
                 e.preventDefault();
                 clickHandler();
@@ -253,7 +323,7 @@ export class BlackjackEventHandlers {
     /**
      * Get button color based on button ID
      */
-    getButtonColor(buttonId) {
+    getButtonColor(buttonId: string): string {
         switch (buttonId) {
             case 'deal-btn':
                 return '#30cfd0';
@@ -271,21 +341,27 @@ export class BlackjackEventHandlers {
     /**
      * Add event listener and track it for cleanup
      */
-    addEventHandler(element, event, handler, options = false) {
+    addEventHandler(
+        element: EventTarget,
+        event: string,
+        handler: EventListenerOrEventListenerObject,
+        options: boolean | AddEventListenerOptions = false
+    ): void {
         element.addEventListener(event, handler, options);
         
         // Store for cleanup
-        const key = `${element.id || element.className}_${event}`;
+        const elementAsHTMLElement = element as HTMLElement;
+        const key = `${elementAsHTMLElement.id || elementAsHTMLElement.className}_${event}`;
         if (!this.eventListeners.has(key)) {
             this.eventListeners.set(key, []);
         }
-        this.eventListeners.get(key).push({ element, event, handler, options });
+        this.eventListeners.get(key)?.push({ element, event, handler, options });
     }
 
     /**
      * Remove all event listeners
      */
-    removeAllEventListeners() {
+    removeAllEventListeners(): void {
         this.eventListeners.forEach((listeners) => {
             listeners.forEach(({ element, event, handler, options }) => {
                 element.removeEventListener(event, handler, options);
@@ -297,11 +373,11 @@ export class BlackjackEventHandlers {
     /**
      * Update button states based on game state
      */
-    updateButtonStates() {
-        const dealBtn = document.getElementById('deal-btn');
-        const hitBtn = document.getElementById('hit-btn');
-        const standBtn = document.getElementById('stand-btn');
-        const doubleBtn = document.getElementById('double-btn');
+    updateButtonStates(): void {
+        const dealBtn = document.getElementById('deal-btn') as HTMLButtonElement | null;
+        const hitBtn = document.getElementById('hit-btn') as HTMLButtonElement | null;
+        const standBtn = document.getElementById('stand-btn') as HTMLButtonElement | null;
+        const doubleBtn = document.getElementById('double-btn') as HTMLButtonElement | null;
         
         // Reset all buttons to disabled state
         [dealBtn, hitBtn, standBtn, doubleBtn].forEach(btn => {
@@ -348,9 +424,9 @@ export class BlackjackEventHandlers {
     /**
      * Handle keyboard events
      */
-    setupKeyboardHandlers() {
-        const keyHandler = (e) => {
-            if (this.game.gameUI.style.display === 'none') return;
+    setupKeyboardHandlers(): void {
+        const keyHandler = (e: KeyboardEvent) => {
+            if (!this.game.gameUI || this.game.gameUI.style.display === 'none') return;
             
             switch (e.key.toLowerCase()) {
                 case 'escape':
@@ -407,15 +483,15 @@ export class BlackjackEventHandlers {
             }
         };
         
-        this.addEventHandler(document, 'keydown', keyHandler);
+        this.addEventHandler(document, 'keydown', keyHandler as EventListener);
     }
 
     /**
      * Select resource by name (helper for keyboard events)
      */
-    selectResource(resource) {
+    selectResource(resource: ResourceType): void {
         if (!this.game.gameLogic.isGameActive()) {
-            const button = document.querySelector(`[data-resource="${resource}"]`);
+            const button = document.querySelector(`[data-resource="${resource}"]`) as HTMLButtonElement | null;
             if (button) {
                 button.click();
             }
@@ -425,7 +501,7 @@ export class BlackjackEventHandlers {
     /**
      * Handle window resize events
      */
-    setupResizeHandler() {
+    setupResizeHandler(): void {
         const resizeHandler = () => {
             // Update mobile detection in case window was resized
             this.isMobile = window.innerWidth <= 768 || window.innerHeight <= 600;
@@ -442,7 +518,7 @@ export class BlackjackEventHandlers {
     /**
      * Setup all handlers at once
      */
-    initialize() {
+    initialize(): void {
         this.setupEventHandlers();
         this.setupKeyboardHandlers();
         this.setupResizeHandler();
@@ -451,7 +527,7 @@ export class BlackjackEventHandlers {
     /**
      * Cleanup method to remove all event listeners
      */
-    destroy() {
+    destroy(): void {
         this.removeAllEventListeners();
     }
 }
