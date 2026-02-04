@@ -1,13 +1,17 @@
-// eventHandlers.js - Event handling setup and methods
+// eventHandlers.ts - Event handling setup and methods
+import { Game } from '../game';
+
 export class GameEventHandlers {
-    constructor(game) {
+    private game: Game;
+
+    constructor(game: Game) {
         this.game = game;
     }
 
     /**
      * Set up all event handlers for the game
      */
-    setupEventHandlers() {
+    setupEventHandlers(): void {
         this.setupWindowEvents();
         this.setupKeyboardEvents();
         this.setupMouseEvents();
@@ -17,10 +21,12 @@ export class GameEventHandlers {
     /**
      * Set up window-related event handlers
      */
-    setupWindowEvents() {
+    setupWindowEvents(): void {
         // Handle window resize
         window.addEventListener('resize', () => {
-            this.game.renderer.handleResize();
+            if (this.game.renderer && this.game.renderer.handleResize) {
+                this.game.renderer.handleResize();
+            }
         });
 
         // Handle visibility change to pause/resume game
@@ -36,7 +42,7 @@ export class GameEventHandlers {
     /**
      * Set up keyboard event handlers
      */
-    setupKeyboardEvents() {
+    setupKeyboardEvents(): void {
         document.addEventListener('keydown', (e) => {
             // Handle ESC key to exit pointer lock
             if (e.key === 'Escape' && document.pointerLockElement) {
@@ -50,12 +56,12 @@ export class GameEventHandlers {
             }
 
             // Add weapon mode switching (F key)
-            if (e.key.toLowerCase() === 'f' && !this.game.spaceship.isDocked) {
-                if (this.game.combat && this.game.combat.cycleWeaponMode) {
-                    const newMode = this.game.combat.cycleWeaponMode();
+            if (e.key.toLowerCase() === 'f' && this.game.spaceship && !this.game.spaceship.isDocked) {
+                if (this.game.combat && (this.game.combat as any).cycleWeaponMode) {
+                    const newMode = (this.game.combat as any).cycleWeaponMode();
                     // Display weapon switch notification in UI
-                    if (this.game.ui && this.game.ui.showNotification) {
-                        this.game.ui.showNotification(`Weapon Mode: ${newMode}`, 2000);
+                    if (this.game.ui && (this.game.ui as any).showNotification) {
+                        (this.game.ui as any).showNotification(`Weapon Mode: ${newMode}`, 2000);
                     }
                 }
             }
@@ -65,13 +71,13 @@ export class GameEventHandlers {
     /**
      * Set up mouse event handlers
      */
-    setupMouseEvents() {
+    setupMouseEvents(): void {
         // Add right-click firing
         document.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             
             // Only fire if not docked
-            if (!this.game.spaceship.isDocked && this.game.combat) {
+            if (this.game.spaceship && !this.game.spaceship.isDocked && this.game.combat) {
                 // Start firing
                 this.game.combat.setFiring(true); // Use combat instead of weaponSystem
                 
@@ -104,7 +110,7 @@ export class GameEventHandlers {
     /**
      * Set up game over event subscription
      */
-    setupGameOverEventSubscription() {
+    setupGameOverEventSubscription(): void {
         // Subscribe to game over events with enhanced logging
         console.log("Game: Setting up game.over event subscription");
         const boundHandleGameOver = this.game.stateManager.handleGameOverEvent.bind(this.game.stateManager);
@@ -115,7 +121,7 @@ export class GameEventHandlers {
         // Verify subscription was successful
         if (this.game.messageBus.listeners.has('game.over')) {
             const listeners = this.game.messageBus.listeners.get('game.over');
-            console.log(`Game: Successfully registered ${listeners.length} game.over listener(s)`);
+            console.log(`Game: Successfully registered ${listeners?.length} game.over listener(s)`);
         } else {
             console.error("Game: Failed to register game.over listener - critical error!");
             // Attempt emergency re-registration
@@ -129,6 +135,8 @@ export class GameEventHandlers {
                     Array.from(this.game.messageBus.listeners.keys()));
 
         // Ensure message bus is correctly shared
-        console.log(`Game: Current mainMessageBus has ${window.mainMessageBus.listeners.has("game.over") ? "game.over listeners" : "NO game.over listeners"}`);
+        if ((window as any).mainMessageBus) {
+            console.log(`Game: Current mainMessageBus has ${(window as any).mainMessageBus.listeners.has("game.over") ? "game.over listeners" : "NO game.over listeners"}`);
+        }
     }
 }

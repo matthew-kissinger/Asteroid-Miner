@@ -1,13 +1,17 @@
-// lifecycle.js - Game lifecycle methods (pause, resume, animate)
+// lifecycle.ts - Game lifecycle methods (pause, resume, animate)
+import { Game } from '../game';
+
 export class GameLifecycleManager {
-    constructor(game) {
+    private game: Game;
+
+    constructor(game: Game) {
         this.game = game;
     }
 
     /**
      * Main animation loop
      */
-    animate() {
+    animate(): void {
         // Calculate delta time
         const now = performance.now();
         const deltaTime = Math.min(now - this.game.lastUpdateTime, 100) / 1000; // Clamped to 100ms
@@ -23,7 +27,9 @@ export class GameLifecycleManager {
         this.game.stateManager.checkGameOver();
 
         // Render scene
-        this.game.renderer.render();
+        if (this.game.renderer && this.game.renderer.render) {
+            this.game.renderer.render();
+        }
 
         // Request next frame
         requestAnimationFrame(this.animate.bind(this));
@@ -32,18 +38,22 @@ export class GameLifecycleManager {
     /**
      * Pause the game
      */
-    pause() {
+    pause(): void {
         // Pause game logic here
         console.log('Game paused');
         
         // Mute audio when game is paused
         if (this.game.audio) {
             this.game.audio.muted = true;
-            for (const sound of Object.values(this.game.audio.sounds)) {
-                sound.muted = true;
+            if (this.game.audio.sounds) {
+                for (const sound of Object.values(this.game.audio.sounds)) {
+                    (sound as any).muted = true;
+                }
             }
-            for (const track of this.game.audio.music) {
-                track.muted = true;
+            if ((this.game.audio as any).music) {
+                for (const track of (this.game.audio as any).music) {
+                    track.muted = true;
+                }
             }
         }
     }
@@ -51,18 +61,22 @@ export class GameLifecycleManager {
     /**
      * Resume the game
      */
-    resume() {
+    resume(): void {
         // Resume game logic here
         console.log('Game resumed');
         this.game.lastUpdateTime = performance.now(); // Reset timer to avoid large delta
         
         // Unmute audio when game is resumed (only if not globally muted)
         if (this.game.audio && !this.game.audio.muted) {
-            for (const sound of Object.values(this.game.audio.sounds)) {
-                sound.muted = false;
+            if (this.game.audio.sounds) {
+                for (const sound of Object.values(this.game.audio.sounds)) {
+                    (sound as any).muted = false;
+                }
             }
-            for (const track of this.game.audio.music) {
-                track.muted = false;
+            if ((this.game.audio as any).music) {
+                for (const track of (this.game.audio as any).music) {
+                    track.muted = false;
+                }
             }
         }
     }

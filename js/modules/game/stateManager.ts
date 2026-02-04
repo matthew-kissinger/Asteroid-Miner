@@ -1,6 +1,11 @@
-// stateManager.js - Game state management and stats tracking
+// stateManager.ts - Game state management and stats tracking
+import * as THREE from 'three';
+import { Game } from '../game';
+
 export class GameStateManager {
-    constructor(game) {
+    private game: Game;
+
+    constructor(game: Game) {
         this.game = game;
         this.initializeState();
     }
@@ -8,7 +13,7 @@ export class GameStateManager {
     /**
      * Initialize game state variables
      */
-    initializeState() {
+    initializeState(): void {
         // Game state
         this.game.isGameOver = false;
         this.game.lastUpdateTime = performance.now();
@@ -29,7 +34,7 @@ export class GameStateManager {
     /**
      * Check for game over conditions
      */
-    checkGameOver() {
+    checkGameOver(): void {
         // Make sure spaceship exists
         if (!this.game.spaceship) return;
 
@@ -49,8 +54,8 @@ export class GameStateManager {
 
         // Check if out of fuel and not near stargate
         if (this.game.spaceship.fuel <= 0 && 
-            this.game.controls.dockingSystem && 
-            !this.game.controls.dockingSystem.nearStargate) {
+            (this.game.controls as any).dockingSystem && 
+            !(this.game.controls as any).dockingSystem.nearStargate) {
             // Use message bus to publish game over event rather than direct call
             this.game.messageBus.publish('game.over', {
                 reason: "Your ship ran out of fuel",
@@ -62,23 +67,25 @@ export class GameStateManager {
 
         // Check for collision with sun
         const sunPosition = new THREE.Vector3(0, 0, 0);
-        const distanceToSun = this.game.spaceship.mesh.position.distanceTo(sunPosition);
-        if (distanceToSun < 400) { // Sun collision radius
-            // Use message bus to publish game over event rather than direct call
-            this.game.messageBus.publish('game.over', {
-                reason: "Your ship was destroyed by the sun's heat",
-                source: "game.checkGameOver",
-                type: "SUN_DEATH"
-            });
-            return;
+        if (this.game.spaceship.mesh) {
+            const distanceToSun = this.game.spaceship.mesh.position.distanceTo(sunPosition);
+            if (distanceToSun < 400) { // Sun collision radius
+                // Use message bus to publish game over event rather than direct call
+                this.game.messageBus.publish('game.over', {
+                    reason: "Your ship was destroyed by the sun's heat",
+                    source: "game.checkGameOver",
+                    type: "SUN_DEATH"
+                });
+                return;
+            }
         }
     }
 
     /**
      * Handle game over events from message bus
-     * @param {Object} message The game over event message
+     * @param message The game over event message
      */
-    handleGameOverEvent(message) {
+    handleGameOverEvent(message: any): void {
         // Check if game is already in game over state to prevent duplicate handling
         if (this.game.isGameOver) {
             console.log("Game: Already in game over state, ignoring duplicate event");
@@ -109,9 +116,9 @@ export class GameStateManager {
 
     /**
      * Trigger game over state and show UI
-     * @param {string|Object} message The reason for game over
+     * @param message The reason for game over
      */
-    gameOver(message) {
+    gameOver(message: string | any): void {
         if (this.game.isGameOver) {
             console.log("Game over already triggered, ignoring duplicate call");
             return;
@@ -128,9 +135,9 @@ export class GameStateManager {
 
         // Show game over screen with resources collected and combat stats
         const gameStats = {
-            resources: this.game.controls && this.game.controls.resources ? this.game.controls.resources : {},
+            resources: (this.game.controls as any)?.resources || {},
             combatStats: {
-                enemiesDestroyed: this.game.combatManager && this.game.combatManager.stats ? this.game.combatManager.stats.enemiesDestroyed : 0,
+                enemiesDestroyed: this.game.combatManager?.stats?.enemiesDestroyed || 0,
                 damageDealt: this.game.damageDealt || 0,
                 damageReceived: this.game.damageReceived || 0
             },
@@ -143,9 +150,9 @@ export class GameStateManager {
 
         // Show game over UI
         console.log("Game: Showing game over UI");
-        if (this.game.ui && this.game.ui.showGameOver) {
+        if (this.game.ui && (this.game.ui as any).showGameOver) {
             // Pass the entire message object to the UI so it can access both reason and type
-            this.game.ui.showGameOver(gameStats, typeof message === 'string' ? message : message);
+            (this.game.ui as any).showGameOver(gameStats, typeof message === 'string' ? message : message);
         } else {
             console.log("Game: UI not available, using fallback");
             // For fallback, extract the reason string if message is an object
@@ -155,17 +162,17 @@ export class GameStateManager {
         }
 
         // Stop spaceship movement
-        if (this.game.spaceship && this.game.spaceship.thrust) {
-            this.game.spaceship.thrust.forward = false;
-            this.game.spaceship.thrust.backward = false;
-            this.game.spaceship.thrust.left = false;
-            this.game.spaceship.thrust.right = false;
-            this.game.spaceship.thrust.boost = false;
+        if (this.game.spaceship && (this.game.spaceship as any).thrust) {
+            (this.game.spaceship as any).thrust.forward = false;
+            (this.game.spaceship as any).thrust.backward = false;
+            (this.game.spaceship as any).thrust.left = false;
+            (this.game.spaceship as any).thrust.right = false;
+            (this.game.spaceship as any).thrust.boost = false;
         }
 
         // Stop all control inputs
-        if (this.game.controls && this.game.controls.inputHandler) {
-            this.game.controls.inputHandler.exitPointerLock();
+        if (this.game.controls && (this.game.controls as any).inputHandler) {
+            (this.game.controls as any).inputHandler.exitPointerLock();
         }
 
         console.log("Game: Game over handling complete");
@@ -173,9 +180,9 @@ export class GameStateManager {
 
     /**
      * Fallback method to show game over screen if the UI system fails
-     * @param {string} message The reason for game over
+     * @param message The reason for game over
      */
-    showFallbackGameOver(message) {
+    showFallbackGameOver(message: string): void {
         console.log("Creating fallback game over screen");
 
         // Check if game over screen already exists
@@ -240,7 +247,7 @@ export class GameStateManager {
     /**
      * Activate horde mode (extreme survival challenge)
      */
-    activateHordeMode() {
+    activateHordeMode(): void {
         if (this.game.isHordeActive) return; // Already active
         
         console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
@@ -259,8 +266,8 @@ export class GameStateManager {
         });
         
         // Notify the player
-        if (this.game.ui && this.game.ui.showNotification) {
-            this.game.ui.showNotification("HORDE MODE ACTIVATED - SURVIVE!", 5000);
+        if (this.game.ui && (this.game.ui as any).showNotification) {
+            (this.game.ui as any).showNotification("HORDE MODE ACTIVATED - SURVIVE!", 5000);
         }
         
         // Force player to undock if currently docked
@@ -278,9 +285,9 @@ export class GameStateManager {
     
     /**
      * Format horde survival time as MM:SS
-     * @returns {string} Formatted time string
+     * @returns Formatted time string
      */
-    getFormattedHordeSurvivalTime() {
+    getFormattedHordeSurvivalTime(): string {
         const totalSeconds = Math.floor(this.game.hordeSurvivalTime / 1000);
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
@@ -290,7 +297,7 @@ export class GameStateManager {
     /**
      * Update horde survival time if active
      */
-    updateHordeTime() {
+    updateHordeTime(): void {
         if (this.game.isHordeActive) {
             this.game.hordeSurvivalTime = performance.now() - this.game.hordeStartTime;
         }

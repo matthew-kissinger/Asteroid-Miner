@@ -1,15 +1,20 @@
-// helpers.js - Utility functions and helper methods
+// helpers.ts - Utility functions and helper methods
+import * as THREE from 'three';
+import { Game } from '../game';
+
 export class GameHelpers {
-    constructor(game) {
+    private game: Game;
+
+    constructor(game: Game) {
         this.game = game;
     }
 
     /**
      * Format time in milliseconds as MM:SS
-     * @param {number} timeMs - Time in milliseconds
-     * @returns {string} Formatted time string
+     * @param timeMs - Time in milliseconds
+     * @returns Formatted time string
      */
-    static formatTime(timeMs) {
+    static formatTime(timeMs: number): string {
         const totalSeconds = Math.floor(timeMs / 1000);
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
@@ -18,41 +23,41 @@ export class GameHelpers {
 
     /**
      * Clamp a value between min and max
-     * @param {number} value - Value to clamp
-     * @param {number} min - Minimum value
-     * @param {number} max - Maximum value
-     * @returns {number} Clamped value
+     * @param value - Value to clamp
+     * @param min - Minimum value
+     * @param max - Maximum value
+     * @returns Clamped value
      */
-    static clamp(value, min, max) {
+    static clamp(value: number, min: number, max: number): number {
         return Math.min(Math.max(value, min), max);
     }
 
     /**
      * Calculate distance between two 3D points
-     * @param {THREE.Vector3} pos1 - First position
-     * @param {THREE.Vector3} pos2 - Second position
-     * @returns {number} Distance between points
+     * @param pos1 - First position
+     * @param pos2 - Second position
+     * @returns Distance between points
      */
-    static distance3D(pos1, pos2) {
+    static distance3D(pos1: THREE.Vector3, pos2: THREE.Vector3): number {
         return pos1.distanceTo(pos2);
     }
 
     /**
      * Linear interpolation between two values
-     * @param {number} start - Start value
-     * @param {number} end - End value
-     * @param {number} t - Interpolation factor (0-1)
-     * @returns {number} Interpolated value
+     * @param start - Start value
+     * @param end - End value
+     * @param t - Interpolation factor (0-1)
+     * @returns Interpolated value
      */
-    static lerp(start, end, t) {
+    static lerp(start: number, end: number, t: number): number {
         return start + (end - start) * t;
     }
 
     /**
      * Get current performance metrics
-     * @returns {Object} Performance metrics object
+     * @returns Performance metrics object
      */
-    getPerformanceMetrics() {
+    getPerformanceMetrics(): any {
         return {
             fps: this.game.currentFPS,
             frameCount: this.game.frameCount,
@@ -64,16 +69,16 @@ export class GameHelpers {
 
     /**
      * Get current game statistics
-     * @returns {Object} Game statistics object
+     * @returns Game statistics object
      */
-    getGameStatistics() {
+    getGameStatistics(): any {
         return {
             enemiesDestroyed: this.game.enemiesDestroyed,
             damageDealt: this.game.damageDealt,
             damageReceived: this.game.damageReceived,
-            resources: this.game.controls && this.game.controls.resources ? this.game.controls.resources : {},
+            resources: (this.game.controls as any)?.resources || {},
             combatStats: {
-                enemiesDestroyed: this.game.combatManager && this.game.combatManager.stats ? this.game.combatManager.stats.enemiesDestroyed : 0,
+                enemiesDestroyed: this.game.combatManager?.stats?.enemiesDestroyed || 0,
                 damageDealt: this.game.damageDealt || 0,
                 damageReceived: this.game.damageReceived || 0
             },
@@ -87,9 +92,9 @@ export class GameHelpers {
 
     /**
      * Check if all required systems are initialized
-     * @returns {boolean} True if all systems are ready
+     * @returns True if all systems are ready
      */
-    areSystemsReady() {
+    areSystemsReady(): boolean {
         return !!(
             this.game.renderer &&
             this.game.scene &&
@@ -108,7 +113,7 @@ export class GameHelpers {
     /**
      * Log system status for debugging
      */
-    logSystemStatus() {
+    logSystemStatus(): void {
         console.log("Game System Status:", {
             renderer: !!this.game.renderer,
             scene: !!this.game.scene,

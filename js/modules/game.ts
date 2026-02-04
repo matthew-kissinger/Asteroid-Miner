@@ -6,10 +6,17 @@ import { GameSystemCoordinator } from './game/systemCoordinator.js';
 import { GameLifecycleManager } from './game/lifecycle.js';
 import { GameEventHandlers } from './game/eventHandlers.js';
 import { GameHelpers } from './game/helpers.js';
+import * as THREE from 'three';
+import { MessageBus } from '../core/messageBus.js';
+import { Physics } from './physics';
+import { Spaceship } from './spaceship';
+import { Environment } from './environment';
+import { Controls } from './controls.js';
+import { UI } from './ui';
+import { AudioManager } from './audio/audio.js';
+import { Combat } from './combat';
 
 type GameOverMessage = string | Record<string, unknown>;
-
-type GameModuleConstructor<T> = new (game: Game) => T;
 
 interface GameInitializerLike {
     initialize: () => Promise<void>;
@@ -19,11 +26,12 @@ interface GameInitializerLike {
 
 interface GameStateManagerLike {
     checkGameOver: () => void;
-    handleGameOverEvent: (message: Record<string, unknown>) => void;
+    handleGameOverEvent: (message: any) => void;
     gameOver: (message: GameOverMessage) => void;
     showFallbackGameOver: (message: string) => void;
     activateHordeMode: () => void;
     getFormattedHordeSurvivalTime: () => string;
+    updateHordeTime: () => void;
 }
 
 interface GameSystemCoordinatorLike {
@@ -42,6 +50,10 @@ interface GameEventHandlersLike {
 }
 
 interface GameHelpersLike {
+    getPerformanceMetrics: () => any;
+    getGameStatistics: () => any;
+    areSystemsReady: () => boolean;
+    logSystemStatus: () => void;
 }
 
 export class Game {
@@ -52,7 +64,41 @@ export class Game {
     eventHandlers!: GameEventHandlersLike;
     helpers!: GameHelpersLike;
 
+    // Game state properties
+    isGameOver: boolean = false;
+    lastUpdateTime: number = performance.now();
+    frameCount: number = 0;
+    currentFPS: number = 0;
+    
+    // Combat stats
+    enemiesDestroyed: number = 0;
+    damageDealt: number = 0;
+    damageReceived: number = 0;
+    
+    // Horde mode properties
+    isHordeActive: boolean = false;
+    hordeStartTime: number = 0;
+    hordeSurvivalTime: number = 0;
+
+    // System references
+    renderer: any; // Using any for now as Renderer is complex
+    scene!: THREE.Scene;
+    camera!: THREE.PerspectiveCamera;
+    physics!: Physics;
+    environment!: Environment;
+    spaceship!: Spaceship;
+    ui!: UI;
+    combat!: Combat;
+    combatManager: any; // AI manager
+    controls!: Controls;
+    audio!: AudioManager;
+    messageBus: MessageBus = new MessageBus();
+    gameOverUnsubscribe?: Function;
+
     constructor() {
+        // Global reference for emergency access
+        (window as any).game = this;
+        
         // Initialize modules in the correct order
         this.initializeModules();
         
@@ -64,12 +110,12 @@ export class Game {
      * Initialize all module instances
      */
     initializeModules(): void {
-        this.initializer = new (GameInitializer as unknown as GameModuleConstructor<GameInitializerLike>)(this);
-        this.stateManager = new (GameStateManager as unknown as GameModuleConstructor<GameStateManagerLike>)(this);
-        this.systemCoordinator = new (GameSystemCoordinator as unknown as GameModuleConstructor<GameSystemCoordinatorLike>)(this);
-        this.lifecycleManager = new (GameLifecycleManager as unknown as GameModuleConstructor<GameLifecycleManagerLike>)(this);
-        this.eventHandlers = new (GameEventHandlers as unknown as GameModuleConstructor<GameEventHandlersLike>)(this);
-        this.helpers = new (GameHelpers as unknown as GameModuleConstructor<GameHelpersLike>)(this);
+        this.initializer = new (GameInitializer as any)(this);
+        this.stateManager = new GameStateManager(this);
+        this.systemCoordinator = new GameSystemCoordinator(this);
+        this.lifecycleManager = new GameLifecycleManager(this);
+        this.eventHandlers = new GameEventHandlers(this);
+        this.helpers = new GameHelpers(this);
     }
 
     /**
