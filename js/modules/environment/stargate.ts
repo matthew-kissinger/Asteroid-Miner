@@ -401,4 +401,16 @@ export class Stargate {
             this.stargate.rotation.z += 0.006;   // 30x faster rotation on Z axis (was 0.0002)
         }
     }
+
+    dispose(): void {
+        if (this.stargate) {
+            this.scene.remove(this.stargate);
+        }
+        this.stargate = null;
+        this.navLights = [];
+        this.portalParticles = [];
+        this.portalShaderMaterial = undefined;
+        this.portalLight = undefined;
+        this.counterRotatingRing = undefined;
+    }
 }

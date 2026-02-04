@@ -20,8 +20,8 @@ export class Sun {
     sunMaterial?: THREE.ShaderMaterial;
     coronaMaterial?: THREE.ShaderMaterial;
     outerCoronaMaterial?: THREE.ShaderMaterial;
-    lighting: SunLighting;
-    flares: SunFlares;
+    lighting!: SunLighting;
+    flares!: SunFlares;
 
     constructor(scene: SceneWithLighting) {
         this.scene = scene;

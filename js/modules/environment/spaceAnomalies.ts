@@ -177,7 +177,7 @@ export class SpaceAnomalies {
         const anomaly = this.anomalyRegistry.createAnomaly(
             type,
             position,
-            (rarity: OrbRarity) => this.createEnergyOrb(rarity),
+            (rarity: string) => this.createEnergyOrb(rarity as OrbRarity),
             () => this.getRandomOrbRarity(),
             (object: THREE.Object3D) => this._addToScene(object)
         ) as AnomalyData;

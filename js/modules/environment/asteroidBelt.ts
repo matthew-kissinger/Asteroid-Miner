@@ -307,6 +307,7 @@ export class AsteroidBelt {
     }
 
     update(deltaTime: number = 0.016): void {
+        void deltaTime;
         // Update asteroid positions and rotations with orbital tilt
         this.asteroids.forEach(asteroid => {
             // Rotate the asteroid (axial rotation)

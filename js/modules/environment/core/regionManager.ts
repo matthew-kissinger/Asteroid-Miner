@@ -3,7 +3,8 @@
 import * as THREE from 'three';
 
 interface RegionInfo {
-    center: THREE.Vector3;
+    center?: THREE.Vector3;
+    position?: THREE.Vector3;
     radius?: number;
     minRadius?: number;
     maxRadius?: number;
@@ -147,8 +148,9 @@ export class RegionManager {
 
         // Check if near stargate
         const stargateRegion = this.planetRegions["Stargate"];
-        if (stargateRegion) {
-            const distanceToStargate = playerPosition.distanceTo(stargateRegion.center);
+        const stargateCenter = stargateRegion?.center ?? stargateRegion?.position;
+        if (stargateRegion && stargateCenter) {
+            const distanceToStargate = playerPosition.distanceTo(stargateCenter);
             if (stargateRegion.radius && distanceToStargate <= stargateRegion.radius) {
                 return "Stargate";
             }
@@ -190,7 +192,9 @@ export class RegionManager {
         for (const [name, region] of Object.entries(this.planetRegions)) {
             if (name === "Asteroid Belt" && componentsLoaded && asteroids) {
                 // Special case for asteroid belt - only if loaded
-                const distance = playerPosition.distanceTo(region.center);
+                const regionCenter = region.center ?? region.position;
+                if (!regionCenter) continue;
+                const distance = playerPosition.distanceTo(regionCenter);
                 if (region.minRadius && region.maxRadius &&
                     distance >= region.minRadius &&
                     distance <= region.maxRadius) {
@@ -206,14 +210,18 @@ export class RegionManager {
                 }
             } else if (name === "Space Anomalies" && componentsLoaded) {
                 // Special case for space anomalies region - only if loaded
-                const distance = playerPosition.distanceTo(region.center);
+                const regionCenter = region.center ?? region.position;
+                if (!regionCenter) continue;
+                const distance = playerPosition.distanceTo(regionCenter);
                 if (region.minRadius && region.maxRadius &&
                     distance >= region.minRadius &&
                     distance <= region.maxRadius) {
                     return "Space Anomaly Field";
                 }
-            } else if (name !== "Sun" && name !== "Stargate" && region.center && region.radius) {
-                const distance = playerPosition.distanceTo(region.center);
+            } else if (name !== "Sun" && name !== "Stargate" && (region.center || region.position) && region.radius) {
+                const regionCenter = region.center ?? region.position;
+                if (!regionCenter) continue;
+                const distance = playerPosition.distanceTo(regionCenter);
                 if (distance <= region.radius) {
                     return `Near ${name}`;
                 }
@@ -222,8 +230,9 @@ export class RegionManager {
 
         // Check sun
         const sunRegion = this.planetRegions["Sun"];
-        if (sunRegion) {
-            const distanceToSun = playerPosition.distanceTo(sunRegion.center);
+        const sunCenter = sunRegion?.center ?? sunRegion?.position;
+        if (sunRegion && sunCenter) {
+            const distanceToSun = playerPosition.distanceTo(sunCenter);
             if (sunRegion.radius && distanceToSun <= sunRegion.radius) {
                 return "Near Sun";
             }

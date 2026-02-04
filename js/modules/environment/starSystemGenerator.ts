@@ -299,7 +299,7 @@ export class StarSystemGenerator {
                 speed: planet.speed || (0.001 + (Math.random() * 0.001)),
                 color: planet.color || SystemUtils.getRandomColor(),
                 rings: planet.rings !== undefined ? planet.rings : Math.random() > 0.7,
-                textureUrl: planet.textureUrl || null,
+                textureUrl: planet.textureUrl || undefined,
                 axialTilt: planet.axialTilt || (Math.random() * Math.PI * 0.5),
                 orbitalTilt: planet.orbitalTilt || (Math.random() * Math.PI * 0.2)
             });
