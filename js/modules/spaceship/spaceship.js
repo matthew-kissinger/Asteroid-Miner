@@ -2,7 +2,7 @@
 // Refactored to improve maintainability and reduce file size
 
 import * as THREE from 'three';
-import { TrailEffects } from '../trail.js';
+import { TrailEffects } from '../trail';
 import { ShipModel } from './model/shipModel.js';
 import { ShipUpgrades } from './systems/upgrades.js';
 import { ShipDocking } from './systems/docking.js';

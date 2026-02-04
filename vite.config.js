@@ -27,7 +27,6 @@ export default defineConfig({
         manualChunks: {
           'three': ['three'],
           'core': ['./js/core/messageBus.js', './js/core/difficultyManager.js'],
-          'modules': ['./js/modules/renderer.js', './js/modules/game.js'],
         },
       },
     },

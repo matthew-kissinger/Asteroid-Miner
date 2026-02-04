@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { Renderer } from '../modules/renderer.js';
-import { Spaceship } from '../modules/spaceship.js';
+import { Spaceship } from '../modules/spaceship';
 import { Physics } from '../modules/physics';
 import { Environment } from '../modules/environment';
 import { Controls } from '../modules/controls.js';
@@ -28,7 +28,7 @@ type GameUi = {
     setAudio: (audio: AudioManager) => void;
     setControls: (controls: GameControls) => void;
     initializeSettings: (game: GameInitializerContext) => void;
-    stargateInterface?: { showStargateUI: () => void };
+    stargateInterface?: { showStargateUI?: (() => void) | undefined };
 };
 
 type GameControls = {
@@ -164,7 +164,7 @@ export class GameInitializer {
         // Start the game UI
         if (this.game.ui && this.game.ui.stargateInterface) {
             console.log("Showing stargate UI...");
-            this.game.ui.stargateInterface.showStargateUI();
+            this.game.ui.stargateInterface.showStargateUI?.();
         } else {
             console.error("No stargate interface found!", this.game.ui);
         }

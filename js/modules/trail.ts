@@ -1,9 +1,45 @@
-// trail.js - Thruster exhaust effects for spaceship
+// trail.ts - Thruster exhaust effects for spaceship
 
 import * as THREE from 'three';
 
+// Thrust state interface (matches physics.ts)
+interface ThrustState {
+    forward: boolean;
+    backward: boolean;
+    left: boolean;
+    right: boolean;
+    boost: boolean;
+}
+
+// Thruster effect configuration
+interface ThrusterConfig {
+    baseRadius: number;
+    length: number;
+    color: number;
+    glowColor: number;
+    type: 'main' | 'right_thruster' | 'left_thruster' | 'reverse';
+}
+
+// Beam segment data
+interface BeamSegment {
+    mesh: THREE.Mesh;
+    material: THREE.MeshBasicMaterial;
+}
+
+// Thruster effect data
+interface ThrusterEffect {
+    group: THREE.Group;
+    beams: BeamSegment[];
+    type: 'main' | 'right_thruster' | 'left_thruster' | 'reverse';
+}
+
 export class TrailEffects {
-    constructor(scene, mesh) {
+    private scene: THREE.Scene;
+    private mesh: THREE.Object3D;
+    private thrusterEffects: ThrusterEffect[];
+    private time: number;
+    
+    constructor(scene: THREE.Scene, mesh: THREE.Object3D) {
         this.scene = scene;
         this.mesh = mesh; // The spaceship mesh
         this.thrusterEffects = [];
@@ -13,15 +49,19 @@ export class TrailEffects {
         this.createThrusterEffects();
     }
     
-    createThrusterEffects() {
+    private createThrusterEffects(): void {
         // Create exhaust beam effect using multiple overlapping cylinders
-        const createExhaustBeam = (position, direction, config) => {
+        const createExhaustBeam = (
+            position: THREE.Vector3,
+            direction: THREE.Vector3,
+            config: ThrusterConfig
+        ): ThrusterEffect => {
             const { baseRadius, length, color, glowColor, type } = config;
             const group = new THREE.Group();
             
             // Create multiple cylinder segments for tapered effect
             const segments = 8;
-            const beams = [];
+            const beams: BeamSegment[] = [];
             
             for (let i = 0; i < segments; i++) {
                 const t = i / segments;
@@ -133,7 +173,7 @@ export class TrailEffects {
         ));
     }
     
-    updateParticles(thrust, velocity) {
+    updateParticles(thrust: ThrustState, velocity: THREE.Vector3): void {
         this.time += 0.016;
         
         // Check window.inputIntent for keyboard controls
@@ -193,7 +233,7 @@ export class TrailEffects {
         });
     }
     
-    updateTrailVisibility(isMoving, thrust, velocity) {
+    updateTrailVisibility(isMoving: boolean, thrust: ThrustState, velocity: THREE.Vector3): void {
         // Update main thruster visibility based on movement
         const mainEffect = this.thrusterEffects.find(e => e.type === 'main');
         if (mainEffect) {
@@ -202,7 +242,7 @@ export class TrailEffects {
         }
     }
     
-    dispose() {
+    dispose(): void {
         // Clean up all thruster effects
         this.thrusterEffects.forEach(effect => {
             if (effect.group) {
@@ -211,9 +251,18 @@ export class TrailEffects {
                 }
                 
                 // Dispose of all children
-                effect.group.traverse(child => {
-                    if (child.geometry) child.geometry.dispose();
-                    if (child.material) child.material.dispose();
+                effect.group.traverse((child: THREE.Object3D) => {
+                    if ('geometry' in child && child.geometry) {
+                        (child.geometry as THREE.BufferGeometry).dispose();
+                    }
+                    if ('material' in child && child.material) {
+                        const material = child.material as THREE.Material;
+                        if (Array.isArray(material)) {
+                            material.forEach(mat => mat.dispose());
+                        } else {
+                            material.dispose();
+                        }
+                    }
                 });
             }
         });

@@ -1,4 +1,5 @@
-// spaceship.js - Handles spaceship creation and management
-// Now imports from refactored modular structure
+// DEPRECATED: This file has been converted to TypeScript.
+// Please update imports to use './spaceship' (without .js extension)
+// This file is kept temporarily for compatibility but will be removed.
 
 export { Spaceship } from './spaceship/spaceship.js';
