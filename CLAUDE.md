@@ -6,9 +6,9 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 1 Complete, Phase 2 ~92% Done
+## Current State: Phase 1 Complete, Phase 2 ~95% Done
 
-Phase 1 is done. Phase 2 is well advanced - bitECS installed, components defined, systems integrated into game loop, all core modules and most subsystem entry points converted to TypeScript. Controls subsystem fully converted (17 files, d807f26). Renderer subdirectory fully converted and committed (5b661ee). Audio subsystem fully converted (8b59957). Build succeeds. Typecheck has 41 errors remaining (controls type mismatches and renderer WebGPU types).
+Phase 1 is done. Phase 2 is well advanced - bitECS installed, components defined, systems integrated into game loop, all core modules and most subsystem entry points converted to TypeScript. All major subsystems converted: controls (17 files, d807f26), renderer/ (6 files, 5b661ee), audio (7 files, 8b59957), pooling (14 files, 7e81a49), spaceship/ (7 files, 1833049), game/ (5 files, 4ec0b63). Build succeeds. Typecheck has 5 errors remaining (1 gameInitializer type mismatch, 4 renderer WebGPU types).
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured)
@@ -40,16 +40,19 @@ Phase 1 is done. Phase 2 is well advanced - bitECS installed, components defined
 - trail.js and spaceship.js (entity modules) converted to TypeScript
 - Audio subsystem fully converted to TypeScript (7 files, 8b59957)
 - Renderer subdirectory fully converted and committed (6 TS files, 5b661ee), stale JS deleted
+- Pooling subsystem fully converted to TypeScript (14 files, 7e81a49), stale JS deleted
+- Spaceship/ subsystem fully converted to TypeScript (7 files, 1833049)
+- Game/ subsystem fully converted to TypeScript (5 files, 4ec0b63)
+- Controls/ typecheck errors fully resolved (65 errors fixed, aaff4bb)
 
 **Remaining Problems:**
-- **Typecheck has 41 errors** - 13 in targetingSystem.ts, 7 in controls.ts, 7 in touch/touchControls.ts, 4 in renderer.ts (WebGPU types), scattered others. A codex task (1b3fa71c) is actively fixing these.
-- **Partial TypeScript** - 75 TS files, 88 non-legacy JS files remain (plus 57 legacy ECS JS files slated for deletion). 51 @ts-ignore suppressions across converted modules.
-- **Pooling conversion task (9eebf151) marked done but no commit found** - cline agent may not have committed. Still 14 JS files, 0 TS files. Needs retry.
+- **Typecheck has 5 errors** - 1 in gameInitializer.ts (GameSpaceship vs SpaceshipType mismatch), 4 in renderer.ts (WebGPU types - WebGPURenderer not in @types/three).
+- **Partial TypeScript** - 101 TS files, 118 non-legacy JS files remain (plus 57 legacy ECS JS files slated for deletion). 51 @ts-ignore suppressions across converted modules.
 - **Dual ECS running** - Both bitECS (via ecsRunner.ts) and legacy ECS (js/core/) run each frame in parallel. Legacy ECS still drives the actual game; bitECS runs a test entity.
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts (volumetric light + claude rays). Pending TSL conversion.
 - **Global state** - ~645 `window.*` usages across the codebase
-- **Large bundle** - Main chunk is 1,101 kB after minification (combat chunk split out at 146 kB). Needs further code splitting.
-- **Unconverted subsystems** - environment/ (39 JS), ui/ (66 JS), pooling/ (14 JS), spaceship/ (7 JS), game/ (5 JS), intro/ (6 JS) subdirectories all still JS.
+- **Large bundle** - Main chunk is 1,105 kB after minification (combat chunk split out at 146 kB). Needs further code splitting.
+- **Unconverted subsystems** - environment/ (39 JS, 6,604 lines), ui/ (66 JS, 17,454 lines), intro/ (6 JS, 1,041 lines) subdirectories still JS. Plus 7 scattered JS files (lightingConfig, perfOverlay, laserMaterial, apiClient, memoryManager, mobileDetector, pathUtils).
 - **Legacy ECS** - js/core/ (12 files), js/components/ (13 files), js/systems/ (32 files) still active. Will be deleted when bitECS fully replaces them.
 
 ## Target Stack (2026 Best Practices)
@@ -152,9 +155,9 @@ Health.current[eid] = Health.max[eid]
 1. ~~Upgrade to Three.js r180+~~ Done (r180, package.json updated)
 2. ~~Add TypeScript with strict mode~~ Done (tsconfig.json, checkJs=false for JS files)
 3. ~~Enable WebGPU renderer with WebGL2 fallback~~ Done (js/modules/renderer.js)
-4. Convert `.js` -> `.ts` incrementally - In progress (75 TS files done, ~88 non-legacy JS files remain)
+4. Convert `.js` -> `.ts` incrementally - In progress (101 TS files done, 118 non-legacy JS files remain)
 
-### Phase 2: bitECS Migration - IN PROGRESS (~92%)
+### Phase 2: bitECS Migration - IN PROGRESS (~95%)
 1. ~~Install bitECS~~ Done (v0.4.0, js/ecs/world.ts created)
 2. ~~Define components~~ Done (24 components in js/ecs/components.ts)
 3. ~~Create first systems~~ Done (physicsSystem.ts + renderSyncSystem.ts in js/ecs/systems/)
@@ -169,10 +172,14 @@ Health.current[eid] = Health.max[eid]
 12. ~~Convert controls subsystem to TypeScript~~ Done (17 files, d807f26)
 13. ~~Convert renderer subdirectory to TypeScript~~ Done (6 files, 5b661ee), stale JS deleted
 14. ~~Convert audio subsystem to TypeScript~~ Done (7 files, 8b59957)
-15. Fix 41 remaining typecheck errors (controls types, renderer WebGPU types) - codex task 1b3fa71c in progress
-16. Convert remaining JS module subdirectories to TypeScript (environment, ui, pooling, spaceship, game, intro)
-17. Create remaining bitECS systems (combat, AI, mining)
-18. Delete old custom ECS (js/core/, js/components/, js/systems/)
+15. ~~Fix 41 remaining typecheck errors (controls types, renderer WebGPU types)~~ Done (codex 1b3fa71c + pooling 7e81a49, down to 5 errors)
+16. ~~Convert pooling subsystem to TypeScript~~ Done (14 files, 7e81a49)
+17. ~~Convert spaceship/ subsystem to TypeScript~~ Done (7 files, 1833049)
+18. ~~Convert game/ subsystem to TypeScript~~ Done (5 files, 4ec0b63)
+19. Convert remaining JS module subdirectories to TypeScript (environment 39 files, ui 66 files, intro 6 files)
+20. Fix remaining 5 typecheck errors (1 gameInitializer, 4 renderer WebGPU types)
+21. Create remaining bitECS systems (combat, AI, mining)
+22. Delete old custom ECS (js/core/, js/components/, js/systems/)
 
 ### Phase 3: Game Feel Overhaul
 1. **Controller tuning**
@@ -327,13 +334,13 @@ js/
 │   │   └── ...               # gamepadHandler.ts, targetingSystem.ts, inputHandler.ts, touchControls.ts
 │   ├── combat/          # Combat submodules (all TS - 6 files + effects/ 4 files)
 │   ├── audio/           # 7 TS files (fully converted, 8b59957)
-│   ├── environment/     # 39 JS files (unconverted)
-│   ├── ui/              # 66 JS files (unconverted - largest subsystem)
-│   ├── pooling/         # 14 JS files (unconverted - task marked done but no commit)
-│   ├── spaceship/       # 7 JS files (unconverted)
-│   ├── game/            # 5 JS files (unconverted)
-│   ├── intro/           # 6 JS files (unconverted)
-│   └── renderer/        # 6 TS files (fully converted, 5b661ee)
+│   ├── pooling/         # 14 TS files (fully converted, 7e81a49)
+│   ├── spaceship/       # 7 TS files (fully converted, 1833049)
+│   ├── game/            # 5 TS files (fully converted, 4ec0b63)
+│   ├── renderer/        # 6 TS files (fully converted, 5b661ee)
+│   ├── environment/     # 39 JS files (unconverted - 6,604 lines)
+│   ├── ui/              # 66 JS files (unconverted - largest subsystem, 17,454 lines)
+│   └── intro/           # 6 JS files (unconverted - 1,041 lines)
 ├── systems/             # Legacy ECS systems (32 JS files - to be deleted)
 ├── components/          # Legacy components (13 JS files - to be deleted)
 ├── core/                # Legacy ECS framework (12 JS files - still active, runs game loop)
@@ -404,10 +411,11 @@ After overhaul:
 - ~~**Dormant mining delete task failed.**~~ RESOLVED - js/systems/mining/ deleted successfully on retry.
 - ~~**TSL laser integration failed.**~~ RESOLVED - CSS laser replaced with 3D cylinder mesh using TSL material in js/modules/controls/mining/laserControl.ts.
 - **51 @ts-ignore suppressions.** Spread across converted modules (mostly ui.ts). Will resolve as JS submodules are converted to TS.
-- ~~**Controls conversion landed with 65 typecheck errors.**~~ RESOLVING - codex task 1b3fa71c fixed docking type issues, down to 41 errors.
+- ~~**Controls conversion landed with 65 typecheck errors.**~~ RESOLVED - codex task 1b3fa71c fixed all docking type issues (aaff4bb).
 - ~~**Renderer/ uncommitted TS files.**~~ RESOLVED - Fixed typecheck errors, committed TS files, deleted stale JS (5b661ee).
 - ~~**Audio "done" task was a no-op.**~~ RESOLVED - Retried with gemini, fully converted (8b59957).
-- **Pooling "done" task (9eebf151) produced no commit.** cline agent marked done but 14 JS files remain, 0 TS. Needs retry with a different agent.
+- ~~**Pooling "done" task (9eebf151) produced no commit.**~~ RESOLVED - Retried with codex, fully converted (14 files, 7e81a49).
+- **Intro "done" task (4546b3a8) by cline was a no-op.** All 6 JS files remain unconverted. Fifth cline no-op. DO NOT USE cline for any tasks.
 - ~~**lightingConfig.js is drifted.**~~ RESOLVED - Config wired to lighting.js, values in sync (sun: 3.0, ambient: 0.3).
 - ~~**Stale physics.js coexists with physics.ts.**~~ RESOLVED - physics.js deleted, imports updated.
 - ~~**Stale renderer.js and controls.js coexist with .ts versions.**~~ RESOLVED - Stale .js files deleted, imports updated (d168865).
