@@ -6,9 +6,9 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 1 Complete, Phase 2 ~95% Done
+## Current State: Phase 1 Complete, Phase 2 ~98% Done
 
-Phase 1 is done. Phase 2 is well advanced - bitECS installed, components defined, systems integrated into game loop, all core modules and most subsystem entry points converted to TypeScript. All major subsystems converted: controls (17 files, d807f26), renderer/ (6 files, 5b661ee), audio (7 files, 8b59957), pooling (14 files, 7e81a49), spaceship/ (7 files, 1833049), game/ (5 files, 4ec0b63). Build succeeds. Typecheck has 5 errors remaining (1 gameInitializer type mismatch, 4 renderer WebGPU types).
+Phase 1 is done. Phase 2 is nearly complete - only ui/ (66 JS files) remains unconverted. All other subsystems fully converted to TypeScript: controls (17 files), renderer/ (6 files), audio (7 files), pooling (14 files), spaceship/ (7 files), game/ (5 files), combat (12 files), main/ (12 files), intro/ (6 files), environment/ (39 files), scattered (7 files). 153 TS files total. Build succeeds. Typecheck has 15 errors (6 diagnostics.ts, 1 gameInitializer.ts, 8 intro/arrivalPhase.ts).
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured)
@@ -44,15 +44,18 @@ Phase 1 is done. Phase 2 is well advanced - bitECS installed, components defined
 - Spaceship/ subsystem fully converted to TypeScript (7 files, 1833049)
 - Game/ subsystem fully converted to TypeScript (5 files, 4ec0b63)
 - Controls/ typecheck errors fully resolved (65 errors fixed, aaff4bb)
+- Intro/ subsystem fully converted to TypeScript (6 files, 6d8f9fa)
+- Environment/ subsystem fully converted to TypeScript (39 files, d945b03 + d9afbc0)
+- Scattered JS files converted to TypeScript (7 files: lightingConfig, perfOverlay, laserMaterial, apiClient, memoryManager, mobileDetector, pathUtils - baf5249)
 
 **Remaining Problems:**
-- **Typecheck has 5 errors** - 1 in gameInitializer.ts (GameSpaceship vs SpaceshipType mismatch), 4 in renderer.ts (WebGPU types - WebGPURenderer not in @types/three).
-- **Partial TypeScript** - 101 TS files, 118 non-legacy JS files remain (plus 57 legacy ECS JS files slated for deletion). 51 @ts-ignore suppressions across converted modules.
+- **Typecheck has 15 errors** - 6 in diagnostics.ts (PerfMetrics type mismatch on window.__perf), 1 in gameInitializer.ts (Physics vs PhysicsType scene incompatibility), 8 in intro/arrivalPhase.ts (nullable mesh, missing clone on VectorLike).
+- **Partial TypeScript** - 153 TS files, 66 JS files remain in ui/ (plus 57 legacy ECS JS files slated for deletion). 50 @ts-ignore suppressions across converted modules.
 - **Dual ECS running** - Both bitECS (via ecsRunner.ts) and legacy ECS (js/core/) run each frame in parallel. Legacy ECS still drives the actual game; bitECS runs a test entity.
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts (volumetric light + claude rays). Pending TSL conversion.
 - **Global state** - ~645 `window.*` usages across the codebase
-- **Large bundle** - Main chunk is 1,105 kB after minification (combat chunk split out at 146 kB). Needs further code splitting.
-- **Unconverted subsystems** - environment/ (39 JS, 6,604 lines), ui/ (66 JS, 17,454 lines), intro/ (6 JS, 1,041 lines) subdirectories still JS. Plus 7 scattered JS files (lightingConfig, perfOverlay, laserMaterial, apiClient, memoryManager, mobileDetector, pathUtils).
+- **Large bundle** - Main chunk is 1,109 kB after minification (combat chunk split out at 146 kB). Needs further code splitting.
+- **Unconverted subsystems** - ui/ (66 JS, 17,454 lines) is the ONLY remaining unconverted subsystem.
 - **Legacy ECS** - js/core/ (12 files), js/components/ (13 files), js/systems/ (32 files) still active. Will be deleted when bitECS fully replaces them.
 
 ## Target Stack (2026 Best Practices)
@@ -155,9 +158,9 @@ Health.current[eid] = Health.max[eid]
 1. ~~Upgrade to Three.js r180+~~ Done (r180, package.json updated)
 2. ~~Add TypeScript with strict mode~~ Done (tsconfig.json, checkJs=false for JS files)
 3. ~~Enable WebGPU renderer with WebGL2 fallback~~ Done (js/modules/renderer.js)
-4. Convert `.js` -> `.ts` incrementally - In progress (101 TS files done, 118 non-legacy JS files remain)
+4. Convert `.js` -> `.ts` incrementally - In progress (153 TS files done, 66 JS files remain in ui/)
 
-### Phase 2: bitECS Migration - IN PROGRESS (~95%)
+### Phase 2: bitECS Migration - IN PROGRESS (~98%)
 1. ~~Install bitECS~~ Done (v0.4.0, js/ecs/world.ts created)
 2. ~~Define components~~ Done (24 components in js/ecs/components.ts)
 3. ~~Create first systems~~ Done (physicsSystem.ts + renderSyncSystem.ts in js/ecs/systems/)
@@ -176,8 +179,11 @@ Health.current[eid] = Health.max[eid]
 16. ~~Convert pooling subsystem to TypeScript~~ Done (14 files, 7e81a49)
 17. ~~Convert spaceship/ subsystem to TypeScript~~ Done (7 files, 1833049)
 18. ~~Convert game/ subsystem to TypeScript~~ Done (5 files, 4ec0b63)
-19. Convert remaining JS module subdirectories to TypeScript (environment 39 files, ui 66 files, intro 6 files)
-20. Fix remaining 5 typecheck errors (1 gameInitializer, 4 renderer WebGPU types)
+19. ~~Convert intro/ subsystem to TypeScript~~ Done (6 files, 6d8f9fa)
+20. ~~Convert environment/ subsystem to TypeScript~~ Done (39 files, d945b03 + d9afbc0)
+21. ~~Convert scattered JS files to TypeScript~~ Done (7 files, baf5249)
+22. Convert ui/ subsystem to TypeScript (66 files, 17,454 lines - ONLY remaining JS)
+23. Fix 15 typecheck errors (6 diagnostics.ts, 1 gameInitializer.ts, 8 intro/arrivalPhase.ts)
 21. Create remaining bitECS systems (combat, AI, mining)
 22. Delete old custom ECS (js/core/, js/components/, js/systems/)
 
@@ -325,7 +331,7 @@ js/
 │   ├── trail.ts         # Trail module (TS)
 │   ├── spaceship.ts     # Spaceship shim (TS, deprecated re-export)
 │   ├── render/
-│   │   └── laserMaterial.js  # TSL laser material (pulsing glow)
+│   │   └── laserMaterial.ts  # TSL laser material (pulsing glow)
 │   ├── controls/
 │   │   ├── miningSystem.ts   # Active mining orchestrator (TS)
 │   │   ├── mining/           # TypeScript mining modules (5 files)
@@ -338,14 +344,14 @@ js/
 │   ├── spaceship/       # 7 TS files (fully converted, 1833049)
 │   ├── game/            # 5 TS files (fully converted, 4ec0b63)
 │   ├── renderer/        # 6 TS files (fully converted, 5b661ee)
-│   ├── environment/     # 39 JS files (unconverted - 6,604 lines)
-│   ├── ui/              # 66 JS files (unconverted - largest subsystem, 17,454 lines)
-│   └── intro/           # 6 JS files (unconverted - 1,041 lines)
+│   ├── environment/     # 39 TS files (fully converted, d945b03 + d9afbc0)
+│   ├── ui/              # 66 JS files (ONLY unconverted subsystem - 17,454 lines)
+│   └── intro/           # 6 TS files (fully converted, 6d8f9fa)
 ├── systems/             # Legacy ECS systems (32 JS files - to be deleted)
 ├── components/          # Legacy components (13 JS files - to be deleted)
 ├── core/                # Legacy ECS framework (12 JS files - still active, runs game loop)
 └── config/
-    └── lightingConfig.js # Lighting config (wired to lighting.js, values in sync)
+    └── lightingConfig.ts # Lighting config (wired to lighting.js, values in sync)
 ```
 
 Target:
