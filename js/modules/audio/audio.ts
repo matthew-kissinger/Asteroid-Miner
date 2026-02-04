@@ -1,15 +1,35 @@
-// audio.js - Main AudioManager facade that delegates to specialized modules
-import { AudioContext } from './core/context.js';
-import { AudioLoader } from './core/loader.js';
+// audio.ts - Main AudioManager facade that delegates to specialized modules
+import { AudioContextManager } from './core/context.js';
+import { AudioLoader, SoundMap } from './core/loader.js';
 import { MusicPlaylist } from './music/playlist.js';
 import { MusicPlayer } from './music/player.js';
 import { SoundPlayer } from './effects/soundPlayer.js';
 import { MobileAudioEnabler } from './mobile/enabler.js';
 
 export class AudioManager {
+    private audioContextManager: AudioContextManager;
+    private audioLoader: AudioLoader;
+    private musicPlaylist: MusicPlaylist;
+    private musicPlayer: MusicPlayer;
+    private soundPlayer: SoundPlayer;
+    private mobileEnabler: MobileAudioEnabler;
+    
+    // Exposed properties for compatibility
+    public sounds: SoundMap;
+    public soundSources: Record<string, any> = {}; // Legacy compatibility
+    public backgroundMusic: any[] = []; // Legacy compatibility
+    public currentMusicIndex: number = 0; // Legacy compatibility
+    public currentMusic: any = null; // Legacy compatibility
+    public music: HTMLAudioElement[];
+    public activeNodes: Set<any>;
+    public activeSounds: Record<string, any>;
+    
+    // Compatibility layer for intro sequence
+    private masterEQ: any;
+    
     constructor() {
         // Initialize core components
-        this.audioContextManager = new AudioContext();
+        this.audioContextManager = new AudioContextManager();
         this.audioLoader = new AudioLoader(this.audioContextManager);
         this.musicPlaylist = new MusicPlaylist();
         this.musicPlayer = new MusicPlayer(this.musicPlaylist);
@@ -18,11 +38,8 @@ export class AudioManager {
         
         // Exposed properties for compatibility
         this.sounds = this.audioLoader.getAllSounds();
-        this.soundSources = {}; // Legacy compatibility
-        this.backgroundMusic = []; // Legacy compatibility
-        this.currentMusicIndex = 0; // Legacy compatibility
-        this.currentMusic = null; // Legacy compatibility
         this.music = this.musicPlaylist.getTracks();
+        // @ts-ignore - Accessing private for legacy compatibility
         this.activeNodes = this.audioContextManager.activeNodes;
         this.activeSounds = this.soundPlayer.activeSounds;
         
@@ -33,56 +50,57 @@ export class AudioManager {
     }
     
     // Getter/setter for volume properties
-    get isMuted() {
+    get isMuted(): boolean {
         return this.soundPlayer.isMuted() || this.musicPlayer.isMuted();
     }
     
-    set isMuted(value) {
+    set isMuted(value: boolean) {
         // Legacy setter - use toggleMute() instead
         if (value !== this.isMuted) {
             this.toggleMute();
         }
     }
     
-    get muted() {
+    get muted(): boolean {
         return this.isMuted;
     }
     
-    set muted(value) {
+    set muted(value: boolean) {
         this.isMuted = value;
     }
     
-    get musicVolume() {
+    get musicVolume(): number {
         return this.musicPlayer.getVolume();
     }
     
-    set musicVolume(value) {
+    set musicVolume(value: number) {
         this.musicPlayer.setVolume(value);
     }
     
-    get sfxVolume() {
+    get sfxVolume(): number {
         return this.soundPlayer.getVolume();
     }
     
-    set sfxVolume(value) {
+    set sfxVolume(value: number) {
         this.soundPlayer.setVolume(value);
     }
     
-    get userHasInteracted() {
+    get userHasInteracted(): boolean {
         return this.mobileEnabler.hasUserInteracted();
     }
     
-    get audioContext() {
+    get audioContext(): AudioContext | null {
         return this.audioContextManager.getContext();
     }
     
     // Initialize audio - load all sounds and music
-    async initialize() {
+    async initialize(): Promise<boolean> {
         try {
             console.log("Loading audio files...");
             
             // Ensure audio context is resumed on first user interaction
-            if (this.audioContext && this.audioContext.state === 'suspended') {
+            const context = this.audioContext;
+            if (context && context.state === 'suspended') {
                 this.audioContextManager.resumeAudioContext();
             }
             
@@ -121,49 +139,49 @@ export class AudioManager {
     }
     
     // Legacy method for compatibility
-    async preDecodeAllSoundEffects() {
+    async preDecodeAllSoundEffects(): Promise<void> {
         console.log("Using optimized sound loading path instead of preDecodeAllSoundEffects");
         await this.audioLoader.preDecodeEssentialSounds();
         await this.audioLoader.loadGameplaySounds();
     }
     
     // Resume audio context on user interaction
-    resumeAudioContext() {
+    resumeAudioContext(): Promise<void> {
         return this.audioContextManager.resumeAudioContext();
     }
     
     // Start playing background music
-    playBackgroundMusic() {
+    playBackgroundMusic(): void {
         this.musicPlayer.playBackgroundMusic(this.userHasInteracted);
     }
     
     // Play the next music track in the playlist
-    playNextTrack() {
+    playNextTrack(): void {
         this.musicPlayer.playNextTrack(this.userHasInteracted);
     }
     
     // Play a sound effect
-    playSound(name) {
+    playSound(name: string): void {
         this.soundPlayer.playSound(name, this.userHasInteracted);
     }
     
     // Stop a continuous sound effect
-    stopSound(name) {
+    stopSound(name: string): void {
         this.soundPlayer.stopSound(name);
     }
     
     // Set the volume for thrust sound based on thrust level
-    setThrustVolume(thrustLevel) {
+    setThrustVolume(thrustLevel: number): void {
         this.soundPlayer.setThrustVolume(thrustLevel);
     }
     
     // Play weapon firing sound
-    playWeaponSound() {
+    playWeaponSound(): void {
         this.soundPlayer.playWeaponSound(this.userHasInteracted);
     }
     
     // Toggle mute for all audio
-    toggleMute() {
+    toggleMute(): boolean {
         const soundMuted = this.soundPlayer.toggleMute();
         const musicMuted = this.musicPlayer.toggleMute();
         
@@ -173,34 +191,34 @@ export class AudioManager {
     }
     
     // Track an audio node for garbage collection (legacy compatibility)
-    trackNode(node) {
+    trackNode(node: any): any {
         return this.audioContextManager.trackNode(node);
     }
     
     // Clean up inactive audio nodes (legacy compatibility)
-    cleanupInactiveNodes() {
+    cleanupInactiveNodes(): void {
         this.audioContextManager.cleanupInactiveNodes();
     }
     
     // Setup garbage collection (legacy compatibility)
-    setupGarbageCollection() {
+    setupGarbageCollection(): void {
         // Already handled in audioContextManager constructor
         console.log("Garbage collection already set up in context manager");
     }
     
     // Setup user interaction listener (legacy compatibility)
-    setupUserInteractionListener() {
+    setupUserInteractionListener(): void {
         // Already handled in mobileEnabler constructor
         console.log("User interaction listener already set up in mobile enabler");
     }
     
     // Initialize tone compatibility (legacy compatibility)
-    initializeToneCompatibility() {
+    initializeToneCompatibility(): any {
         return this.masterEQ;
     }
     
     // Clean up resources when destroying the audio manager
-    cleanup() {
+    cleanup(): void {
         console.log("Cleaning up AudioManager resources...");
         
         // Stop all active sounds

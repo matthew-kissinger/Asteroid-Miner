@@ -1,20 +1,26 @@
-// enabler.js - Mobile audio unlock handling and user interaction detection
+// enabler.ts - Mobile audio unlock handling and user interaction detection
+import { AudioContextManager } from '../core/context.js';
+import { MusicPlayer } from '../music/player.js';
+
 export class MobileAudioEnabler {
-    constructor(audioContextManager, musicPlayer) {
+    private audioContextManager: AudioContextManager;
+    private musicPlayer: MusicPlayer;
+    private userHasInteracted: boolean = false;
+    
+    constructor(audioContextManager: AudioContextManager, musicPlayer: MusicPlayer) {
         this.audioContextManager = audioContextManager;
         this.musicPlayer = musicPlayer;
-        this.userHasInteracted = false;
         
         this.setupUserInteractionListener();
     }
     
     // Check if user has interacted
-    hasUserInteracted() {
+    hasUserInteracted(): boolean {
         return this.userHasInteracted;
     }
     
     // Show a notification to the user when a directory is missing
-    showDirectoryMissingNotification(directory) {
+    showDirectoryMissingNotification(directory: string): void {
         console.warn(`Directory not found: ${directory}`);
         
         // Create a notification element
@@ -71,7 +77,7 @@ export class MobileAudioEnabler {
     }
     
     // Set up a listener to detect the first user interaction
-    setupUserInteractionListener() {
+    setupUserInteractionListener(): void {
         const handleInteraction = () => {
             if (!this.userHasInteracted) {
                 this.userHasInteracted = true;
@@ -132,9 +138,10 @@ export class MobileAudioEnabler {
                     if (actionButtons.length > 0) {
                         console.log(`Mobile: Found ${actionButtons.length} buttons to attach audio handlers`);
                         actionButtons.forEach(button => {
-                            if (!button.hasAudioHandler) {
-                                button.addEventListener('touchend', forceAudioResume, {passive: true});
-                                button.hasAudioHandler = true;
+                            const btn = button as HTMLButtonElement & { hasAudioHandler?: boolean };
+                            if (!btn.hasAudioHandler) {
+                                btn.addEventListener('touchend', forceAudioResume, {passive: true});
+                                btn.hasAudioHandler = true;
                             }
                         });
                     }
@@ -157,7 +164,7 @@ export class MobileAudioEnabler {
     }
     
     // Clean up event listeners
-    cleanup() {
+    cleanup(): void {
         // Note: The actual cleanup of event listeners is handled in the main handler
         // This method is here for consistency with other modules
         this.userHasInteracted = false;

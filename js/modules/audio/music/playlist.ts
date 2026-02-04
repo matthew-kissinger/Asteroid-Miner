@@ -1,19 +1,19 @@
-// playlist.js - Music queue management and shuffling
+// playlist.ts - Music queue management and shuffling
 import { getAbsolutePath } from '../../../utils/pathUtils.js';
 
 export class MusicPlaylist {
-    constructor() {
-        this.music = []; // Store all background music tracks
-        this.musicVolume = 0.21; // Reduced by 30% from 0.3
-    }
+    private music: HTMLAudioElement[] = []; // Store all background music tracks
+    private musicVolume: number = 0.21; // Reduced by 30% from 0.3
+    
+    constructor() {}
     
     // Helper method to handle paths correctly for both local and GitHub Pages deployment
-    getPath(relativePath) {
+    getPath(relativePath: string): string {
         return getAbsolutePath(relativePath);
     }
     
     // Fisher-Yates shuffle algorithm for arrays
-    shuffleArray(array) {
+    shuffleArray<T>(array: T[]): T[] {
         let currentIndex = array.length, randomIndex;
         
         // While there remain elements to shuffle
@@ -30,7 +30,7 @@ export class MusicPlaylist {
     }
     
     // Helper method to check if a file exists
-    async checkFileExists(path) {
+    async checkFileExists(path: string): Promise<{ path: string; exists: boolean }> {
         console.log(`Checking if file/directory exists: ${path}`);
         try {
             // Try to fetch the resource
@@ -52,7 +52,7 @@ export class MusicPlaylist {
     }
     
     // Load all music files from the soundtrack folder
-    async loadBackgroundMusic() {
+    async loadBackgroundMusic(): Promise<void> {
         try {
             console.log("Loading soundtrack files...");
             
@@ -77,14 +77,12 @@ export class MusicPlaylist {
             
             // Create a dummy audio element if loading fails
             console.warn("Falling back to a dummy silent track");
-            const dummyAudio = new Audio();
-            dummyAudio.loop = true;
-            this.music.push(dummyAudio);
+            this.createDummyTrack();
         }
     }
     
     // Helper method to load music files
-    async loadMusicFiles(files) {
+    async loadMusicFiles(files: string[]): Promise<void> {
         // Note: Currently keeping music as HTML5 Audio for compatibility
         // Could be updated to Web Audio API in the future
         console.log(`Found ${files.length} music files:`, files);
@@ -147,36 +145,38 @@ export class MusicPlaylist {
     }
     
     // Create dummy track if loading fails
-    createDummyTrack() {
+    createDummyTrack(): void {
         const dummyAudio = new Audio();
         dummyAudio.loop = true;
         this.music.push(dummyAudio);
     }
     
     // Play the next music track in the playlist
-    playNextTrack() {
+    playNextTrack(): HTMLAudioElement | null {
         if (this.music.length === 0) return null;
         
         // Move current track to the end of the playlist
         const currentTrack = this.music.shift();
-        this.music.push(currentTrack);
+        if (currentTrack) {
+            this.music.push(currentTrack);
+        }
         
         // Return the next track
         return this.getCurrentTrack();
     }
     
     // Get the current track (first in queue)
-    getCurrentTrack() {
+    getCurrentTrack(): HTMLAudioElement | null {
         return this.music.length > 0 ? this.music[0] : null;
     }
     
     // Get all tracks
-    getTracks() {
+    getTracks(): HTMLAudioElement[] {
         return this.music;
     }
     
     // Set volume for all tracks
-    setVolume(volume) {
+    setVolume(volume: number): void {
         this.musicVolume = volume;
         for (const track of this.music) {
             track.volume = volume;
@@ -184,12 +184,12 @@ export class MusicPlaylist {
     }
     
     // Get current volume
-    getVolume() {
+    getVolume(): number {
         return this.musicVolume;
     }
     
     // Check if playlist has tracks
-    hasTracks() {
+    hasTracks(): boolean {
         return this.music.length > 0;
     }
 }

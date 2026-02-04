@@ -1,21 +1,34 @@
-// soundPlayer.js - Sound effects playback with 3D audio and volume control
+// soundPlayer.ts - Sound effects playback with 3D audio and volume control
+import { AudioContextManager, TrackableNode } from '../core/context.js';
+import { AudioLoader } from '../core/loader.js';
+
+interface ActiveSoundNodes {
+    source: AudioBufferSourceNode & TrackableNode;
+    gain: GainNode & TrackableNode;
+}
+
 export class SoundPlayer {
-    constructor(audioContextManager, audioLoader) {
+    private audioContextManager: AudioContextManager;
+    private audioLoader: AudioLoader;
+    private sfxVolume: number = 0.5; // Default sound effects volume
+    private muted: boolean = false;
+    
+    // Track active continuous sounds
+    public activeSounds: {
+        [key: string]: ActiveSoundNodes | null;
+    } = {
+        laser: null,
+        thrust: null,
+        "mining-laser": null
+    };
+    
+    constructor(audioContextManager: AudioContextManager, audioLoader: AudioLoader) {
         this.audioContextManager = audioContextManager;
         this.audioLoader = audioLoader;
-        this.sfxVolume = 0.5; // Default sound effects volume
-        this.muted = false;
-        
-        // Track active continuous sounds
-        this.activeSounds = {
-            laser: null,
-            thrust: null,
-            "mining-laser": null
-        };
     }
     
     // Play a sound effect using Web Audio API
-    playSound(name, userHasInteracted) {
+    playSound(name: string, userHasInteracted: boolean): void {
         console.log(`Attempting to play sound: ${name}`);
         
         if (this.muted) {
@@ -29,9 +42,13 @@ export class SoundPlayer {
         }
         
         const audioContext = this.audioContextManager.getContext();
+        if (!audioContext) {
+            console.warn("AudioContext not available for playing sound");
+            return;
+        }
         
         // Make sure AudioContext is running
-        if (audioContext && audioContext.state === 'suspended') {
+        if (audioContext.state === 'suspended') {
             this.audioContextManager.resumeAudioContext();
         }
         
@@ -59,12 +76,12 @@ export class SoundPlayer {
                 // For continuous sounds, create and track the sound source node
                 if (!this.activeSounds[name]) {
                     // Create source node for looping sound
-                    const sourceNode = audioContext.createBufferSource();
+                    const sourceNode = audioContext.createBufferSource() as AudioBufferSourceNode & TrackableNode;
                     sourceNode.buffer = soundBuffer;
                     sourceNode.loop = true;
                     
                     // Create gain node for volume control
-                    const gainNode = audioContext.createGain();
+                    const gainNode = audioContext.createGain() as GainNode & TrackableNode;
                     gainNode.gain.value = this.sfxVolume * (name === 'thrust' ? 1.5 : 1.0);
                     
                     // Connect nodes: source -> gain -> destination
@@ -87,11 +104,11 @@ export class SoundPlayer {
             } else {
                 // For one-shot sounds
                 // Create source node
-                const sourceNode = audioContext.createBufferSource();
+                const sourceNode = audioContext.createBufferSource() as AudioBufferSourceNode & TrackableNode;
                 sourceNode.buffer = soundBuffer;
                 
                 // Create gain node for volume control
-                const gainNode = audioContext.createGain();
+                const gainNode = audioContext.createGain() as GainNode & TrackableNode;
                 // Increase volume slightly for projectile sounds to make them more noticeable
                 const volumeMultiplier = name === 'projectile' ? 0.7 : 0.5;
                 gainNode.gain.value = this.sfxVolume * volumeMultiplier;
@@ -122,15 +139,14 @@ export class SoundPlayer {
     }
     
     // Stop a continuous sound effect
-    stopSound(name) {
+    stopSound(name: string): void {
         if (!this.activeSounds[name]) return;
         
         try {
             if (name === 'laser' || name === 'thrust' || name === 'mining-laser') {
                 // For looping sounds
-                if (this.activeSounds[name]) {
-                    const nodes = this.activeSounds[name];
-                    
+                const nodes = this.activeSounds[name];
+                if (nodes) {
                     // Stop the source node
                     if (nodes.source) {
                         try {
@@ -156,22 +172,23 @@ export class SoundPlayer {
     }
     
     // Set the volume for thrust sound based on thrust level
-    setThrustVolume(thrustLevel) {
-        if (!this.activeSounds.thrust || !this.activeSounds.thrust.gain) return;
+    setThrustVolume(thrustLevel: number): void {
+        const thrustSound = this.activeSounds.thrust;
+        if (!thrustSound || !thrustSound.gain) return;
         
         // Scale the volume based on thrust level
         const volume = Math.min(1.0, Math.max(0.1, thrustLevel)) * this.sfxVolume * 1.5;
         
         // Apply volume to gain node
         try {
-            this.activeSounds.thrust.gain.gain.value = volume;
+            thrustSound.gain.gain.value = volume;
         } catch (err) {
             console.error("Error setting thrust volume:", err);
         }
     }
     
     // Play weapon firing sound - dedicated method for weapon sounds
-    playWeaponSound(userHasInteracted) {
+    playWeaponSound(userHasInteracted: boolean): void {
         console.log("Playing weapon firing sound");
         
         // Check usual conditions
@@ -180,9 +197,13 @@ export class SoundPlayer {
         }
         
         const audioContext = this.audioContextManager.getContext();
+        if (!audioContext) {
+            console.warn("AudioContext not available for weapon sound");
+            return;
+        }
         
         // Make sure AudioContext is running
-        if (audioContext && audioContext.state === 'suspended') {
+        if (audioContext.state === 'suspended') {
             this.audioContextManager.resumeAudioContext();
         }
         
@@ -200,11 +221,11 @@ export class SoundPlayer {
         
         try {
             // Create source node
-            const sourceNode = audioContext.createBufferSource();
+            const sourceNode = audioContext.createBufferSource() as AudioBufferSourceNode & TrackableNode;
             sourceNode.buffer = sounds.projectile;
             
             // Create gain node with higher volume for weapon sound
-            const gainNode = audioContext.createGain();
+            const gainNode = audioContext.createGain() as GainNode & TrackableNode;
             gainNode.gain.value = this.sfxVolume * 0.8; // Higher volume for weapon sounds
             
             // Connect nodes: source -> gain -> destination
@@ -231,7 +252,7 @@ export class SoundPlayer {
     }
     
     // Toggle mute for sound effects
-    toggleMute() {
+    toggleMute(): boolean {
         this.muted = !this.muted;
         
         // Stop any active sound effects when muting
@@ -246,22 +267,22 @@ export class SoundPlayer {
     }
     
     // Set sound effects volume
-    setVolume(volume) {
+    setVolume(volume: number): void {
         this.sfxVolume = volume;
     }
     
     // Get sound effects volume
-    getVolume() {
+    getVolume(): number {
         return this.sfxVolume;
     }
     
     // Check if sound effects are muted
-    isMuted() {
+    isMuted(): boolean {
         return this.muted;
     }
     
     // Stop all active sounds
-    stopAllSounds() {
+    stopAllSounds(): void {
         this.stopSound('laser');
         this.stopSound('thrust');
         this.stopSound('mining-laser');

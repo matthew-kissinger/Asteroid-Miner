@@ -1,26 +1,38 @@
-// context.js - Web Audio API context management and compatibility
-export class AudioContext {
+// context.ts - Web Audio API context management and compatibility
+
+export interface TrackableNode {
+    _inactive?: boolean;
+    disposed?: boolean;
+}
+
+export class AudioContextManager {
+    private audioContext: AudioContext | null = null;
+    private activeNodes: Set<TrackableNode> = new Set();
+    private gcInterval: number | ReturnType<typeof setInterval> | null = null;
+    private masterEQ: { connect: (node: any) => any } | null = null;
+    
     constructor() {
-        this.audioContext = null;
-        this.activeNodes = new Set();
-        this.gcInterval = null;
-        
         this.initializeContext();
         this.setupGarbageCollection();
     }
     
     // Initialize Web Audio API context with compatibility
-    initializeContext() {
+    initializeContext(): void {
         try {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            console.log("Web Audio API context created successfully");
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioContextClass) {
+                this.audioContext = new AudioContextClass();
+                console.log("Web Audio API context created successfully");
+            } else {
+                console.error("Web Audio API not supported in this browser");
+            }
         } catch (error) {
             console.error("Failed to create Web Audio API context:", error);
         }
     }
     
     // Resume audio context on user interaction
-    resumeAudioContext() {
+    resumeAudioContext(): Promise<void> {
         if (this.audioContext && this.audioContext.state === 'suspended') {
             return this.audioContext.resume().then(() => {
                 console.log("AudioContext resumed successfully");
@@ -32,24 +44,24 @@ export class AudioContext {
     }
     
     // Get the audio context instance
-    getContext() {
+    getContext(): AudioContext | null {
         return this.audioContext;
     }
     
     // Check if context is available and ready
-    isReady() {
-        return this.audioContext && this.audioContext.state !== 'closed';
+    isReady(): boolean {
+        return this.audioContext !== null && this.audioContext.state !== 'closed';
     }
     
     // Set up regular garbage collection for unused audio nodes
-    setupGarbageCollection() {
+    setupGarbageCollection(): void {
         // Clean up inactive nodes every 30 seconds
         this.gcInterval = setInterval(() => this.cleanupInactiveNodes(), 30000);
         console.log("Audio garbage collection scheduled");
     }
     
     // Clean up inactive audio nodes to prevent memory leaks
-    cleanupInactiveNodes() {
+    cleanupInactiveNodes(): void {
         let count = 0;
         this.activeNodes.forEach(node => {
             // Check if node is inactive
@@ -65,7 +77,7 @@ export class AudioContext {
     }
     
     // Track an audio node for garbage collection
-    trackNode(node) {
+    trackNode<T extends TrackableNode>(node: T): T {
         if (node) {
             this.activeNodes.add(node);
         }
@@ -73,12 +85,12 @@ export class AudioContext {
     }
     
     // Initialize a minimal Tone.js compatibility layer for the intro sequence
-    initializeToneCompatibility() {
+    initializeToneCompatibility(): { connect: (node: any) => any } {
         // Create a dummy masterEQ object that the intro sequence can connect to
         // This allows the intro sequence code to remain unchanged
         this.masterEQ = {
             // Dummy connect method that returns the input
-            connect: function(node) {
+            connect: function(node: any) {
                 return node;
             }
         };
@@ -88,12 +100,12 @@ export class AudioContext {
     }
     
     // Clean up context and resources
-    cleanup() {
+    cleanup(): Promise<void> {
         console.log("Cleaning up AudioContext resources...");
         
         // Clear intervals
         if (this.gcInterval) {
-            clearInterval(this.gcInterval);
+            clearInterval(this.gcInterval as number);
             this.gcInterval = null;
         }
         

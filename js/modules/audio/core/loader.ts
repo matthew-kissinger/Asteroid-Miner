@@ -1,19 +1,26 @@
-// loader.js - Audio file loading, decoding, and caching
+// loader.ts - Audio file loading, decoding, and caching
 import { getAbsolutePath } from '../../../utils/pathUtils.js';
+import { AudioContextManager } from './context.js';
+
+export interface SoundMap {
+    [key: string]: AudioBuffer | null;
+}
 
 export class AudioLoader {
-    constructor(audioContextManager) {
+    private audioContextManager: AudioContextManager;
+    private sounds: SoundMap = {}; // Stores decoded AudioBuffers
+    
+    constructor(audioContextManager: AudioContextManager) {
         this.audioContextManager = audioContextManager;
-        this.sounds = {}; // Stores decoded AudioBuffers
     }
     
     // Helper method to handle paths correctly for both local and GitHub Pages deployment
-    getPath(relativePath) {
+    getPath(relativePath: string): string {
         return getAbsolutePath(relativePath);
     }
     
     // Load and decode a sound file using Web Audio API
-    async loadAndDecodeSound(name, url) {
+    async loadAndDecodeSound(name: string, url: string): Promise<AudioBuffer> {
         try {
             console.log(`Loading and decoding sound: ${name} from ${url}`);
             
@@ -49,7 +56,7 @@ export class AudioLoader {
     }
     
     // Pre-decode only essential UI sounds for quick startup
-    async preDecodeEssentialSounds() {
+    async preDecodeEssentialSounds(): Promise<void> {
         try {
             console.log("Pre-decoding essential UI sounds...");
             
@@ -77,7 +84,7 @@ export class AudioLoader {
     }
     
     // Load remaining gameplay sounds in the background
-    async loadGameplaySounds() {
+    async loadGameplaySounds(): Promise<void> {
         try {
             console.log("Loading gameplay sounds in background...");
             
@@ -112,7 +119,7 @@ export class AudioLoader {
     }
     
     // Create dummy sounds if loading fails
-    createDummySounds() {
+    createDummySounds(): void {
         console.warn("Creating dummy silent AudioBuffers as fallback");
         
         const soundEffects = ['laser', 'thrust', 'explosion', 'boink', 'phaserUp', 'phaserDown', 'mining-laser', 'projectile'];
@@ -139,7 +146,7 @@ export class AudioLoader {
     }
     
     // Helper method to check if a file exists
-    async checkFileExists(path) {
+    async checkFileExists(path: string): Promise<{ path: string; exists: boolean }> {
         console.log(`Checking if file/directory exists: ${path}`);
         try {
             // Try to fetch the resource
@@ -161,7 +168,7 @@ export class AudioLoader {
     }
     
     // Check if the required sound directories exist and notify user if they don't
-    async checkSoundDirectories() {
+    async checkSoundDirectories(): Promise<boolean> {
         // Check for sounds directory
         const soundsDirExists = await this.checkFileExists(this.getPath('sounds'));
         if (!soundsDirExists.exists) {
@@ -185,12 +192,12 @@ export class AudioLoader {
     }
     
     // Get a loaded sound buffer
-    getSound(name) {
+    getSound(name: string): AudioBuffer | null {
         return this.sounds[name];
     }
     
     // Get all loaded sounds
-    getAllSounds() {
+    getAllSounds(): SoundMap {
         return this.sounds;
     }
 }

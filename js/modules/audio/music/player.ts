@@ -1,13 +1,21 @@
-// player.js - Music playback control and volume management
+// player.ts - Music playback control and volume management
+import { MusicPlaylist } from './playlist.js';
+
+interface ExtendedAudioElement extends HTMLAudioElement {
+    hasEndedListener?: boolean;
+}
+
 export class MusicPlayer {
-    constructor(playlist) {
+    public playlist: MusicPlaylist;
+    private currentMusic: ExtendedAudioElement | null = null;
+    private muted: boolean = false;
+    
+    constructor(playlist: MusicPlaylist) {
         this.playlist = playlist;
-        this.currentMusic = null;
-        this.muted = false;
     }
     
     // Start playing background music
-    playBackgroundMusic(userHasInteracted) {
+    playBackgroundMusic(userHasInteracted: boolean): void {
         if (!this.playlist.hasTracks() || this.muted) return;
         
         // Only attempt to play if the user has interacted with the page
@@ -17,7 +25,7 @@ export class MusicPlayer {
         }
         
         // Get the track at the front of the queue
-        const track = this.playlist.getCurrentTrack();
+        const track = this.playlist.getCurrentTrack() as ExtendedAudioElement;
         if (!track) return;
         
         console.log(`Starting to play track: ${track.src.split('/').pop()}`);
@@ -54,7 +62,7 @@ export class MusicPlayer {
     }
     
     // Play the next track in the playlist
-    playNextTrack(userHasInteracted) {
+    playNextTrack(userHasInteracted: boolean): void {
         const nextTrack = this.playlist.playNextTrack();
         if (nextTrack && userHasInteracted) {
             this.playBackgroundMusic(userHasInteracted);
@@ -62,7 +70,7 @@ export class MusicPlayer {
     }
     
     // Toggle mute for music
-    toggleMute() {
+    toggleMute(): boolean {
         this.muted = !this.muted;
         
         // Adjust music volume
@@ -76,22 +84,22 @@ export class MusicPlayer {
     }
     
     // Set music volume
-    setVolume(volume) {
+    setVolume(volume: number): void {
         this.playlist.setVolume(this.muted ? 0 : volume);
     }
     
     // Get current music volume
-    getVolume() {
+    getVolume(): number {
         return this.playlist.getVolume();
     }
     
     // Check if music is muted
-    isMuted() {
+    isMuted(): boolean {
         return this.muted;
     }
     
     // Pause all music
-    pauseAll() {
+    pauseAll(): void {
         const tracks = this.playlist.getTracks();
         for (const track of tracks) {
             track.pause();
@@ -100,7 +108,7 @@ export class MusicPlayer {
     }
     
     // Get current playing track
-    getCurrentTrack() {
+    getCurrentTrack(): ExtendedAudioElement | null {
         return this.currentMusic;
     }
 }
