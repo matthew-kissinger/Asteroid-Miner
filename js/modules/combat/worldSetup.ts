@@ -124,48 +124,30 @@ export class WorldSetup {
             playerEntity.addTag('player');
             console.log(`[COMBAT] Added 'player' tag to entity ${playerEntity.id}`);
             
-            // Import needed components
-            let TransformComponent: any, HealthComponent: any;
-            
-            try {
-                const transformModule = await import('../../components/transform.js');
-                TransformComponent = transformModule.TransformComponent;
-                console.log("[COMBAT] Successfully imported TransformComponent");
-            } catch (error) {
-                console.error("[COMBAT] Failed to import TransformComponent:", error);
-                // Create a minimal fallback if import fails
-                TransformComponent = class FallbackTransform {
-                    position: THREE.Vector3;
-                    rotation: THREE.Euler;
-                    quaternion: THREE.Quaternion;
-                    constructor(position?: THREE.Vector3) { 
-                        this.position = position || new THREE.Vector3();
-                        this.rotation = new THREE.Euler();
-                        this.quaternion = new THREE.Quaternion();
-                    }
-                };
-            }
-            
-            try {
-                const healthModule = await import('../../components/combat/healthComponent.js');
-                HealthComponent = healthModule.HealthComponent;
-                console.log("[COMBAT] Successfully imported HealthComponent");
-            } catch (error) {
-                console.error("[COMBAT] Failed to import HealthComponent:", error);
-                // Create a minimal fallback if import fails
-                HealthComponent = class FallbackHealth {
-                    health: number;
-                    shield: number;
-                    maxHealth: number;
-                    maxShield: number;
-                    constructor(health?: number, shield?: number) {
-                        this.health = health || 100;
-                        this.shield = shield || 50;
-                        this.maxHealth = health || 100;
-                        this.maxShield = shield || 50;
-                    }
-                };
-            }
+            // Legacy components removed; use minimal local shims.
+            const TransformComponent = class FallbackTransform {
+                position: THREE.Vector3;
+                rotation: THREE.Euler;
+                quaternion: THREE.Quaternion;
+                constructor(position?: THREE.Vector3) {
+                    this.position = position || new THREE.Vector3();
+                    this.rotation = new THREE.Euler();
+                    this.quaternion = new THREE.Quaternion();
+                }
+            };
+
+            const HealthComponent = class FallbackHealth {
+                health: number;
+                shield: number;
+                maxHealth: number;
+                maxShield: number;
+                constructor(health?: number, shield?: number) {
+                    this.health = health || 100;
+                    this.shield = shield || 50;
+                    this.maxHealth = health || 100;
+                    this.maxShield = shield || 50;
+                }
+            };
             
             // Add transform component linked to spaceship position
             try {
