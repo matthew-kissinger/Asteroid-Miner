@@ -52,3 +52,13 @@ export {
   difficultyScalingSystem,
   enemyCollisionAttackSystem,
 } from './enemyAISystem'
+
+// Mining system
+export {
+  miningDetectionSystem,
+  miningProgressSystem,
+  miningExtractionSystem,
+  activateMiningLaser,
+  deactivateMiningLaser,
+  ResourceType,
+} from './miningSystem'
