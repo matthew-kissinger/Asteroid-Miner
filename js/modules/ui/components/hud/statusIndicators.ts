@@ -1,11 +1,11 @@
 // statusIndicators.js - Various status indicators (shields, weapons, targeting system, etc.)
 
-import { HUDStyles } from './styles.js';
+import { HUDStyles } from './styles.ts';
 
 export class HUDStatusIndicators {
-    static createTargetingSystem(parent) {
+    static createTargetingSystem(parent: HTMLElement): HTMLDivElement {
         // Main crosshair container
-        const targetingSystem = document.createElement('div');
+        const targetingSystem: HTMLDivElement = document.createElement('div');
         targetingSystem.id = 'targeting-system';
         HUDStyles.applyStyles(targetingSystem, {
             position: 'absolute',
@@ -19,7 +19,7 @@ export class HUDStatusIndicators {
         parent.appendChild(targetingSystem);
         
         // Crosshair - create using SVG for more precise styling
-        const crosshair = document.createElement('div');
+        const crosshair: HTMLDivElement = document.createElement('div');
         crosshair.id = 'crosshair';
         HUDStyles.applyStyles(crosshair, {
             position: 'absolute',
@@ -59,8 +59,8 @@ export class HUDStatusIndicators {
         return targetingSystem;
     }
 
-    static createTargetInfoDisplay(parent) {
-        const targetInfo = document.createElement('div');
+    static createTargetInfoDisplay(parent: HTMLElement): HTMLDivElement {
+        const targetInfo: HTMLDivElement = document.createElement('div');
         targetInfo.id = 'target-info';
         targetInfo.className = 'hud-panel';
         
@@ -111,8 +111,8 @@ export class HUDStatusIndicators {
         return targetInfo;
     }
 
-    static createLaserBeam(parent) {
-        const laserBeam = document.createElement('div');
+    static createLaserBeam(parent: HTMLElement): HTMLDivElement {
+        const laserBeam: HTMLDivElement = document.createElement('div');
         laserBeam.id = 'laser-beam';
         HUDStyles.applyStyles(laserBeam, {
             position: 'absolute',
@@ -132,7 +132,7 @@ export class HUDStatusIndicators {
         return laserBeam;
     }
 
-    static createScanlineEffect(parent) {
+    static createScanlineEffect(parent: HTMLElement): HTMLDivElement | null {
         // Scanline effect disabled - returning null
         return null;
         
@@ -157,20 +157,20 @@ export class HUDStatusIndicators {
     /**
      * Update shield display with current shield status
      */
-    static updateShieldDisplay(spaceship) {
-        const shieldBar = document.getElementById('shield-bar');
+    static updateShieldDisplay(spaceship: any): void {
+        const shieldBar: HTMLDivElement | null = document.getElementById('shield-bar') as HTMLDivElement;
         if (!shieldBar) return;
         
-        let shieldPercentage = 100;
-        let shieldFound = false;
+        let shieldPercentage: number = 100;
+        let shieldFound: boolean = false;
         
         // Try to directly access player's health component
         try {
-            if (window.game && window.game.world) {
-                const players = window.game.world.getEntitiesByTag('player');
+            if (window.game && (window.game as any).world) {
+                const players: any[] = (window.game as any).world.getEntitiesByTag('player');
                 if (players && players.length > 0) {
-                    const player = players[0];
-                    const health = player.getComponent('HealthComponent');
+                    const player: any = players[0];
+                    const health: any = player.getComponent('HealthComponent');
                     
                     if (health) {
                         shieldPercentage = health.getShieldPercentage();
@@ -195,7 +195,7 @@ export class HUDStatusIndicators {
                     }
                 }
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error("Error accessing player shield component:", e);
         }
         
@@ -220,20 +220,20 @@ export class HUDStatusIndicators {
     /**
      * Update hull display with current hull status
      */
-    static updateHullDisplay(spaceship) {
-        const hullBar = document.getElementById('hull-bar');
+    static updateHullDisplay(spaceship: any): void {
+        const hullBar: HTMLDivElement | null = document.getElementById('hull-bar') as HTMLDivElement;
         if (!hullBar) return;
         
-        let hullPercentage = 100;
-        let healthFound = false;
+        let hullPercentage: number = 100;
+        let healthFound: boolean = false;
         
         // Try to directly access player's health component
         try {
-            if (window.game && window.game.world) {
-                const players = window.game.world.getEntitiesByTag('player');
+            if (window.game && (window.game as any).world) {
+                const players: any[] = (window.game as any).world.getEntitiesByTag('player');
                 if (players && players.length > 0) {
-                    const player = players[0];
-                    const health = player.getComponent('HealthComponent');
+                    const player: any = players[0];
+                    const health: any = player.getComponent('HealthComponent');
                     
                     if (health) {
                         hullPercentage = health.getHealthPercentage();
@@ -242,13 +242,13 @@ export class HUDStatusIndicators {
                         if (spaceship) {
                             // If HealthComponent health is higher, use that value
                             if (health.health > spaceship.hull) {
-                                spaceship.hull = health.health;
-                                spaceship.maxHull = health.maxHealth;
+                                spaceship.hull = health.hull;
+                                spaceship.maxHull = health.maxHull;
                             }
                             // If spaceship hull is higher (e.g., after repair), update health component
                             else if (spaceship.hull > health.health) {
                                 health.health = spaceship.hull;
-                                console.log(`Updated HealthComponent health from spaceship: ${health.health}`);
+                                console.log(`Updated HealthComponent health from spaceship: ${health.hull}`);
                                 // Recalculate hull percentage
                                 hullPercentage = health.getHealthPercentage();
                             }
@@ -258,7 +258,7 @@ export class HUDStatusIndicators {
                     }
                 }
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error("Error accessing player health component:", e);
         }
         
@@ -283,13 +283,13 @@ export class HUDStatusIndicators {
     /**
      * Update fuel display with current fuel status
      */
-    static updateFuelDisplay(spaceship) {
-        const fuelBar = document.getElementById('fuel-bar');
-        const fuelValue = document.getElementById('fuel-value');
+    static updateFuelDisplay(spaceship: any): void {
+        const fuelBar: HTMLDivElement | null = document.getElementById('fuel-bar') as HTMLDivElement;
+        const fuelValue: HTMLSpanElement | null = document.getElementById('fuel-value') as HTMLSpanElement;
         if (!fuelBar || !spaceship) return;
         
         // Correctly calculate fuel percentage based on maxFuel
-        const fuelPercent = spaceship.maxFuel > 0 ? 
+        const fuelPercent: number = spaceship.maxFuel > 0 ? 
             (spaceship.fuel / spaceship.maxFuel) * 100 : 0;
         
         fuelBar.style.width = `${fuelPercent}%`;
@@ -312,8 +312,8 @@ export class HUDStatusIndicators {
     /**
      * Update credits display
      */
-    static updateCreditsDisplay(spaceship) {
-        const creditsDisplay = document.getElementById('credits-value');
+    static updateCreditsDisplay(spaceship: any): void {
+        const creditsDisplay: HTMLElement | null = document.getElementById('credits-value');
         if (creditsDisplay && spaceship) {
             creditsDisplay.textContent = `${spaceship.credits} CR`;
         }
@@ -322,8 +322,8 @@ export class HUDStatusIndicators {
     /**
      * Update location coordinates display
      */
-    static updateCoordinates(x, y, z) {
-        const coordsElement = document.getElementById('location-coordinates');
+    static updateCoordinates(x: number, y: number, z: number): void {
+        const coordsElement: HTMLElement | null = document.getElementById('location-coordinates');
         if (coordsElement) {
             coordsElement.textContent = `X: ${Math.round(x)} Y: ${Math.round(y)} Z: ${Math.round(z)}`;
         }
@@ -332,8 +332,8 @@ export class HUDStatusIndicators {
     /**
      * Update FPS display
      */
-    static updateFPS(fps, cap) {
-        const fpsElement = document.getElementById('fps-display');
+    static updateFPS(fps: number, cap: number): void {
+        const fpsElement: HTMLElement | null = document.getElementById('fps-display');
         if (fpsElement) {
             if (cap) {
                 // Show actual FPS and the cap
@@ -355,11 +355,11 @@ export class HUDStatusIndicators {
             
             // Add auto indicator if using monitor refresh rate
             if (window.game && 
-                window.game.ui && 
-                window.game.ui.settings && 
-                window.game.ui.settings.settings.frameRateCap === 'auto') {
+                (window.game as any).ui && 
+                (window.game as any).ui.settings && 
+                (window.game as any).ui.settings.settings.frameRateCap === 'auto') {
                 
-                const refreshRate = window.game.ui.settings.monitorRefreshRate || 60;
+                const refreshRate: number = ((window.game as any).ui.settings.monitorRefreshRate || 60);
                 
                 if (cap > 0) {
                     // Show it's using auto mode with the detected refresh rate
@@ -375,8 +375,8 @@ export class HUDStatusIndicators {
     /**
      * Update location display
      */
-    static updateLocation(locationName, systemName = 'Unknown System') {
-        const currentSystem = document.getElementById('current-system');
+    static updateLocation(locationName: string, systemName: string = 'Unknown System'): void {
+        const currentSystem: HTMLElement | null = document.getElementById('current-system');
         
         if (currentSystem) {
             currentSystem.textContent = systemName.toUpperCase();

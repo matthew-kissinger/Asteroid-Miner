@@ -1,27 +1,30 @@
 // helpers.js - Settings utility functions and validation
 
 export class SettingsHelpers {
+    monitorRefreshRate: number; // Default refresh rate
+    updateRefreshRateCallback?: () => void;
+
     constructor() {
-        this.monitorRefreshRate = 60; // Default refresh rate
+        this.monitorRefreshRate = 60; 
     }
 
     /**
      * Detects system capabilities for auto-configuration
      */
-    detectSystemCapabilities() {
-        const performance = {};
+    detectSystemCapabilities(): string {
+        const performance: Record<string, any> = {};
         
         // Check device pixel ratio (higher on high-end devices)
         performance.highDPI = window.devicePixelRatio > 1;
         
         // Check if WebGL2 is available
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl2');
+        const canvas: HTMLCanvasElement = document.createElement('canvas');
+        const gl: WebGL2RenderingContext | null = canvas.getContext('webgl2');
         performance.webgl2 = !!gl;
         
         // Get GPU info if available
         if (gl) {
-            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            const debugInfo: WEBGL_debug_renderer_info | null = gl.getExtension('WEBGL_debug_renderer_info');
             if (debugInfo) {
                 performance.gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
             }
@@ -46,7 +49,7 @@ export class SettingsHelpers {
     /**
      * Detects monitor refresh rate
      */
-    detectMonitorRefreshRate() {
+    detectMonitorRefreshRate(): void {
         // Start with intelligent default based on common scenarios
         this.monitorRefreshRate = 60;
         
@@ -89,7 +92,7 @@ export class SettingsHelpers {
     /**
      * Quick refresh rate measurement
      */
-    quickRefreshRateMeasure() {
+    quickRefreshRateMeasure(): number {
         // Check if we have screen refresh rate available
         if (window.screen && typeof window.screen.refresh === 'number' && window.screen.refresh > 0) {
             return Math.round(window.screen.refresh);
@@ -115,13 +118,13 @@ export class SettingsHelpers {
     /**
      * Starts accurate refresh rate detection over time
      */
-    startAccurateRefreshDetection() {
-        let warmupFrames = 5; // Skip initial irregular frames
-        let frameCount = 0;
-        const timestamps = [];
-        const startTime = performance.now();
+    startAccurateRefreshDetection(): void {
+        let warmupFrames: number = 5; // Skip initial irregular frames
+        let frameCount: number = 0;
+        const timestamps: number[] = [];
+        const startTime: number = performance.now();
         
-        const detectFrame = (timestamp) => {
+        const detectFrame = (timestamp: number): void => {
             frameCount++;
             
             // Skip warmup frames
@@ -146,10 +149,10 @@ export class SettingsHelpers {
     /**
      * Processes refresh rate samples to determine accurate rate
      */
-    processRefreshRateSamples(timestamps) {
+    processRefreshRateSamples(timestamps: number[]): void {
         if (timestamps.length < 2) return;
         
-        const intervals = [];
+        const intervals: number[] = [];
         for (let i = 1; i < timestamps.length; i++) {
             const delta = timestamps[i] - timestamps[i-1];
             if (delta > 0) {
@@ -187,7 +190,7 @@ export class SettingsHelpers {
     /**
      * Rounds measured rate to common refresh rates
      */
-    roundToCommonRefreshRate(rate) {
+    roundToCommonRefreshRate(rate: number): number {
         // Common refresh rates in 2024
         const commonRates = [24, 30, 48, 50, 60, 72, 75, 90, 100, 120, 144, 165, 180, 240, 360, 480];
         
@@ -213,22 +216,22 @@ export class SettingsHelpers {
     /**
      * Gets the current monitor refresh rate
      */
-    getMonitorRefreshRate() {
+    getMonitorRefreshRate(): number {
         return this.monitorRefreshRate;
     }
 
     /**
      * Sets a callback to be called when refresh rate is updated
      */
-    setRefreshRateUpdateCallback(callback) {
+    setRefreshRateUpdateCallback(callback: () => void): void {
         this.updateRefreshRateCallback = callback;
     }
 
     /**
      * Validates a settings object
      */
-    validateSettings(settings) {
-        const validationRules = {
+    validateSettings(settings: Record<string, any>): { isValid: boolean; errors: string[] } {
+        const validationRules: Record<string, string[]> = {
             graphicalQuality: ['low', 'medium', 'high'],
             asteroidDetail: ['low', 'medium', 'high'],
             lightingQuality: ['low', 'medium', 'high'],
@@ -238,7 +241,7 @@ export class SettingsHelpers {
             godRaysType: ['standard', 'claude']
         };
 
-        const errors = [];
+        const errors: string[] = [];
 
         // Validate enum values
         for (const [key, validValues] of Object.entries(validationRules)) {
@@ -264,10 +267,10 @@ export class SettingsHelpers {
     /**
      * Gets performance recommendation based on system capabilities
      */
-    getPerformanceRecommendation() {
-        const capability = this.detectSystemCapabilities();
+    getPerformanceRecommendation(): Record<string, any> {
+        const capability: string = this.detectSystemCapabilities();
         
-        const recommendations = {
+        const recommendations: Record<string, any> = {
             low: {
                 graphicalQuality: 'low',
                 postProcessing: false,
@@ -308,8 +311,8 @@ export class SettingsHelpers {
     /**
      * Formats settings for display
      */
-    formatSettingsForDisplay(settings) {
-        const formatted = {};
+    formatSettingsForDisplay(settings: Record<string, any>): Record<string, string> {
+        const formatted: Record<string, string> = {};
         
         for (const [key, value] of Object.entries(settings)) {
             if (typeof value === 'boolean') {
@@ -333,11 +336,11 @@ export class SettingsHelpers {
     /**
      * Calculates estimated performance impact of settings
      */
-    calculatePerformanceImpact(settings) {
-        let impact = 0;
+    calculatePerformanceImpact(settings: Record<string, any>): number {
+        let impact: number = 0;
         
         // Quality settings impact
-        const qualityMap = { low: 1, medium: 2, high: 3 };
+        const qualityMap: Record<string, number> = { low: 1, medium: 2, high: 3 };
         impact += qualityMap[settings.graphicalQuality] || 2;
         impact += qualityMap[settings.asteroidDetail] || 2;
         impact += qualityMap[settings.lightingQuality] || 2;

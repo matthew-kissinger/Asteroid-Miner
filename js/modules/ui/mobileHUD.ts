@@ -1,13 +1,16 @@
 // mobileHUD.js - Simplified HUD for mobile devices
 
 export class MobileHUD {
-    constructor(spaceship) {
+    spaceship: MobileHUDSpaceship | null;
+    controls: MobileHUDControls | null;
+
+    constructor(spaceship: MobileHUDSpaceship) {
         this.spaceship = spaceship;
         this.controls = null; // Will be set from UI class
         this.setupMobileHUD();
     }
     
-    setupMobileHUD() {
+    setupMobileHUD(): void {
         // Add CSS for animations
         const style = document.createElement('style');
         style.textContent = `
@@ -28,7 +31,7 @@ export class MobileHUD {
         hudContainer.style.width = 'min(140px, 25vw)'; // Responsive width with minimum
         hudContainer.style.backgroundColor = 'rgba(6, 22, 31, 0.8)';
         hudContainer.style.backdropFilter = 'blur(5px)';
-        hudContainer.style.webkitBackdropFilter = 'blur(5px)'; // For Safari
+        hudContainer.style.setProperty('webkitBackdropFilter', 'blur(5px)'); // For Safari
         hudContainer.style.borderRadius = '8px';
         hudContainer.style.border = '1px solid rgba(120, 220, 232, 0.3)';
         hudContainer.style.padding = '10px';
@@ -99,7 +102,7 @@ export class MobileHUD {
         this.addCornerElements(hudContainer);
     }
     
-    createStatusBar(parent, label, id, color) {
+    createStatusBar(parent: HTMLElement, label: string, id: string, color: string): void {
         const container = document.createElement('div');
         container.style.display = 'flex';
         container.style.alignItems = 'center';
@@ -146,7 +149,7 @@ export class MobileHUD {
         parent.appendChild(container);
     }
     
-    createAnomalyDisplay(parent) {
+    createAnomalyDisplay(parent: HTMLElement): void {
         const anomalyContainer = document.createElement('div');
         anomalyContainer.style.display = 'flex';
         anomalyContainer.style.justifyContent = 'space-between';
@@ -174,7 +177,7 @@ export class MobileHUD {
         parent.appendChild(anomalyContainer);
     }
     
-    addCornerElements(panel) {
+    addCornerElements(panel: HTMLElement): void {
         // Top left corner
         const topLeft = document.createElement('div');
         topLeft.style.position = 'absolute';
@@ -220,7 +223,7 @@ export class MobileHUD {
         panel.appendChild(bottomRight);
     }
     
-    update() {
+    update(): void {
         // Update shield display
         this.updateShieldDisplay();
         
@@ -240,15 +243,17 @@ export class MobileHUD {
         this.updateHordeModeDisplay();
     }
     
-    updateShieldDisplay() {
-        const shieldBar = document.getElementById('shield-bar-mobile');
+    updateShieldDisplay(): void {
+        const shieldBar = document.getElementById('shield-bar-mobile') as HTMLDivElement | null;
         if (!shieldBar) return;
         
         let shieldPercentage = 100;
         
         // Get shield data from spaceship
-        if (this.spaceship && typeof this.spaceship.shield !== 'undefined') {
-            shieldPercentage = (this.spaceship.shield / this.spaceship.maxShield) * 100;
+        const shieldValue = this.spaceship?.shield ?? null;
+        const maxShield = this.spaceship?.maxShield ?? null;
+        if (typeof shieldValue === 'number' && typeof maxShield === 'number' && maxShield > 0) {
+            shieldPercentage = (shieldValue / maxShield) * 100;
         }
         
         // Update the shield bar
@@ -264,15 +269,17 @@ export class MobileHUD {
         }
     }
     
-    updateHullDisplay() {
-        const hullBar = document.getElementById('hull-bar-mobile');
+    updateHullDisplay(): void {
+        const hullBar = document.getElementById('hull-bar-mobile') as HTMLDivElement | null;
         if (!hullBar) return;
         
         let hullPercentage = 100;
         
         // Get hull data from spaceship
-        if (this.spaceship && typeof this.spaceship.hull !== 'undefined') {
-            hullPercentage = (this.spaceship.hull / this.spaceship.maxHull) * 100;
+        const hullValue = this.spaceship?.hull ?? null;
+        const maxHull = this.spaceship?.maxHull ?? null;
+        if (typeof hullValue === 'number' && typeof maxHull === 'number' && maxHull > 0) {
+            hullPercentage = (hullValue / maxHull) * 100;
         }
         
         // Update the hull bar
@@ -288,14 +295,15 @@ export class MobileHUD {
         }
     }
     
-    updateFuelDisplay() {
-        const fuelBar = document.getElementById('fuel-bar-mobile');
-        const fuelValue = document.getElementById('fuel-value-mobile');
+    updateFuelDisplay(): void {
+        const fuelBar = document.getElementById('fuel-bar-mobile') as HTMLDivElement | null;
+        const fuelValue = document.getElementById('fuel-value-mobile') as HTMLDivElement | null;
         if (!fuelBar || !this.spaceship) return;
         
         // Correctly calculate fuel percentage based on maxFuel
-        const fuelPercent = this.spaceship.maxFuel > 0 ? 
-            (this.spaceship.fuel / this.spaceship.maxFuel) * 100 : 0;
+        const maxFuel = this.spaceship.maxFuel ?? 0;
+        const fuel = this.spaceship.fuel ?? 0;
+        const fuelPercent = maxFuel > 0 ? (fuel / maxFuel) * 100 : 0;
         
         fuelBar.style.width = `${fuelPercent}%`;
         
@@ -310,12 +318,12 @@ export class MobileHUD {
         
         // Update the fuel value text display
         if (fuelValue) {
-            fuelValue.textContent = `${Math.round(this.spaceship.fuel)} / ${Math.round(this.spaceship.maxFuel)}`;
+            fuelValue.textContent = `${Math.round(fuel)} / ${Math.round(maxFuel)}`;
         }
     }
     
-    updateCargoDisplay() {
-        const cargoValue = document.getElementById('cargo-value-mobile');
+    updateCargoDisplay(): void {
+        const cargoValue = document.getElementById('cargo-value-mobile') as HTMLDivElement | null;
         if (!cargoValue) return;
         
         // Try to get resources from different possible sources
@@ -326,14 +334,16 @@ export class MobileHUD {
         if (this.controls && this.controls.resources) {
             resources = this.controls.resources;
             // Get max capacity from spaceship if available
-            if (this.spaceship && typeof this.spaceship.maxCargoCapacity !== 'undefined') {
+            if (this.spaceship && typeof this.spaceship.maxCargoCapacity === 'number') {
                 maxCargo = this.spaceship.maxCargoCapacity;
             }
         } 
         // Fall back to cargo component if available
         else if (this.spaceship && this.spaceship.cargoComponent && this.spaceship.cargoComponent.resources) {
             resources = this.spaceship.cargoComponent.resources;
-            maxCargo = this.spaceship.cargoComponent.maxCapacity;
+            if (typeof this.spaceship.cargoComponent.maxCapacity === 'number') {
+                maxCargo = this.spaceship.cargoComponent.maxCapacity;
+            }
         }
         // Last resort - use previously defined resources structure
         else if (this.spaceship && this.spaceship.resources) {
@@ -348,9 +358,9 @@ export class MobileHUD {
         
         // Properly iterate through the resources object and sum numeric values
         for (const key in resources) {
-            if (resources.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(resources, key)) {
                 // Get the resource amount, ensure it's a number
-                const amount = parseFloat(resources[key]) || 0;
+                const amount = parseFloat(String(resources[key])) || 0;
                 totalCargo += amount;
             }
         }
@@ -370,8 +380,8 @@ export class MobileHUD {
         }
     }
     
-    updateAnomalyCount() {
-        const anomalyCount = document.getElementById('anomaly-count-mobile');
+    updateAnomalyCount(): void {
+        const anomalyCount = document.getElementById('anomaly-count-mobile') as HTMLDivElement | null;
         if (!anomalyCount) return;
         
         // Get anomaly count from game object if available
@@ -396,9 +406,9 @@ export class MobileHUD {
     /**
      * Update the horde mode indicator and timer in the mobile HUD
      */
-    updateHordeModeDisplay() {
-        const hordeIndicator = document.getElementById('mobile-horde-indicator');
-        const hordeTimer = document.getElementById('mobile-horde-timer');
+    updateHordeModeDisplay(): void {
+        const hordeIndicator = document.getElementById('mobile-horde-indicator') as HTMLDivElement | null;
+        const hordeTimer = document.getElementById('mobile-horde-timer') as HTMLDivElement | null;
         
         if (!hordeIndicator || !hordeTimer) return;
         
@@ -416,14 +426,15 @@ export class MobileHUD {
                 hordeTimer.textContent = window.game.getFormattedHordeSurvivalTime();
             } else {
                 // Fallback calculation
-                const totalSeconds = Math.floor(window.game.hordeSurvivalTime / 1000);
+                const hordeSurvivalTime = window.game.hordeSurvivalTime ?? 0;
+                const totalSeconds = Math.floor(hordeSurvivalTime / 1000);
                 const minutes = Math.floor(totalSeconds / 60);
                 const seconds = totalSeconds % 60;
                 hordeTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
             
             // Increase pulsing intensity after 3 minutes
-            if (window.game.hordeSurvivalTime > 3 * 60 * 1000) {
+            if ((window.game.hordeSurvivalTime ?? 0) > 3 * 60 * 1000) {
                 const styleEl = document.createElement('style');
                 styleEl.textContent = `
                     @keyframes pulse-horde-mobile {
@@ -444,35 +455,43 @@ export class MobileHUD {
         }
     }
     
-    hide() {
-        const container = document.getElementById('mobile-hud-container');
+    hide(): void {
+        const container = document.getElementById('mobile-hud-container') as HTMLDivElement | null;
         if (container) {
             container.style.display = 'none';
         }
     }
     
-    show() {
+    show(): void {
         // Check if intro sequence is active
         if (window.game && window.game.introSequenceActive) {
             console.log("MobileHUD: Not showing HUD during intro sequence");
             return; // Don't show during intro
         }
         
-        const container = document.getElementById('mobile-hud-container');
+        const container = document.getElementById('mobile-hud-container') as HTMLDivElement | null;
         if (container) {
             container.style.display = 'block';
         }
     }
     
     // Add method to set controls reference
-    setControls(controls) {
+    setControls(controls: MobileHUDControls): void {
         console.log("MobileHUD: Setting controls reference");
         this.controls = controls;
     }
 
     // Update to handle system name and anomaly count in a simpler way
-    updateLocation(locationName, systemName = 'Unknown System') {
+    updateLocation(_locationName: string | null, _systemName = 'Unknown System'): void {
         // Since we no longer show system name, we just need to update anomaly count
         this.updateAnomalyCount();
     }
 } 
+
+type MobileHUDResources = Record<string, number | string>;
+
+type MobileHUDSpaceship = any;
+
+type MobileHUDControls = {
+    resources?: MobileHUDResources;
+};

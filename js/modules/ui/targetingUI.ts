@@ -5,7 +5,7 @@ export class TargetingUI {
         this.setupTargetingUI();
     }
     
-    setupTargetingUI() {
+    setupTargetingUI(): void {
         // Create lock-on display
         const lockOnDisplay = document.createElement('div');
         lockOnDisplay.id = 'lock-on-display';
@@ -68,25 +68,25 @@ export class TargetingUI {
         document.body.appendChild(targetIndicator);
     }
     
-    showLockOn() {
-        const lockOnDisplay = document.getElementById('lock-on-display');
+    showLockOn(): void {
+        const lockOnDisplay = document.getElementById('lock-on-display') as HTMLDivElement | null;
         if (lockOnDisplay) {
             lockOnDisplay.style.display = 'block';
         }
     }
     
-    hideLockOn() {
-        const lockOnDisplay = document.getElementById('lock-on-display');
+    hideLockOn(): void {
+        const lockOnDisplay = document.getElementById('lock-on-display') as HTMLDivElement | null;
         if (lockOnDisplay) {
             lockOnDisplay.style.display = 'none';
         }
     }
     
-    updateTargetInfo(targetType, distance, resourceType) {
-        const targetIndicator = document.getElementById('target-indicator');
-        const targetTypeElement = document.getElementById('target-type');
-        const targetDistanceElement = document.getElementById('target-distance');
-        const targetResourceElement = document.getElementById('target-resource');
+    updateTargetInfo(targetType: string, distance: number, resourceType?: string | null): void {
+        const targetIndicator = document.getElementById('target-indicator') as HTMLDivElement | null;
+        const targetTypeElement = document.getElementById('target-type') as HTMLDivElement | null;
+        const targetDistanceElement = document.getElementById('target-distance') as HTMLDivElement | null;
+        const targetResourceElement = document.getElementById('target-resource') as HTMLDivElement | null;
         
         if (targetIndicator && targetTypeElement && targetDistanceElement) {
             // Show the target indicator
@@ -119,7 +119,7 @@ export class TargetingUI {
     }
     
     // Add a subtle pulse animation to the target indicator
-    addPulseEffect(element) {
+    addPulseEffect(element: HTMLElement): void {
         // Remove any existing animation
         element.style.animation = 'none';
         
@@ -144,8 +144,8 @@ export class TargetingUI {
         }
     }
     
-    hideTargetInfo() {
-        const targetIndicator = document.getElementById('target-indicator');
+    hideTargetInfo(): void {
+        const targetIndicator = document.getElementById('target-indicator') as HTMLDivElement | null;
         if (targetIndicator) {
             targetIndicator.style.display = 'none';
         }

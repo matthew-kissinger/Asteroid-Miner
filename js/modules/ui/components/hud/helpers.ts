@@ -4,7 +4,7 @@ export class HUDHelpers {
     /**
      * Format a number with appropriate units (K, M, B)
      */
-    static formatNumber(num) {
+    static formatNumber(num: number): string {
         if (num >= 1000000000) {
             return (num / 1000000000).toFixed(1) + 'B';
         }
@@ -20,7 +20,7 @@ export class HUDHelpers {
     /**
      * Format time in MM:SS format
      */
-    static formatTime(milliseconds) {
+    static formatTime(milliseconds: number): string {
         const totalSeconds = Math.floor(milliseconds / 1000);
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
@@ -30,14 +30,14 @@ export class HUDHelpers {
     /**
      * Format coordinates for display
      */
-    static formatCoordinates(x, y, z) {
+    static formatCoordinates(x: number, y: number, z: number): string {
         return `X: ${Math.round(x)} Y: ${Math.round(y)} Z: ${Math.round(z)}`;
     }
 
     /**
      * Format distance with appropriate units
      */
-    static formatDistance(distance) {
+    static formatDistance(distance: number): string {
         if (distance >= 1000) {
             return `${(distance / 1000).toFixed(1)} km`;
         }
@@ -47,7 +47,7 @@ export class HUDHelpers {
     /**
      * Format percentage for display
      */
-    static formatPercentage(value, maxValue) {
+    static formatPercentage(value: number, maxValue: number): number {
         if (maxValue === 0) return 0;
         return Math.round((value / maxValue) * 100);
     }
@@ -55,7 +55,7 @@ export class HUDHelpers {
     /**
      * Get color based on percentage value (green to red)
      */
-    static getStatusColor(percentage) {
+    static getStatusColor(percentage: number): string {
         if (percentage >= 75) {
             return 'rgba(95, 255, 143, 0.8)'; // Green
         } else if (percentage >= 50) {
@@ -70,7 +70,7 @@ export class HUDHelpers {
     /**
      * Get fuel color based on fuel level
      */
-    static getFuelColor(fuelPercent) {
+    static getFuelColor(fuelPercent: number): string {
         if (fuelPercent < 20) {
             return 'rgba(255, 80, 80, 0.8)'; // Red for critical
         } else if (fuelPercent < 40) {
@@ -83,7 +83,7 @@ export class HUDHelpers {
     /**
      * Get shield color based on shield level
      */
-    static getShieldColor(shieldPercent) {
+    static getShieldColor(shieldPercent: number): string {
         if (shieldPercent < 25) {
             return 'rgba(255, 80, 80, 0.8)'; // Red for low shields
         } else if (shieldPercent < 50) {
@@ -96,7 +96,7 @@ export class HUDHelpers {
     /**
      * Get hull color based on hull integrity
      */
-    static getHullColor(hullPercent) {
+    static getHullColor(hullPercent: number): string {
         if (hullPercent < 30) {
             return 'rgba(255, 80, 80, 0.8)'; // Red for critical damage
         } else if (hullPercent < 60) {
@@ -109,7 +109,7 @@ export class HUDHelpers {
     /**
      * Check if device is mobile
      */
-    static isMobileDevice() {
+    static isMobileDevice(): boolean {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) ||
                window.innerWidth <= 768;
@@ -118,35 +118,35 @@ export class HUDHelpers {
     /**
      * Clamp a value between min and max
      */
-    static clamp(value, min, max) {
+    static clamp(value: number, min: number, max: number): number {
         return Math.min(Math.max(value, min), max);
     }
 
     /**
      * Linear interpolation between two values
      */
-    static lerp(start, end, factor) {
+    static lerp(start: number, end: number, factor: number): number {
         return start + (end - start) * factor;
     }
 
     /**
      * Convert degrees to radians
      */
-    static degToRad(degrees) {
+    static degToRad(degrees: number): number {
         return degrees * (Math.PI / 180);
     }
 
     /**
      * Convert radians to degrees
      */
-    static radToDeg(radians) {
+    static radToDeg(radians: number): number {
         return radians * (180 / Math.PI);
     }
 
     /**
      * Get resource icon color based on type
      */
-    static getResourceColor(resourceType) {
+    static getResourceColor(resourceType: string): string {
         switch (resourceType.toLowerCase()) {
             case 'iron':
                 return 'rgba(180, 180, 180, 0.8)';
@@ -166,14 +166,14 @@ export class HUDHelpers {
     /**
      * Generate a random ID for temporary elements
      */
-    static generateId(prefix = 'hud') {
+    static generateId(prefix: string = 'hud'): string {
         return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
 
     /**
      * Debounce function to limit how often a function can be called
      */
-    static debounce(func, wait) {
+    static debounce(func: Function, wait: number): (...args: any[]) => void {
         let timeout;
         return function executedFunction(...args) {
             const later = () => {
@@ -188,7 +188,7 @@ export class HUDHelpers {
     /**
      * Throttle function to limit how often a function can be called
      */
-    static throttle(func, limit) {
+    static throttle(func: Function, limit: number): (...args: any[]) => void {
         let inThrottle;
         return function() {
             const args = arguments;
@@ -204,7 +204,7 @@ export class HUDHelpers {
     /**
      * Safe access to nested object properties
      */
-    static safeGet(obj, path, defaultValue = null) {
+    static safeGet(obj: Record<string, any>, path: string, defaultValue: any = null): any {
         try {
             return path.split('.').reduce((current, key) => current[key], obj) ?? defaultValue;
         } catch {
@@ -215,7 +215,7 @@ export class HUDHelpers {
     /**
      * Check if an element is visible in the viewport
      */
-    static isElementVisible(element) {
+    static isElementVisible(element: HTMLElement | null): boolean {
         if (!element) return false;
         
         const rect = element.getBoundingClientRect();
@@ -230,20 +230,20 @@ export class HUDHelpers {
     /**
      * Get the current game state safely
      */
-    static getGameState() {
+    static getGameState(): string {
         return HUDHelpers.safeGet(window, 'game.state', 'unknown');
     }
 
     /**
      * Get player data safely
      */
-    static getPlayerData() {
+    static getPlayerData(): any {
         try {
             if (window.game && window.game.world) {
-                const players = window.game.world.getEntitiesByTag('player');
+                const players: any[] = window.game.world.getEntitiesByTag('player');
                 return players && players.length > 0 ? players[0] : null;
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error('Error accessing player data:', e);
         }
         return null;
@@ -252,12 +252,12 @@ export class HUDHelpers {
     /**
      * Get player health component safely
      */
-    static getPlayerHealthComponent() {
-        const player = HUDHelpers.getPlayerData();
+    static getPlayerHealthComponent(): any {
+        const player: any = HUDHelpers.getPlayerData();
         if (player) {
             try {
                 return player.getComponent('HealthComponent');
-            } catch (e) {
+            } catch (e: any) {
                 console.error('Error accessing health component:', e);
             }
         }
@@ -267,7 +267,7 @@ export class HUDHelpers {
     /**
      * Validate and sanitize user input
      */
-    static sanitizeString(str) {
+    static sanitizeString(str: string): string {
         if (typeof str !== 'string') return '';
         return str.replace(/[<>'"&]/g, '');
     }
@@ -275,14 +275,14 @@ export class HUDHelpers {
     /**
      * Check if a value is numeric
      */
-    static isNumeric(value) {
+    static isNumeric(value: any): boolean {
         return !isNaN(parseFloat(value)) && isFinite(value);
     }
 
     /**
      * Get optimal text color for given background color
      */
-    static getOptimalTextColor(backgroundColor) {
+    static getOptimalTextColor(backgroundColor: string): string {
         // Simple luminance calculation to determine if text should be light or dark
         const rgb = backgroundColor.match(/\d+/g);
         if (rgb && rgb.length >= 3) {

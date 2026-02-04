@@ -30,8 +30,8 @@ export class HUDEventHandlers {
     /**
      * Add startup glitch effect to show HUD is initializing
      */
-    addStartupGlitchEffect() {
-        const hudContainer = document.getElementById('hud-container');
+    addStartupGlitchEffect(): void {
+        const hudContainer: HTMLDivElement | null = document.getElementById('hud-container') as HTMLDivElement;
         if (!hudContainer) return;
         
         // Incremental fade-in with glitches
@@ -61,7 +61,7 @@ export class HUDEventHandlers {
     /**
      * Add glitch effect to an element
      */
-    addGlitch(element) {
+    addGlitch(element: HTMLElement): void {
         // Create a temporary animation
         const animationName = HUDStyles.createGlitchAnimation();
         
@@ -84,9 +84,9 @@ export class HUDEventHandlers {
     /**
      * Animate the scanline moving down the screen
      */
-    animateScanline() {
-        let position = 0;
-        const height = window.innerHeight;
+    animateScanline(): void {
+        let position: number = 0;
+        const height: number = window.innerHeight;
         
         const moveScanline = () => {
             if (!this.scanline) return;
@@ -112,15 +112,15 @@ export class HUDEventHandlers {
     /**
      * Set the scanline element reference
      */
-    setScanline(scanlineElement) {
+    setScanline(scanlineElement: HTMLDivElement): void {
         this.scanline = scanlineElement;
     }
 
     /**
      * Handle location changes with glitch effect
      */
-    handleLocationChange(locationName, systemName) {
-        const locationPanel = document.getElementById('location-panel');
+    handleLocationChange(locationName: string, systemName: string): void {
+        const locationPanel: HTMLDivElement | null = document.getElementById('location-panel') as HTMLDivElement;
         if (locationPanel) {
             this.addGlitch(locationPanel);
         }
@@ -129,8 +129,8 @@ export class HUDEventHandlers {
     /**
      * Show HUD with animations
      */
-    show() {
-        const hudContainer = document.getElementById('hud-container');
+    show(): void {
+        const hudContainer: HTMLDivElement | null = document.getElementById('hud-container') as HTMLDivElement;
         if (hudContainer) {
             hudContainer.style.opacity = '1';
         }
@@ -153,8 +153,8 @@ export class HUDEventHandlers {
     /**
      * Hide HUD
      */
-    hide() {
-        const hudContainer = document.getElementById('hud-container');
+    hide(): void {
+        const hudContainer: HTMLDivElement | null = document.getElementById('hud-container') as HTMLDivElement;
         if (hudContainer) {
             hudContainer.style.opacity = '0';
         }
@@ -173,9 +173,9 @@ export class HUDEventHandlers {
     /**
      * Clean up resources and event listeners
      */
-    destroy() {
+    destroy(): void {
         // Cancel any active animation frames
-        this.animationFrames.forEach(frameId => {
+        this.animationFrames.forEach((frameId: number) => {
             cancelAnimationFrame(frameId);
         });
         this.animationFrames = [];
@@ -187,7 +187,7 @@ export class HUDEventHandlers {
         }
         
         // Remove DOM event listeners
-        const controls = document.getElementById('show-controls');
+        const controls: HTMLElement | null = document.getElementById('show-controls');
         if (controls) {
             controls.removeEventListener('click', controls.clickHandler);
             controls.removeEventListener('mouseover', controls.mouseoverHandler);
@@ -201,7 +201,7 @@ export class HUDEventHandlers {
     /**
      * Handle window resize events
      */
-    handleResize() {
+    handleResize(): void {
         // Update scanline animation bounds if needed
         if (this.scanline) {
             // Restart scanline animation with new dimensions
@@ -212,7 +212,7 @@ export class HUDEventHandlers {
     /**
      * Handle performance monitoring
      */
-    handlePerformanceUpdate(fps, frameTime) {
+    handlePerformanceUpdate(fps: number, frameTime: number): void {
         // Could add performance-based UI adjustments here
         // For example, reduce effects if FPS is low
         if (fps < 30) {
@@ -221,7 +221,7 @@ export class HUDEventHandlers {
                 clearInterval(this.glitchInterval);
                 this.glitchInterval = setInterval(() => {
                     if (Math.random() > 0.9) { // Less frequent
-                        this.addGlitch(document.getElementById('hud-container'));
+                        this.addGlitch(document.getElementById('hud-container') as HTMLDivElement);
                     }
                 }, 10000); // Less often
             }
@@ -231,7 +231,7 @@ export class HUDEventHandlers {
     /**
      * Handle game state changes
      */
-    handleGameStateChange(newState, oldState) {
+    handleGameStateChange(newState: string, oldState: string): void {
         // React to game state changes with appropriate HUD updates
         switch (newState) {
             case 'playing':
@@ -239,7 +239,7 @@ export class HUDEventHandlers {
                 break;
             case 'paused':
                 // Maybe dim the HUD slightly
-                const hudContainer = document.getElementById('hud-container');
+                const hudContainer: HTMLDivElement | null = document.getElementById('hud-container') as HTMLDivElement;
                 if (hudContainer) {
                     hudContainer.style.opacity = '0.5';
                 }
@@ -253,8 +253,8 @@ export class HUDEventHandlers {
     /**
      * Handle critical events that need immediate visual feedback
      */
-    handleCriticalEvent(eventType, data) {
-        const hudContainer = document.getElementById('hud-container');
+    handleCriticalEvent(eventType: string, data: any): void {
+        const hudContainer: HTMLDivElement | null = document.getElementById('hud-container') as HTMLDivElement;
         
         switch (eventType) {
             case 'low-health':

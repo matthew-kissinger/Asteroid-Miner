@@ -1,6 +1,6 @@
 // displays.js - Resource displays, health bars, fuel gauges, and data panels
 
-import { HUDStyles } from './styles.js';
+import { HUDStyles } from './styles.ts';
 
 export class HUDDisplays {
     static createFlightPanel(parent) {

@@ -1,9 +1,13 @@
 // graphicsSettings.js - Graphics settings controls and logic
 
 import * as THREE from 'three';
+import { SettingsStyles } from './styles.ts';
 
 export class GraphicsSettings {
-    constructor(game, styles) {
+    game: any; // TODO: Define a proper interface for 'game'
+    styles: typeof SettingsStyles;
+
+    constructor(game: any, styles: typeof SettingsStyles) {
         this.game = game;
         this.styles = styles;
     }
@@ -11,7 +15,7 @@ export class GraphicsSettings {
     /**
      * Creates the graphics settings section HTML
      */
-    createGraphicsSettingsHTML() {
+    createGraphicsSettingsHTML(): string {
         return `
             <div style="margin-bottom: 20px;">
                 <h3 style="${this.styles.getSectionHeaderStyle()}">GRAPHICS SETTINGS</h3>
@@ -99,7 +103,7 @@ export class GraphicsSettings {
     /**
      * Applies graphics settings to the game renderer
      */
-    applyGraphicsSettings(settings) {
+    applyGraphicsSettings(settings: any): void {
         if (!this.game) return;
         
         // Apply renderer settings
@@ -114,10 +118,10 @@ export class GraphicsSettings {
     /**
      * Applies renderer-specific graphics settings
      */
-    applyRendererSettings(settings) {
+    applyRendererSettings(settings: any): void {
         if (!this.game.renderer) return;
         
-        const renderer = this.game.renderer;
+        const renderer: any = this.game.renderer;
         
         // Apply graphical quality
         switch (settings.graphicalQuality) {
@@ -241,10 +245,10 @@ export class GraphicsSettings {
     /**
      * Applies environment-related graphics settings
      */
-    applyEnvironmentSettings(settings) {
+    applyEnvironmentSettings(settings: any): void {
         if (!this.game.environment) return;
         
-        const environment = this.game.environment;
+        const environment: any = this.game.environment;
         
         // Apply asteroid detail settings
         if (environment.asteroidBelt && environment.asteroidBelt.updateDensity) {
@@ -265,7 +269,7 @@ export class GraphicsSettings {
     /**
      * Applies physics settings related to graphics
      */
-    applyPhysicsSettings(settings) {
+    applyPhysicsSettings(settings: any): void {
         // Physics settings don't need much adjustment, but we can optimize collision detection
         // based on asteroid detail setting
         if (this.game.physics) {
@@ -288,8 +292,8 @@ export class GraphicsSettings {
     /**
      * Updates graphics-related UI elements with current settings
      */
-    updateGraphicsUI(settings) {
-        const elements = {
+    updateGraphicsUI(settings: any): void {
+        const elements: Record<string, any> = {
             'graphical-quality': settings.graphicalQuality,
             'post-processing': settings.postProcessing,
             'asteroid-detail': settings.asteroidDetail,
@@ -301,12 +305,12 @@ export class GraphicsSettings {
         };
 
         for (const [elementId, value] of Object.entries(elements)) {
-            const element = document.getElementById(elementId);
+            const element: HTMLInputElement | HTMLSelectElement | null = document.getElementById(elementId) as HTMLInputElement | HTMLSelectElement;
             if (element) {
                 if (element.type === 'checkbox') {
-                    element.checked = value;
+                    (element as HTMLInputElement).checked = value;
                 } else {
-                    element.value = value;
+                    (element as HTMLSelectElement).value = value;
                 }
             }
         }
@@ -315,7 +319,16 @@ export class GraphicsSettings {
     /**
      * Reads graphics settings from UI elements
      */
-    readGraphicsSettings() {
+    readGraphicsSettings(): {
+        graphicalQuality: string;
+        postProcessing: boolean;
+        asteroidDetail: string;
+        lightingQuality: string;
+        particleEffects: string;
+        resolutionScale: string;
+        godRaysEnabled: boolean;
+        godRaysType: string;
+    } {
         return {
             graphicalQuality: this.getElementValue('graphical-quality', 'medium'),
             postProcessing: this.getElementChecked('post-processing', true),
@@ -331,23 +344,23 @@ export class GraphicsSettings {
     /**
      * Helper to get element value with fallback
      */
-    getElementValue(elementId, defaultValue) {
-        const element = document.getElementById(elementId);
+    getElementValue(elementId: string, defaultValue: string): string {
+        const element: HTMLSelectElement | null = document.getElementById(elementId) as HTMLSelectElement;
         return element ? element.value : defaultValue;
     }
 
     /**
      * Helper to get element checked state with fallback
      */
-    getElementChecked(elementId, defaultValue) {
-        const element = document.getElementById(elementId);
+    getElementChecked(elementId: string, defaultValue: boolean): boolean {
+        const element: HTMLInputElement | null = document.getElementById(elementId) as HTMLInputElement;
         return element ? element.checked : defaultValue;
     }
 
     /**
      * Applies graphics preset settings
      */
-    applyGraphicsPreset(preset, settings) {
+    applyGraphicsPreset(preset: string, settings: any): any {
         switch (preset) {
             case 'performance':
                 // Performance preset - prioritizes frame rate

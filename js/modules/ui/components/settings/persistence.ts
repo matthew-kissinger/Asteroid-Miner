@@ -1,6 +1,8 @@
 // persistence.js - Settings save/load and localStorage handling
 
 export class SettingsPersistence {
+    storageKey: string;
+
     constructor() {
         this.storageKey = 'asteroidMinerSettings';
     }
@@ -8,7 +10,20 @@ export class SettingsPersistence {
     /**
      * Gets default settings object
      */
-    getDefaultSettings() {
+    getDefaultSettings(): {
+        graphicalQuality: string;
+        postProcessing: boolean;
+        asteroidDetail: string;
+        lightingQuality: string;
+        particleEffects: string;
+        resolutionScale: string;
+        frameRateCap: string;
+        showFPS: boolean;
+        spatialAudio: boolean;
+        autoQuality: boolean;
+        godRaysEnabled: boolean;
+        godRaysType: string;
+    } {
         return {
             graphicalQuality: 'medium',    // low, medium, high
             postProcessing: true,          // true, false
@@ -28,18 +43,31 @@ export class SettingsPersistence {
     /**
      * Loads settings from localStorage
      */
-    loadSettings() {
+    loadSettings(): {
+        graphicalQuality: string;
+        postProcessing: boolean;
+        asteroidDetail: string;
+        lightingQuality: string;
+        particleEffects: string;
+        resolutionScale: string;
+        frameRateCap: string;
+        showFPS: boolean;
+        spatialAudio: boolean;
+        autoQuality: boolean;
+        godRaysEnabled: boolean;
+        godRaysType: string;
+    } {
         try {
-            const savedSettings = localStorage.getItem(this.storageKey);
+            const savedSettings: string | null = localStorage.getItem(this.storageKey);
             if (savedSettings) {
-                const parsedSettings = JSON.parse(savedSettings);
+                const parsedSettings: Record<string, any> = JSON.parse(savedSettings);
                 // Merge saved settings with defaults to handle new settings
                 const defaultSettings = this.getDefaultSettings();
                 const mergedSettings = {...defaultSettings, ...parsedSettings};
                 console.log("Settings loaded from localStorage:", mergedSettings);
                 return mergedSettings;
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error loading settings:", error);
         }
         
@@ -50,12 +78,12 @@ export class SettingsPersistence {
     /**
      * Saves settings to localStorage
      */
-    saveSettings(settings) {
+    saveSettings(settings: Record<string, any>): boolean {
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(settings));
             console.log("Settings saved to localStorage");
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error saving settings:", error);
             return false;
         }
@@ -64,13 +92,13 @@ export class SettingsPersistence {
     /**
      * Validates settings object to ensure all required properties exist
      */
-    validateSettings(settings) {
+    validateSettings(settings: Record<string, any>): Record<string, any> {
         const defaults = this.getDefaultSettings();
-        const validatedSettings = {...defaults};
+        const validatedSettings: Record<string, any> = {...defaults};
         
         // Only copy valid properties from the input settings
         for (const key in defaults) {
-            if (settings.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(settings, key)) {
                 validatedSettings[key] = settings[key];
             }
         }
@@ -81,12 +109,12 @@ export class SettingsPersistence {
     /**
      * Clears saved settings (resets to defaults)
      */
-    clearSettings() {
+    clearSettings(): boolean {
         try {
             localStorage.removeItem(this.storageKey);
             console.log("Settings cleared from localStorage");
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error clearing settings:", error);
             return false;
         }
@@ -95,10 +123,10 @@ export class SettingsPersistence {
     /**
      * Exports settings as JSON string
      */
-    exportSettings(settings) {
+    exportSettings(settings: Record<string, any>): string | null {
         try {
             return JSON.stringify(settings, null, 2);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error exporting settings:", error);
             return null;
         }
@@ -107,11 +135,11 @@ export class SettingsPersistence {
     /**
      * Imports settings from JSON string
      */
-    importSettings(jsonString) {
+    importSettings(jsonString: string): Record<string, any> | null {
         try {
-            const importedSettings = JSON.parse(jsonString);
+            const importedSettings: Record<string, any> = JSON.parse(jsonString);
             return this.validateSettings(importedSettings);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error importing settings:", error);
             return null;
         }
@@ -120,9 +148,9 @@ export class SettingsPersistence {
     /**
      * Backs up current settings with timestamp
      */
-    backupSettings(settings) {
-        const timestamp = new Date().toISOString();
-        const backupKey = `${this.storageKey}_backup_${timestamp}`;
+    backupSettings(settings: Record<string, any>): string | null {
+        const timestamp: string = new Date().toISOString();
+        const backupKey: string = `${this.storageKey}_backup_${timestamp}`;
         
         try {
             localStorage.setItem(backupKey, JSON.stringify({
@@ -131,7 +159,7 @@ export class SettingsPersistence {
             }));
             console.log(`Settings backed up with key: ${backupKey}`);
             return backupKey;
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error backing up settings:", error);
             return null;
         }
@@ -140,15 +168,15 @@ export class SettingsPersistence {
     /**
      * Lists available setting backups
      */
-    listBackups() {
-        const backups = [];
-        const backupPrefix = `${this.storageKey}_backup_`;
+    listBackups(): { key: string; timestamp: string; date: Date }[] {
+        const backups: { key: string; timestamp: string; date: Date }[] = [];
+        const backupPrefix: string = `${this.storageKey}_backup_`;
         
         try {
             for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
+                const key: string | null = localStorage.key(i);
                 if (key && key.startsWith(backupPrefix)) {
-                    const backupData = JSON.parse(localStorage.getItem(key));
+                    const backupData = JSON.parse(localStorage.getItem(key) || '{}');
                     backups.push({
                         key,
                         timestamp: backupData.timestamp,
@@ -158,9 +186,9 @@ export class SettingsPersistence {
             }
             
             // Sort by date, newest first
-            backups.sort((a, b) => b.date - a.date);
+            backups.sort((a, b) => b.date.getTime() - a.date.getTime());
             return backups;
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error listing backups:", error);
             return [];
         }
@@ -169,14 +197,14 @@ export class SettingsPersistence {
     /**
      * Restores settings from a backup
      */
-    restoreFromBackup(backupKey) {
+    restoreFromBackup(backupKey: string): Record<string, any> | null {
         try {
-            const backupData = localStorage.getItem(backupKey);
+            const backupData: string | null = localStorage.getItem(backupKey);
             if (backupData) {
-                const parsedBackup = JSON.parse(backupData);
+                const parsedBackup: { timestamp: string; settings: Record<string, any> } = JSON.parse(backupData);
                 return this.validateSettings(parsedBackup.settings);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error restoring from backup:", error);
         }
         return null;
@@ -185,7 +213,7 @@ export class SettingsPersistence {
     /**
      * Cleans up old backups (keeps only the most recent N backups)
      */
-    cleanupBackups(keepCount = 5) {
+    cleanupBackups(keepCount: number = 5): void {
         const backups = this.listBackups();
         
         // Remove backups beyond the keep count
@@ -193,7 +221,7 @@ export class SettingsPersistence {
             try {
                 localStorage.removeItem(backups[i].key);
                 console.log(`Removed old backup: ${backups[i].key}`);
-            } catch (error) {
+            } catch (error: any) {
                 console.error(`Error removing backup ${backups[i].key}:`, error);
             }
         }

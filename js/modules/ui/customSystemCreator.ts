@@ -9,8 +9,62 @@ import { PreviewManager } from './components/customSystem/preview.js';
 import { EventHandlerManager } from './components/customSystem/eventHandlers.js';
 import { HelperManager } from './components/customSystem/helpers.js';
 
+type ApiImageResponse = {
+    success: boolean;
+    image_paths?: string[];
+    message?: string;
+};
+
+type GeneratedPlanetPreview = {
+    name: string;
+    url: string | null;
+};
+
+type CustomSystemData = {
+    id: string;
+    [key: string]: unknown;
+};
+
+type StarSystemGenerator = any;
+
+type EnvironmentForCustomSystem = {
+    travelToSystem?: (systemId: string) => void;
+};
+
 export class CustomSystemCreator {
-    constructor(starSystemGenerator, environment) {
+    starSystemGenerator: StarSystemGenerator | null;
+    environment: EnvironmentForCustomSystem | null;
+    apiClient: ApiClient;
+    isVisible: boolean;
+    isGenerating: boolean;
+    generatedSkyboxUrl: string | null;
+    generatedPlanetUrls: GeneratedPlanetPreview[];
+    systemData: CustomSystemData | null;
+    helpers: HelperManager;
+    isMobile: boolean;
+    styleManager: StyleManager;
+    validationManager: ValidationManager;
+    systemDataManager: SystemDataManager;
+    formViewManager: FormViewManager;
+    previewManager: PreviewManager;
+    eventHandlerManager: EventHandlerManager;
+    container: HTMLDivElement | null;
+    systemNameInput: HTMLInputElement | null;
+    skyboxDescription: HTMLTextAreaElement | null;
+    planetDescriptions: HTMLDivElement | null;
+    addPlanetBtn: HTMLButtonElement | null;
+    generateSystemBtn: HTMLButtonElement | null;
+    generationProgress: HTMLDivElement | null;
+    generationStatus: HTMLParagraphElement | null;
+    systemForm: HTMLDivElement | null;
+    systemPreview: HTMLDivElement | null;
+    skyboxPreviewImg: HTMLImageElement | null;
+    planetsPreview: HTMLDivElement | null;
+    travelToSystemBtn: HTMLButtonElement | null;
+    regenerateSystemBtn: HTMLButtonElement | null;
+    closeBtn: HTMLButtonElement | null;
+
+    constructor(starSystemGenerator: StarSystemGenerator | null, environment: EnvironmentForCustomSystem | null) {
         this.starSystemGenerator = starSystemGenerator;
         this.environment = environment;
         this.apiClient = new ApiClient();
@@ -28,26 +82,43 @@ export class CustomSystemCreator {
         this.styleManager = new StyleManager(this.isMobile);
         this.validationManager = new ValidationManager(this.isMobile);
         this.systemDataManager = new SystemDataManager();
-        this.formViewManager = new FormViewManager(this.isMobile, this.styleManager);
+        this.formViewManager = new FormViewManager(this.isMobile, this.styleManager as unknown as null);
         this.previewManager = new PreviewManager(this.isMobile);
         this.eventHandlerManager = new EventHandlerManager(this, this.isMobile);
         
         // Initialize UI
+        this.container = null;
+        this.systemNameInput = null;
+        this.skyboxDescription = null;
+        this.planetDescriptions = null;
+        this.addPlanetBtn = null;
+        this.generateSystemBtn = null;
+        this.generationProgress = null;
+        this.generationStatus = null;
+        this.systemForm = null;
+        this.systemPreview = null;
+        this.skyboxPreviewImg = null;
+        this.planetsPreview = null;
+        this.travelToSystemBtn = null;
+        this.regenerateSystemBtn = null;
+        this.closeBtn = null;
+
         this.createUI();
         this.setupEventHandlers();
         this.setupSliderListeners(1);
     }
     
-    createUI() {
+    createUI(): void {
         // Inject styles
         this.styleManager.injectStyles();
         
         // Create main container
-        this.container = this.formViewManager.createMainContainer();
-        this.container.innerHTML = this.formViewManager.createModalContent();
+        const container = this.formViewManager.createMainContainer();
+        container.innerHTML = this.formViewManager.createModalContent();
+        this.container = container;
         
         // Add to document
-        document.body.appendChild(this.container);
+        document.body.appendChild(container);
         
         // Capture references to elements
         this.captureElementReferences();
@@ -58,29 +129,32 @@ export class CustomSystemCreator {
         }
     }
     
-    captureElementReferences() {
-        this.systemNameInput = document.getElementById('system-name');
-        this.skyboxDescription = document.getElementById('skybox-description');
-        this.planetDescriptions = document.getElementById('planet-descriptions');
-        this.addPlanetBtn = document.getElementById('add-planet-btn');
-        this.generateSystemBtn = document.getElementById('generate-system-btn');
-        this.generationProgress = document.getElementById('generation-progress');
-        this.generationStatus = document.getElementById('generation-status');
-        this.systemForm = document.getElementById('system-creator-form');
-        this.systemPreview = document.getElementById('system-preview');
-        this.skyboxPreviewImg = document.getElementById('skybox-preview-img');
-        this.planetsPreview = document.getElementById('planets-preview');
-        this.travelToSystemBtn = document.getElementById('travel-to-system-btn');
-        this.regenerateSystemBtn = document.getElementById('regenerate-system-btn');
-        this.closeBtn = document.getElementById('close-system-creator');
+    captureElementReferences(): void {
+        this.systemNameInput = document.getElementById('system-name') as HTMLInputElement | null;
+        this.skyboxDescription = document.getElementById('skybox-description') as HTMLTextAreaElement | null;
+        this.planetDescriptions = document.getElementById('planet-descriptions') as HTMLDivElement | null;
+        this.addPlanetBtn = document.getElementById('add-planet-btn') as HTMLButtonElement | null;
+        this.generateSystemBtn = document.getElementById('generate-system-btn') as HTMLButtonElement | null;
+        this.generationProgress = document.getElementById('generation-progress') as HTMLDivElement | null;
+        this.generationStatus = document.getElementById('generation-status') as HTMLParagraphElement | null;
+        this.systemForm = document.getElementById('system-creator-form') as HTMLDivElement | null;
+        this.systemPreview = document.getElementById('system-preview') as HTMLDivElement | null;
+        this.skyboxPreviewImg = document.getElementById('skybox-preview-img') as HTMLImageElement | null;
+        this.planetsPreview = document.getElementById('planets-preview') as HTMLDivElement | null;
+        this.travelToSystemBtn = document.getElementById('travel-to-system-btn') as HTMLButtonElement | null;
+        this.regenerateSystemBtn = document.getElementById('regenerate-system-btn') as HTMLButtonElement | null;
+        this.closeBtn = document.getElementById('close-system-creator') as HTMLButtonElement | null;
     }
     
-    setupMobileEnhancements() {
-        this.formViewManager.addRippleEffect(this.container);
+    setupMobileEnhancements(): void {
+        if (this.container) {
+            this.formViewManager.addRippleEffect(this.container);
+        }
         this.validationManager.setupCharacterCounters(this.skyboxDescription, this.planetDescriptions);
     }
     
-    setupEventHandlers() {
+    setupEventHandlers(): void {
+        if (!this.container) return;
         const elements = {
             closeBtn: this.closeBtn,
             addPlanetBtn: this.addPlanetBtn,
@@ -97,7 +171,9 @@ export class CustomSystemCreator {
         this.eventHandlerManager.setupValidationHandlers(elements, this.validationManager);
     }
     
-    addPlanetInput() {
+    addPlanetInput(): void {
+        if (!this.planetDescriptions) return;
+        
         const planetDiv = this.formViewManager.addPlanetInput(
             this.planetDescriptions,
             this.setupSliderListeners.bind(this),
@@ -114,15 +190,16 @@ export class CustomSystemCreator {
         }
     }
     
-    setupSliderListeners(index) {
+    setupSliderListeners(index: number): void {
         this.formViewManager.setupSliderListeners(index);
     }
     
-    updatePlanetNumbers() {
+    updatePlanetNumbers(): void {
+        if (!this.planetDescriptions) return;
         this.formViewManager.updatePlanetNumbers(this.planetDescriptions);
     }
     
-    async generateSystem() {
+    async generateSystem(): Promise<void> {
         // Validate inputs
         const systemValidation = this.validationManager.validateSystemForm(
             this.systemNameInput, 
@@ -130,15 +207,17 @@ export class CustomSystemCreator {
         );
         
         if (!systemValidation.isValid) {
-            this.validationManager.showMobileAlert(systemValidation.message, this.playUISound.bind(this));
+            this.validationManager.showMobileAlert(systemValidation.message, this.playUISound.bind(this) as unknown as null);
             return;
         }
+        
+        if (!this.planetDescriptions) return;
         
         const planetInputs = this.planetDescriptions.getElementsByClassName('planet-input');
         const planetValidation = this.validationManager.validatePlanetCount(planetInputs);
         
         if (!planetValidation.isValid) {
-            this.validationManager.showMobileAlert(planetValidation.message, this.playUISound.bind(this));
+            this.validationManager.showMobileAlert(planetValidation.message, this.playUISound.bind(this) as unknown as null);
             return;
         }
         
@@ -146,7 +225,7 @@ export class CustomSystemCreator {
         const { planets, errors } = this.validationManager.collectPlanetData(planetInputs);
         
         if (errors.length > 0) {
-            this.validationManager.showMobileAlert(errors[0], this.playUISound.bind(this));
+            this.validationManager.showMobileAlert(errors[0], this.playUISound.bind(this) as unknown as null);
             return;
         }
         
@@ -155,15 +234,13 @@ export class CustomSystemCreator {
         this.isGenerating = true;
         
         try {
-            // Check for auth token or get one
-            if (!this.apiClient.hasValidToken()) {
-                this.previewManager.updateGenerationStatus('Authenticating...');
-                await this.apiClient.getToken();
-            }
-            
             // Generate skybox
             this.previewManager.updateGenerationStatus('Generating skybox...');
-            const skyboxResponse = await this.apiClient.generateSkybox(
+            if (!this.systemNameInput || !this.skyboxDescription) {
+                throw new Error('Missing system input elements');
+            }
+            
+            const skyboxResponse: ApiImageResponse = await this.apiClient.generateSkybox(
                 this.systemNameInput.value.trim(), 
                 this.skyboxDescription.value.trim()
             );
@@ -182,7 +259,7 @@ export class CustomSystemCreator {
                     `Generating planet ${i+1} of ${planets.length}: ${planet.name}...`
                 );
                 
-                const planetResponse = await this.apiClient.generatePlanet(planet.name, planet.description);
+                const planetResponse: ApiImageResponse = await this.apiClient.generatePlanet(planet.name, planet.description);
                 
                 if (planetResponse.success && planetResponse.image_paths?.length) {
                     this.generatedPlanetUrls.push({
@@ -193,7 +270,8 @@ export class CustomSystemCreator {
             }
             
             // Create system data
-            const starClass = document.getElementById('star-class').value;
+            const starClassSelect = document.getElementById('star-class') as HTMLSelectElement | null;
+            const starClass = starClassSelect ? starClassSelect.value : 'G';
             this.systemData = this.systemDataManager.createSystemData(
                 this.systemNameInput.value.trim(),
                 starClass,
@@ -212,10 +290,11 @@ export class CustomSystemCreator {
             );
             
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             console.error('Error generating system:', error);
             this.validationManager.showMobileAlert(
-                `Failed to generate system: ${error.message}`, 
-                this.playUISound.bind(this)
+                `Failed to generate system: ${errorMessage}`, 
+                this.playUISound.bind(this) as unknown as null
             );
             this.previewManager.hideProgress();
         }
@@ -223,16 +302,20 @@ export class CustomSystemCreator {
         this.isGenerating = false;
     }
     
-    travelToSystem() {
+    travelToSystem(): void {
         if (!this.systemData) {
             this.validationManager.showMobileAlert(
                 'No system data available. Please generate a system first.',
-                this.playUISound.bind(this)
+                this.playUISound.bind(this) as unknown as null
             );
             return;
         }
         
         try {
+            if (!this.starSystemGenerator) {
+                throw new Error('Star system generator not available');
+            }
+            
             const success = this.starSystemGenerator.addCustomSystem(this.systemData);
             
             if (!success) {
@@ -248,19 +331,20 @@ export class CustomSystemCreator {
             }
             
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             console.error('Error traveling to custom system:', error);
             this.validationManager.showMobileAlert(
-                `Failed to travel to custom system: ${error.message}`,
-                this.playUISound.bind(this)
+                `Failed to travel to custom system: ${errorMessage}`,
+                this.playUISound.bind(this) as unknown as null
             );
         }
     }
     
-    playUISound() {
+    playUISound(): void {
         this.helpers.playUISound();
     }
     
-    show() {
+    show(): void {
         if (!this.container) return;
         
         this.cleanupBeforeHiding();
@@ -279,7 +363,8 @@ export class CustomSystemCreator {
         }
     }
     
-    setupMobileShow() {
+    setupMobileShow(): void {
+        if (!this.container) return;
         const modalContent = this.container.querySelector('.modal-content');
         if (modalContent) {
             this.helpers.scrollToTop(modalContent);
@@ -298,7 +383,7 @@ export class CustomSystemCreator {
         }, 300);
     }
     
-    setupDesktopShow() {
+    setupDesktopShow(): void {
         setTimeout(() => {
             if (this.systemNameInput) {
                 this.systemNameInput.focus();
@@ -306,7 +391,7 @@ export class CustomSystemCreator {
         }, 300);
     }
     
-    hide() {
+    hide(): void {
         if (!this.container || this.isGenerating) return;
         
         this.cleanupBeforeHiding();
@@ -331,7 +416,7 @@ export class CustomSystemCreator {
         }, 100);
     }
     
-    toggle() {
+    toggle(): void {
         if (this.isVisible) {
             this.hide();
         } else {
@@ -339,7 +424,7 @@ export class CustomSystemCreator {
         }
     }
     
-    cleanupBeforeHiding() {
+    cleanupBeforeHiding(): void {
         if (this.isGenerating) {
             this.isGenerating = false;
             this.previewManager.hideProgress();
@@ -355,7 +440,7 @@ export class CustomSystemCreator {
         }
     }
     
-    destroy() {
+    destroy(): void {
         this.cleanupBeforeHiding();
         this.eventHandlerManager.cleanup();
         this.styleManager.cleanup();

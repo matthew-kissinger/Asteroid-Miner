@@ -7,8 +7,39 @@ import { WeaponDisplay } from './components/combat/weaponDisplay.js';
 import { CombatAnimations } from './components/combat/animations.js';
 import { CombatEventHandlers } from './components/combat/eventHandlers.js';
 import { CombatHelpers } from './components/combat/helpers.js';
+import type { Vector3 } from 'three';
+
+type CombatScreenPosition = {
+    x: number;
+    y: number;
+};
+
+type CombatWeaponSystem = {
+    [key: string]: unknown;
+};
+
+type CombatSpaceship = {
+    [key: string]: unknown;
+};
+
+type CombatSystem = {
+    [key: string]: unknown;
+};
 
 export class CombatDisplay {
+    weaponSystem: CombatWeaponSystem | null;
+    spaceship: CombatSpaceship | null;
+    combatSystem?: CombatSystem;
+    enemyCount: number;
+    currentTarget: unknown;
+    styles: typeof combatStyles;
+    indicators: CombatIndicators;
+    enemyDisplay: EnemyDisplay;
+    weaponDisplay: WeaponDisplay;
+    animations: CombatAnimations;
+    eventHandlers: CombatEventHandlers;
+    helpers: typeof CombatHelpers;
+
     constructor() {
         this.weaponSystem = null;
         this.spaceship = null;
@@ -27,7 +58,7 @@ export class CombatDisplay {
         this.setupCombatDisplay();
     }
     
-    setReferences(weaponSystem, spaceship, combatSystem) {
+    setReferences(weaponSystem: CombatWeaponSystem, spaceship: CombatSpaceship, combatSystem: CombatSystem): void {
         this.weaponSystem = weaponSystem;
         this.spaceship = spaceship;
         this.combatSystem = combatSystem;
@@ -38,7 +69,7 @@ export class CombatDisplay {
         this.eventHandlers.initializeEventListeners();
     }
     
-    setupCombatDisplay() {
+    setupCombatDisplay(): void {
         // Create combat container
         const combatContainer = document.createElement('div');
         combatContainer.id = 'combat-container';
@@ -87,7 +118,7 @@ export class CombatDisplay {
      * Create shield display
      * @param {HTMLElement} parent Parent container
      */
-    createShieldDisplay(parent) {
+    createShieldDisplay(parent: HTMLElement): void {
         const shieldContainer = document.createElement('div');
         this.styles.applyShieldContainerStyles(shieldContainer);
         
@@ -96,10 +127,10 @@ export class CombatDisplay {
         this.styles.applyShieldLabelStyles(shieldLabel);
         shieldContainer.appendChild(shieldLabel);
         
-        const { container: shieldBarContainer, bar: shieldBar } = this.helpers.createProgressBar(
+        const { container: shieldBarContainer } = this.helpers.createProgressBar(
             'shield-bar-container', 'shield-bar', this.styles,
             this.styles.applyShieldBarContainerStyles, this.styles.applyShieldBarStyles
-        );
+        ) as { container: HTMLDivElement; bar: HTMLDivElement };
         shieldContainer.appendChild(shieldBarContainer);
         
         const shieldValue = document.createElement('div');
@@ -115,7 +146,7 @@ export class CombatDisplay {
      * Create hull display
      * @param {HTMLElement} parent Parent container
      */
-    createHullDisplay(parent) {
+    createHullDisplay(parent: HTMLElement): void {
         const hullContainer = document.createElement('div');
         this.styles.applyHullContainerStyles(hullContainer);
         
@@ -124,10 +155,10 @@ export class CombatDisplay {
         this.styles.applyHullLabelStyles(hullLabel);
         hullContainer.appendChild(hullLabel);
         
-        const { container: hullBarContainer, bar: hullBar } = this.helpers.createProgressBar(
+        const { container: hullBarContainer } = this.helpers.createProgressBar(
             'hull-bar-container', 'hull-bar', this.styles,
             this.styles.applyHullBarContainerStyles, this.styles.applyHullBarStyles
-        );
+        ) as { container: HTMLDivElement; bar: HTMLDivElement };
         hullContainer.appendChild(hullBarContainer);
         
         const hullValue = document.createElement('div');
@@ -143,7 +174,7 @@ export class CombatDisplay {
      * Create stats container
      * @param {HTMLElement} parent Parent container
      */
-    createStatsContainer(parent) {
+    createStatsContainer(parent: HTMLElement): void {
         const statsContainer = document.createElement('div');
         this.styles.applyStatsContainerStyles(statsContainer);
         
@@ -159,7 +190,7 @@ export class CombatDisplay {
         parent.appendChild(statsContainer);
     }
     
-    update() {
+    update(): void {
         // Skip updating if refs not set
         if (!this.spaceship) return;
         
@@ -191,19 +222,20 @@ export class CombatDisplay {
     /**
      * Update shield display
      */
-    updateShieldDisplay() {
-        const shieldBar = document.getElementById('shield-bar');
-        const shieldValue = document.getElementById('shield-value');
+    updateShieldDisplay(): void {
+        const shieldBar = document.getElementById('shield-bar') as HTMLDivElement | null;
+        const shieldValue = document.getElementById('shield-value') as HTMLSpanElement | null;
         
         if (!shieldBar || !shieldValue) return;
         
         // Get shield component or fall back to spaceship properties
-        const shieldComponent = this.helpers.getComponent(this.spaceship, 'HealthComponent');
+        const spaceship = this.spaceship ?? {};
+        const shieldComponent = this.helpers.getComponent(spaceship, 'HealthComponent');
         
-        let shield = this.helpers.safeGet(shieldComponent, 'shield', 
-                                         this.helpers.safeGet(this.spaceship, 'shield', 0));
-        let maxShield = this.helpers.safeGet(shieldComponent, 'maxShield', 
-                                            this.helpers.safeGet(this.spaceship, 'maxShield', 100));
+        const shield = this.helpers.safeGet(shieldComponent ?? {}, 'shield', 
+                                            this.helpers.safeGet(spaceship, 'shield', 0));
+        const maxShield = this.helpers.safeGet(shieldComponent ?? {}, 'maxShield', 
+                                               this.helpers.safeGet(spaceship, 'maxShield', 100));
         
         const shieldPercent = this.helpers.formatPercentage(shield, maxShield);
         shieldBar.style.width = `${shieldPercent}%`;
@@ -216,19 +248,20 @@ export class CombatDisplay {
     /**
      * Update hull display
      */
-    updateHullDisplay() {
-        const hullBar = document.getElementById('hull-bar');
-        const hullValue = document.getElementById('hull-value');
+    updateHullDisplay(): void {
+        const hullBar = document.getElementById('hull-bar') as HTMLDivElement | null;
+        const hullValue = document.getElementById('hull-value') as HTMLSpanElement | null;
         
         if (!hullBar || !hullValue) return;
         
         // Get health component or fall back to spaceship properties
-        const healthComponent = this.helpers.getComponent(this.spaceship, 'HealthComponent');
+        const spaceship = this.spaceship ?? {};
+        const healthComponent = this.helpers.getComponent(spaceship, 'HealthComponent');
         
-        let health = this.helpers.safeGet(healthComponent, 'health', 
-                                         this.helpers.safeGet(this.spaceship, 'hull', 0));
-        let maxHealth = this.helpers.safeGet(healthComponent, 'maxHealth', 
-                                            this.helpers.safeGet(this.spaceship, 'maxHull', 100));
+        const health = this.helpers.safeGet(healthComponent ?? {}, 'health', 
+                                            this.helpers.safeGet(spaceship, 'hull', 0));
+        const maxHealth = this.helpers.safeGet(healthComponent ?? {}, 'maxHealth', 
+                                               this.helpers.safeGet(spaceship, 'maxHull', 100));
         
         const healthPercent = this.helpers.formatPercentage(health, maxHealth);
         hullBar.style.width = `${healthPercent}%`;
@@ -242,7 +275,7 @@ export class CombatDisplay {
     /**
      * Update enemy count
      */
-    updateEnemyCount() {
+    updateEnemyCount(): void {
         const enemyCount = this.helpers.getEnemyCount();
         this.enemyCount = enemyCount;
         this.enemyDisplay.updateEnemyCount(enemyCount);
@@ -258,16 +291,16 @@ export class CombatDisplay {
      * @param {THREE.Vector3} position World position
      * @returns {Object|null} Screen coordinates
      */
-    worldToScreen(position) {
+    worldToScreen(position: Vector3): CombatScreenPosition | null {
         if (!window.game || !window.game.camera) return null;
-        return this.helpers.worldToScreen(position, window.game.camera);
+        return this.helpers.worldToScreen(position, window.game.camera) as CombatScreenPosition | null;
     }
     
     /**
      * Set current target
      * @param {Entity} target Target entity
      */
-    setTarget(target) {
+    setTarget(target: unknown): void {
         this.currentTarget = target;
         this.enemyDisplay.setTarget(target);
     }
@@ -275,19 +308,19 @@ export class CombatDisplay {
     /**
      * Clear current target
      */
-    clearTarget() {
+    clearTarget(): void {
         this.currentTarget = null;
         this.enemyDisplay.clearTarget();
     }
     
     
-    showNotification(message, duration = 3000) {
+    showNotification(message: string, duration = 3000): void {
         this.indicators.showNotification(message, duration);
     }
     
-    hide() {
+    hide(): void {
         // Hide combat UI
-        const combatContainer = document.getElementById('combat-container');
+        const combatContainer = document.getElementById('combat-container') as HTMLDivElement | null;
         if (combatContainer) {
             combatContainer.style.display = 'none';
         }
@@ -296,9 +329,9 @@ export class CombatDisplay {
         this.enemyDisplay.hide();
     }
     
-    show() {
+    show(): void {
         // Show combat UI
-        const combatContainer = document.getElementById('combat-container');
+        const combatContainer = document.getElementById('combat-container') as HTMLDivElement | null;
         if (combatContainer) {
             combatContainer.style.display = 'block';
         }
@@ -307,7 +340,7 @@ export class CombatDisplay {
     /**
      * Cleanup combat display
      */
-    cleanup() {
+    cleanup(): void {
         this.eventHandlers.cleanup();
         this.animations.cleanup();
         this.indicators.clearAll();

@@ -5,7 +5,7 @@ export class ControlsMenu {
         this.setupControlsMenu();
     }
     
-    setupControlsMenu() {
+    setupControlsMenu(): void {
         // Create controls menu
         const controlsMenu = document.createElement('div');
         controlsMenu.id = 'controls-menu';
@@ -29,7 +29,7 @@ export class ControlsMenu {
         controlsMenu.appendChild(controlsTitle);
         
         // Control rows
-        const createControlRow = (keyText, actionText) => {
+        const createControlRow = (keyText: string, actionText: string): HTMLDivElement => {
             const row = document.createElement('div');
             row.className = 'control-row';
             row.style.display = 'flex';
@@ -71,42 +71,47 @@ export class ControlsMenu {
         controlsMenu.appendChild(createControlRow('Q', 'Dock with Stargate'));
         
         // Set up event listeners for the controls menu
-        document.getElementById('close-controls').addEventListener('click', () => {
-            this.hide();
-        });
+        const closeControls = document.getElementById('close-controls');
+        if (closeControls) {
+            closeControls.addEventListener('click', () => {
+                this.hide();
+            });
+        }
 
         // Close menu when clicking outside of it
-        document.addEventListener('click', (e) => {
-            const controlsMenu = document.getElementById('controls-menu');
-            const showControlsButton = document.getElementById('show-controls');
+        document.addEventListener('click', (e: MouseEvent) => {
+            const controlsMenu = document.getElementById('controls-menu') as HTMLDivElement | null;
+            const showControlsButton = document.getElementById('show-controls') as HTMLButtonElement | null;
+            
+            if (!controlsMenu) return;
             
             if (controlsMenu.style.display === 'block' && 
-                !controlsMenu.contains(e.target) && 
+                !controlsMenu.contains(e.target as Node) && 
                 e.target !== showControlsButton) {
                 this.hide();
             }
         });
     }
     
-    show() {
-        const controlsMenu = document.getElementById('controls-menu');
+    show(): void {
+        const controlsMenu = document.getElementById('controls-menu') as HTMLDivElement | null;
         if (controlsMenu) {
             controlsMenu.style.display = 'block';
         }
     }
     
-    hide() {
-        const controlsMenu = document.getElementById('controls-menu');
+    hide(): void {
+        const controlsMenu = document.getElementById('controls-menu') as HTMLDivElement | null;
         if (controlsMenu) {
             controlsMenu.style.display = 'none';
         }
     }
     
-    setupButtonHandler() {
+    setupButtonHandler(): void {
         // Add click handler for the show controls button
-        const showControlsButton = document.getElementById('show-controls');
+        const showControlsButton = document.getElementById('show-controls') as HTMLButtonElement | null;
         if (showControlsButton) {
-            showControlsButton.addEventListener('click', (e) => {
+            showControlsButton.addEventListener('click', (e: MouseEvent) => {
                 this.show();
                 e.stopPropagation(); // Prevent click from passing through
             });

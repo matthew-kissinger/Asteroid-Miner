@@ -9,7 +9,28 @@ import { MissionsView } from './components/stargate/missions.js';
 import { EventHandlers } from './components/stargate/eventHandlers.js';
 import { StargateHelpers } from './components/stargate/helpers.js';
 
+type StargateStarMap = any;
+
+type StargateBlackjackGame = any;
+
+type StargateSettings = any;
+
+type StargateSpaceship = any;
+
+type StargateResources = any;
+
 export class StargateInterface {
+    starMap: StargateStarMap | null;
+    blackjackGame: StargateBlackjackGame | null;
+    settings: StargateSettings | null;
+    isMobile: boolean;
+    terminalView: TerminalView;
+    systemsView: SystemsView;
+    tradingView: TradingView;
+    upgradesView: UpgradesView;
+    missionsView: MissionsView;
+    eventHandlers: EventHandlers;
+
     constructor() {
         this.starMap = null;
         this.blackjackGame = null;
@@ -34,19 +55,19 @@ export class StargateInterface {
         this.setupEventHandlers();
     }
     
-    setStarMap(starMap) {
+    setStarMap(starMap: StargateStarMap): void {
         this.starMap = starMap;
-        this.systemsView.setStarMap(starMap);
+        this.systemsView.setStarMap(starMap as unknown as never);
     }
     
-    setBlackjackGame(blackjackGame) {
+    setBlackjackGame(blackjackGame: StargateBlackjackGame): void {
         this.blackjackGame = blackjackGame;
-        this.systemsView.setBlackjackGame(blackjackGame);
+        this.systemsView.setBlackjackGame(blackjackGame as unknown as never);
     }
     
-    setSettings(settings) {
+    setSettings(settings: StargateSettings): void {
         this.settings = settings;
-        this.systemsView.setSettings(settings);
+        this.systemsView.setSettings(settings as unknown as never);
         
         // Pass the stargate interface reference to settings
         if (this.settings) {
@@ -54,7 +75,7 @@ export class StargateInterface {
         }
     }
     
-    setupStargateUI() {
+    setupStargateUI(): void {
         // Create and inject styles
         this.terminalView.createStyles();
         
@@ -62,22 +83,22 @@ export class StargateInterface {
         this.terminalView.createDockingPrompt();
         
         // Create main UI container
-        const stargateUI = this.terminalView.createMainUI();
+        const stargateUI = this.terminalView.createMainUI() as unknown as HTMLDivElement;
         stargateUI.innerHTML = this.terminalView.getMainUIContent();
         
         document.body.appendChild(stargateUI);
     }
     
-    showDockingPrompt() {
+    showDockingPrompt(): void {
         this.terminalView.showDockingPrompt();
     }
     
-    hideDockingPrompt() {
+    hideDockingPrompt(): void {
         this.terminalView.hideDockingPrompt();
     }
     
-    showStargateUI() {
-        const stargateUI = document.getElementById('stargate-ui');
+    showStargateUI(): void {
+        const stargateUI = document.getElementById('stargate-ui') as HTMLDivElement | null;
         if (stargateUI) {
             console.log("Showing stargate UI on " + (this.isMobile ? "mobile" : "desktop"));
             stargateUI.style.display = 'block';
@@ -103,28 +124,28 @@ export class StargateInterface {
         }
     }
     
-    hideStargateUI() {
-        const stargateUI = document.getElementById('stargate-ui');
+    hideStargateUI(): void {
+        const stargateUI = document.getElementById('stargate-ui') as HTMLDivElement | null;
         if (stargateUI) {
             stargateUI.style.display = 'none';
         }
     }
 
     // Add alias for compatibility
-    hide() {
+    hide(): void {
         this.hideStargateUI();
     }
     
-    updateStargateUI(spaceship, resources) {
+    updateStargateUI(spaceship: StargateSpaceship, resources: StargateResources): void {
         // Set references in submodules
-        this.tradingView.setGameReferences(spaceship, resources);
-        this.upgradesView.setSpaceship(spaceship);
+        this.tradingView.setGameReferences(spaceship as any, resources as any);
+        this.upgradesView.setSpaceship(spaceship as any);
         
         // Update displays using submodules
-        StargateHelpers.updateResourceDisplays(resources);
-        StargateHelpers.updateCreditsDisplay(spaceship);
-        StargateHelpers.updateStatusGauges(spaceship);
-        StargateHelpers.updateServiceButtons(spaceship);
+        StargateHelpers.updateResourceDisplays(resources as any);
+        StargateHelpers.updateCreditsDisplay(spaceship as any);
+        StargateHelpers.updateStatusGauges(spaceship as any);
+        StargateHelpers.updateServiceButtons(spaceship as any);
         
         this.upgradesView.updateUpgradeDisplays();
         this.tradingView.updateResourceSellButtons();
@@ -132,7 +153,7 @@ export class StargateInterface {
         this.tradingView.updateOrbSellButtons();
         this.tradingView.updateLaserTurretDisplay();
     }
-    setupEventHandlers() {
+    setupEventHandlers(): void {
         const updateUICallback = () => {
             const gameData = StargateHelpers.syncWithGameResources();
             if (gameData) {

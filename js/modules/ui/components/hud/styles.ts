@@ -1,15 +1,15 @@
 // styles.js - CSS styles and animations for HUD elements
 
 export class HUDStyles {
-    static initializeStyles() {
+    static initializeStyles(): void {
         // Add Google Font for futuristic UI
-        const fontLink = document.createElement('link');
+        const fontLink: HTMLLinkElement = document.createElement('link');
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600&family=Electrolize&display=swap';
         fontLink.rel = 'stylesheet';
         document.head.appendChild(fontLink);
 
         // Add main HUD animations and styles
-        const style = document.createElement('style');
+        const style: HTMLStyleElement = document.createElement('style');
         style.textContent = `
             @keyframes pulse {
                 0% { opacity: 0.7; }
@@ -50,7 +50,7 @@ export class HUDStyles {
         document.head.appendChild(style);
     }
 
-    static getMainContainerStyles() {
+    static getMainContainerStyles(): Record<string, string> {
         return {
             position: 'absolute',
             top: '0',
@@ -67,7 +67,7 @@ export class HUDStyles {
         };
     }
 
-    static getPanelStyles() {
+    static getPanelStyles(): Record<string, string> {
         return {
             backgroundColor: 'rgba(6, 22, 31, 0.7)',
             backdropFilter: 'blur(5px)',
@@ -78,7 +78,7 @@ export class HUDStyles {
         };
     }
 
-    static getPanelHeaderStyles() {
+    static getPanelHeaderStyles(): Record<string, string> {
         return {
             fontWeight: '600',
             fontSize: '14px',
@@ -93,7 +93,7 @@ export class HUDStyles {
         };
     }
 
-    static getStatusIndicatorStyles() {
+    static getStatusIndicatorStyles(): Record<string, string> {
         return {
             width: '8px',
             height: '8px',
@@ -104,7 +104,7 @@ export class HUDStyles {
         };
     }
 
-    static getPanelRowStyles() {
+    static getPanelRowStyles(): Record<string, string> {
         return {
             display: 'flex',
             justifyContent: 'space-between',
@@ -113,7 +113,7 @@ export class HUDStyles {
         };
     }
 
-    static getButtonStyles() {
+    static getButtonStyles(): Record<string, string> {
         return {
             width: '100%',
             marginTop: '15px',
@@ -134,7 +134,7 @@ export class HUDStyles {
         };
     }
 
-    static getBarContainerStyles() {
+    static getBarContainerStyles(): Record<string, string> {
         return {
             height: '10px',
             backgroundColor: 'rgba(10, 30, 40, 0.5)',
@@ -143,7 +143,7 @@ export class HUDStyles {
         };
     }
 
-    static getBarStyles() {
+    static getBarStyles(): Record<string, string> {
         return {
             width: '100%',
             height: '100%',
@@ -152,7 +152,7 @@ export class HUDStyles {
         };
     }
 
-    static getScanlineEffectStyles() {
+    static getScanlineEffectStyles(): Record<string, string> {
         return {
             position: 'absolute',
             top: '0',
@@ -167,7 +167,7 @@ export class HUDStyles {
         };
     }
 
-    static getActiveScanlineStyles() {
+    static getActiveScanlineStyles(): Record<string, string> {
         return {
             position: 'absolute',
             left: '0',
@@ -182,9 +182,9 @@ export class HUDStyles {
         };
     }
 
-    static createGlitchAnimation() {
-        const timestamp = Date.now();
-        const glitchAnimation = `
+    static createGlitchAnimation(): string {
+        const timestamp: number = Date.now();
+        const glitchAnimation: string = `
             @keyframes glitch-${timestamp} {
                 0% { transform: translate(0, 0) skew(0deg); filter: hue-rotate(0deg); }
                 1% { transform: translate(2px, 2px) skew(1deg); filter: hue-rotate(90deg); }
@@ -200,7 +200,7 @@ export class HUDStyles {
         `;
         
         // Add animation to document
-        const style = document.createElement('style');
+        const style: HTMLStyleElement = document.createElement('style');
         style.textContent = glitchAnimation;
         document.head.appendChild(style);
         
@@ -208,13 +208,13 @@ export class HUDStyles {
         return `glitch-${timestamp}`;
     }
 
-    static applyStyles(element, styles) {
+    static applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
         Object.assign(element.style, styles);
     }
 
-    static addCornerElements(panel) {
+    static addCornerElements(panel: HTMLElement): void {
         // Top left corner
-        const topLeft = document.createElement('div');
+        const topLeft: HTMLDivElement = document.createElement('div');
         HUDStyles.applyStyles(topLeft, {
             position: 'absolute',
             top: '0',
@@ -227,7 +227,7 @@ export class HUDStyles {
         panel.appendChild(topLeft);
         
         // Top right corner
-        const topRight = document.createElement('div');
+        const topRight: HTMLDivElement = document.createElement('div');
         HUDStyles.applyStyles(topRight, {
             position: 'absolute',
             top: '0',
@@ -240,7 +240,7 @@ export class HUDStyles {
         panel.appendChild(topRight);
         
         // Bottom left corner
-        const bottomLeft = document.createElement('div');
+        const bottomLeft: HTMLDivElement = document.createElement('div');
         HUDStyles.applyStyles(bottomLeft, {
             position: 'absolute',
             bottom: '0',
@@ -253,7 +253,7 @@ export class HUDStyles {
         panel.appendChild(bottomLeft);
         
         // Bottom right corner
-        const bottomRight = document.createElement('div');
+        const bottomRight: HTMLDivElement = document.createElement('div');
         HUDStyles.applyStyles(bottomRight, {
             position: 'absolute',
             bottom: '0',

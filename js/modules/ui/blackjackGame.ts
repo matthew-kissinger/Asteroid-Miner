@@ -16,8 +16,38 @@ import { BlackjackAnimations } from './components/blackjack/animations.js';
 import { BlackjackBetting } from './components/blackjack/betting.js';
 import { BlackjackEventHandlers } from './components/blackjack/eventHandlers.js';
 
+type BlackjackAudio = {
+    playSound?: (sound: string) => void;
+};
+
+type BlackjackSpaceship = {
+    cargo?: {
+        iron?: number;
+        gold?: number;
+        platinum?: number;
+    };
+};
+
+type BlackjackGameResult = 'win' | 'blackjack' | 'lose' | 'bust' | 'push';
+type BlackjackBet = {
+    amount: string | number;
+    resource?: string | null;
+};
+
 export class BlackjackGame {
-    constructor(scene, spaceship, audio) {
+    scene: unknown;
+    spaceship: BlackjackSpaceship;
+    audio: BlackjackAudio | null;
+    isMobile: boolean;
+    view: BlackjackGameView;
+    deck: BlackjackCardDeck;
+    gameLogic: BlackjackGameLogic;
+    animations: BlackjackAnimations;
+    betting: BlackjackBetting;
+    eventHandlers: BlackjackEventHandlers;
+    gameUI: HTMLDivElement | null;
+
+    constructor(scene: unknown, spaceship: BlackjackSpaceship, audio: BlackjackAudio | null) {
         this.scene = scene;
         this.spaceship = spaceship;
         this.audio = audio;
@@ -31,8 +61,8 @@ export class BlackjackGame {
         this.view = new BlackjackGameView(this.isMobile);
         this.deck = new BlackjackCardDeck();
         this.gameLogic = new BlackjackGameLogic();
-        this.animations = new BlackjackAnimations(this.audio);
-        this.betting = new BlackjackBetting(this.spaceship);
+        this.animations = new BlackjackAnimations(this.audio as unknown as null);
+        this.betting = new BlackjackBetting(this.spaceship as unknown as null);
         this.eventHandlers = new BlackjackEventHandlers(this, this.isMobile);
         
         // UI elements
@@ -42,7 +72,7 @@ export class BlackjackGame {
     /**
      * Initialize the game UI
      */
-    init() {
+    init(): void {
         if (!this.gameUI) {
             this.createGameUI();
         }
@@ -51,7 +81,7 @@ export class BlackjackGame {
     /**
      * Create the game UI elements
      */
-    createGameUI() {
+    createGameUI(): void {
         this.gameUI = this.view.createGameUI();
         this.eventHandlers.initialize();
         this.updateControls();
@@ -60,7 +90,7 @@ export class BlackjackGame {
     /**
      * Show the game UI and sync with current game resources
      */
-    show() {
+    show(): void {
         // Don't show during intro sequence
         if (window.game && window.game.introSequenceActive) {
             console.log("BlackjackGame: Not showing game UI during intro sequence");
@@ -73,9 +103,10 @@ export class BlackjackGame {
             
             // Force audio context resumption for mobile
             if (this.audio && this.isMobile) {
+                const audio = this.audio;
                 setTimeout(() => {
                     console.log("Mobile: Attempting to play initial sound in BlackjackGame");
-                    this.audio.playSound('boink');
+                    audio.playSound?.('boink');
                 }, 100);
             }
             
@@ -92,13 +123,13 @@ export class BlackjackGame {
     /**
      * Hide the game UI and return to the stargate interface
      */
-    hide() {
+    hide(): void {
         if (this.gameUI) {
             this.view.hide(this.gameUI);
             this.animations.playCardSound('boink');
             
             // Show the stargate interface when exiting blackjack
-            const stargateUI = document.getElementById('stargate-ui');
+            const stargateUI = document.getElementById('stargate-ui') as HTMLDivElement | null;
             if (stargateUI) {
                 stargateUI.style.display = 'block';
             }
@@ -108,7 +139,7 @@ export class BlackjackGame {
     /**
      * Reset the game state
      */
-    reset() {
+    reset(): void {
         this.gameLogic.reset();
         this.betting.reset();
         
@@ -121,13 +152,13 @@ export class BlackjackGame {
         this.view.updateBetAmount('0');
         
         // Hide dealer speech
-        const speechBubble = document.getElementById('dealer-speech');
+        const speechBubble = document.getElementById('dealer-speech') as HTMLDivElement | null;
         if (speechBubble) {
             speechBubble.style.display = 'none';
         }
         
         // Reset resource selection
-        document.querySelectorAll('.resource-btn').forEach(btn => {
+        document.querySelectorAll<HTMLElement>('.resource-btn').forEach(btn => {
             this.animations.removeResourceSelection(btn);
         });
         
@@ -137,23 +168,24 @@ export class BlackjackGame {
     /**
      * Select a resource for betting
      */
-    selectBetResource(resource) {
+    selectBetResource(resource: string): void {
         this.betting.selectBetResource(resource);
-        this.view.updateBetAmount(this.betting.getCurrentBet().amount);
+        const currentBet = this.betting.getCurrentBet() as BlackjackBet;
+        this.view.updateBetAmount(currentBet.amount);
         this.updateControls();
     }
     
     /**
      * Update the game controls based on the current state
      */
-    updateControls() {
+    updateControls(): void {
         this.eventHandlers.updateButtonStates();
     }
     
     /**
      * Start a new game
      */
-    startGame() {
+    startGame(): void {
         console.log("Starting game with bet:", this.betting.getCurrentBet());
         
         if (!this.betting.hasValidBet()) {
@@ -196,7 +228,7 @@ export class BlackjackGame {
         this.dealCardToDealer(true); // Face down
         
         // Check for natural blackjack
-        const naturalResult = this.gameLogic.checkForNaturalBlackjack();
+        const naturalResult = this.gameLogic.checkForNaturalBlackjack() as BlackjackGameResult | null;
         if (naturalResult) {
             this.handleGameEnd(naturalResult);
         } else {
@@ -210,12 +242,14 @@ export class BlackjackGame {
     /**
      * Deal a card to the player
      */
-    dealCardToPlayer() {
+    dealCardToPlayer(): void {
         const card = this.deck.drawCard();
         this.gameLogic.addCardToPlayer(card);
         
         const cardEl = this.view.addCard(card, false, true);
-        this.animations.animateCardDeal(cardEl);
+        if (cardEl) {
+            this.animations.animateCardDeal(cardEl);
+        }
         
         const score = this.gameLogic.getPlayerScore();
         this.view.updateScore(score, true);
@@ -228,12 +262,14 @@ export class BlackjackGame {
     /**
      * Deal a card to the dealer
      */
-    dealCardToDealer(faceDown = false) {
+    dealCardToDealer(faceDown = false): void {
         const card = this.deck.drawCard();
         this.gameLogic.addCardToDealer(card);
         
         const cardEl = this.view.addCard(card, faceDown, false);
-        this.animations.animateCardDeal(cardEl);
+        if (cardEl) {
+            this.animations.animateCardDeal(cardEl);
+        }
         
         if (!faceDown) {
             const visibleScore = this.gameLogic.calculateVisibleDealerScore();
@@ -244,7 +280,7 @@ export class BlackjackGame {
     /**
      * Player action: Hit (take another card)
      */
-    hit() {
+    hit(): void {
         if (this.gameLogic.isGameActive()) {
             this.dealCardToPlayer();
             this.animations.playCardSound('hit');
@@ -255,7 +291,7 @@ export class BlackjackGame {
     /**
      * Player action: Stand (end turn)
      */
-    stand() {
+    stand(): void {
         if (this.gameLogic.isGameActive()) {
             this.animations.playCardSound('stand');
             this.dealerPlay();
@@ -265,7 +301,7 @@ export class BlackjackGame {
     /**
      * Player action: Double Down
      */
-    doubleDown() {
+    doubleDown(): void {
         if (this.gameLogic.isGameActive() && this.gameLogic.getPlayerHand().length === 2) {
             if (!this.betting.canAffordDoubleDown()) {
                 this.view.updateGameStatus('NOT ENOUGH RESOURCES FOR DOUBLE DOWN');
@@ -291,21 +327,24 @@ export class BlackjackGame {
     /**
      * Dealer's turn to play
      */
-    dealerPlay() {
+    dealerPlay(): void {
         // Reveal dealer's face-down card
         const lastCard = this.gameLogic.getLastDealerCard();
         if (lastCard) {
-            this.animations.animateCardFlip(
-                document.getElementById('face-down-card'),
-                () => {
+            const faceDownCard = document.getElementById('face-down-card') as HTMLDivElement | null;
+            if (faceDownCard) {
+                this.animations.animateCardFlip(faceDownCard, () => {
                     this.view.revealDealerCard(lastCard);
                     this.view.updateScore(this.gameLogic.getDealerScore(), false);
-                }
-            );
+                });
+            } else {
+                this.view.revealDealerCard(lastCard);
+                this.view.updateScore(this.gameLogic.getDealerScore(), false);
+            }
         }
         
         // Dealer hits until score is 17 or higher
-        const dealerPlayNextCard = () => {
+        const dealerPlayNextCard = (): void => {
             if (this.gameLogic.shouldDealerHit()) {
                 this.dealCardToDealer();
                 this.animations.playCardSound('hit');
@@ -314,7 +353,7 @@ export class BlackjackGame {
                     dealerPlayNextCard();
                 }, 800);
             } else {
-                const result = this.gameLogic.determineOutcome();
+                const result = this.gameLogic.determineOutcome() as BlackjackGameResult;
                 this.handleGameEnd(result);
             }
         };
@@ -325,38 +364,43 @@ export class BlackjackGame {
     /**
      * Handle game end with result
      */
-    handleGameEnd(result) {
+    handleGameEnd(result: BlackjackGameResult): void {
         this.gameLogic.endGame(result);
         
-        let payout = 0;
         let statusMessage = '';
-        let speechType = result;
+        let speechType: BlackjackGameResult | 'lose' = result;
         
         switch (result) {
             case 'win':
-                payout = this.betting.handleWin();
+                this.betting.handleWin();
                 statusMessage = 'YOU WIN!';
-                this.animations.animateWinCelebration(this.gameUI);
+                if (this.gameUI) {
+                    this.animations.animateWinCelebration(this.gameUI);
+                }
                 this.animations.playCardSound('win');
                 break;
                 
             case 'blackjack':
-                payout = this.betting.handleBlackjack();
+                this.betting.handleBlackjack();
                 statusMessage = 'BLACKJACK! TRIPLE PAYOUT!';
-                this.animations.animateBlackjackCelebration(this.gameUI);
+                if (this.gameUI) {
+                    this.animations.animateBlackjackCelebration(this.gameUI);
+                }
                 this.animations.playCardSound('blackjack');
                 break;
                 
             case 'lose':
             case 'bust':
                 statusMessage = result === 'bust' ? 'BUST! YOU LOSE' : 'DEALER WINS';
-                this.animations.animateLoseEffect(this.gameUI);
+                if (this.gameUI) {
+                    this.animations.animateLoseEffect(this.gameUI);
+                }
                 this.animations.playCardSound(result);
                 speechType = 'lose';
                 break;
                 
             case 'push':
-                payout = this.betting.handlePush();
+                this.betting.handlePush();
                 statusMessage = 'PUSH - BETS RETURNED';
                 this.animations.playCardSound('push');
                 break;
@@ -377,7 +421,7 @@ export class BlackjackGame {
     /**
      * Cleanup method for destroying the game
      */
-    destroy() {
+    destroy(): void {
         if (this.eventHandlers) {
             this.eventHandlers.destroy();
         }

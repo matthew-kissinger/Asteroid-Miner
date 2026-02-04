@@ -1,14 +1,26 @@
 // startScreen.js - Manages the game's start screen UI
 
+type StartScreenGame = {
+    startDocked?: () => void;
+    startIntroSequence?: () => void;
+    [key: string]: unknown;
+};
+
+type StartScreenUI = unknown;
+
 export class StartScreen {
-    constructor(game, ui) {
+    game: StartScreenGame;
+    ui: StartScreenUI;
+    isVisible: boolean;
+
+    constructor(game: StartScreenGame, ui: StartScreenUI) {
         this.game = game;
         this.ui = ui;
         this.isVisible = false;
         this.setupStartScreen();
     }
 
-    setupStartScreen() {
+    setupStartScreen(): void {
         // Create start screen container
         const startScreen = document.createElement('div');
         startScreen.id = 'start-screen';
@@ -92,9 +104,9 @@ export class StartScreen {
         this.setupEventListeners();
     }
 
-    setupEventListeners() {
+    setupEventListeners(): void {
         // Play button
-        const playButton = document.getElementById('play-button');
+        const playButton = document.getElementById('play-button') as HTMLButtonElement | null;
         if (playButton) {
             playButton.addEventListener('click', () => {
                 console.log("Play button clicked");
@@ -127,9 +139,9 @@ export class StartScreen {
         }
 
         // How to Play button
-        const howToPlayButton = document.getElementById('how-to-play-button');
-        const howToPlayModal = document.getElementById('how-to-play-modal');
-        const closeHowToPlayButton = document.getElementById('close-how-to-play');
+        const howToPlayButton = document.getElementById('how-to-play-button') as HTMLButtonElement | null;
+        const howToPlayModal = document.getElementById('how-to-play-modal') as HTMLDivElement | null;
+        const closeHowToPlayButton = document.getElementById('close-how-to-play') as HTMLButtonElement | null;
 
         if (howToPlayButton && howToPlayModal) {
             howToPlayButton.addEventListener('click', () => {
@@ -143,7 +155,7 @@ export class StartScreen {
             });
 
             // Also close when clicking outside the modal content
-            howToPlayModal.addEventListener('click', (e) => {
+            howToPlayModal.addEventListener('click', (e: MouseEvent) => {
                 if (e.target === howToPlayModal) {
                     howToPlayModal.style.display = 'none';
                 }
@@ -151,30 +163,31 @@ export class StartScreen {
         }
     }
 
-    show() {
-        const startScreen = document.getElementById('start-screen');
+    show(): void {
+        const startScreen = document.getElementById('start-screen') as HTMLDivElement | null;
         if (startScreen) {
             startScreen.style.display = 'flex';
             this.isVisible = true;
             
             // End timing for initialization when start screen becomes visible
-            if (window.initialTimestamp) {
-                const timeToStartScreen = performance.now() - window.initialTimestamp;
+            const initialTimestamp = (window as Window & { initialTimestamp?: number }).initialTimestamp;
+            if (initialTimestamp) {
+                const timeToStartScreen = performance.now() - initialTimestamp;
                 console.log(`Time to start screen visible: ${timeToStartScreen.toFixed(2)}ms`);
                 // Remove console.timeEnd since console.time was never called
             }
         }
     }
 
-    hide() {
-        const startScreen = document.getElementById('start-screen');
+    hide(): void {
+        const startScreen = document.getElementById('start-screen') as HTMLDivElement | null;
         if (startScreen) {
             startScreen.style.display = 'none';
             this.isVisible = false;
         }
 
         // Also hide How to Play modal if it's open
-        const howToPlayModal = document.getElementById('how-to-play-modal');
+        const howToPlayModal = document.getElementById('how-to-play-modal') as HTMLDivElement | null;
         if (howToPlayModal) {
             howToPlayModal.style.display = 'none';
         }

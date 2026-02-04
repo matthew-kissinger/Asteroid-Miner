@@ -1,7 +1,12 @@
 // audioSettings.js - Audio settings controls and logic
 
+import { SettingsStyles } from './styles.ts';
+
 export class AudioSettings {
-    constructor(game, styles) {
+    game: any; // TODO: Define a proper interface for 'game'
+    styles: typeof SettingsStyles;
+
+    constructor(game: any, styles: typeof SettingsStyles) {
         this.game = game;
         this.styles = styles;
     }
@@ -9,7 +14,7 @@ export class AudioSettings {
     /**
      * Creates the audio settings section HTML
      */
-    createAudioSettingsHTML() {
+    createAudioSettingsHTML(): string {
         return `
             <div style="margin-bottom: 20px;">
                 <h3 style="${this.styles.getSectionHeaderStyle()}">AUDIO SETTINGS</h3>
@@ -26,7 +31,7 @@ export class AudioSettings {
     /**
      * Applies audio settings to the game
      */
-    applyAudioSettings(settings) {
+    applyAudioSettings(settings: { spatialAudio: boolean }): void {
         if (!this.game.audio) return;
         
         const audio = this.game.audio;
@@ -40,8 +45,8 @@ export class AudioSettings {
     /**
      * Updates audio-related UI elements with current settings
      */
-    updateAudioUI(settings) {
-        const spatialAudioElement = document.getElementById('spatial-audio');
+    updateAudioUI(settings: { spatialAudio: boolean }): void {
+        const spatialAudioElement: HTMLInputElement | null = document.getElementById('spatial-audio') as HTMLInputElement;
         if (spatialAudioElement) {
             spatialAudioElement.checked = settings.spatialAudio;
         }
@@ -50,8 +55,8 @@ export class AudioSettings {
     /**
      * Reads audio settings from UI elements
      */
-    readAudioSettings() {
-        const spatialAudioElement = document.getElementById('spatial-audio');
+    readAudioSettings(): { spatialAudio: boolean } {
+        const spatialAudioElement: HTMLInputElement | null = document.getElementById('spatial-audio') as HTMLInputElement;
         
         return {
             spatialAudio: spatialAudioElement ? spatialAudioElement.checked : true
@@ -61,7 +66,7 @@ export class AudioSettings {
     /**
      * Applies audio preset settings
      */
-    applyAudioPreset(preset, settings) {
+    applyAudioPreset(preset: string, settings: { spatialAudio: boolean }): { spatialAudio: boolean } {
         switch (preset) {
             case 'performance':
                 settings.spatialAudio = false;

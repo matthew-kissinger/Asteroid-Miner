@@ -1,11 +1,11 @@
 // notifications.js - Notification system and message display
 
-import { HUDStyles } from './styles.js';
+import { HUDStyles } from './styles.ts';
 
 export class HUDNotifications {
-    static createNotificationsArea(parent) {
+    static createNotificationsArea(parent: HTMLElement): HTMLDivElement {
         // Create notifications area in the top middle of the screen
-        const notificationsArea = document.createElement('div');
+        const notificationsArea: HTMLDivElement = document.createElement('div');
         notificationsArea.id = 'notifications-area';
         HUDStyles.applyStyles(notificationsArea, {
             position: 'absolute',
@@ -25,8 +25,8 @@ export class HUDNotifications {
         return notificationsArea;
     }
 
-    static createHordeModeIndicator(parent) {
-        const hordeIndicator = document.createElement('div');
+    static createHordeModeIndicator(parent: HTMLElement): HTMLDivElement {
+        const hordeIndicator: HTMLDivElement = document.createElement('div');
         hordeIndicator.id = 'horde-mode-indicator';
         hordeIndicator.className = 'hud-panel';
         HUDStyles.applyStyles(hordeIndicator, {
@@ -45,7 +45,7 @@ export class HUDNotifications {
         });
         
         // Create a flex container for the horde mode indicator content
-        const hordeContent = document.createElement('div');
+        const hordeContent: HTMLDivElement = document.createElement('div');
         HUDStyles.applyStyles(hordeContent, {
             display: 'flex',
             alignItems: 'center',
@@ -54,14 +54,14 @@ export class HUDNotifications {
         });
         
         // Add the text and timer elements
-        const hordeLabel = document.createElement('span');
+        const hordeLabel: HTMLSpanElement = document.createElement('span');
         HUDStyles.applyStyles(hordeLabel, {
             color: '#ff3030',
             textShadow: '0 0 5px rgba(255,48,48,0.5)'
         });
         hordeLabel.textContent = 'HORDE MODE';
         
-        const survivalTime = document.createElement('span');
+        const survivalTime: HTMLSpanElement = document.createElement('span');
         survivalTime.id = 'horde-survival-time';
         HUDStyles.applyStyles(survivalTime, {
             color: '#ff9999',
@@ -85,34 +85,34 @@ export class HUDNotifications {
     /**
      * Update the horde mode indicator and survival timer
      */
-    static updateHordeModeDisplay() {
-        const hordeIndicator = document.getElementById('horde-mode-indicator');
-        const survivalTime = document.getElementById('horde-survival-time');
+    static updateHordeModeDisplay(): void {
+        const hordeIndicator: HTMLDivElement | null = document.getElementById('horde-mode-indicator') as HTMLDivElement;
+        const survivalTime: HTMLSpanElement | null = document.getElementById('horde-survival-time') as HTMLSpanElement;
         
         if (!hordeIndicator || !survivalTime) return;
         
         // Check if horde mode is active in the game
-        if (window.game && window.game.isHordeActive) {
+        if (window.game && (window.game as any).isHordeActive) {
             // Show the indicator if not already visible
             if (hordeIndicator.style.display === 'none') {
                 hordeIndicator.style.display = 'flex';
             }
             
             // Update the survival time display
-            if (window.game.getFormattedHordeSurvivalTime) {
-                survivalTime.textContent = window.game.getFormattedHordeSurvivalTime();
-            } else {
+            if (window.game && (window.game as any).getFormattedHordeSurvivalTime) {
+                survivalTime.textContent = (window.game as any).getFormattedHordeSurvivalTime();
+            } else if (window.game && (window.game as any).hordeSurvivalTime !== undefined) {
                 // Fallback calculation if method not available
-                const totalSeconds = Math.floor(window.game.hordeSurvivalTime / 1000);
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = totalSeconds % 60;
+                const totalSeconds: number = Math.floor((window.game as any).hordeSurvivalTime / 1000);
+                const minutes: number = Math.floor(totalSeconds / 60);
+                const seconds: number = totalSeconds % 60;
                 survivalTime.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
             
             // Increase pulsing intensity based on survival time
             // After 3 minutes, make the pulsing more urgent
-            if (window.game.hordeSurvivalTime > 3 * 60 * 1000) {
-                const styleEl = document.createElement('style');
+            if (window.game && (window.game as any).hordeSurvivalTime > 3 * 60 * 1000) {
+                const styleEl: HTMLStyleElement = document.createElement('style');
                 styleEl.textContent = `
                     @keyframes pulse-horde {
                         0% { box-shadow: 0 0 8px rgba(255, 30, 30, 0.7); }
@@ -134,11 +134,11 @@ export class HUDNotifications {
     /**
      * Show a temporary notification message
      */
-    static showNotification(message, type = 'info', duration = 3000) {
-        const notificationsArea = document.getElementById('notifications-area');
+    static showNotification(message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info', duration: number = 3000): void {
+        const notificationsArea: HTMLDivElement | null = document.getElementById('notifications-area') as HTMLDivElement;
         if (!notificationsArea) return;
 
-        const notification = document.createElement('div');
+        const notification: HTMLDivElement = document.createElement('div');
         notification.className = 'hud-notification';
         
         let backgroundColor, borderColor;
@@ -179,7 +179,7 @@ export class HUDNotifications {
         notificationsArea.appendChild(notification);
 
         // Add fade-in animation
-        const fadeInStyle = document.createElement('style');
+        const fadeInStyle: HTMLStyleElement = document.createElement('style');
         fadeInStyle.textContent = `
             @keyframes fadeIn {
                 from { opacity: 0; transform: translateY(-10px); }
@@ -206,11 +206,11 @@ export class HUDNotifications {
     /**
      * Show a critical alert that requires attention
      */
-    static showCriticalAlert(message) {
+    static showCriticalAlert(message: string): void {
         HUDNotifications.showNotification(message, 'error', 5000);
         
         // Add screen flash effect for critical alerts
-        const flashOverlay = document.createElement('div');
+        const flashOverlay: HTMLDivElement = document.createElement('div');
         HUDStyles.applyStyles(flashOverlay, {
             position: 'fixed',
             top: '0',
@@ -223,7 +223,7 @@ export class HUDNotifications {
             animation: 'flash 0.5s ease-in-out'
         });
 
-        const flashStyle = document.createElement('style');
+        const flashStyle: HTMLStyleElement = document.createElement('style');
         flashStyle.textContent = `
             @keyframes flash {
                 0% { opacity: 0; }

@@ -1,27 +1,16 @@
 // ui.ts - Main UI class that integrates all UI components
 
-// @ts-ignore - importing from unconverted JS modules
-import { HUD } from './ui/hud.js';
-// @ts-ignore - importing from unconverted JS modules
-import { MobileHUD } from './ui/mobileHUD.js';
-// @ts-ignore - importing from unconverted JS modules
-import { MiningDisplay } from './ui/miningDisplay.js';
-// @ts-ignore - importing from unconverted JS modules
-import { TargetingUI } from './ui/targetingUI.js';
-// @ts-ignore - importing from unconverted JS modules
-import { StargateInterface } from './ui/stargateInterface.js';
-// @ts-ignore - importing from unconverted JS modules
-import { GameOverScreen } from './ui/gameOverScreen.js';
-// @ts-ignore - importing from unconverted JS modules
-import { ControlsMenu } from './ui/controlsMenu.js';
-// @ts-ignore - importing from unconverted JS modules
-import { StarMap } from './ui/starMap.js';
-// @ts-ignore - importing from unconverted JS modules
-import { BlackjackGame } from './ui/blackjackGame.js';
-// @ts-ignore - importing from unconverted JS modules
-import { Settings } from './ui/settings.js';
-// @ts-ignore - importing from unconverted JS modules
-import { StartScreen } from './ui/startScreen.js';
+import { HUD } from './ui/hud.ts';
+import { MobileHUD } from './ui/mobileHUD.ts';
+import { MiningDisplay } from './ui/miningDisplay.ts';
+import { TargetingUI } from './ui/targetingUI.ts';
+import { StargateInterface } from './ui/stargateInterface.ts';
+import { GameOverScreen } from './ui/gameOverScreen.ts';
+import { ControlsMenu } from './ui/controlsMenu.ts';
+import { StarMap } from './ui/starMap.ts';
+import { BlackjackGame } from './ui/blackjackGame.ts';
+import { Settings } from './ui/settings.ts';
+import { StartScreen } from './ui/startScreen.ts';
 // @ts-ignore - importing from unconverted JS modules
 import { MemoryStats } from '../utils/memoryManager.js';
 import { MobileDetector } from '../utils/mobileDetector.js';
@@ -33,10 +22,7 @@ interface Cargo {
     platinum: number;
 }
 
-interface SpaceshipForUI {
-    cargo?: Cargo;
-    isDocked?: boolean;
-}
+type SpaceshipForUI = any;
 
 interface StarSystemGenerator {
     getCurrentSystemData(): { name: string } | null;
@@ -60,6 +46,7 @@ interface ControlsForUI {
     dockingSystem?: DockingSystem;
     touchControls?: TouchControls;
     setupStargateUIControls?: () => void;
+    [key: string]: unknown;
 }
 
 interface AudioForUI {
@@ -73,14 +60,14 @@ interface HUDComponent {
     updateFPS?: (fps: number, cap?: number) => void;
     hide?: () => void;
     show?: () => void;
-    setControls?: (controls: ControlsForUI) => void;
+    setControls?: (controls: any) => void;
 }
 
 interface MiningDisplayComponent {
     update?: () => void;
     hide?: () => void;
     show?: () => void;
-    setControls?: (controls: ControlsForUI) => void;
+    setControls?: (controls: any) => void;
 }
 
 interface TargetingUIComponent {
@@ -91,9 +78,9 @@ interface TargetingUIComponent {
 interface StargateInterfaceComponent {
     hideDockingPrompt?: () => void;
     showStargateUI?: () => void;
-    setStarMap?: (starMap: StarMapComponent) => void;
-    setBlackjackGame?: (blackjackGame: BlackjackGameComponent) => void;
-    setSettings?: (settings: SettingsComponent) => void;
+    setStarMap?: (starMap: any) => void;
+    setBlackjackGame?: (blackjackGame: any) => void;
+    setSettings?: (settings: any) => void;
 }
 
 interface GameOverScreenComponent {
@@ -107,7 +94,7 @@ interface ControlsMenuComponent {
 }
 
 interface StarMapComponent {
-    dockingSystem?: DockingSystem;
+    dockingSystem?: DockingSystem | null;
 }
 
 interface BlackjackGameComponent {
@@ -182,7 +169,7 @@ export class UI {
         this.controlsMenu = new ControlsMenu();
         
         // Initialize star map (requires environment, docking system, and stargate interface)
-        this.starMap = new StarMap(this.environment.starSystemGenerator, null, this.stargateInterface);
+        this.starMap = new StarMap(this.environment.starSystemGenerator ?? null, null, this.stargateInterface);
         
         // Initialize Blackjack game (will be fully initialized after audio is set)
         this.blackjackGame = null;

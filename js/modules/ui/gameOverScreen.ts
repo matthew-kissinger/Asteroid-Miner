@@ -2,18 +2,46 @@
 
 import { getAbsolutePath } from '../../utils/pathUtils.ts';
 
+type GameOverAudio = {
+    playSound?: (sound: string) => void;
+};
+
+type HordeModeData = {
+    active: boolean;
+    survivalTime?: string;
+    rawSurvivalTime?: number;
+};
+
+type GameOverResources = {
+    iron?: number;
+    gold?: number;
+    platinum?: number;
+    resources?: GameOverResources;
+    hordeMode?: HordeModeData;
+};
+
+type GameOverMessage = {
+    data?: {
+        type?: string;
+        reason?: string;
+    };
+};
+
 export class GameOverScreen {
+    isVisible: boolean;
+    audio?: GameOverAudio;
+
     constructor() {
         this.isVisible = false;
         this.setupGameOverScreen();
     }
     
     // Helper method to handle paths for GitHub Pages and local development
-    getPath(relativePath) {
+    getPath(relativePath: string): string {
         return getAbsolutePath(relativePath);
     }
     
-    setupGameOverScreen() {
+    setupGameOverScreen(): void {
         // Add game over container (hidden initially)
         const gameOverContainer = document.createElement('div');
         gameOverContainer.id = 'game-over-container';
@@ -62,7 +90,7 @@ export class GameOverScreen {
         gameOverContainer.appendChild(resourcesSummary);
     }
     
-    setupRestartButton(container) {
+    setupRestartButton(container: HTMLElement): void {
         const restartButton = document.createElement('button');
         restartButton.id = 'restart-game-button';
         restartButton.textContent = 'RESTART MISSION';
@@ -89,9 +117,7 @@ export class GameOverScreen {
         
         restartButton.addEventListener('click', () => {
             // Play the click sound
-            if (this.audio) {
-                this.audio.playSound('uiClick');
-            }
+            this.audio?.playSound?.('uiClick');
             
             // Show loading status
             const loadingStatus = document.createElement('div');
@@ -128,23 +154,26 @@ export class GameOverScreen {
         container.appendChild(restartButton);
     }
     
-    show(resources, message) {
+    show(resources: unknown, message: unknown): void {
         console.log("GameOverScreen: Showing game over screen");
         
         // Show game over screen
-        const gameOverContainer = document.getElementById('game-over-container');
-        gameOverContainer.style.display = 'flex';
+        const gameOverContainer = document.getElementById('game-over-container') as HTMLDivElement | null;
+        if (gameOverContainer) {
+            gameOverContainer.style.display = 'flex';
+        }
         
         // Set message based on reason
-        const gameOverMessage = document.getElementById('game-over-message');
+        const gameOverMessage = document.getElementById('game-over-message') as HTMLParagraphElement | null;
+        const typedMessage = message as string | GameOverMessage | null;
         if (gameOverMessage) {
             // Default message
             let displayMessage = 'Your journey has ended.';
             
             // Check if we received a reason type or just a string message
-            if (typeof message === 'object' && message.data && message.data.type) {
+            if (typeof typedMessage === 'object' && typedMessage?.data && typedMessage.data.type) {
                 // Use the type field for more reliable message categorization
-                const reasonType = message.data.type;
+                const reasonType = typedMessage.data.type;
                 
                 switch (reasonType) {
                     case 'FUEL_DEPLETED':
@@ -164,25 +193,25 @@ export class GameOverScreen {
                         break;
                     default:
                         // If we have a reason string but don't recognize the type
-                        if (message.data.reason) {
-                            displayMessage = message.data.reason;
+                        if (typedMessage.data.reason) {
+                            displayMessage = typedMessage.data.reason;
                         }
                 }
-            } else if (message) {
+            } else if (typeof typedMessage === 'string' && typedMessage.length > 0) {
                 // Fallback to string content checking for backward compatibility
-                if (message.includes("fuel")) {
+                if (typedMessage.includes("fuel")) {
                     displayMessage = 'Your ship drifted into the void after running out of fuel.';
-                } else if (message.includes("asteroid")) {
+                } else if (typedMessage.includes("asteroid")) {
                     displayMessage = 'Your ship was destroyed by an asteroid collision.';
-                } else if (message.includes("combat")) {
+                } else if (typedMessage.includes("combat")) {
                     displayMessage = 'Your ship was destroyed in combat.';
-                } else if (message.includes("sun")) {
+                } else if (typedMessage.includes("sun")) {
                     displayMessage = "Your ship was incinerated by the sun's heat!";
-                } else if (message.includes("planet")) {
+                } else if (typedMessage.includes("planet")) {
                     displayMessage = "Your ship crashed into a planet!";
                 } else {
                     // Use the provided message if none of our standardized reasons match
-                    displayMessage = message;
+                    displayMessage = typedMessage;
                 }
             }
             
@@ -194,20 +223,21 @@ export class GameOverScreen {
         let hordeSurvivalTime = "00:00";
         let rawSurvivalTime = 0;
         
-        if (resources && resources.hordeMode) {
-            wasHordeMode = resources.hordeMode.active;
-            hordeSurvivalTime = resources.hordeMode.survivalTime || "00:00";
-            rawSurvivalTime = resources.hordeMode.rawSurvivalTime || 0;
+        const typedResources = resources as GameOverResources | null;
+        if (typedResources && typedResources.hordeMode) {
+            wasHordeMode = typedResources.hordeMode.active;
+            hordeSurvivalTime = typedResources.hordeMode.survivalTime || "00:00";
+            rawSurvivalTime = typedResources.hordeMode.rawSurvivalTime || 0;
         }
         
         // Handle different resource data formats
         // It might be wrapped in a gameStats structure or come directly
-        let resourceData = resources;
+        let resourceData = typedResources;
         
         // Check if resources has a nested resources property (from gameOver method in game.js)
-        if (resources && resources.resources) {
+        if (typedResources && typedResources.resources) {
             console.log("GameOverScreen: Using nested resources data structure");
-            resourceData = resources.resources;
+            resourceData = typedResources.resources;
         }
         
         // Ensure we have valid resource values with defaults
@@ -216,7 +246,7 @@ export class GameOverScreen {
         const platinum = resourceData && resourceData.platinum ? resourceData.platinum : 0;
         
         // Update resources summary with guaranteed safe values
-        const resourcesSummary = document.getElementById('resources-summary');
+        const resourcesSummary = document.getElementById('resources-summary') as HTMLDivElement | null;
         if (resourcesSummary) {
             // Create horde mode section if applicable
             if (wasHordeMode) {

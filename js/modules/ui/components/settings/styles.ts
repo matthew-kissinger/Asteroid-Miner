@@ -1,15 +1,17 @@
 // styles.js - Settings UI styles and CSS generation
 
 export class SettingsStyles {
-    constructor(isMobile) {
+    isMobile: boolean;
+
+    constructor(isMobile: boolean) {
         this.isMobile = isMobile;
     }
 
     /**
      * Creates the main settings container with responsive styling
      */
-    createSettingsContainer() {
-        const settingsContainer = document.createElement('div');
+    createSettingsContainer(): HTMLDivElement {
+        const settingsContainer: HTMLDivElement = document.createElement('div');
         settingsContainer.id = 'settings-container';
         settingsContainer.style.position = 'absolute';
         settingsContainer.style.top = '50%';
@@ -50,28 +52,28 @@ export class SettingsStyles {
     /**
      * Gets responsive styles for settings rows
      */
-    getSettingsRowStyle() {
+    getSettingsRowStyle(): string {
         return `display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};`;
     }
 
     /**
      * Gets styles for setting labels
      */
-    getSettingLabelStyle() {
+    getSettingLabelStyle(): string {
         return `margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}`;
     }
 
     /**
      * Gets styles for setting controls
      */
-    getSettingControlStyle() {
+    getSettingControlStyle(): string {
         return `${this.isMobile ? 'width: 100%' : ''}`;
     }
 
     /**
      * Gets styles for toggle controls
      */
-    getToggleControlStyle() {
+    getToggleControlStyle(): string {
         return `${this.isMobile ? 'width: 100%; display: flex; justify-content: flex-end;' : ''}`;
     }
 

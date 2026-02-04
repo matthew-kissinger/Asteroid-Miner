@@ -1,19 +1,100 @@
 // settingsView.js - Settings panel layout and view management
 
+import { GraphicsSettings } from './graphicsSettings.ts';
+import { AudioSettings } from './audioSettings.ts';
+import { SettingsHelpers } from './helpers.ts';
+import { SettingsPersistence } from './persistence.ts'; // Assuming this will be needed
+
 export class SettingsView {
-    constructor(styles, graphicsSettings, audioSettings, helpers) {
+    styles: any; // TODO: Type this accurately
+    graphicsSettings: GraphicsSettings;
+    audioSettings: AudioSettings;
+    helpers: SettingsHelpers;
+    persistence: SettingsPersistence; // Added for saving/loading
+    private _isVisible: boolean = false; // Internal state for visibility
+
+    constructor(
+        styles: any, // Styles class reference
+        graphicsSettings: GraphicsSettings,
+        audioSettings: AudioSettings,
+        helpers: SettingsHelpers,
+        persistence: SettingsPersistence
+    ) {
         this.styles = styles;
         this.graphicsSettings = graphicsSettings;
         this.audioSettings = audioSettings;
         this.helpers = helpers;
+        this.persistence = persistence;
     }
+
+    // --- Methods expected by SettingsEventHandlers ---
+    updateSettings(): void {
+        console.warn("SettingsView: updateSettings not fully implemented yet.");
+        // This method will read values from UI and prepare them for application
+        // For example:
+        // const newGraphicsSettings = this.graphicsSettings.readGraphicsSettings();
+        // const newAudioSettings = this.audioSettings.readAudioSettings();
+        // this.currentSettings = { ...this.currentSettings, ...newGraphicsSettings, ...newAudioSettings };
+    }
+
+    saveSettings(): void {
+        console.warn("SettingsView: saveSettings not fully implemented yet.");
+        // This method will save the current settings via persistence
+        // For example:
+        // this.persistence.saveSettings(this.currentSettings);
+    }
+
+    applyAllSettings(): void {
+        console.warn("SettingsView: applyAllSettings not fully implemented yet.");
+        // This method will apply all settings to the game
+        // For example:
+        // this.graphicsSettings.applyGraphicsSettings(this.currentSettings);
+        // this.audioSettings.applyAudioSettings(this.currentSettings);
+    }
+
+    applyPreset(presetName: string): void {
+        console.warn(`SettingsView: applyPreset('${presetName}') not fully implemented yet.`);
+        // This method will apply a preset and update the UI
+        // For example:
+        // const newSettings = this.helpers.getPerformanceRecommendation(presetName); // Or a specific preset logic
+        // this.currentSettings = { ...this.currentSettings, ...newSettings };
+        // this.updateAllUI(this.currentSettings);
+    }
+
+    showSettingsApplied(): void {
+        // Create notification
+        const notification: HTMLDivElement = document.createElement('div');
+        const notificationStyles: Record<string, string> = this.styles.getNotificationStyle();
+        
+        // Apply all styles
+        Object.assign(notification.style, notificationStyles);
+        notification.textContent = 'Settings applied and saved';
+        
+        document.body.appendChild(notification);
+        
+        // Remove after a few seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.5s';
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 500);
+        }, 1500);
+    }
+
+    get isVisible(): boolean {
+        return this._isVisible;
+    }
+
+    // --- Original methods with type annotations ---
 
     /**
      * Creates the complete settings UI
      */
-    createSettingsUI() {
+    createSettingsUI(): HTMLElement {
         // Create settings container
-        const settingsContainer = this.styles.createSettingsContainer();
+        const settingsContainer: HTMLDivElement = this.styles.createSettingsContainer();
         
         // Create settings content
         settingsContainer.innerHTML = this.createSettingsHTML();
@@ -30,7 +111,7 @@ export class SettingsView {
     /**
      * Creates the complete settings HTML content
      */
-    createSettingsHTML() {
+    createSettingsHTML(): string {
         return `
             <h2 style="${this.styles.getMainTitleStyle()}">GAME SETTINGS</h2>
             
@@ -49,7 +130,7 @@ export class SettingsView {
     /**
      * Creates the performance settings section HTML
      */
-    createPerformanceSettingsHTML() {
+    createPerformanceSettingsHTML(): string {
         return `
             <div style="margin-bottom: 20px;">
                 <h3 style="${this.styles.getSectionHeaderStyle()}">PERFORMANCE SETTINGS</h3>
@@ -84,7 +165,7 @@ export class SettingsView {
     /**
      * Creates the presets section HTML
      */
-    createPresetsHTML() {
+    createPresetsHTML(): string {
         return `
             <div style="margin-bottom: 20px;">
                 <h3 style="${this.styles.getSectionHeaderStyle()}">PRESETS</h3>
@@ -107,7 +188,7 @@ export class SettingsView {
     /**
      * Creates the action buttons HTML
      */
-    createActionButtonsHTML() {
+    createActionButtonsHTML(): string {
         return `
             <div style="${this.styles.getActionButtonsContainerStyle()}">
                 <button id="apply-settings" style="${this.styles.getApplyButtonStyle()}">
@@ -123,34 +204,30 @@ export class SettingsView {
     /**
      * Shows the settings panel
      */
-    show() {
-        const settingsContainer = document.getElementById('settings-container');
+    show(): boolean {
+        const settingsContainer: HTMLDivElement | null = document.getElementById('settings-container') as HTMLDivElement;
         if (settingsContainer) {
             settingsContainer.style.display = 'block';
-            return true;
-        }
-        return false;
+            this._isVisible = true;
     }
 
     /**
      * Hides the settings panel
      */
-    hide() {
-        const settingsContainer = document.getElementById('settings-container');
+    hide(): boolean {
+        const settingsContainer: HTMLDivElement | null = document.getElementById('settings-container') as HTMLDivElement;
         if (settingsContainer) {
             settingsContainer.style.display = 'none';
-            return true;
-        }
-        return false;
+            this._isVisible = false;
     }
 
     /**
      * Updates the refresh rate display in the frame rate cap dropdown
      */
-    updateRefreshRateDisplay(refreshRate) {
-        const frameRateSelect = document.getElementById('frame-rate-cap');
+    updateRefreshRateDisplay(refreshRate: number): void {
+        const frameRateSelect: HTMLSelectElement | null = document.getElementById('frame-rate-cap') as HTMLSelectElement;
         if (frameRateSelect) {
-            const autoOption = frameRateSelect.querySelector('option[value="auto"]');
+            const autoOption: HTMLOptionElement | null = frameRateSelect.querySelector('option[value="auto"]');
             if (autoOption) {
                 autoOption.textContent = `Monitor Refresh Rate (${refreshRate}Hz)`;
             }
@@ -160,10 +237,10 @@ export class SettingsView {
     /**
      * Shows a settings applied notification
      */
-    showSettingsApplied() {
+    showSettingsApplied(): void {
         // Create notification
-        const notification = document.createElement('div');
-        const notificationStyles = this.styles.getNotificationStyle();
+        const notification: HTMLDivElement = document.createElement('div');
+        const notificationStyles: Record<string, string> = this.styles.getNotificationStyle();
         
         // Apply all styles
         Object.assign(notification.style, notificationStyles);

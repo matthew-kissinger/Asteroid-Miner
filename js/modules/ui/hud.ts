@@ -3,20 +3,28 @@
 import { HUDStyles } from './components/hud/styles.js';
 import { HUDDisplays } from './components/hud/displays.js';
 import { HUDNotifications } from './components/hud/notifications.js';
-import { HUDMinimap } from './components/hud/minimap.js';
 import { HUDStatusIndicators } from './components/hud/statusIndicators.js';
 import { HUDEventHandlers } from './components/hud/eventHandlers.js';
 import { HUDHelpers } from './components/hud/helpers.js';
 
+type HUDSpaceship = {
+    [key: string]: unknown;
+};
+
+type HUDNotificationType = 'info' | 'warning' | 'error' | 'success';
+
 export class HUD {
-    constructor(spaceship) {
+    spaceship: HUDSpaceship | null;
+    eventHandlers: HUDEventHandlers | null;
+
+    constructor(spaceship: HUDSpaceship) {
         this.spaceship = spaceship;
         this.eventHandlers = new HUDEventHandlers();
         this.setupHUD();
-        this.eventHandlers.animateHudIn();
+        this.eventHandlers?.animateHudIn();
     }
     
-    setupHUD() {
+    setupHUD(): void {
         // Initialize styles first
         HUDStyles.initializeStyles();
         
@@ -25,7 +33,9 @@ export class HUD {
         
         // Create scanline effect and get reference
         const scanline = HUDStatusIndicators.createScanlineEffect(hudContainer);
-        this.eventHandlers.setScanline(scanline);
+        if (scanline) {
+            this.eventHandlers?.setScanline(scanline);
+        }
         
         // Create all HUD panels
         HUDDisplays.createFlightPanel(hudContainer);
@@ -36,7 +46,7 @@ export class HUD {
         HUDNotifications.createNotificationsArea(hudContainer);
     }
     
-    createMainContainer() {
+    createMainContainer(): HTMLDivElement {
         const hudContainer = document.createElement('div');
         hudContainer.id = 'hud-container';
         HUDStyles.applyStyles(hudContainer, HUDStyles.getMainContainerStyles());
@@ -44,7 +54,7 @@ export class HUD {
         return hudContainer;
     }
     
-    update() {
+    update(): void {
         if (!this.spaceship) return;
         
         // Update all status indicators
@@ -57,32 +67,33 @@ export class HUD {
         HUDNotifications.updateHordeModeDisplay();
     }
     
-    updateLocation(locationName, systemName = 'Unknown System') {
-        HUDStatusIndicators.updateLocation(locationName, systemName);
-        this.eventHandlers.handleLocationChange(locationName, systemName);
+    updateLocation(locationName: string | null, systemName = 'Unknown System'): void {
+        const safeLocation = locationName ?? 'Unknown Location';
+        HUDStatusIndicators.updateLocation(safeLocation, systemName);
+        this.eventHandlers?.handleLocationChange(safeLocation, systemName);
     }
     
-    updateCoordinates(x, y, z) {
+    updateCoordinates(x: number, y: number, z: number): void {
         HUDStatusIndicators.updateCoordinates(x, y, z);
     }
     
-    updateFPS(fps, cap) {
-        HUDStatusIndicators.updateFPS(fps, cap);
+    updateFPS(fps: number, cap?: number): void {
+        HUDStatusIndicators.updateFPS(fps, cap ?? 0);
     }
     
-    hide() {
-        this.eventHandlers.hide();
+    hide(): void {
+        this.eventHandlers?.hide();
     }
     
-    show() {
-        this.eventHandlers.show();
+    show(): void {
+        this.eventHandlers?.show();
     }
     
-    destroy() {
-        this.eventHandlers.destroy();
+    destroy(): void {
+        this.eventHandlers?.destroy();
         
         // Remove DOM elements
-        const hudContainer = document.getElementById('hud-container');
+        const hudContainer = document.getElementById('hud-container') as HTMLDivElement | null;
         if (hudContainer && hudContainer.parentNode) {
             hudContainer.parentNode.removeChild(hudContainer);
         }
@@ -93,24 +104,24 @@ export class HUD {
     }
     
     // Backward compatibility methods
-    updateShieldDisplay() {
+    updateShieldDisplay(): void {
         HUDStatusIndicators.updateShieldDisplay(this.spaceship);
     }
     
-    updateHullDisplay() {
+    updateHullDisplay(): void {
         HUDStatusIndicators.updateHullDisplay(this.spaceship);
     }
     
-    updateHordeModeDisplay() {
+    updateHordeModeDisplay(): void {
         HUDNotifications.updateHordeModeDisplay();
     }
     
     // Utility methods for external access
-    showNotification(message, type = 'info', duration = 3000) {
+    showNotification(message: string, type: HUDNotificationType = 'info', duration = 3000): void {
         HUDNotifications.showNotification(message, type, duration);
     }
     
-    showCriticalAlert(message) {
+    showCriticalAlert(message: string): void {
         HUDNotifications.showCriticalAlert(message);
     }
     

@@ -1,13 +1,13 @@
 // minimap.js - Minimap rendering and updates (placeholder for future implementation)
 
-import { HUDStyles } from './styles.js';
+import { HUDStyles } from './styles.ts';
 
 export class HUDMinimap {
     /**
      * Create a minimap component (removed as per user request, but keeping for future)
      * This is a placeholder for when minimap functionality might be re-added
      */
-    static createMinimap(parent) {
+    static createMinimap(parent: HTMLElement): HTMLDivElement | null {
         // Radar/minimap was removed as per user request
         // This method is kept as a placeholder for potential future implementation
         console.log('Minimap creation requested but currently disabled');
@@ -17,7 +17,7 @@ export class HUDMinimap {
     /**
      * Update minimap with current game state
      */
-    static updateMinimap(gameState) {
+    static updateMinimap(gameState: any): void {
         // Placeholder for minimap update logic
         // Currently disabled as radar was removed
         return;
@@ -26,7 +26,7 @@ export class HUDMinimap {
     /**
      * Add a blip to the minimap
      */
-    static addBlip(x, y, type, data) {
+    static addBlip(x: number, y: number, type: string, data: any): void {
         // Placeholder for adding objects to minimap
         // Currently disabled as radar was removed
         return;
@@ -35,7 +35,7 @@ export class HUDMinimap {
     /**
      * Remove a blip from the minimap
      */
-    static removeBlip(id) {
+    static removeBlip(id: string): void {
         // Placeholder for removing objects from minimap
         // Currently disabled as radar was removed
         return;
@@ -44,7 +44,7 @@ export class HUDMinimap {
     /**
      * Clear all blips from the minimap
      */
-    static clearBlips() {
+    static clearBlips(): void {
         // Placeholder for clearing minimap
         // Currently disabled as radar was removed
         return;
@@ -53,7 +53,7 @@ export class HUDMinimap {
     /**
      * Set minimap zoom level
      */
-    static setZoom(zoomLevel) {
+    static setZoom(zoomLevel: number): void {
         // Placeholder for zoom functionality
         // Currently disabled as radar was removed
         return;
@@ -62,7 +62,7 @@ export class HUDMinimap {
     /**
      * Toggle minimap visibility
      */
-    static toggleVisibility() {
+    static toggleVisibility(): void {
         // Placeholder for visibility toggle
         // Currently disabled as radar was removed
         return;
