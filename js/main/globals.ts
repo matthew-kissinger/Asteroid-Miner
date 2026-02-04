@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { MessageBus } from '../core/messageBus.js';
-import { getGlobalPoolRegistry } from '../modules/pooling/PoolRegistry.js';
+import { getGlobalPoolRegistry } from '../modules/pooling/PoolRegistry.ts';
 
 type PoolRegistry = {
     get: (poolName: string, ...args: unknown[]) => unknown;

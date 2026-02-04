@@ -1,8 +1,30 @@
 /**
  * Impact Type Handler Module
- * 
+ *
  * Handles different types of impact effects based on projectile type
  */
+
+import type { ObjectPool } from '../../../ObjectPool.ts';
+import type * as THREE from 'three';
+import type { ExplosionFactory } from './explosionFactory.ts';
+import type { SparkFactory } from './sparkFactory.ts';
+import type { DebrisFactory } from './debrisFactory.ts';
+
+type ExplosionPoints = ReturnType<ExplosionFactory['createExplosion']>;
+type SparkPoints = ReturnType<SparkFactory['createSparkEffect']>;
+type DebrisGroup = ReturnType<DebrisFactory['createDebrisEffect']>;
+
+type ImpactEffects = {
+    explosion?: ExplosionPoints;
+    spark?: SparkPoints;
+    debris?: DebrisGroup;
+};
+
+type ImpactPools = {
+    explosionPool?: ObjectPool<ExplosionPoints>;
+    sparkPool?: ObjectPool<SparkPoints>;
+    debrisPool?: ObjectPool<DebrisGroup>;
+};
 
 export class ImpactTypeHandler {
     constructor() {
@@ -11,16 +33,17 @@ export class ImpactTypeHandler {
 
     /**
      * Create an impact effect based on projectile type
-     * @param {THREE.Vector3} position - Impact position
-     * @param {string} projectileType - Type of projectile that impacted
-     * @param {object} options - Effect options
-     * @param {object} pools - Object containing the different effect pools
-     * @returns {object} Created effects
+     * @param position - Impact position
+     * @param projectileType - Type of projectile that impacted
+     * @param options - Effect options
+     * @param pools - Object containing the different effect pools
+     * @returns Created effects
      */
-    createImpactEffect(position, projectileType = 'bullet', options = {}, pools = {}) {
-        const effects = {};
+    createImpactEffect(position: THREE.Vector3, projectileType = 'bullet', options: Record<string, unknown> = {}, pools: ImpactPools = {}): ImpactEffects {
+        void options;
+        const effects: ImpactEffects = {};
         const { explosionPool, sparkPool, debrisPool } = pools;
-        
+
         switch (projectileType) {
             case 'missile':
                 // Large explosion for missiles
@@ -30,7 +53,7 @@ export class ImpactTypeHandler {
                     effects.explosion.scale.set(2, 2, 2); // Larger explosion
                 }
                 break;
-                
+
             case 'laser':
                 // Bright spark effect for lasers
                 if (sparkPool) {
@@ -38,7 +61,7 @@ export class ImpactTypeHandler {
                     effects.spark.material.color.setHex(0x00ffff);
                 }
                 break;
-                
+
             case 'plasma':
                 // Purple energy explosion for plasma
                 if (explosionPool) {
@@ -50,7 +73,7 @@ export class ImpactTypeHandler {
                     effects.spark.material.color.setHex(0xaa00ff);
                 }
                 break;
-                
+
             case 'bullet':
             default:
                 // Sparks and debris for bullets
@@ -62,7 +85,7 @@ export class ImpactTypeHandler {
                 }
                 break;
         }
-        
+
         return effects;
     }
 
@@ -70,7 +93,7 @@ export class ImpactTypeHandler {
      * Helper method to get explosion from pool
      * @private
      */
-    _getExplosion(explosionPool, position, duration) {
+    private _getExplosion(explosionPool: ObjectPool<ExplosionPoints>, position: THREE.Vector3, duration: number): ExplosionPoints {
         const explosion = explosionPool.get();
         explosion.position.copy(position);
         explosion.visible = true;
@@ -84,7 +107,7 @@ export class ImpactTypeHandler {
      * Helper method to get spark effect from pool
      * @private
      */
-    _getSparkEffect(sparkPool, position, duration) {
+    private _getSparkEffect(sparkPool: ObjectPool<SparkPoints>, position: THREE.Vector3, duration: number): SparkPoints {
         const spark = sparkPool.get();
         spark.position.copy(position);
         spark.visible = true;
@@ -98,7 +121,7 @@ export class ImpactTypeHandler {
      * Helper method to get debris effect from pool
      * @private
      */
-    _getDebrisEffect(debrisPool, position, duration) {
+    private _getDebrisEffect(debrisPool: ObjectPool<DebrisGroup>, position: THREE.Vector3, duration: number): DebrisGroup {
         const debris = debrisPool.get();
         debris.position.copy(position);
         debris.visible = true;

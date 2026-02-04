@@ -1,6 +1,6 @@
 /**
  * Impact Effects Pool
- * 
+ *
  * Manages pooling of impact effects for projectile collisions:
  * - Explosion particle systems
  * - Impact flashes and sparks
@@ -8,286 +8,325 @@
  * - Different effects based on impact type
  */
 
-import { ObjectPool } from '../../ObjectPool.js';
+import { ObjectPool } from '../../ObjectPool.ts';
 import * as THREE from 'three';
-import { ExplosionFactory } from './impacts/explosionFactory.js';
-import { SparkFactory } from './impacts/sparkFactory.js';
-import { DebrisFactory } from './impacts/debrisFactory.js';
-import { ImpactTypeHandler } from './impacts/impactTypeHandler.js';
+import { ExplosionFactory } from './impacts/explosionFactory.ts';
+import { SparkFactory } from './impacts/sparkFactory.ts';
+import { DebrisFactory } from './impacts/debrisFactory.ts';
+import { ImpactTypeHandler } from './impacts/impactTypeHandler.ts';
+
+type SharedAssets = {
+    explosionParticleMaterial: THREE.PointsMaterial;
+};
+
+type ExplosionPoints = ReturnType<ExplosionFactory['createExplosion']>;
+
+type SparkPoints = ReturnType<SparkFactory['createSparkEffect']>;
+
+type DebrisGroup = ReturnType<DebrisFactory['createDebrisEffect']>;
+
+type ImpactEffects = {
+    explosion?: ExplosionPoints;
+    spark?: SparkPoints;
+    debris?: DebrisGroup;
+};
+
+type AddToScene = (object: THREE.Object3D) => void;
+
+type RemoveFromParent = (object: THREE.Object3D) => void;
 
 export class ImpactEffectsPool {
+    sharedAssets: SharedAssets;
+    private _addToScene: AddToScene;
+    private _removeFromParent: RemoveFromParent;
+
+    explosionFactory: ExplosionFactory;
+    sparkFactory: SparkFactory;
+    debrisFactory: DebrisFactory;
+    impactTypeHandler: ImpactTypeHandler;
+
+    explosionPool!: ObjectPool<ExplosionPoints>;
+    sparkPool!: ObjectPool<SparkPoints>;
+    debrisPool!: ObjectPool<DebrisGroup>;
+
     /**
      * Create a new ImpactEffectsPool
-     * @param {object} sharedAssets - Shared geometries and materials
-     * @param {function} addToScene - Function to add objects to scene
-     * @param {function} removeFromParent - Function to remove objects from parent
+     * @param sharedAssets - Shared geometries and materials
+     * @param addToScene - Function to add objects to scene
+     * @param removeFromParent - Function to remove objects from parent
      */
-    constructor(sharedAssets, addToScene, removeFromParent) {
+    constructor(sharedAssets: SharedAssets, addToScene: AddToScene, removeFromParent: RemoveFromParent) {
         this.sharedAssets = sharedAssets;
         this._addToScene = addToScene;
         this._removeFromParent = removeFromParent;
-        
+
         // Initialize factories
         this.explosionFactory = new ExplosionFactory(sharedAssets);
         this.sparkFactory = new SparkFactory(sharedAssets);
         this.debrisFactory = new DebrisFactory();
         this.impactTypeHandler = new ImpactTypeHandler();
-        
+
         this.initializePools();
     }
-    
+
     /**
      * Initialize impact effect pools
      */
-    initializePools() {
+    initializePools(): void {
         // Initialize explosion pool
-        this.explosionPool = new ObjectPool(
+        this.explosionPool = new ObjectPool<ExplosionPoints>(
             // Create function
             () => this.createExplosion(),
             // Reset function
             (explosion) => this.resetExplosion(explosion),
             10, // Initial size
-            5   // Expand size
+            5 // Expand size
         );
-        
+
         // Initialize spark pool for impact effects
-        this.sparkPool = new ObjectPool(
+        this.sparkPool = new ObjectPool<SparkPoints>(
             // Create function
             () => this.createSparkEffect(),
             // Reset function
             (spark) => this.resetSparkEffect(spark),
             20, // Initial size
-            8   // Expand size
+            8 // Expand size
         );
-        
+
         // Initialize debris pool
-        this.debrisPool = new ObjectPool(
+        this.debrisPool = new ObjectPool<DebrisGroup>(
             // Create function
             () => this.createDebrisEffect(),
             // Reset function
             (debris) => this.resetDebrisEffect(debris),
             15, // Initial size
-            6   // Expand size
+            6 // Expand size
         );
     }
-    
+
     /**
      * Create a new explosion effect
-     * @returns {THREE.Points} An explosion particle system
+     * @returns An explosion particle system
      */
-    createExplosion() {
+    createExplosion(): ExplosionPoints {
         return this.explosionFactory.createExplosion();
     }
-    
+
     /**
      * Reset explosion to initial state
-     * @param {THREE.Points} explosion - The explosion to reset
+     * @param explosion - The explosion to reset
      */
-    resetExplosion(explosion) {
+    resetExplosion(explosion: ExplosionPoints): void {
         this.explosionFactory.resetExplosion(explosion);
     }
-    
+
     /**
      * Create a spark effect for impacts
-     * @returns {THREE.Points} A spark particle system
+     * @returns A spark particle system
      */
-    createSparkEffect() {
+    createSparkEffect(): SparkPoints {
         return this.sparkFactory.createSparkEffect();
     }
-    
+
     /**
      * Reset spark effect to initial state
-     * @param {THREE.Points} spark - The spark effect to reset
+     * @param spark - The spark effect to reset
      */
-    resetSparkEffect(spark) {
+    resetSparkEffect(spark: SparkPoints): void {
         this.sparkFactory.resetSparkEffect(spark);
     }
-    
+
     /**
      * Create debris effect for impacts
-     * @returns {THREE.Group} A debris group
+     * @returns A debris group
      */
-    createDebrisEffect() {
+    createDebrisEffect(): DebrisGroup {
         return this.debrisFactory.createDebrisEffect();
     }
-    
+
     /**
      * Reset debris effect to initial state
-     * @param {THREE.Group} debris - The debris effect to reset
+     * @param debris - The debris effect to reset
      */
-    resetDebrisEffect(debris) {
+    resetDebrisEffect(debris: DebrisGroup): void {
         this.debrisFactory.resetDebrisEffect(debris);
     }
-    
+
     /**
      * Create an impact effect based on projectile type
-     * @param {THREE.Vector3} position - Impact position
-     * @param {string} projectileType - Type of projectile that impacted
-     * @param {object} options - Effect options
-     * @returns {object} Created effects
+     * @param position - Impact position
+     * @param projectileType - Type of projectile that impacted
+     * @param options - Effect options
+     * @returns Created effects
      */
-    createImpactEffect(position, projectileType = 'bullet', options = {}) {
+    createImpactEffect(position: THREE.Vector3, projectileType = 'bullet', options: Record<string, unknown> = {}): ImpactEffects {
         const pools = {
             explosionPool: this.explosionPool,
             sparkPool: this.sparkPool,
             debrisPool: this.debrisPool
         };
-        
+
         const effects = this.impactTypeHandler.createImpactEffect(position, projectileType, options, pools);
-        
+
         // Add effects to scene if not already there
-        Object.values(effects).forEach(effect => {
+        Object.values(effects).forEach((effect) => {
             if (effect && !effect.parent) {
                 this._addToScene(effect);
             }
         });
-        
+
         return effects;
     }
-    
+
     /**
      * Get an explosion effect from the pool
-     * @param {THREE.Vector3} position - Position for the explosion
-     * @param {number} duration - Duration of the explosion in milliseconds
-     * @returns {THREE.Points} An explosion effect
+     * @param position - Position for the explosion
+     * @param duration - Duration of the explosion in milliseconds
+     * @returns An explosion effect
      */
-    getExplosion(position, duration = 1000) {
+    getExplosion(position: THREE.Vector3, duration = 1000): ExplosionPoints {
         const explosion = this.explosionPool.get();
         explosion.position.copy(position);
         explosion.visible = true;
         explosion.userData.active = true;
         explosion.userData.startTime = Date.now();
         explosion.userData.duration = duration;
-        
+
         // Add to scene if not already there
         if (!explosion.parent) {
             this._addToScene(explosion);
         }
-        
+
         return explosion;
     }
-    
+
     /**
      * Get a spark effect from the pool
-     * @param {THREE.Vector3} position - Position for the spark effect
-     * @param {number} duration - Duration of the effect in milliseconds
-     * @returns {THREE.Points} A spark effect
+     * @param position - Position for the spark effect
+     * @param duration - Duration of the effect in milliseconds
+     * @returns A spark effect
      */
-    getSparkEffect(position, duration = 500) {
+    getSparkEffect(position: THREE.Vector3, duration = 500): SparkPoints {
         const spark = this.sparkPool.get();
         spark.position.copy(position);
         spark.visible = true;
         spark.userData.active = true;
         spark.userData.startTime = Date.now();
         spark.userData.duration = duration;
-        
+
         if (!spark.parent) {
             this._addToScene(spark);
         }
-        
+
         return spark;
     }
-    
+
     /**
      * Get a debris effect from the pool
-     * @param {THREE.Vector3} position - Position for the debris effect
-     * @param {number} duration - Duration of the effect in milliseconds
-     * @returns {THREE.Group} A debris effect
+     * @param position - Position for the debris effect
+     * @param duration - Duration of the effect in milliseconds
+     * @returns A debris effect
      */
-    getDebrisEffect(position, duration = 2000) {
+    getDebrisEffect(position: THREE.Vector3, duration = 2000): DebrisGroup {
         const debris = this.debrisPool.get();
         debris.position.copy(position);
         debris.visible = true;
         debris.userData.active = true;
         debris.userData.startTime = Date.now();
         debris.userData.duration = duration;
-        
+
         if (!debris.parent) {
             this._addToScene(debris);
         }
-        
+
         return debris;
     }
-    
+
     /**
      * Update all active impact effects
-     * @param {number} deltaTime - Time since last update
+     * @param deltaTime - Time since last update
      */
-    updateEffects(deltaTime) {
-        this.updateExplosions(deltaTime);
-        this.updateSparks(deltaTime);
-        this.updateDebris(deltaTime);
+    updateEffects(_deltaTime: number): void {
+        this.updateExplosions();
+        this.updateSparks();
+        this.updateDebris();
     }
-    
+
     /**
      * Update all active explosions
-     * @param {number} deltaTime - Time since last update
      */
-    updateExplosions(deltaTime) {
+    updateExplosions(): void {
         this.explosionFactory.updateExplosions(this.explosionPool.active, (explosion) => this.releaseExplosion(explosion));
     }
-    
+
     /**
      * Update all active spark effects
-     * @param {number} deltaTime - Time since last update
      */
-    updateSparks(deltaTime) {
+    updateSparks(): void {
         this.sparkFactory.updateSparks(this.sparkPool.active, (spark) => this.releaseSparkEffect(spark));
     }
-    
+
     /**
      * Update all active debris effects
-     * @param {number} deltaTime - Time since last update
      */
-    updateDebris(deltaTime) {
+    updateDebris(): void {
         this.debrisFactory.updateDebris(this.debrisPool.active, (debris) => this.releaseDebrisEffect(debris));
     }
-    
+
     /**
      * Release effects back to pools
      */
-    releaseExplosion(explosion) {
+    releaseExplosion(explosion: ExplosionPoints): void {
         if (explosion.parent) {
             this._removeFromParent(explosion);
         }
         this.explosionPool.release(explosion);
     }
-    
-    releaseSparkEffect(spark) {
+
+    releaseSparkEffect(spark: SparkPoints): void {
         if (spark.parent) {
             this._removeFromParent(spark);
         }
         this.sparkPool.release(spark);
     }
-    
-    releaseDebrisEffect(debris) {
+
+    releaseDebrisEffect(debris: DebrisGroup): void {
         if (debris.parent) {
             this._removeFromParent(debris);
         }
         this.debrisPool.release(debris);
     }
-    
+
     /**
      * Dispose all impact effect pools
      */
-    dispose() {
+    dispose(): void {
         this.explosionPool.dispose((explosion) => {
             if (explosion.parent) this._removeFromParent(explosion);
             if (explosion.material) explosion.material.dispose();
             if (explosion.geometry) explosion.geometry.dispose();
         });
-        
+
         this.sparkPool.dispose((spark) => {
             if (spark.parent) this._removeFromParent(spark);
             if (spark.material) spark.material.dispose();
             if (spark.geometry) spark.geometry.dispose();
         });
-        
+
         this.debrisPool.dispose((debris) => {
             if (debris.parent) this._removeFromParent(debris);
             for (const piece of debris.children) {
-                if (piece.material) piece.material.dispose();
-                if (piece.geometry) piece.geometry.dispose();
+                const mesh = piece as THREE.Mesh;
+                if (mesh.material) {
+                    if (Array.isArray(mesh.material)) {
+                        mesh.material.forEach((material) => material.dispose());
+                    } else {
+                        mesh.material.dispose();
+                    }
+                }
+                if (mesh.geometry) {
+                    mesh.geometry.dispose();
+                }
             }
         });
     }

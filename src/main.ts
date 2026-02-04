@@ -27,7 +27,7 @@ window.__vite_compat = {
 };
 
 // @ts-ignore - js/modules might not be typed yet
-import { getGlobalPoolRegistry } from '../js/modules/pooling/PoolRegistry.js';
+import { getGlobalPoolRegistry } from '../js/modules/pooling/PoolRegistry.ts';
 
 // Initialize the global object pool early via PoolRegistry facade
 window.objectPool = (() => {
