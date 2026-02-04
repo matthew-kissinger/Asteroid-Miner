@@ -6,9 +6,9 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 1 Complete, Phase 2 ~70% Done
+## Current State: Phase 1 Complete, Phase 2 ~75% Done
 
-Phase 1 is done. Phase 2 is well underway - bitECS installed, components defined, systems created and integrated into game loop, combat module converted to TypeScript, stale physics.js deleted.
+Phase 1 is done. Phase 2 is well underway - bitECS installed, components defined, systems created and integrated into game loop, combat module converted to TypeScript, stale physics.js deleted. Recent wave of TS conversions (ui, environment, typecheck fixes) brought error count from 12 to 5.
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured)
@@ -33,15 +33,19 @@ Phase 1 is done. Phase 2 is well underway - bitECS installed, components defined
 - Dormant ECS mining system deleted (js/systems/mining/ removed)
 - Vite minification re-enabled (constructor.name breakage fixed)
 - lightingConfig.js wired to lighting.js - values now match (sun: 3.0, ambient: 0.3)
+- UI module converted to TypeScript (js/modules/ui.ts) - 25,620 bytes, stale ui.js deleted
+- Environment module converted to TypeScript (js/modules/environment.ts)
+- 12 typecheck errors fixed in renderer.ts, controls.ts, gameInitializer.ts (7f26904)
 
 **Remaining Problems:**
-- **Partial TypeScript** - 39 TS files done, but ~243 JS files remain. js/main.ts has 7 @ts-ignore suppressions (imports from untyped JS modules).
-- **Typecheck has 12 errors** - renderer.ts (7 errors), controls.ts (3 errors), gameInitializer.ts (1 error), combat-related (1 error). These are type mismatches from the JS-to-TS conversion, not logic errors.
+- **Partial TypeScript** - 41 TS files done, but ~241 JS files remain. js/main.ts has 7 @ts-ignore suppressions (imports from untyped JS modules).
+- **Typecheck has 5 errors** - All in gameInitializer.ts. The UI class has `stargateInterface` as optional but `GameUi` type requires it non-optional. Type contract mismatch, not a logic error.
 - **Stale .js files coexist with .ts** - renderer.js and controls.js still exist alongside their .ts replacements. gameInitializer.ts still imports `renderer.js` and `controls.js` explicitly (should resolve to .ts).
 - **Dual ECS running** - Both bitECS (via ecsRunner.ts) and legacy ECS (js/core/) run each frame in parallel. Legacy ECS still drives the actual game; bitECS runs a test entity.
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.js (volumetric light + claude rays). Pending TSL conversion task exists (ccc67db9).
-- **Global state** - ~627 `window.*` usages across the codebase
+- **Global state** - ~645 `window.*` usages across the codebase
 - **combatManager.js** - Legacy combat manager (191 lines) still exists at js/modules/combat/combatManager.js alongside the new TS combat module
+- **Large bundle** - Main chunk is 1,228 kB after minification (needs code splitting)
 
 ## Target Stack (2026 Best Practices)
 
@@ -143,9 +147,9 @@ Health.current[eid] = Health.max[eid]
 1. ~~Upgrade to Three.js r180+~~ Done (r180, package.json updated)
 2. ~~Add TypeScript with strict mode~~ Done (tsconfig.json, checkJs=false for JS files)
 3. ~~Enable WebGPU renderer with WebGL2 fallback~~ Done (js/modules/renderer.js)
-4. Convert `.js` -> `.ts` incrementally - In progress (25 TS files done, ~257 JS files remain)
+4. Convert `.js` -> `.ts` incrementally - In progress (41 TS files done, ~241 JS files remain)
 
-### Phase 2: bitECS Migration - IN PROGRESS (~70%)
+### Phase 2: bitECS Migration - IN PROGRESS (~75%)
 1. ~~Install bitECS~~ Done (v0.4.0, js/ecs/world.ts created)
 2. ~~Define components~~ Done (24 components in js/ecs/components.ts)
 3. ~~Create first systems~~ Done (physicsSystem.ts + renderSyncSystem.ts in js/ecs/systems/)
@@ -155,9 +159,10 @@ Health.current[eid] = Health.max[eid]
 7. ~~Convert combat module to TypeScript~~ Done (combat.ts + 11 submodules)
 8. ~~Convert renderer.js and controls.js to TypeScript~~ Done (but stale .js copies remain)
 9. Delete stale renderer.js and controls.js, update imports - **Next up**
-10. Fix 12 typecheck errors in renderer.ts, controls.ts, gameInitializer.ts
-11. Create remaining bitECS systems (combat, AI, mining)
-12. Delete old custom ECS (js/core/) and combatManager.js
+10. ~~Fix 12 typecheck errors in renderer.ts, controls.ts, gameInitializer.ts~~ Done (7f26904). 5 errors remain in gameInitializer.ts (UI type mismatch).
+11. Fix remaining 5 typecheck errors in gameInitializer.ts
+12. Create remaining bitECS systems (combat, AI, mining)
+13. Delete old custom ECS (js/core/) and combatManager.js
 
 ### Phase 3: Game Feel Overhaul
 1. **Controller tuning**
@@ -302,6 +307,8 @@ js/
 │   │   ├── miningSystem.js   # Active mining orchestrator
 │   │   └── mining/           # TypeScript mining modules (5 files)
 │   ├── physics.ts       # Newtonian physics (TypeScript, 752 lines)
+│   ├── ui.ts            # UI module (TypeScript, 25,620 bytes)
+│   ├── environment.ts   # Environment module (TypeScript)
 │   ├── combat.ts        # Combat orchestrator (TS)
 │   ├── combat/          # Combat submodules (all TS)
 │   │   ├── worldSetup.ts, registerSystems.ts, combatLogic.ts
@@ -309,7 +316,7 @@ js/
 │   │   ├── combatManager.js  # STALE legacy combat manager (191 lines)
 │   │   └── effects/          # explosionEffects.ts, geometryManager.ts,
 │   │                         # materialManager.ts, projectileEffects.ts
-│   └── ...              # ~15 more module directories (still JS)
+│   └── ...              # ~13 more module directories (still JS)
 ├── systems/             # Legacy ECS systems
 ├── components/          # Legacy components
 ├── core/                # Legacy ECS framework (still active, runs game loop)
@@ -383,7 +390,10 @@ After overhaul:
 - ~~**lightingConfig.js is drifted.**~~ RESOLVED - Config wired to lighting.js, values in sync (sun: 3.0, ambient: 0.3).
 - ~~**Stale physics.js coexists with physics.ts.**~~ RESOLVED - physics.js deleted, imports updated.
 - **Stale renderer.js and controls.js coexist with .ts versions.** gameInitializer.ts imports the .js versions explicitly. Need to update imports and delete the stale .js files.
-- **12 typecheck errors after TS conversion.** renderer.ts has 7 errors (shadow map types, Pass types, material types). controls.ts has 3 errors (resource types, index signature). These are typing issues, not logic bugs.
+- ~~**12 typecheck errors after TS conversion.**~~ RESOLVED - Fixed in 7f26904. Down to 5 errors, all in gameInitializer.ts (UI stargateInterface optional vs required type mismatch).
+- **Gemini agent OAuth expired.** Gemini tasks silently fail until re-authenticated. Avoid routing to gemini until fixed.
+- **codex/gpt-5.2-codex-fast failed on stale file deletion.** The fast model didn't produce usable output for the delete-stale-files task. Use a more capable model for file deletion + import rewiring tasks.
+- **Cursor agents may not commit.** cursor/composer-1 completed tasks but sometimes no commit was found. Add explicit commit instructions to cursor task prompts.
 
 ## Resources
 
