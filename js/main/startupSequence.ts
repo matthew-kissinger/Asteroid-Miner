@@ -70,7 +70,7 @@ type StartupGameContext = {
 };
 
 type IntroSequenceLike = {
-    onComplete?: () => void;
+    onComplete?: (() => void) | null;
     startSequence: (onComplete?: () => void) => void;
 };
 
@@ -192,14 +192,14 @@ export class StartupSequence {
     initIntroSequence(): void {
         // Initialize the intro sequence module
         this.introSequence = new IntroSequence(
-            this.game.scene,
-            this.game.camera,
-            this.game.spaceship,
-            this.game.audio  // Pass audio manager as 4th parameter
+            this.game.scene as THREE.Scene,
+            this.game.camera as THREE.Camera,
+            this.game.spaceship ?? null,
+            this.game.audio ?? null  // Pass audio manager as 4th parameter
         );
         
         // Set the completion callback
-        this.introSequence.onComplete = () => {
+        this.introSequence!.onComplete = () => {
             this.completeIntroSequence();
         };
     }

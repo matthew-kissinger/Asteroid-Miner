@@ -1,4 +1,4 @@
-// introSequence.js - Manages the cinematic Star Dreadnought intro sequence
+// introSequence.ts - Manages the cinematic Star Dreadnought intro sequence
 
 import * as THREE from 'three';
 import { StarDreadnought } from './environment/starDreadnought.js';
@@ -9,8 +9,129 @@ import { DialogueSystem } from './intro/ui/dialogueSystem.js';
 import { updateArrivalPhase } from './intro/animation/arrivalPhase.js';
 import { updateDeparturePhase } from './intro/animation/departurePhase.js';
 
+type IntroSoundEffect = {
+    play?: () => void;
+    dispose?: () => void;
+};
+
+type IntroSoundMap = Record<string, IntroSoundEffect>;
+
+type AudioManagerLike = {
+    muted?: boolean;
+    sfxVolume?: number;
+    audioContext?: { state: string };
+    resumeAudioContext?: () => void;
+    initialize?: () => Promise<void>;
+};
+
+interface PortalEffectLike {
+    getPortalGroup: () => THREE.Group;
+    updatePortalEffect: () => void;
+    setOpacity: (opacity: number) => void;
+    setScale: (scale: number) => void;
+    setPosition: (position: THREE.Vector3) => void;
+    setRotation: (rotation: THREE.Euler) => void;
+    setVisible: (visible: boolean) => void;
+    dispose: () => void;
+}
+
+interface StarDreadnoughtLike {
+    ship: THREE.Group;
+    teleportBeamActive: boolean;
+    setEnginesPower: (power: number) => void;
+    activateTeleportBeam: () => void;
+    deactivateTeleportBeam: () => void;
+    updateTeleportBeam: (progress: number) => void;
+    destroy?: () => void;
+    dispose?: () => void;
+}
+
+interface VectorLike {
+    set: (x: number, y: number, z: number) => void;
+    x: number;
+    y: number;
+    z: number;
+}
+
+interface EulerLike {
+    set: (x: number, y: number, z: number) => void;
+}
+
+interface MeshLike {
+    position: VectorLike;
+    rotation: EulerLike;
+    visible?: boolean;
+    add?: (obj: THREE.Object3D) => void;
+    remove?: (obj: THREE.Object3D) => void;
+}
+
+interface SpaceshipLike {
+    mesh?: MeshLike;
+    thrust?: {
+        forward: boolean;
+        backward: boolean;
+        left: boolean;
+        right: boolean;
+        boost: boolean;
+    };
+    velocity?: THREE.Vector3;
+    isDocked?: boolean;
+    hull?: number;
+    shield?: number;
+    fuel?: number;
+}
+
+interface DialogueSystemLike {
+    initialize: (dialogueWavs: HTMLAudioElement[], audioManager?: AudioManagerLike | null) => void;
+    setupDialogueUI: () => void;
+    typeNextDialogue: (sequenceTime?: number, isPlaying?: boolean) => boolean;
+    cleanup: () => void;
+}
+
+interface IntroSequenceAnimationContext {
+    portalEffect: PortalEffectLike;
+    starDreadnought: StarDreadnoughtLike;
+    camera: THREE.Camera;
+    spaceship: SpaceshipLike | null;
+    introSounds: IntroSoundMap;
+    flashOverlay: (maxOpacity?: number) => void;
+    finalPlayerPosition?: THREE.Vector3;
+    playerShieldEffect?: THREE.Object3D | null;
+    shieldPulseTime?: number;
+}
+
+type GameWindowWithInstance = Window & {
+    gameInstance?: {
+        spaceship?: SpaceshipLike;
+    };
+};
+
 export class IntroSequence {
-    constructor(scene, camera, spaceship, audioManager) {
+    scene: THREE.Scene | null;
+    camera: THREE.Camera | null;
+    spaceship: SpaceshipLike | null;
+    audio: AudioManagerLike | null;
+    isPlaying: boolean;
+    sequenceTime: number;
+    onComplete: (() => void) | null;
+    skipEnabled: boolean;
+    initialCameraPosition: THREE.Vector3 | null;
+    initialCameraRotation: THREE.Euler | null;
+    starDreadnought: StarDreadnoughtLike | null;
+    portalEffect: PortalEffectLike | null;
+    overlay: HTMLDivElement | null;
+    dialogueSystem: DialogueSystemLike | null;
+    introSounds: IntroSoundMap;
+    dialogueWavs: HTMLAudioElement[];
+    skipButton: HTMLDivElement | null;
+    lastTime: number;
+    animationFrameId: number | null;
+    finalPlayerPosition?: THREE.Vector3;
+    playerShieldEffect?: THREE.Object3D | null;
+    shieldPulseTime?: number;
+    skipHandler?: (event: KeyboardEvent) => void;
+
+    constructor(scene: THREE.Scene, camera: THREE.Camera, spaceship: SpaceshipLike | null, audioManager: AudioManagerLike | null) {
         this.scene = scene;
         this.camera = camera;
         this.spaceship = spaceship;
@@ -25,16 +146,17 @@ export class IntroSequence {
         this.initialCameraRotation = null;
         
         // Create StarDreadnought instance
-        this.starDreadnought = new StarDreadnought(scene);
+        this.starDreadnought = new StarDreadnought(scene) as unknown as StarDreadnoughtLike;
         
         // Setup portal effect
-        this.portalEffect = new PortalEffect();
+        this.portalEffect = new PortalEffect() as unknown as PortalEffectLike;
         
         // Overlay for flash effects
+        this.overlay = null;
         this.setupOverlay();
         
         // Setup dialogue system
-        this.dialogueSystem = new DialogueSystem();
+        this.dialogueSystem = new DialogueSystem() as unknown as DialogueSystemLike;
         
         // Custom sound effects
         this.introSounds = {};
@@ -42,28 +164,23 @@ export class IntroSequence {
         // Dialogue WAV files
         this.dialogueWavs = [];
         
+        this.skipButton = null;
+        this.lastTime = 0;
+        this.animationFrameId = null;
         
         console.log("Intro sequence initialized");
         
         // Load dialogue WAV files
-        this.dialogueWavs = loadDialogueWavs();
+        this.dialogueWavs = loadDialogueWavs() as HTMLAudioElement[];
         
         // Create custom Tone.js sound effects
-        this.introSounds = createIntroSoundEffects(this.audio);
+        this.introSounds = createIntroSoundEffects(this.audio) as IntroSoundMap;
         
         // Initialize dialogue system
         this.dialogueSystem.initialize(this.dialogueWavs, this.audio);
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    setupOverlay() {
+    setupOverlay(): void {
         // Create a DOM overlay for the flash effect
         this.overlay = document.createElement('div');
         this.overlay.id = 'intro-overlay';
@@ -82,21 +199,26 @@ export class IntroSequence {
         document.body.appendChild(this.overlay);
     }
     
-    startSequence(onComplete) {
+    startSequence(onComplete?: () => void): void {
         if (this.isPlaying) return;
         
         console.log("Starting intro sequence...");
         this.isPlaying = true;
         this.sequenceTime = 0;
-        this.onComplete = onComplete;
+        this.onComplete = onComplete || null;
+
+        const camera = this.camera as THREE.Camera;
+        const scene = this.scene as THREE.Scene;
+        const portalEffect = this.portalEffect as PortalEffectLike;
+        const starDreadnought = this.starDreadnought as StarDreadnoughtLike;
         
         // Store initial camera state to restore player camera after sequence
-        this.initialCameraPosition = this.camera.position.clone();
-        this.initialCameraRotation = this.camera.rotation.clone();
+        this.initialCameraPosition = camera.position.clone();
+        this.initialCameraRotation = camera.rotation.clone();
         
         // Position camera for initial view of portal forming
-        this.camera.position.set(0, 6000, 12000);
-        this.camera.lookAt(30000, 5000, 0); // Look at where portal will appear
+        camera.position.set(0, 6000, 12000);
+        camera.lookAt(30000, 5000, 0); // Look at where portal will appear
         
         // Hide player ship during sequence
         if (this.spaceship && this.spaceship.mesh) {
@@ -118,12 +240,12 @@ export class IntroSequence {
         }
         
         // Add portal to scene
-        this.scene.add(this.portalEffect.getPortalGroup());
+        scene.add(portalEffect.getPortalGroup());
         
         // Position the star dreadnought initially outside the scene
-        this.starDreadnought.ship.position.set(35000, 5000, 0); // Off-screen
-        this.starDreadnought.ship.rotation.y = Math.PI/2; // Face toward center
-        this.starDreadnought.ship.visible = false;
+        starDreadnought.ship.position.set(35000, 5000, 0); // Off-screen
+        starDreadnought.ship.rotation.y = Math.PI / 2; // Face toward center
+        starDreadnought.ship.visible = false;
         
         // Start sequence animation
         this.animate = this.animate.bind(this);
@@ -134,20 +256,20 @@ export class IntroSequence {
         this.setupSkipHandler();
         
         // Setup dialogue UI
-        this.dialogueSystem.setupDialogueUI();
+        this.dialogueSystem?.setupDialogueUI();
         
         // Start first dialogue line
         setTimeout(() => {
-            this.dialogueSystem.typeNextDialogue(this.sequenceTime, this.isPlaying);
+            this.dialogueSystem?.typeNextDialogue(this.sequenceTime, this.isPlaying);
         }, 2000);
         
         // Play warp sound
         if (this.introSounds.warp) {
-            this.introSounds.warp.play();
+            this.introSounds.warp.play?.();
         }
     }
     
-    animate(currentTime) {
+    animate(currentTime: number): void {
         if (!this.isPlaying) return;
         
         // Slower pace for more sublime experience
@@ -177,13 +299,13 @@ export class IntroSequence {
     
     /**
      * Create context object for animation phases
-     * @returns {Object} Context containing all necessary references
+     * @returns Context containing all necessary references
      */
-    createAnimationContext() {
+    createAnimationContext(): IntroSequenceAnimationContext {
         return {
-            portalEffect: this.portalEffect,
-            starDreadnought: this.starDreadnought,
-            camera: this.camera,
+            portalEffect: this.portalEffect as PortalEffectLike,
+            starDreadnought: this.starDreadnought as StarDreadnoughtLike,
+            camera: this.camera as THREE.Camera,
             spaceship: this.spaceship,
             introSounds: this.introSounds,
             flashOverlay: this.flashOverlay.bind(this),
@@ -193,11 +315,7 @@ export class IntroSequence {
         };
     }
     
-    
-    
-    
-    
-    flashOverlay(maxOpacity = 0.6) {
+    flashOverlay(maxOpacity = 0.6): void {
         if (!this.overlay) return;
         
         // Flash overlay effect
@@ -205,11 +323,13 @@ export class IntroSequence {
         
         // Fade out after flash
         setTimeout(() => {
-            this.overlay.style.opacity = '0';
+            if (this.overlay) {
+                this.overlay.style.opacity = '0';
+            }
         }, 300);
     }
     
-    setupSkipHandler() {
+    setupSkipHandler(): void {
         // Add skip button
         const skipButton = document.createElement('div');
         skipButton.id = 'skip-intro-button';
@@ -236,7 +356,7 @@ export class IntroSequence {
         this.skipButton = skipButton;
     }
     
-    skipSequence() {
+    skipSequence(): void {
         console.log("Skipping intro sequence");
         
         // Position ship exactly where the intro would have positioned it
@@ -251,15 +371,15 @@ export class IntroSequence {
             this.spaceship.mesh.visible = true;
             
             // Ensure ship has proper health and fuel values
-            if (this.spaceship.hull <= 0) {
+            if (this.spaceship.hull !== undefined && this.spaceship.hull <= 0) {
                 console.log("Fixing spaceship hull from", this.spaceship.hull, "to 100");
                 this.spaceship.hull = 100;
             }
-            if (this.spaceship.shield <= 0) {
+            if (this.spaceship.shield !== undefined && this.spaceship.shield <= 0) {
                 console.log("Fixing spaceship shield from", this.spaceship.shield, "to 50");
                 this.spaceship.shield = 50;
             }
-            if (this.spaceship.fuel <= 0) {
+            if (this.spaceship.fuel !== undefined && this.spaceship.fuel <= 0) {
                 console.log("Fixing spaceship fuel from", this.spaceship.fuel, "to 100");
                 this.spaceship.fuel = 100;
             }
@@ -270,38 +390,43 @@ export class IntroSequence {
         
         // Don't show stargate UI - player should be in space after skipping
         // Just ensure the ship is properly set to undocked state
-        if (window.gameInstance && window.gameInstance.spaceship) {
-            window.gameInstance.spaceship.isDocked = false;
+        const gameWindow = window as GameWindowWithInstance;
+        if (gameWindow.gameInstance && gameWindow.gameInstance.spaceship) {
+            gameWindow.gameInstance.spaceship.isDocked = false;
             console.log("Ship set to undocked state after skip");
             
             // Double-check health values on the global instance too
-            if (window.gameInstance.spaceship.hull <= 0) {
+            if (gameWindow.gameInstance.spaceship.hull !== undefined && gameWindow.gameInstance.spaceship.hull <= 0) {
                 console.log("Fixing global spaceship hull to 100");
-                window.gameInstance.spaceship.hull = 100;
+                gameWindow.gameInstance.spaceship.hull = 100;
             }
-            if (window.gameInstance.spaceship.fuel <= 0) {
+            if (gameWindow.gameInstance.spaceship.fuel !== undefined && gameWindow.gameInstance.spaceship.fuel <= 0) {
                 console.log("Fixing global spaceship fuel to 100");
-                window.gameInstance.spaceship.fuel = 100;
+                gameWindow.gameInstance.spaceship.fuel = 100;
             }
         }
     }
     
-    completeSequence() {
+    completeSequence(): void {
         console.log("Intro sequence complete");
         this.isPlaying = false;
+
+        const scene = this.scene as THREE.Scene;
+        const portalEffect = this.portalEffect as PortalEffectLike;
+        const starDreadnought = this.starDreadnought as StarDreadnoughtLike;
         
         // Remove warp tunnel from scene
-        this.scene.remove(this.portalEffect.getPortalGroup());
+        scene.remove(portalEffect.getPortalGroup());
         
         // Hide dreadnought
-        this.starDreadnought.ship.visible = false;
+        starDreadnought.ship.visible = false;
         
         // Enable skip button for next time
         this.skipEnabled = true;
         
         // Remove shield effect from player
-        if (this.playerShieldEffect) {
-            this.spaceship.mesh.remove(this.playerShieldEffect);
+        if (this.playerShieldEffect && this.spaceship?.mesh) {
+            this.spaceship.mesh.remove?.(this.playerShieldEffect);
             this.playerShieldEffect = null;
         }
         
@@ -318,7 +443,7 @@ export class IntroSequence {
         }
         
         // Clean up dialogue system
-        this.dialogueSystem.cleanup();
+        this.dialogueSystem?.cleanup();
         
         // Make sure player ship is visible but DO NOT reset position
         if (this.spaceship && this.spaceship.mesh) {
@@ -343,7 +468,7 @@ export class IntroSequence {
             // Use setTimeout to make sure this executes after the animation frame
             setTimeout(() => {
                 console.log("Executing intro sequence completion callback");
-                this.onComplete();
+                this.onComplete?.();
             }, 100);
         }
     }
@@ -351,7 +476,7 @@ export class IntroSequence {
     /**
      * Clean up resources when intro sequence is no longer needed
      */
-    destroy() {
+    destroy(): void {
         // Cancel animation frame if running
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
@@ -359,14 +484,14 @@ export class IntroSequence {
         }
         
         // Clean up dialogue system
-        this.dialogueSystem.cleanup();
+        this.dialogueSystem?.cleanup();
         
         if (this.overlay && this.overlay.parentNode) {
             this.overlay.parentNode.removeChild(this.overlay);
         }
         
         // Remove skip handler
-        document.removeEventListener('keydown', this.skipHandler);
+        document.removeEventListener('keydown', this.skipHandler as EventListener);
         
         // Clean up portal effect
         if (this.portalEffect) {
@@ -398,4 +523,4 @@ export class IntroSequence {
         this.dialogueSystem = null;
         this.dialogueWavs = [];
     }
-} 
+}
