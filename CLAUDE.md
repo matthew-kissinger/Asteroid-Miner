@@ -8,7 +8,7 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 
 ## Current State: Phase 1 Complete, Phase 2 Complete
 
-Phase 1 and Phase 2 are done. All application JS files are converted to TypeScript. 247 TS files total, 57 JS files remain (all legacy ECS in core/components/systems - slated for deletion). Build succeeds. Typecheck passes with 0 errors. 0 @ts-ignore suppressions (type declarations added for legacy ECS). Code splitting implemented - game code distributed across lazy-loaded chunks (game-core 180 kB, combat 145 kB, environment 62 kB, ui 55 kB).
+Phase 1 and Phase 2 are done. All application JS files are converted to TypeScript. 236 TS files total (234 in js/, 2 in src/), 45 JS files remain (all legacy ECS in components/systems - slated for deletion). Core framework (js/core/) converted to TypeScript. Build succeeds. Typecheck passes with 0 errors. 0 @ts-ignore suppressions (26 .d.ts type declarations for legacy ECS JS). Code splitting implemented - game code distributed across lazy-loaded chunks (game-core 180 kB, combat 145 kB, environment 62 kB, ui 55 kB).
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured)
@@ -55,21 +55,24 @@ Phase 1 and Phase 2 are done. All application JS files are converted to TypeScri
 - UI hud + settings converted to TypeScript (14 files, 1592476)
 - All typecheck errors in ui/ resolved (9254892) - 0 errors remaining
 - UI customSystem/ converted to TypeScript (7 files, 25ba2e6)
-- Type declarations added for legacy ECS JS files (28 .d.ts files) - eliminates all @ts-ignore
+- Type declarations added for legacy ECS JS files (26 .d.ts files) - eliminates all @ts-ignore
 - GLSL shaders evaluated for TSL conversion - ShaderPass requires raw GLSL, documented in shaders.ts
 - Vite code splitting implemented (563abdd) - dynamic imports for UI, audio, intro, ECS
+- Legacy ECS core framework converted to TypeScript (12 files in js/core/, 984eaac)
+- Global state module singletons created (js/globals/ - debug.ts, messageBus.ts, objectPool.ts)
+- bitECS MovementSystem ported (cde26c6) - Newtonian physics in bitECS
 
 **Remaining Problems:**
 - **Dual ECS running** - Both bitECS (via ecsRunner.ts) and legacy ECS (js/core/) run each frame in parallel. Legacy ECS still drives the actual game; bitECS runs a test entity.
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
-- **Global state** - ~645 `window.*` usages across the codebase (84 files affected)
-- **Legacy ECS** - js/core/ (12 files), js/components/ (13 files), js/systems/ (32 files) still active. 28 .d.ts type declarations added. Will be deleted when bitECS fully replaces them.
+- **Global state** - ~645 `window.*` usages across the codebase. js/globals/ module created with debug, messageBus, objectPool singletons but most code still accesses window.* directly.
+- **Legacy ECS** - js/core/ (12 TS files), js/components/ (13 JS files), js/systems/ (32 JS files) still active. 26 .d.ts type declarations for JS files. Will be deleted when bitECS fully replaces them.
 
 ## Target Stack (2026 Best Practices)
 
 | Layer | Current | Target | Status |
 |-------|---------|--------|--------|
-| Language | TypeScript (247 TS, 57 legacy JS) | **TypeScript (strict)** | Complete (app code) |
+| Language | TypeScript (236 TS, 45 legacy JS) | **TypeScript (strict)** | Complete (app code) |
 | Renderer | Three.js r180 WebGPU | **Three.js r180+ WebGPU** | Done |
 | Shaders | GLSL + TSL laser (integrated) | **TSL (Three Shading Language)** | Started |
 | ECS | Custom + bitECS (integrated, dual running) | **bitECS** | In Progress |
@@ -197,10 +200,13 @@ Health.current[eid] = Health.max[eid]
 27. ~~Convert ui/components/customSystem to TypeScript~~ Done (7 files, 25ba2e6)
 28. ~~Convert ui/components/hud/displays.js to TypeScript~~ Done (1592476)
 29. ~~Fix typecheck errors in newly converted ui/ files~~ Done (9254892) - 0 errors
-30. ~~Add type declarations for legacy ECS~~ Done (28 .d.ts files, eliminated all @ts-ignore)
+30. ~~Add type declarations for legacy ECS~~ Done (26 .d.ts files, eliminated all @ts-ignore)
 31. ~~Implement Vite code splitting~~ Done (563abdd, dynamic imports, manualChunks)
-32. Create remaining bitECS systems (combat, AI, mining)
-33. Delete old custom ECS (js/core/, js/components/, js/systems/)
+32. ~~Convert legacy ECS core framework to TypeScript~~ Done (12 files in js/core/, 984eaac)
+33. ~~Port MovementSystem to bitECS~~ Done (cde26c6)
+34. ~~Create global state module singletons~~ Done (js/globals/ - debug.ts, messageBus.ts, objectPool.ts, 984eaac)
+35. Create remaining bitECS systems (combat, AI, mining)
+36. Delete old custom ECS (js/components/, js/systems/)
 
 ### Phase 3: Game Feel Overhaul
 1. **Controller tuning**
@@ -362,9 +368,10 @@ js/
 │   ├── environment/     # 39 TS files (fully converted, d945b03 + d9afbc0)
 │   ├── ui/              # All TS (65+ files, fully converted)
 │   └── intro/           # 6 TS files (fully converted, 6d8f9fa)
+├── globals/             # Module-level singletons (debug.ts, messageBus.ts, objectPool.ts)
 ├── systems/             # Legacy ECS systems (32 JS files - to be deleted)
 ├── components/          # Legacy components (13 JS files - to be deleted)
-├── core/                # Legacy ECS framework (12 JS files - still active, runs game loop)
+├── core/                # Legacy ECS framework (12 TS files - converted, still active)
 └── config/
     └── lightingConfig.ts # Lighting config (wired to lighting.js, values in sync)
 ```
