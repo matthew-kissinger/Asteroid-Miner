@@ -1,6 +1,19 @@
-// indicators.js - Hit indicators, damage numbers, and combat feedback
+// indicators.ts - Hit indicators, damage numbers, and combat feedback
+
+export interface DamageNumber {
+    element: HTMLElement;
+    startTime: number;
+}
+
+export interface ScreenPosition {
+    x: number;
+    y: number;
+}
 
 export class CombatIndicators {
+    notifications: string[];
+    damageNumbers: DamageNumber[];
+
     constructor() {
         this.notifications = [];
         this.damageNumbers = [];
@@ -8,10 +21,10 @@ export class CombatIndicators {
 
     /**
      * Show notification message
-     * @param {string} message Notification message
-     * @param {number} duration Duration in milliseconds
+     * @param message Notification message
+     * @param duration Duration in milliseconds
      */
-    showNotification(message, duration = 3000) {
+    showNotification(message: string, duration: number = 3000): void {
         const notificationArea = document.getElementById('notification-area');
         if (!notificationArea) return;
         
@@ -33,14 +46,14 @@ export class CombatIndicators {
 
     /**
      * Show damage number at specific position
-     * @param {number} damage Damage amount
-     * @param {Object} position Screen position {x, y}
-     * @param {string} color Color of damage number
-     * @param {boolean} isCritical Whether this is a critical hit
+     * @param damage Damage amount
+     * @param position Screen position {x, y}
+     * @param color Color of damage number
+     * @param isCritical Whether this is a critical hit
      */
-    showDamageNumber(damage, position, color = '#ff3030', isCritical = false) {
+    showDamageNumber(damage: number, position: ScreenPosition, color: string = '#ff3030', isCritical: boolean = false): void {
         const damageElement = document.createElement('div');
-        damageElement.textContent = Math.round(damage);
+        damageElement.textContent = Math.round(damage).toString();
         damageElement.style.position = 'absolute';
         damageElement.style.left = `${position.x}px`;
         damageElement.style.top = `${position.y}px`;
@@ -79,10 +92,10 @@ export class CombatIndicators {
 
     /**
      * Show hit indicator at target position
-     * @param {Object} position Screen position {x, y}
-     * @param {string} type Type of hit ('hit', 'critical', 'shield', 'miss')
+     * @param position Screen position {x, y}
+     * @param type Type of hit ('hit', 'critical', 'shield', 'miss')
      */
-    showHitIndicator(position, type = 'hit') {
+    showHitIndicator(position: ScreenPosition, type: string = 'hit'): void {
         const indicator = document.createElement('div');
         indicator.style.position = 'absolute';
         indicator.style.left = `${position.x - 15}px`;
@@ -131,11 +144,11 @@ export class CombatIndicators {
 
     /**
      * Show status effect indicator
-     * @param {string} effect Effect name
-     * @param {Object} position Screen position {x, y}
-     * @param {string} color Effect color
+     * @param effect Effect name
+     * @param position Screen position {x, y}
+     * @param color Effect color
      */
-    showStatusEffect(effect, position, color = '#00ffff') {
+    showStatusEffect(effect: string, position: ScreenPosition, color: string = '#00ffff'): void {
         const effectElement = document.createElement('div');
         effectElement.textContent = effect.toUpperCase();
         effectElement.style.position = 'absolute';
@@ -168,22 +181,22 @@ export class CombatIndicators {
     /**
      * Show weapon overheat warning
      */
-    showOverheatWarning() {
+    showOverheatWarning(): void {
         this.showNotification('WEAPON OVERHEATED - COOLING DOWN', 2000);
     }
 
     /**
      * Show shield recharge indicator
      */
-    showShieldRecharge() {
+    showShieldRecharge(): void {
         this.showNotification('SHIELDS RECHARGING', 1500);
     }
 
     /**
      * Show EMP effect indicator
-     * @param {Object} position Screen position {x, y}
+     * @param position Screen position {x, y}
      */
-    showEMPEffect(position) {
+    showEMPEffect(position: ScreenPosition): void {
         const empElement = document.createElement('div');
         empElement.style.position = 'absolute';
         empElement.style.left = `${position.x - 25}px`;
@@ -215,9 +228,9 @@ export class CombatIndicators {
 
     /**
      * Show missile lock indicator
-     * @param {Object} position Screen position {x, y}
+     * @param position Screen position {x, y}
      */
-    showMissileLock(position) {
+    showMissileLock(position: ScreenPosition): void {
         const lockElement = document.createElement('div');
         lockElement.innerHTML = '◎';
         lockElement.style.position = 'absolute';
@@ -256,25 +269,25 @@ export class CombatIndicators {
 
     /**
      * Show low ammo warning
-     * @param {string} weaponType Type of weapon
-     * @param {number} ammoCount Remaining ammo
+     * @param weaponType Type of weapon
+     * @param ammoCount Remaining ammo
      */
-    showLowAmmoWarning(weaponType, ammoCount) {
+    showLowAmmoWarning(weaponType: string, ammoCount: number): void {
         this.showNotification(`${weaponType.toUpperCase()} AMMO LOW: ${ammoCount}`, 2000);
     }
 
     /**
      * Show no ammo warning
-     * @param {string} weaponType Type of weapon
+     * @param weaponType Type of weapon
      */
-    showNoAmmoWarning(weaponType) {
+    showNoAmmoWarning(weaponType: string): void {
         this.showNotification(`${weaponType.toUpperCase()} OUT OF AMMO`, 2000);
     }
 
     /**
      * Clean up old damage numbers and indicators
      */
-    cleanup() {
+    cleanup(): void {
         const now = Date.now();
         this.damageNumbers = this.damageNumbers.filter(item => {
             if (now - item.startTime > 2000) {
@@ -290,7 +303,7 @@ export class CombatIndicators {
     /**
      * Clear all active indicators
      */
-    clearAll() {
+    clearAll(): void {
         // Clear damage numbers
         this.damageNumbers.forEach(item => {
             if (item.element.parentNode) {

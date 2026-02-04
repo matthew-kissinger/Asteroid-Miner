@@ -1,16 +1,30 @@
-// enemyDisplay.js - Enemy health bars, status displays, and target tracking
+// enemyDisplay.ts - Enemy health bars, status displays, and target tracking
+
+import { combatStyles } from './styles';
+
+export interface ScreenPosition {
+    x: number;
+    y: number;
+}
+
+export interface Entity {
+    getComponent(componentName: string): any;
+    world?: any;
+}
 
 export class EnemyDisplay {
+    currentTarget: Entity | null;
+
     constructor() {
         this.currentTarget = null;
     }
 
     /**
      * Create target info section of the HUD
-     * @param {HTMLElement} parent Parent container
-     * @param {Object} styles Styles object
+     * @param parent Parent container
+     * @param styles Styles object
      */
-    createTargetInfoSection(parent, styles) {
+    createTargetInfoSection(parent: HTMLElement, styles: typeof combatStyles): void {
         const targetContainer = document.createElement('div');
         styles.applyTargetContainerStyles(targetContainer);
         
@@ -55,9 +69,9 @@ export class EnemyDisplay {
 
     /**
      * Create target HUD that appears over enemies
-     * @param {Object} styles Styles object
+     * @param styles Styles object
      */
-    createTargetHUD(styles) {
+    createTargetHUD(styles: typeof combatStyles): void {
         const targetHUD = document.createElement('div');
         targetHUD.id = 'target-hud';
         styles.applyTargetHUDStyles(targetHUD);
@@ -91,9 +105,9 @@ export class EnemyDisplay {
 
     /**
      * Update target information display
-     * @param {Entity} currentTarget Current target entity
+     * @param currentTarget Current target entity
      */
-    updateTargetInfo(currentTarget) {
+    updateTargetInfo(currentTarget: Entity | null): void {
         this.currentTarget = currentTarget;
         
         const targetInfo = document.getElementById('combat-target-info');
@@ -164,10 +178,10 @@ export class EnemyDisplay {
 
     /**
      * Update target HUD position over targeted enemy
-     * @param {Entity} currentTarget Current target entity
-     * @param {Function} worldToScreen Function to convert world to screen coords
+     * @param currentTarget Current target entity
+     * @param worldToScreen Function to convert world to screen coords
      */
-    updateTargetHUD(currentTarget, worldToScreen) {
+    updateTargetHUD(currentTarget: Entity | null, worldToScreen: (pos: any) => ScreenPosition | null): void {
         this.currentTarget = currentTarget;
         
         const targetHUD = document.getElementById('target-hud');
@@ -228,9 +242,9 @@ export class EnemyDisplay {
 
     /**
      * Set current target
-     * @param {Entity} target Target entity
+     * @param target Target entity
      */
-    setTarget(target) {
+    setTarget(target: Entity | null): void {
         this.currentTarget = target;
         this.updateTargetInfo(target);
     }
@@ -238,17 +252,17 @@ export class EnemyDisplay {
     /**
      * Clear current target
      */
-    clearTarget() {
+    clearTarget(): void {
         this.currentTarget = null;
         this.updateTargetInfo(null);
     }
 
     /**
      * Check if a target is valid
-     * @param {Entity} target Target to check
-     * @returns {boolean} True if target is valid
+     * @param target Target to check
+     * @returns True if target is valid
      */
-    isTargetValid(target) {
+    isTargetValid(target: Entity | null): boolean {
         if (!target) return false;
         
         // Check if target exists in world
@@ -266,13 +280,13 @@ export class EnemyDisplay {
 
     /**
      * Update enemy count display
-     * @param {number} enemyCount Current enemy count
+     * @param enemyCount Current enemy count
      */
-    updateEnemyCount(enemyCount) {
+    updateEnemyCount(enemyCount: number): void {
         const enemyCountElement = document.getElementById('enemy-count');
         if (!enemyCountElement) return;
         
-        enemyCountElement.textContent = enemyCount;
+        enemyCountElement.textContent = enemyCount.toString();
         
         // Highlight when enemies are present
         if (enemyCount > 0) {
@@ -285,7 +299,7 @@ export class EnemyDisplay {
     /**
      * Hide target displays
      */
-    hide() {
+    hide(): void {
         const targetHUD = document.getElementById('target-hud');
         if (targetHUD) {
             targetHUD.style.display = 'none';

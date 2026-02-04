@@ -1,6 +1,26 @@
-// weaponDisplay.js - Weapon status, ammo, cooldowns, and special systems
+// weaponDisplay.ts - Weapon status, ammo, cooldowns, and special systems
+
+import { combatStyles } from './styles';
+
+export interface WeaponComponent {
+    type?: string;
+    constructor?: { name: string };
+    ammo?: number;
+    maxAmmo?: number;
+    isActive?: boolean;
+    isReady?: boolean;
+    lockingOn?: boolean;
+    timeSinceLastShot?: number;
+    cooldown?: number;
+    shield?: number;
+    getShieldPercentage?: () => number;
+    getCooldownProgress?: () => number;
+}
 
 export class WeaponDisplay {
+    weaponSystem: any | null;
+    spaceship: any | null;
+
     constructor() {
         this.weaponSystem = null;
         this.spaceship = null;
@@ -8,20 +28,20 @@ export class WeaponDisplay {
 
     /**
      * Set references to weapon system and spaceship
-     * @param {Object} weaponSystem Weapon system reference
-     * @param {Object} spaceship Spaceship reference
+     * @param weaponSystem Weapon system reference
+     * @param spaceship Spaceship reference
      */
-    setReferences(weaponSystem, spaceship) {
+    setReferences(weaponSystem: any, spaceship: any): void {
         this.weaponSystem = weaponSystem;
         this.spaceship = spaceship;
     }
 
     /**
      * Create weapon system display
-     * @param {HTMLElement} parent Parent container
-     * @param {Object} styles Styles object
+     * @param parent Parent container
+     * @param styles Styles object
      */
-    createWeaponDisplay(parent, styles) {
+    createWeaponDisplay(parent: HTMLElement, styles: typeof combatStyles): void {
         const weaponContainer = document.createElement('div');
         styles.applyWeaponContainerStyles(weaponContainer);
         
@@ -61,10 +81,10 @@ export class WeaponDisplay {
 
     /**
      * Create special weapons section of the HUD
-     * @param {HTMLElement} parent Parent container
-     * @param {Object} styles Styles object
+     * @param parent Parent container
+     * @param styles Styles object
      */
-    createSpecialWeaponsSection(parent, styles) {
+    createSpecialWeaponsSection(parent: HTMLElement, styles: typeof combatStyles): void {
         const specialContainer = document.createElement('div');
         styles.applySpecialContainerStyles(specialContainer);
         
@@ -75,7 +95,7 @@ export class WeaponDisplay {
         specialContainer.appendChild(specialHeader);
         
         // Create special weapon items
-        const createSpecialItem = (name, id, color, icon) => {
+        const createSpecialItem = (name: string, id: string, color: string, _icon: string) => {
             const item = document.createElement('div');
             styles.applySpecialItemStyles(item);
             
@@ -112,7 +132,7 @@ export class WeaponDisplay {
     /**
      * Update weapon display
      */
-    updateWeaponDisplay() {
+    updateWeaponDisplay(): void {
         const weaponMode = document.getElementById('weapon-mode');
         const weaponEnergyBar = document.getElementById('weapon-energy-bar');
         const energyValue = document.getElementById('energy-value');
@@ -131,7 +151,7 @@ export class WeaponDisplay {
         
         if (activeWeapon) {
             // Set weapon name and color based on type
-            const weaponType = activeWeapon.type || activeWeapon.constructor.name;
+            const weaponType = activeWeapon.type || (activeWeapon.constructor ? activeWeapon.constructor.name : '');
             if (weaponType === 'ParticleCannonComponent') {
                 weaponName = 'Particle Cannon';
                 weaponColor = '#00ffff';
@@ -178,7 +198,7 @@ export class WeaponDisplay {
     /**
      * Update special weapons status
      */
-    updateSpecialWeaponsStatus() {
+    updateSpecialWeaponsStatus(): void {
         // Update shield status
         this.updateSpecialWeaponStatus('shield', this.spaceship?.getComponent ? 
                                        this.spaceship.getComponent('HealthComponent') : null);
@@ -198,10 +218,10 @@ export class WeaponDisplay {
 
     /**
      * Update status for a single special weapon
-     * @param {string} id Component ID
-     * @param {Component} component Weapon component
+     * @param id Component ID
+     * @param component Weapon component
      */
-    updateSpecialWeaponStatus(id, component) {
+    updateSpecialWeaponStatus(id: string, component: WeaponComponent | null): void {
         const statusIndicator = document.getElementById(`${id}-status`);
         const cooldownText = document.getElementById(`${id}-cooldown`);
         
@@ -216,25 +236,25 @@ export class WeaponDisplay {
             // Get component status
             if (id === 'shield') {
                 // Use shield properties from HealthComponent instead of ShieldComponent
-                isActive = component.shield > 0;
-                isReady = component.getShieldPercentage() > 0;
-                cooldownProgress = component.getShieldPercentage() / 100;
+                isActive = (component.shield || 0) > 0;
+                isReady = component.getShieldPercentage ? component.getShieldPercentage() > 0 : true;
+                cooldownProgress = component.getShieldPercentage ? component.getShieldPercentage() / 100 : 1;
             } else if (id === 'emp') {
                 isActive = false; // EMP is momentary, not a toggle
-                isReady = component.isReady;
+                isReady = component.isReady || false;
                 cooldownProgress = component.getCooldownProgress ? component.getCooldownProgress() : 1;
             } else if (id === 'turret') {
-                isActive = component.isActive;
+                isActive = component.isActive || false;
                 isReady = true; // Turrets are always ready, just toggled on/off
                 cooldownProgress = 1;
             } else if (id === 'missile') {
-                isActive = component.lockingOn;
-                isReady = component.timeSinceLastShot >= component.cooldown;
-                cooldownProgress = component.timeSinceLastShot / component.cooldown;
+                isActive = component.lockingOn || false;
+                isReady = (component.timeSinceLastShot || 0) >= (component.cooldown || 0);
+                cooldownProgress = component.cooldown ? (component.timeSinceLastShot || 0) / component.cooldown : 1;
                 
                 // Special case for missiles - show ammo count
                 if (cooldownText) {
-                    if (component.ammo <= 0) {
+                    if ((component.ammo || 0) <= 0) {
                         cooldownText.textContent = 'NO AMMO';
                         cooldownText.style.color = '#ff3030';
                     } else if (!isReady) {
@@ -280,10 +300,10 @@ export class WeaponDisplay {
 
     /**
      * Get color for special weapon type
-     * @param {string} type Weapon type
-     * @returns {string} Color hex string
+     * @param type Weapon type
+     * @returns Color hex string
      */
-    getColorForSpecialWeapon(type) {
+    getColorForSpecialWeapon(type: string): string {
         switch (type) {
             case 'shield': return '#3399ff';
             case 'emp': return '#00ffff';
@@ -295,9 +315,9 @@ export class WeaponDisplay {
 
     /**
      * Get weapon info for display
-     * @returns {Object} Weapon information
+     * @returns Weapon information
      */
-    getWeaponInfo() {
+    getWeaponInfo(): any {
         if (!this.weaponSystem) return null;
         
         const activeWeapon = this.weaponSystem.getActiveWeapon ? 
@@ -306,7 +326,7 @@ export class WeaponDisplay {
         if (!activeWeapon) return null;
         
         return {
-            name: activeWeapon.type || activeWeapon.constructor.name,
+            name: activeWeapon.type || (activeWeapon.constructor ? activeWeapon.constructor.name : 'Unknown'),
             component: activeWeapon,
             energy: this.spaceship?.energy || 100,
             maxEnergy: this.spaceship?.maxEnergy || 100
@@ -315,19 +335,19 @@ export class WeaponDisplay {
 
     /**
      * Check if weapon is ready to fire
-     * @param {string} weaponType Type of weapon to check
-     * @returns {boolean} True if weapon is ready
+     * @param weaponType Type of weapon to check
+     * @returns True if weapon is ready
      */
-    isWeaponReady(weaponType) {
+    isWeaponReady(weaponType: string): boolean {
         const component = this.spaceship?.getComponent ? 
                          this.spaceship.getComponent(`${weaponType}Component`) : null;
         
         if (!component) return false;
         
         if (weaponType === 'missile') {
-            return component.ammo > 0 && component.timeSinceLastShot >= component.cooldown;
+            return (component.ammo || 0) > 0 && (component.timeSinceLastShot || 0) >= (component.cooldown || 0);
         } else if (weaponType === 'emp') {
-            return component.isReady;
+            return component.isReady || false;
         }
         
         return true;

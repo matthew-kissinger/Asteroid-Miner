@@ -1,6 +1,14 @@
-// animations.js - Combat animations, visual effects, and transitions
+// animations.ts - Combat animations, visual effects, and transitions
+
+export interface ActiveAnimation {
+    element: HTMLElement;
+    startTime: number;
+    duration: number;
+}
 
 export class CombatAnimations {
+    activeAnimations: ActiveAnimation[];
+
     constructor() {
         this.activeAnimations = [];
         this.setupKeyframes();
@@ -9,7 +17,7 @@ export class CombatAnimations {
     /**
      * Setup CSS keyframes for animations
      */
-    setupKeyframes() {
+    setupKeyframes(): void {
         if (document.querySelector('#combat-animations-keyframes')) return;
         
         const style = document.createElement('style');
@@ -71,12 +79,12 @@ export class CombatAnimations {
 
     /**
      * Animate health bar change with color transition
-     * @param {HTMLElement} healthBar Health bar element
-     * @param {number} fromPercent Starting percentage
-     * @param {number} toPercent Ending percentage
-     * @param {number} duration Animation duration in ms
+     * @param healthBar Health bar element
+     * @param fromPercent Starting percentage
+     * @param toPercent Ending percentage
+     * @param duration Animation duration in ms
      */
-    animateHealthChange(healthBar, fromPercent, toPercent, duration = 500) {
+    animateHealthChange(healthBar: HTMLElement | null, fromPercent: number, toPercent: number, duration: number = 500): void {
         if (!healthBar) return;
         
         const startTime = Date.now();
@@ -112,12 +120,12 @@ export class CombatAnimations {
 
     /**
      * Animate shield bar change with flicker effect
-     * @param {HTMLElement} shieldBar Shield bar element
-     * @param {number} fromPercent Starting percentage
-     * @param {number} toPercent Ending percentage
-     * @param {number} duration Animation duration in ms
+     * @param shieldBar Shield bar element
+     * @param fromPercent Starting percentage
+     * @param toPercent Ending percentage
+     * @param duration Animation duration in ms
      */
-    animateShieldChange(shieldBar, fromPercent, toPercent, duration = 300) {
+    animateShieldChange(shieldBar: HTMLElement | null, fromPercent: number, toPercent: number, duration: number = 300): void {
         if (!shieldBar) return;
         
         const startTime = Date.now();
@@ -149,11 +157,11 @@ export class CombatAnimations {
 
     /**
      * Pulse animation for elements
-     * @param {HTMLElement} element Element to pulse
-     * @param {number} duration Animation duration in ms
-     * @param {number} count Number of pulses
+     * @param element Element to pulse
+     * @param duration Animation duration in ms
+     * @param count Number of pulses
      */
-    pulseElement(element, duration = 1000, count = 3) {
+    pulseElement(element: HTMLElement | null, duration: number = 1000, count: number = 3): void {
         if (!element) return;
         
         element.style.animation = `pulse ${duration / count}ms ease-in-out ${count}`;
@@ -165,11 +173,11 @@ export class CombatAnimations {
 
     /**
      * Shake animation for damage feedback
-     * @param {HTMLElement} element Element to shake
-     * @param {number} intensity Shake intensity (1-5)
-     * @param {number} duration Animation duration in ms
+     * @param element Element to shake
+     * @param intensity Shake intensity (1-5)
+     * @param duration Animation duration in ms
      */
-    shakeElement(element, intensity = 2, duration = 500) {
+    shakeElement(element: HTMLElement | null, intensity: number = 2, duration: number = 500): void {
         if (!element) return;
         
         const keyframes = `
@@ -199,11 +207,11 @@ export class CombatAnimations {
 
     /**
      * Glow effect for special abilities
-     * @param {HTMLElement} element Element to glow
-     * @param {string} color Glow color
-     * @param {number} duration Animation duration in ms
+     * @param element Element to glow
+     * @param color Glow color
+     * @param duration Animation duration in ms
      */
-    glowElement(element, color = '#00ffff', duration = 2000) {
+    glowElement(element: HTMLElement | null, color: string = '#00ffff', duration: number = 2000): void {
         if (!element) return;
         
         const originalBoxShadow = element.style.boxShadow;
@@ -218,11 +226,11 @@ export class CombatAnimations {
 
     /**
      * Warning flash animation
-     * @param {HTMLElement} element Element to flash
-     * @param {number} count Number of flashes
-     * @param {number} speed Flash speed in ms
+     * @param element Element to flash
+     * @param count Number of flashes
+     * @param speed Flash speed in ms
      */
-    warningFlash(element, count = 5, speed = 200) {
+    warningFlash(element: HTMLElement | null, count: number = 5, speed: number = 200): void {
         if (!element) return;
         
         let flashCount = 0;
@@ -241,10 +249,10 @@ export class CombatAnimations {
 
     /**
      * Smooth fade in animation
-     * @param {HTMLElement} element Element to fade in
-     * @param {number} duration Animation duration in ms
+     * @param element Element to fade in
+     * @param duration Animation duration in ms
      */
-    fadeIn(element, duration = 500) {
+    fadeIn(element: HTMLElement | null, duration: number = 500): void {
         if (!element) return;
         
         element.style.opacity = '0';
@@ -259,11 +267,11 @@ export class CombatAnimations {
 
     /**
      * Smooth fade out animation
-     * @param {HTMLElement} element Element to fade out
-     * @param {number} duration Animation duration in ms
-     * @param {boolean} hideAfter Whether to hide element after fade
+     * @param element Element to fade out
+     * @param duration Animation duration in ms
+     * @param hideAfter Whether to hide element after fade
      */
-    fadeOut(element, duration = 500, hideAfter = true) {
+    fadeOut(element: HTMLElement | null, duration: number = 500, hideAfter: boolean = true): void {
         if (!element) return;
         
         element.style.animation = `fade-out ${duration}ms ease-out forwards`;
@@ -279,10 +287,10 @@ export class CombatAnimations {
 
     /**
      * Slide up animation for notifications
-     * @param {HTMLElement} element Element to slide up
-     * @param {number} duration Animation duration in ms
+     * @param element Element to slide up
+     * @param duration Animation duration in ms
      */
-    slideUp(element, duration = 300) {
+    slideUp(element: HTMLElement | null, duration: number = 300): void {
         if (!element) return;
         
         element.style.animation = `slide-up ${duration}ms ease-out forwards`;
@@ -294,10 +302,10 @@ export class CombatAnimations {
 
     /**
      * Slide down animation for hiding elements
-     * @param {HTMLElement} element Element to slide down
-     * @param {number} duration Animation duration in ms
+     * @param element Element to slide down
+     * @param duration Animation duration in ms
      */
-    slideDown(element, duration = 300) {
+    slideDown(element: HTMLElement | null, duration: number = 300): void {
         if (!element) return;
         
         element.style.animation = `slide-down ${duration}ms ease-in forwards`;
@@ -310,11 +318,11 @@ export class CombatAnimations {
 
     /**
      * Rotate animation for loading indicators
-     * @param {HTMLElement} element Element to rotate
-     * @param {number} duration Rotation duration in ms
-     * @param {boolean} infinite Whether to rotate indefinitely
+     * @param element Element to rotate
+     * @param duration Rotation duration in ms
+     * @param infinite Whether to rotate indefinitely
      */
-    rotateElement(element, duration = 1000, infinite = false) {
+    rotateElement(element: HTMLElement | null, duration: number = 1000, infinite: boolean = false): void {
         if (!element) return;
         
         const animation = `rotate ${duration}ms linear ${infinite ? 'infinite' : '1'}`;
@@ -329,10 +337,10 @@ export class CombatAnimations {
 
     /**
      * Animate weapon charging effect
-     * @param {HTMLElement} weaponBar Weapon energy bar
-     * @param {number} chargeTime Charge time in ms
+     * @param weaponBar Weapon energy bar
+     * @param chargeTime Charge time in ms
      */
-    animateWeaponCharge(weaponBar, chargeTime = 1000) {
+    animateWeaponCharge(weaponBar: HTMLElement | null, chargeTime: number = 1000): void {
         if (!weaponBar) return;
         
         this.glowElement(weaponBar, '#00ffff', chargeTime);
@@ -358,11 +366,11 @@ export class CombatAnimations {
 
     /**
      * Animate energy depletion
-     * @param {HTMLElement} energyBar Energy bar element
-     * @param {number} fromPercent Starting percentage
-     * @param {number} toPercent Ending percentage
+     * @param energyBar Energy bar element
+     * @param _fromPercent Starting percentage
+     * @param toPercent Ending percentage
      */
-    animateEnergyDepletion(energyBar, fromPercent, toPercent) {
+    animateEnergyDepletion(energyBar: HTMLElement | null, _fromPercent: number, toPercent: number): void {
         if (!energyBar) return;
         
         // Quick snap to new value with flash effect
@@ -375,9 +383,9 @@ export class CombatAnimations {
 
     /**
      * Animate target lock-on effect
-     * @param {HTMLElement} targetElement Target HUD element
+     * @param targetElement Target HUD element
      */
-    animateTargetLock(targetElement) {
+    animateTargetLock(targetElement: HTMLElement | null): void {
         if (!targetElement) return;
         
         // Pulse effect for lock-on
@@ -406,7 +414,7 @@ export class CombatAnimations {
     /**
      * Clean up animations
      */
-    cleanup() {
+    cleanup(): void {
         this.activeAnimations.forEach(animation => {
             if (animation.element && animation.element.style) {
                 animation.element.style.animation = '';
@@ -417,9 +425,9 @@ export class CombatAnimations {
 
     /**
      * Stop all animations on an element
-     * @param {HTMLElement} element Element to stop animations on
+     * @param element Element to stop animations on
      */
-    stopAnimations(element) {
+    stopAnimations(element: HTMLElement | null): void {
         if (!element) return;
         
         element.style.animation = '';

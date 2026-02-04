@@ -31,7 +31,7 @@ export class CombatDisplay {
     spaceship: CombatSpaceship | null;
     combatSystem?: CombatSystem;
     enemyCount: number;
-    currentTarget: unknown;
+    currentTarget: any;
     styles: typeof combatStyles;
     indicators: CombatIndicators;
     enemyDisplay: EnemyDisplay;
@@ -300,7 +300,7 @@ export class CombatDisplay {
      * Set current target
      * @param {Entity} target Target entity
      */
-    setTarget(target: unknown): void {
+    setTarget(target: any): void {
         this.currentTarget = target;
         this.enemyDisplay.setTarget(target);
     }

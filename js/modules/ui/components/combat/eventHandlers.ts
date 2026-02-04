@@ -1,6 +1,21 @@
-// eventHandlers.js - Combat events, damage processing, and combat stats
+// eventHandlers.ts - Combat events, damage processing, and combat stats
+
+export interface CombatStats {
+    enemiesDestroyed: number;
+    damageDealt: number;
+    damageReceived: number;
+}
+
+export interface CombatEvent {
+    detail?: any;
+    [key: string]: any;
+}
 
 export class CombatEventHandlers {
+    combatSystem: any | null;
+    combatStats: CombatStats;
+    eventListeners: { eventType: string; handler: (event: any) => void }[];
+
     constructor() {
         this.combatSystem = null;
         this.combatStats = {
@@ -13,16 +28,16 @@ export class CombatEventHandlers {
 
     /**
      * Set reference to combat system
-     * @param {Object} combatSystem Combat system reference
+     * @param combatSystem Combat system reference
      */
-    setCombatSystem(combatSystem) {
+    setCombatSystem(combatSystem: any): void {
         this.combatSystem = combatSystem;
     }
 
     /**
      * Initialize combat event listeners
      */
-    initializeEventListeners() {
+    initializeEventListeners(): void {
         // Listen for damage events
         this.addEventListener('entity:damage', this.handleDamageEvent.bind(this));
         
@@ -50,12 +65,13 @@ export class CombatEventHandlers {
 
     /**
      * Add event listener
-     * @param {string} eventType Event type
-     * @param {Function} handler Event handler function
+     * @param eventType Event type
+     * @param handler Event handler function
      */
-    addEventListener(eventType, handler) {
-        if (window.game && window.game.eventBus) {
-            window.game.eventBus.addEventListener(eventType, handler);
+    addEventListener(eventType: string, handler: (event: any) => void): void {
+        const game = (window as any).game;
+        if (game && game.eventBus) {
+            game.eventBus.addEventListener(eventType, handler);
             this.eventListeners.push({ eventType, handler });
         }
     }
@@ -63,10 +79,11 @@ export class CombatEventHandlers {
     /**
      * Remove all event listeners
      */
-    removeEventListeners() {
-        if (window.game && window.game.eventBus) {
+    removeEventListeners(): void {
+        const game = (window as any).game;
+        if (game && game.eventBus) {
             this.eventListeners.forEach(({ eventType, handler }) => {
-                window.game.eventBus.removeEventListener(eventType, handler);
+                game.eventBus.removeEventListener(eventType, handler);
             });
         }
         this.eventListeners = [];
@@ -74,80 +91,88 @@ export class CombatEventHandlers {
 
     /**
      * Handle damage event
-     * @param {Object} event Damage event data
+     * @param event Damage event data
      */
-    handleDamageEvent(event) {
+    handleDamageEvent(event: CombatEvent): void {
         const { target, damage, source, isCritical, damageType } = event.detail || event;
         
         if (!target || !damage) return;
         
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
+
         // Update damage statistics
-        if (source === window.game?.spaceship) {
+        if (source === game?.spaceship) {
             // Player dealt damage
             this.combatStats.damageDealt += damage;
-        } else if (target === window.game?.spaceship) {
+        } else if (target === game?.spaceship) {
             // Player received damage
             this.combatStats.damageReceived += damage;
             
             // Trigger damage feedback
-            this.triggerDamageFeedback(damage, damageType, isCritical);
+            this.triggerDamageFeedback(damage, isCritical);
         }
         
         // Show damage number if target is visible
         const screenPos = this.getEntityScreenPosition(target);
-        if (screenPos && window.combatDisplay?.indicators) {
+        if (screenPos && combatDisplay?.indicators) {
             const color = this.getDamageColor(damageType, isCritical);
-            window.combatDisplay.indicators.showDamageNumber(damage, screenPos, color, isCritical);
+            combatDisplay.indicators.showDamageNumber(damage, screenPos, color, isCritical);
             
             // Show hit indicator
             const hitType = isCritical ? 'critical' : (damageType === 'shield' ? 'shield' : 'hit');
-            window.combatDisplay.indicators.showHitIndicator(screenPos, hitType);
+            combatDisplay.indicators.showHitIndicator(screenPos, hitType);
         }
     }
 
     /**
      * Handle enemy destroyed event
-     * @param {Object} event Enemy destroyed event data
+     * @param event Enemy destroyed event data
      */
-    handleEnemyDestroyed(event) {
-        const { enemy, killer } = event.detail || event;
+    handleEnemyDestroyed(event: CombatEvent): void {
+        const { killer } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (killer === window.game?.spaceship) {
+        if (killer === game?.spaceship) {
             this.combatStats.enemiesDestroyed++;
             
             // Show destruction feedback
-            if (window.combatDisplay?.indicators) {
-                window.combatDisplay.indicators.showNotification('ENEMY DESTROYED', 1500);
+            if (combatDisplay?.indicators) {
+                combatDisplay.indicators.showNotification('ENEMY DESTROYED', 1500);
             }
         }
     }
 
     /**
      * Handle weapon fired event
-     * @param {Object} event Weapon fired event data
+     * @param event Weapon fired event data
      */
-    handleWeaponFired(event) {
-        const { weapon, shooter, target } = event.detail || event;
+    handleWeaponFired(event: CombatEvent): void {
+        const { shooter } = event.detail || event;
+        const game = (window as any).game;
         
-        if (shooter === window.game?.spaceship) {
+        if (shooter === game?.spaceship) {
             // Player fired weapon - trigger visual feedback
-            this.triggerWeaponFiredFeedback(weapon);
+            this.triggerWeaponFiredFeedback();
         }
     }
 
     /**
      * Handle shield hit event
-     * @param {Object} event Shield hit event data
+     * @param event Shield hit event data
      */
-    handleShieldHit(event) {
-        const { target, damage } = event.detail || event;
+    handleShieldHit(event: CombatEvent): void {
+        const { target } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (target === window.game?.spaceship) {
+        if (target === game?.spaceship) {
             // Player shields hit - show shield effect
-            if (window.combatDisplay?.indicators) {
+            if (combatDisplay?.indicators) {
                 const screenPos = this.getEntityScreenPosition(target);
                 if (screenPos) {
-                    window.combatDisplay.indicators.showStatusEffect('SHIELD HIT', screenPos, '#3399ff');
+                    combatDisplay.indicators.showStatusEffect('SHIELD HIT', screenPos, '#3399ff');
                 }
             }
         }
@@ -155,15 +180,17 @@ export class CombatEventHandlers {
 
     /**
      * Handle shield depleted event
-     * @param {Object} event Shield depleted event data
+     * @param event Shield depleted event data
      */
-    handleShieldDepleted(event) {
+    handleShieldDepleted(event: CombatEvent): void {
         const { target } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (target === window.game?.spaceship) {
+        if (target === game?.spaceship) {
             // Player shields depleted
-            if (window.combatDisplay?.indicators) {
-                window.combatDisplay.indicators.showNotification('SHIELDS DOWN', 2000);
+            if (combatDisplay?.indicators) {
+                combatDisplay.indicators.showNotification('SHIELDS DOWN', 2000);
             }
             
             // Trigger warning animation
@@ -173,183 +200,205 @@ export class CombatEventHandlers {
 
     /**
      * Handle shield recharge event
-     * @param {Object} event Shield recharge event data
+     * @param event Shield recharge event data
      */
-    handleShieldRecharge(event) {
+    handleShieldRecharge(event: CombatEvent): void {
         const { target } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (target === window.game?.spaceship) {
+        if (target === game?.spaceship) {
             // Player shields recharging
-            if (window.combatDisplay?.indicators) {
-                window.combatDisplay.indicators.showShieldRecharge();
+            if (combatDisplay?.indicators) {
+                combatDisplay.indicators.showShieldRecharge();
             }
         }
     }
 
     /**
      * Handle weapon overheat event
-     * @param {Object} event Weapon overheat event data
+     * @param event Weapon overheat event data
      */
-    handleWeaponOverheat(event) {
-        const { weapon, shooter } = event.detail || event;
+    handleWeaponOverheat(event: CombatEvent): void {
+        const { shooter } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (shooter === window.game?.spaceship) {
+        if (shooter === game?.spaceship) {
             // Player weapon overheated
-            if (window.combatDisplay?.indicators) {
-                window.combatDisplay.indicators.showOverheatWarning();
+            if (combatDisplay?.indicators) {
+                combatDisplay.indicators.showOverheatWarning();
             }
         }
     }
 
     /**
      * Handle weapon reload event
-     * @param {Object} event Weapon reload event data
+     * @param event Weapon reload event data
      */
-    handleWeaponReload(event) {
+    handleWeaponReload(event: CombatEvent): void {
         const { weapon, shooter, ammoCount } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (shooter === window.game?.spaceship) {
+        if (shooter === game?.spaceship) {
             // Player weapon reloaded
-            if (ammoCount <= 3 && window.combatDisplay?.indicators) {
+            if (ammoCount <= 3 && combatDisplay?.indicators) {
                 // Low ammo warning
-                window.combatDisplay.indicators.showLowAmmoWarning(weapon.type || 'WEAPON', ammoCount);
+                combatDisplay.indicators.showLowAmmoWarning(weapon.type || 'WEAPON', ammoCount);
             }
         }
     }
 
     /**
      * Handle EMP activated event
-     * @param {Object} event EMP activated event data
+     * @param event EMP activated event data
      */
-    handleEMPActivated(event) {
-        const { source, position } = event.detail || event;
+    handleEMPActivated(event: CombatEvent): void {
+        const { source } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (source === window.game?.spaceship) {
+        if (source === game?.spaceship) {
             // Player activated EMP
             const screenPos = this.getEntityScreenPosition(source) || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
             
-            if (window.combatDisplay?.indicators) {
-                window.combatDisplay.indicators.showEMPEffect(screenPos);
-                window.combatDisplay.indicators.showNotification('EMP BURST ACTIVATED', 2000);
+            if (combatDisplay?.indicators) {
+                combatDisplay.indicators.showEMPEffect(screenPos);
+                combatDisplay.indicators.showNotification('EMP BURST ACTIVATED', 2000);
             }
         }
     }
 
     /**
      * Handle turret toggle event
-     * @param {Object} event Turret toggle event data
+     * @param event Turret toggle event data
      */
-    handleTurretToggle(event) {
+    handleTurretToggle(event: CombatEvent): void {
         const { source, isActive } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (source === window.game?.spaceship) {
+        if (source === game?.spaceship) {
             // Player toggled turrets
             const status = isActive ? 'ACTIVATED' : 'DEACTIVATED';
-            if (window.combatDisplay?.indicators) {
-                window.combatDisplay.indicators.showNotification(`TURRETS ${status}`, 1500);
+            if (combatDisplay?.indicators) {
+                combatDisplay.indicators.showNotification(`TURRETS ${status}`, 1500);
             }
         }
     }
 
     /**
      * Handle missile lock event
-     * @param {Object} event Missile lock event data
+     * @param event Missile lock event data
      */
-    handleMissileLock(event) {
+    handleMissileLock(event: CombatEvent): void {
         const { target, shooter } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (shooter === window.game?.spaceship && target) {
+        if (shooter === game?.spaceship && target) {
             // Player locked onto target
             const screenPos = this.getEntityScreenPosition(target);
-            if (screenPos && window.combatDisplay?.indicators) {
-                window.combatDisplay.indicators.showMissileLock(screenPos);
+            if (screenPos && combatDisplay?.indicators) {
+                combatDisplay.indicators.showMissileLock(screenPos);
             }
         }
     }
 
     /**
      * Handle missile fired event
-     * @param {Object} event Missile fired event data
+     * @param event Missile fired event data
      */
-    handleMissileFired(event) {
+    handleMissileFired(event: CombatEvent): void {
         const { shooter, ammoRemaining } = event.detail || event;
+        const game = (window as any).game;
+        const combatDisplay = (window as any).combatDisplay;
         
-        if (shooter === window.game?.spaceship) {
+        if (shooter === game?.spaceship) {
             // Player fired missile
-            if (ammoRemaining === 0 && window.combatDisplay?.indicators) {
-                window.combatDisplay.indicators.showNoAmmoWarning('MISSILE');
+            if (ammoRemaining === 0 && combatDisplay?.indicators) {
+                combatDisplay.indicators.showNoAmmoWarning('MISSILE');
             }
         }
     }
 
     /**
      * Trigger damage feedback for player
-     * @param {number} damage Damage amount
-     * @param {string} damageType Type of damage
-     * @param {boolean} isCritical Whether damage is critical
+     * @param damage Damage amount
+     * @param isCritical Whether damage is critical
      */
-    triggerDamageFeedback(damage, damageType, isCritical) {
+    triggerDamageFeedback(damage: number, isCritical: boolean): void {
+        const combatDisplay = (window as any).combatDisplay;
+        if (!combatDisplay) return;
+
         // Screen shake effect based on damage
         const shakeIntensity = Math.min(Math.floor(damage / 20), 5);
-        if (shakeIntensity > 0 && window.combatDisplay?.animations) {
+        if (shakeIntensity > 0 && combatDisplay.animations) {
             const combatContainer = document.getElementById('combat-container');
-            window.combatDisplay.animations.shakeElement(combatContainer, shakeIntensity, 300);
+            if (combatContainer) {
+                combatDisplay.animations.shakeElement(combatContainer, shakeIntensity, 300);
+            }
         }
         
         // Flash effect for critical hits
-        if (isCritical && window.combatDisplay?.animations) {
+        if (isCritical && combatDisplay.animations) {
             const combatContainer = document.getElementById('combat-container');
-            window.combatDisplay.animations.warningFlash(combatContainer, 2, 100);
+            if (combatContainer) {
+                combatDisplay.animations.warningFlash(combatContainer, 2, 100);
+            }
         }
     }
 
     /**
      * Trigger weapon fired feedback
-     * @param {Object} weapon Weapon that was fired
      */
-    triggerWeaponFiredFeedback(weapon) {
-        if (!window.combatDisplay?.animations) return;
+    triggerWeaponFiredFeedback(): void {
+        const combatDisplay = (window as any).combatDisplay;
+        if (!combatDisplay?.animations) return;
         
         // Pulse weapon energy bar
         const weaponEnergyBar = document.getElementById('weapon-energy-bar');
         if (weaponEnergyBar) {
-            window.combatDisplay.animations.pulseElement(weaponEnergyBar, 200, 1);
+            combatDisplay.animations.pulseElement(weaponEnergyBar, 200, 1);
         }
     }
 
     /**
      * Trigger shield depleted warning
      */
-    triggerShieldDepletedWarning() {
-        if (!window.combatDisplay?.animations) return;
+    triggerShieldDepletedWarning(): void {
+        const combatDisplay = (window as any).combatDisplay;
+        if (!combatDisplay?.animations) return;
         
         const shieldBar = document.getElementById('shield-bar');
         if (shieldBar) {
-            window.combatDisplay.animations.warningFlash(shieldBar, 5, 150);
+            combatDisplay.animations.warningFlash(shieldBar, 5, 150);
         }
     }
 
     /**
      * Get entity screen position
-     * @param {Object} entity Entity to get position for
-     * @returns {Object|null} Screen position {x, y}
+     * @param entity Entity to get position for
+     * @returns Screen position {x, y}
      */
-    getEntityScreenPosition(entity) {
-        if (!entity || !window.combatDisplay?.worldToScreen) return null;
+    getEntityScreenPosition(entity: any): { x: number; y: number } | null {
+        const combatDisplay = (window as any).combatDisplay;
+        if (!entity || !combatDisplay?.worldToScreen) return null;
         
         const transform = entity.getComponent ? entity.getComponent('TransformComponent') : null;
         if (!transform || !transform.position) return null;
         
-        return window.combatDisplay.worldToScreen(transform.position);
+        return combatDisplay.worldToScreen(transform.position);
     }
 
     /**
      * Get damage color based on type and criticality
-     * @param {string} damageType Type of damage
-     * @param {boolean} isCritical Whether damage is critical
-     * @returns {string} Color hex string
+     * @param damageType Type of damage
+     * @param isCritical Whether damage is critical
+     * @returns Color hex string
      */
-    getDamageColor(damageType, isCritical) {
+    getDamageColor(damageType: string, isCritical: boolean): string {
         if (isCritical) return '#ffff00'; // Yellow for critical
         
         switch (damageType) {
@@ -364,30 +413,30 @@ export class CombatEventHandlers {
     /**
      * Update combat statistics display
      */
-    updateCombatStats() {
+    updateCombatStats(): void {
         // Update enemies destroyed
         const enemiesDestroyedElement = document.getElementById('enemies-destroyed');
         if (enemiesDestroyedElement) {
-            enemiesDestroyedElement.textContent = this.combatStats.enemiesDestroyed;
+            enemiesDestroyedElement.textContent = this.combatStats.enemiesDestroyed.toString();
         }
         
         // Update damage dealt
         const damageDealtElement = document.getElementById('damage-dealt');
         if (damageDealtElement) {
-            damageDealtElement.textContent = Math.floor(this.combatStats.damageDealt);
+            damageDealtElement.textContent = Math.floor(this.combatStats.damageDealt).toString();
         }
         
         // Update damage received
         const damageReceivedElement = document.getElementById('damage-received');
         if (damageReceivedElement) {
-            damageReceivedElement.textContent = Math.floor(this.combatStats.damageReceived);
+            damageReceivedElement.textContent = Math.floor(this.combatStats.damageReceived).toString();
         }
     }
 
     /**
      * Reset combat statistics
      */
-    resetStats() {
+    resetStats(): void {
         this.combatStats = {
             enemiesDestroyed: 0,
             damageDealt: 0,
@@ -398,27 +447,28 @@ export class CombatEventHandlers {
 
     /**
      * Get current combat statistics
-     * @returns {Object} Combat statistics
+     * @returns Combat statistics
      */
-    getStats() {
+    getStats(): CombatStats {
         return { ...this.combatStats };
     }
 
     /**
      * Fire custom combat event
-     * @param {string} eventType Event type
-     * @param {Object} eventData Event data
+     * @param eventType Event type
+     * @param eventData Event data
      */
-    fireEvent(eventType, eventData) {
-        if (window.game && window.game.eventBus) {
-            window.game.eventBus.dispatchEvent(new CustomEvent(eventType, { detail: eventData }));
+    fireEvent(eventType: string, eventData: any): void {
+        const game = (window as any).game;
+        if (game && game.eventBus) {
+            game.eventBus.dispatchEvent(new CustomEvent(eventType, { detail: eventData }));
         }
     }
 
     /**
      * Cleanup event handlers
      */
-    cleanup() {
+    cleanup(): void {
         this.removeEventListeners();
         this.resetStats();
     }
