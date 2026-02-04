@@ -1,9 +1,12 @@
-// displays.js - Resource displays, health bars, fuel gauges, and data panels
+// displays.ts - Resource displays, health bars, fuel gauges, and data panels
 
 import { HUDStyles } from './styles.ts';
 
 export class HUDDisplays {
-    static createFlightPanel(parent) {
+    /**
+     * Creates the flight panel displaying core ship information
+     */
+    static createFlightPanel(parent: HTMLElement): HTMLDivElement {
         const flightPanel = document.createElement('div');
         flightPanel.id = 'flight-panel';
         flightPanel.className = 'hud-panel';
@@ -47,7 +50,10 @@ export class HUDDisplays {
         return flightPanel;
     }
 
-    static createStatusPanel(parent) {
+    /**
+     * Creates the status panel for hull and shield monitoring
+     */
+    static createStatusPanel(parent: HTMLElement): HTMLDivElement {
         const statusPanel = document.createElement('div');
         statusPanel.id = 'status-panel';
         statusPanel.className = 'hud-panel';
@@ -91,7 +97,10 @@ export class HUDDisplays {
         return statusPanel;
     }
 
-    static createLocationPanel(parent) {
+    /**
+     * Creates the location panel with system name, coordinates, and FPS
+     */
+    static createLocationPanel(parent: HTMLElement): HTMLDivElement {
         const locationPanel = document.createElement('div');
         locationPanel.id = 'location-panel';
         locationPanel.className = 'hud-panel';
@@ -139,7 +148,10 @@ export class HUDDisplays {
         return locationPanel;
     }
 
-    static createResourcePanel(parent) {
+    /**
+     * Creates the resource panel for cargo monitoring
+     */
+    static createResourcePanel(parent: HTMLElement): HTMLDivElement {
         const resourcePanel = document.createElement('div');
         resourcePanel.id = 'resource-panel';
         resourcePanel.className = 'hud-panel';
@@ -192,7 +204,10 @@ export class HUDDisplays {
         return resourcePanel;
     }
 
-    static createFuelGauge(panel) {
+    /**
+     * Creates the fuel gauge component
+     */
+    static createFuelGauge(panel: HTMLElement): void {
         const fuelRow = document.createElement('div');
         fuelRow.className = 'panel-row';
         HUDStyles.applyStyles(fuelRow, HUDStyles.getPanelRowStyles());
@@ -235,7 +250,10 @@ export class HUDDisplays {
         fuelBarContainer.appendChild(fuelBar);
     }
 
-    static createShieldBar(panel) {
+    /**
+     * Creates the shield integrity bar
+     */
+    static createShieldBar(panel: HTMLElement): void {
         const shieldRow = document.createElement('div');
         shieldRow.className = 'panel-row';
         HUDStyles.applyStyles(shieldRow, HUDStyles.getPanelRowStyles());
@@ -263,7 +281,10 @@ export class HUDDisplays {
         shieldBarContainer.appendChild(shieldBar);
     }
 
-    static createHullBar(panel) {
+    /**
+     * Creates the hull integrity bar
+     */
+    static createHullBar(panel: HTMLElement): void {
         const hullRow = document.createElement('div');
         hullRow.className = 'panel-row';
         HUDStyles.applyStyles(hullRow, HUDStyles.getPanelRowStyles());
@@ -291,7 +312,10 @@ export class HUDDisplays {
         hullBarContainer.appendChild(hullBar);
     }
 
-    static createResourceRow(panel, name, id, hexColor) {
+    /**
+     * Creates a resource row for the cargo panel
+     */
+    static createResourceRow(panel: HTMLElement, name: string, id: string, hexColor: string): void {
         const row = document.createElement('div');
         HUDStyles.applyStyles(row, {
             display: 'flex',
@@ -335,7 +359,10 @@ export class HUDDisplays {
         panel.appendChild(row);
     }
 
-    static createCapacityMeter(panel) {
+    /**
+     * Creates the cargo capacity meter
+     */
+    static createCapacityMeter(panel: HTMLElement): void {
         const capacityRow = document.createElement('div');
         HUDStyles.applyStyles(capacityRow, {
             marginTop: '8px',
@@ -384,7 +411,10 @@ export class HUDDisplays {
         capacityBarContainer.appendChild(capacityBar);
     }
 
-    static createPanelRow(panel, label, id, defaultValue, isIndicator = false) {
+    /**
+     * Creates a standard panel row with label and value
+     */
+    static createPanelRow(panel: HTMLElement, label: string, id: string, defaultValue: string, isIndicator: boolean = false): void {
         const row = document.createElement('div');
         row.className = 'panel-row';
         HUDStyles.applyStyles(row, {
@@ -414,7 +444,10 @@ export class HUDDisplays {
         row.appendChild(valueEl);
     }
 
-    static createControlsButton(panel) {
+    /**
+     * Creates the systems control button
+     */
+    static createControlsButton(panel: HTMLElement): void {
         const controlsButton = document.createElement('button');
         controlsButton.id = 'show-controls';
         controlsButton.textContent = 'SYSTEM CONTROLS';
@@ -437,7 +470,10 @@ export class HUDDisplays {
         panel.appendChild(controlsButton);
     }
 
-    static createSoundToggleButton(panel) {
+    /**
+     * Creates the sound toggle button
+     */
+    static createSoundToggleButton(panel: HTMLElement): void {
         const soundToggleBtn = document.createElement('button');
         soundToggleBtn.id = 'sound-toggle';
         soundToggleBtn.textContent = 'SOUND: ON';

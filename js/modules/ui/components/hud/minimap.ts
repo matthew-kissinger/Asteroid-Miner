@@ -1,13 +1,11 @@
-// minimap.js - Minimap rendering and updates (placeholder for future implementation)
-
-import { HUDStyles } from './styles.ts';
+// minimap.ts - Minimap rendering and updates (placeholder for future implementation)
 
 export class HUDMinimap {
     /**
      * Create a minimap component (removed as per user request, but keeping for future)
      * This is a placeholder for when minimap functionality might be re-added
      */
-    static createMinimap(parent: HTMLElement): HTMLDivElement | null {
+    static createMinimap(_parent: HTMLElement): HTMLDivElement | null {
         // Radar/minimap was removed as per user request
         // This method is kept as a placeholder for potential future implementation
         console.log('Minimap creation requested but currently disabled');
@@ -17,7 +15,7 @@ export class HUDMinimap {
     /**
      * Update minimap with current game state
      */
-    static updateMinimap(gameState: any): void {
+    static updateMinimap(_gameState: any): void {
         // Placeholder for minimap update logic
         // Currently disabled as radar was removed
         return;
@@ -26,7 +24,7 @@ export class HUDMinimap {
     /**
      * Add a blip to the minimap
      */
-    static addBlip(x: number, y: number, type: string, data: any): void {
+    static addBlip(_x: number, _y: number, _type: string, _data: any): void {
         // Placeholder for adding objects to minimap
         // Currently disabled as radar was removed
         return;
@@ -35,7 +33,7 @@ export class HUDMinimap {
     /**
      * Remove a blip from the minimap
      */
-    static removeBlip(id: string): void {
+    static removeBlip(_id: string): void {
         // Placeholder for removing objects from minimap
         // Currently disabled as radar was removed
         return;
@@ -53,7 +51,7 @@ export class HUDMinimap {
     /**
      * Set minimap zoom level
      */
-    static setZoom(zoomLevel: number): void {
+    static setZoom(_zoomLevel: number): void {
         // Placeholder for zoom functionality
         // Currently disabled as radar was removed
         return;

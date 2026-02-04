@@ -119,7 +119,7 @@ export class HUDEventHandlers {
     /**
      * Handle location changes with glitch effect
      */
-    handleLocationChange(locationName: string, systemName: string): void {
+    handleLocationChange(_locationName: string, _systemName: string): void {
         const locationPanel: HTMLDivElement | null = document.getElementById('location-panel') as HTMLDivElement;
         if (locationPanel) {
             this.addGlitch(locationPanel);
@@ -212,7 +212,7 @@ export class HUDEventHandlers {
     /**
      * Handle performance monitoring
      */
-    handlePerformanceUpdate(fps: number, frameTime: number): void {
+    handlePerformanceUpdate(fps: number, _frameTime: number): void {
         // Could add performance-based UI adjustments here
         // For example, reduce effects if FPS is low
         if (fps < 30) {
@@ -231,7 +231,7 @@ export class HUDEventHandlers {
     /**
      * Handle game state changes
      */
-    handleGameStateChange(newState: string, oldState: string): void {
+    handleGameStateChange(newState: string, _oldState: string): void {
         // React to game state changes with appropriate HUD updates
         switch (newState) {
             case 'playing':
@@ -253,7 +253,7 @@ export class HUDEventHandlers {
     /**
      * Handle critical events that need immediate visual feedback
      */
-    handleCriticalEvent(eventType: string, data: any): void {
+    handleCriticalEvent(eventType: string, _data: any): void {
         const hudContainer: HTMLDivElement | null = document.getElementById('hud-container') as HTMLDivElement;
         
         switch (eventType) {

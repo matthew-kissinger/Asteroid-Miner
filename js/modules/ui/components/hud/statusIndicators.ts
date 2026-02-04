@@ -132,7 +132,7 @@ export class HUDStatusIndicators {
         return laserBeam;
     }
 
-    static createScanlineEffect(parent: HTMLElement): HTMLDivElement | null {
+    static createScanlineEffect(_parent: HTMLElement): HTMLDivElement | null {
         // Scanline effect disabled - returning null
         return null;
         
@@ -359,8 +359,6 @@ export class HUDStatusIndicators {
                 (window.game as any).ui.settings && 
                 (window.game as any).ui.settings.settings.frameRateCap === 'auto') {
                 
-                const refreshRate: number = ((window.game as any).ui.settings.monitorRefreshRate || 60);
-                
                 if (cap > 0) {
                     // Show it's using auto mode with the detected refresh rate
                     fpsElement.textContent = `FPS: ${Math.round(fps)}/${cap} (Auto)`;
@@ -375,7 +373,7 @@ export class HUDStatusIndicators {
     /**
      * Update location display
      */
-    static updateLocation(locationName: string, systemName: string = 'Unknown System'): void {
+    static updateLocation(_locationName: string, systemName: string = 'Unknown System'): void {
         const currentSystem: HTMLElement | null = document.getElementById('current-system');
         
         if (currentSystem) {

@@ -62,7 +62,7 @@ export class SettingsHelpers {
                         console.log(`Using getScreenDetails API: ${this.monitorRefreshRate}Hz`);
                         this.updateRefreshRateCallback?.();
                     }
-                }).catch((err: any) => {
+                }).catch((_err: any) => {
                     console.log("getScreenDetails not available, falling back to other methods");
                 });
             }
