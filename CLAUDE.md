@@ -216,22 +216,22 @@ Health.current[eid] = Health.max[eid]
 36. ~~Wire all bitECS systems into ecsRunner.ts~~ Done (e9d8f51)
 37. ~~Delete old custom ECS (js/components/, js/systems/)~~ Done (13c30a0)
 
-### Phase 3: Game Feel Overhaul
+### Phase 3: Game Feel Overhaul - IN PROGRESS
 1. **Controller tuning**
-   - Response curves (not linear)
-   - Dead zones
-   - Acceleration/deceleration curves
-   - Gamepad rumble feedback
+   - ~~Response curves (not linear)~~ Done (407f1eb)
+   - Dead zones (already implemented in gamepadHandler.ts)
+   - ~~Acceleration/deceleration curves~~ Done (407f1eb - unified applyResponseCurve)
+   - ~~Gamepad rumble feedback~~ Done (388f075 - combat events trigger vibration)
 2. **Combat system**
-   - Better hit feedback (screen shake, flash)
+   - Better hit feedback (screen shake, flash) - **In progress**
    - Weapon feel (recoil, sound sync)
    - Enemy behavior variety
    - Damage numbers or indicators
 3. **Camera system**
-   - Smooth follow with lag
-   - Shake on impact/explosion
+   - ~~Smooth follow with lag~~ Done (978e50e - CAMERA_LAG damping)
+   - Shake on impact/explosion - **Needs implementation** (failed task 575f6daa)
    - Zoom on boost
-   - Look-ahead based on velocity
+   - ~~Look-ahead based on velocity~~ Done (978e50e - CAMERA_LOOKAHEAD_SCALE)
 
 ### Phase 4: Visual Indicators
 1. **Lock-on system**
