@@ -49,7 +49,9 @@ export {
 // Enemy AI system
 export {
   enemyDetectionSystem,
+  enemyPatrolSystem,
   enemyPursuitSystem,
+  enemyEvadeSystem,
   enemySeparationSystem,
   difficultyScalingSystem,
   enemyCollisionAttackSystem,

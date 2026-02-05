@@ -262,10 +262,15 @@ export const EnemyAI = {
   faction: new Uint8Array(10000),      // 0 = spectrals, 1 = other (expand as needed)
   aiType: new Uint8Array(10000),       // 0 = drone, 1 = other
   subtype: new Uint8Array(10000),      // 0 = standard, 1 = heavy, 2 = swift
+  state: new Uint8Array(10000),        // 0 = idle, 1 = patrol, 2 = chase, 3 = evade
   detectionRange: new Float32Array(10000),
   damage: new Float32Array(10000),
   speed: new Float32Array(10000),
   playerFound: new Uint8Array(10000),  // 0 = not found, 1 = found
+  spawnX: new Float32Array(10000),
+  spawnY: new Float32Array(10000),
+  spawnZ: new Float32Array(10000),
+  stateTimer: new Float32Array(10000),
   spiralAmplitude: new Float32Array(10000),
   spiralFrequency: new Float32Array(10000),
   spiralPhase: new Float32Array(10000),

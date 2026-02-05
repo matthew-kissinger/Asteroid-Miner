@@ -28,11 +28,18 @@ const SEPARATION_FORCE_MAGNITUDE = 150
 const SEPARATION_THRESHOLD_MULTIPLIER = 2.5
 const COLLISION_DISTANCE = 75 // Kamikaze attack distance
 
+// State constants
+const STATE_IDLE = 0
+const STATE_PATROL = 1
+const STATE_CHASE = 2
+const STATE_EVADE = 3
+
 /**
  * Enemy Detection System
  *
  * Checks if enemies detect the player based on distance.
  * Sets EnemyAI.playerFound flag when player is within detection range.
+ * Handles state transitions: IDLE -> PATROL, PATROL -> CHASE.
  *
  * @param enemies - Array of enemy entity IDs
  * @param playerEid - Player entity ID (or -1 if no player)
@@ -41,6 +48,16 @@ export function enemyDetectionSystem(
   enemies: number[],
   playerEid: number
 ): void {
+  for (const eid of enemies) {
+    // Handle IDLE -> PATROL transition
+    if (EnemyAI.state[eid] === STATE_IDLE) {
+      EnemyAI.state[eid] = STATE_PATROL
+      EnemyAI.spawnX[eid] = Position.x[eid]
+      EnemyAI.spawnY[eid] = Position.y[eid]
+      EnemyAI.spawnZ[eid] = Position.z[eid]
+    }
+  }
+
   if (playerEid === -1) return
 
   // Get player position
@@ -49,8 +66,8 @@ export function enemyDetectionSystem(
   const playerZ = Position.z[playerEid]
 
   for (const eid of enemies) {
-    // Skip if already found player
-    if (EnemyAI.playerFound[eid]) continue
+    // Skip if already in CHASE or EVADE
+    if (EnemyAI.state[eid] === STATE_CHASE || EnemyAI.state[eid] === STATE_EVADE) continue
 
     // Calculate distance to player
     const dx = Position.x[eid] - playerX
@@ -62,6 +79,7 @@ export function enemyDetectionSystem(
 
     if (distSq < detectionRangeSq) {
       EnemyAI.playerFound[eid] = 1
+      EnemyAI.state[eid] = STATE_CHASE
     }
   }
 }
@@ -69,11 +87,8 @@ export function enemyDetectionSystem(
 /**
  * Enemy Pursuit System
  *
- * Moves enemies toward the player with spiral movement patterns.
- * Implements different movement behaviors based on enemy subtype:
- * - Standard drones: Spiral approach with sinusoidal offset
- * - Heavy drones: Slow, direct approach
- * - Swift drones: Fast zigzag approach
+ * Handles movement for enemies in CHASE state.
+ * Transitions to EVADE if health is low.
  *
  * @param enemies - Array of enemy entity IDs
  * @param playerEid - Player entity ID (or -1 if no player)
@@ -84,68 +99,219 @@ export function enemyPursuitSystem(
   playerEid: number,
   dt: number
 ): void {
-  if (playerEid === -1) return
-
-  const playerX = Position.x[playerEid]
-  const playerY = Position.y[playerEid]
-  const playerZ = Position.z[playerEid]
-
   for (const eid of enemies) {
-    // Only pursue if player has been detected
-    if (!EnemyAI.playerFound[eid]) continue
+    if (EnemyAI.state[eid] !== STATE_CHASE) continue
+
+    // Transition to EVADE if health is low (below 25%)
+    if (Health.max[eid] > 0 && Health.current[eid] < 0.25 * Health.max[eid]) {
+      EnemyAI.state[eid] = STATE_EVADE
+      EnemyAI.stateTimer[eid] = 0
+      continue
+    }
+
+    if (playerEid === -1) {
+      EnemyAI.state[eid] = STATE_PATROL
+      continue
+    }
 
     // Update time alive
     EnemyAI.timeAlive[eid] += dt
 
-    // Calculate base direction to player
-    const dx = playerX - Position.x[eid]
-    const dy = playerY - Position.y[eid]
-    const dz = playerZ - Position.z[eid]
+    applyChaseMovement(eid, playerEid, dt)
+  }
+}
+
+/**
+ * Enemy Patrol System
+ *
+ * Handles movement for enemies in PATROL state.
+ *
+ * @param enemies - Array of enemy entity IDs
+ * @param dt - Delta time in seconds
+ */
+export function enemyPatrolSystem(
+  enemies: number[],
+  dt: number
+): void {
+  for (const eid of enemies) {
+    if (EnemyAI.state[eid] !== STATE_PATROL) continue
+
+    const spawnX = EnemyAI.spawnX[eid]
+    const spawnY = EnemyAI.spawnY[eid]
+    const spawnZ = EnemyAI.spawnZ[eid]
+    const timeAlive = EnemyAI.timeAlive[eid]
+    const speed = EnemyAI.speed[eid] * 0.5 // Patrol at 50% speed
+
+    // Circular patrol pattern
+    const radius = 200
+    const angle = timeAlive * 0.5 // Rotation speed
+    
+    const targetX = spawnX + Math.cos(angle) * radius
+    const targetY = spawnY
+    const targetZ = spawnZ + Math.sin(angle) * radius
+
+    const dx = targetX - Position.x[eid]
+    const dy = targetY - Position.y[eid]
+    const dz = targetZ - Position.z[eid]
     const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
 
-    if (dist === 0) continue
+    if (dist > 1) {
+      const dirX = dx / dist
+      const dirY = dy / dist
+      const dirZ = dz / dist
 
-    // Normalize base direction
-    const baseDirX = dx / dist
-    const baseDirY = dy / dist
-    const baseDirZ = dz / dist
+      Velocity.x[eid] = dirX * speed
+      Velocity.y[eid] = dirY * speed
+      Velocity.z[eid] = dirZ * speed
 
-    // Apply movement based on subtype
-    const subtype = EnemyAI.subtype[eid]
-    const speed = EnemyAI.speed[eid]
-
-    if (subtype === 0) {
-      // Standard drone: spiral approach
-      applyStandardDroneMovement(
-        eid,
-        baseDirX,
-        baseDirY,
-        baseDirZ,
-        dist,
-        speed,
-        dt
-      )
-    } else if (subtype === 1) {
-      // Heavy drone: slow, direct approach
-      applyHeavyDroneMovement(eid, baseDirX, baseDirY, baseDirZ, speed, dt)
-    } else if (subtype === 2) {
-      // Swift drone: fast zigzag
-      applySwiftDroneMovement(
-        eid,
-        baseDirX,
-        baseDirY,
-        baseDirZ,
-        dist,
-        speed,
-        dt
-      )
+      // Face movement direction
+      updateRotationTowardsPlayer(eid, dirX, dirY, dirZ)
+    } else {
+      Velocity.x[eid] = 0
+      Velocity.y[eid] = 0
+      Velocity.z[eid] = 0
     }
 
     // Apply separation force influence
     applySeparationInfluence(eid, speed, dt)
+  }
+}
 
-    // Update rotation to face player (simple LookAt approximation)
-    updateRotationTowardsPlayer(eid, baseDirX, baseDirY, baseDirZ)
+/**
+ * Chase behavior: Original pursuit logic
+ */
+function applyChaseMovement(
+  eid: number,
+  playerEid: number,
+  dt: number
+): void {
+  const playerX = Position.x[playerEid]
+  const playerY = Position.y[playerEid]
+  const playerZ = Position.z[playerEid]
+
+  // Calculate base direction to player
+  const dx = playerX - Position.x[eid]
+  const dy = playerY - Position.y[eid]
+  const dz = playerZ - Position.z[eid]
+  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+  if (dist === 0) return
+
+  // Normalize base direction
+  const baseDirX = dx / dist
+  const baseDirY = dy / dist
+  const baseDirZ = dz / dist
+
+  // Apply movement based on subtype
+  const subtype = EnemyAI.subtype[eid]
+  const speed = EnemyAI.speed[eid]
+
+  if (subtype === 0) {
+    // Standard drone: spiral approach
+    applyStandardDroneMovement(
+      eid,
+      baseDirX,
+      baseDirY,
+      baseDirZ,
+      dist,
+      speed,
+      dt
+    )
+  } else if (subtype === 1) {
+    // Heavy drone: slow, direct approach
+    applyHeavyDroneMovement(eid, baseDirX, baseDirY, baseDirZ, speed, dt)
+  } else if (subtype === 2) {
+    // Swift drone: fast zigzag
+    applySwiftDroneMovement(
+      eid,
+      baseDirX,
+      baseDirY,
+      baseDirZ,
+      dist,
+      speed,
+      dt
+    )
+  }
+
+  // Apply separation force influence
+  applySeparationInfluence(eid, speed, dt)
+
+  // Update rotation to face player
+  updateRotationTowardsPlayer(eid, baseDirX, baseDirY, baseDirZ)
+}
+
+/**
+ * Enemy Evade System
+ *
+ * Handles movement for enemies in EVADE state.
+ * Transitions back to CHASE after timeout or health recovery.
+ *
+ * @param enemies - Array of enemy entity IDs
+ * @param playerEid - Player entity ID (or -1 if no player)
+ * @param dt - Delta time in seconds
+ */
+export function enemyEvadeSystem(
+  enemies: number[],
+  playerEid: number,
+  dt: number
+): void {
+  for (const eid of enemies) {
+    if (EnemyAI.state[eid] !== STATE_EVADE) continue
+
+    // Update evade timer
+    EnemyAI.stateTimer[eid] += dt
+
+    // Transition back to CHASE after 3 seconds or if health recovered (above 40%)
+    const healthRecovered = Health.max[eid] > 0 && Health.current[eid] > 0.4 * Health.max[eid]
+    if (EnemyAI.stateTimer[eid] >= 3.0 || healthRecovered) {
+      EnemyAI.state[eid] = STATE_CHASE
+      continue
+    }
+
+    if (playerEid === -1) {
+      EnemyAI.state[eid] = STATE_PATROL
+      continue
+    }
+
+    // Update time alive
+    EnemyAI.timeAlive[eid] += dt
+
+    const playerX = Position.x[playerEid]
+    const playerY = Position.y[playerEid]
+    const playerZ = Position.z[playerEid]
+
+    // Calculate direction AWAY from player
+    let dx = Position.x[eid] - playerX
+    let dy = Position.y[eid] - playerY
+    let dz = Position.z[eid] - playerZ
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+    if (dist === 0) continue
+
+    // Move AWAY from player at 1.2x speed
+    const speed = EnemyAI.speed[eid] * 1.2
+    
+    // Add some random jitter to prevent predictable retreat
+    const jitter = 0.2
+    let dirX = dx / dist + (Math.random() - 0.5) * jitter
+    let dirY = dy / dist + (Math.random() - 0.5) * jitter
+    let dirZ = dz / dist + (Math.random() - 0.5) * jitter
+    
+    // Re-normalize after jitter
+    const dirLen = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ)
+    dirX /= dirLen
+    dirY /= dirLen
+    dirZ /= dirLen
+
+    Velocity.x[eid] = dirX * speed
+    Velocity.y[eid] = dirY * speed
+    Velocity.z[eid] = dirZ * speed
+
+    // Face away from player (movement direction)
+    updateRotationTowardsPlayer(eid, dirX, dirY, dirZ)
+
+    // Apply separation force influence
+    applySeparationInfluence(eid, speed, dt)
   }
 }
 

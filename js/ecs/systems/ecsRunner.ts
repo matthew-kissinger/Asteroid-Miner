@@ -16,7 +16,9 @@ import {
   registerMesh,
   type MeshRegistry,
   enemyDetectionSystem,
+  enemyPatrolSystem,
   enemyPursuitSystem,
+  enemyEvadeSystem,
   enemySeparationSystem,
   difficultyScalingSystem,
   enemyCollisionAttackSystem,
@@ -137,7 +139,9 @@ export function updateECS(deltaTime: number): void {
   // 2. Enemy AI systems
   if (enemies.length > 0) {
     enemyDetectionSystem(enemies, playerEntityId)
+    enemyPatrolSystem(enemies, deltaTime)
     enemyPursuitSystem(enemies, playerEntityId, deltaTime)
+    enemyEvadeSystem(enemies, playerEntityId, deltaTime)
     enemySeparationSystem(enemies)
     difficultyScalingSystem(enemies, gameTime)
     enemyCollisionAttackSystem(enemies, playerEntityId)
