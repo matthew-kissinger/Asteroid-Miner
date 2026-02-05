@@ -6,15 +6,20 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 2 COMPLETE - Pure TypeScript, bitECS Active
+## Current State: Phase 3 COMPLETE - Game Feel Overhaul Done
 
-**MILESTONE: Pure TypeScript Codebase Achieved (2026-02-05)**
+**MILESTONE: Phase 3 Game Feel Complete (2026-02-05)**
 
-- 245 TypeScript files, 0 JavaScript files
-- Legacy ECS DELETED (13c30a0) - js/systems/ and js/components/ directories removed
+- 245 TypeScript files, 0 JavaScript files (pure TypeScript codebase)
 - bitECS systems ALL wired into game loop: physics, renderSync, enemyAI, combat, mining
 - Build succeeds, typecheck passes with 0 errors
-- Code splitting maintained (game-core 180 kB, combat 35 kB, env 62 kB, ui 56 kB)
+- Code splitting: game-core 184 kB, combat 35 kB, env 62 kB, ui 61 kB
+
+**Phase 3 Completed Features:**
+- Controller tuning: response curves, dead zones, gamepad rumble
+- Combat feedback: screen flash, camera shake, weapon recoil, floating damage numbers
+- Camera system: damping, velocity offset, look-ahead, boost zoom
+- Threat awareness: off-screen enemy indicators (f711765)
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured)
@@ -71,8 +76,9 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 **Remaining Problems:**
 - **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment.
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
-- **Global state** - ~218 `window.*` usages across 61 files (down from 645). Concentrated in UI modules. js/globals/ module created but most code still uses window.* directly.
+- **Global state** - ~220 `window.*` usages across 62 files (down from 645). Concentrated in UI modules. js/globals/ module created but most code still uses window.* directly.
 - **enemyAISystem window.game** - 7 references to window.game in enemyAISystem.ts for difficulty scaling. Should use dependency injection.
+- **Enemy AI variety** - Currently single behavior pattern (chase + spiral). State machine with multiple behaviors (patrol, evade, strafe) would improve gameplay.
 
 ## Target Stack (2026 Best Practices)
 
@@ -215,37 +221,40 @@ Health.current[eid] = Health.max[eid]
 36. ~~Wire all bitECS systems into ecsRunner.ts~~ Done (e9d8f51)
 37. ~~Delete old custom ECS (js/components/, js/systems/)~~ Done (13c30a0)
 
-### Phase 3: Game Feel Overhaul - IN PROGRESS
+### Phase 3: Game Feel Overhaul - COMPLETE
 1. **Controller tuning** - COMPLETE
    - ~~Response curves (not linear)~~ Done (407f1eb)
    - ~~Dead zones~~ Already implemented in gamepadHandler.ts
    - ~~Acceleration/deceleration curves~~ Done (407f1eb - unified applyResponseCurve)
    - ~~Gamepad rumble feedback~~ Done (388f075 - combat events trigger vibration)
-2. **Combat system**
+2. **Combat system** - COMPLETE
    - ~~Screen flash on damage~~ Done (0da1d40 - HTML overlay with CSS transitions)
    - ~~Camera shake on impact~~ Done (1934ba2 - dual-frequency sine waves in Physics.applyShake)
-   - Weapon feel (recoil, sound sync)
-   - Enemy behavior variety
-   - Damage numbers or indicators
+   - ~~Weapon feel (recoil, sound sync)~~ Done (2b51030 - camera recoil via weapon.fire events)
+   - ~~Damage numbers~~ Done (2b51030 - floating damage numbers with color-coding)
+   - Enemy behavior variety - DEFERRED to Phase 4 (depends on state machine architecture)
 3. **Camera system** - COMPLETE
    - ~~Smooth follow with lag~~ Done (978e50e - CAMERA_LAG damping)
    - ~~Shake on impact/explosion~~ Done (1934ba2 - event-driven via mainMessageBus)
    - ~~Zoom on boost~~ Done (32854ea - 1.3x zoom out with smooth lerp)
    - ~~Look-ahead based on velocity~~ Done (978e50e - CAMERA_LOOKAHEAD_SCALE)
 
-### Phase 4: Visual Indicators
+### Phase 4: Visual Indicators - IN PROGRESS
 1. **Lock-on system**
    - Target reticle with lead indicator
    - Lock-on animation/sound
    - Target info display (health, distance, type)
-2. **Threat awareness**
-   - Off-screen enemy arrows
+2. **Threat awareness** - PARTIAL
+   - ~~Off-screen enemy arrows~~ Done (f711765 - color-coded by distance, max 6 indicators)
    - Incoming missile warnings
    - Radar/minimap
 3. **Movement feedback**
    - Velocity vector indicator
    - Speed lines at high velocity
    - G-force screen effects
+4. **Enemy AI** (moved from Phase 3)
+   - Enemy behavior variety (state machines)
+   - Difficulty-based spawning
 
 ### Phase 5: HUD Overhaul
 1. Modern design (CSS/Tailwind, not inline)
