@@ -39,10 +39,14 @@ export {
   addTrackedEntity,
   removeTrackedEntity,
   addEnemy,
+  addAsteroid,
+  addPlanet,
   addProjectile,
   addEntityWithHealth,
   setPlayerEntity,
   getEnemies,
+  getAsteroids,
+  getPlanets,
   getPlayerEntity,
 } from './ecsRunner'
 

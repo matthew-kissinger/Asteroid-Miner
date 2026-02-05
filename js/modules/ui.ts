@@ -20,8 +20,7 @@ import { initScreenFlash } from './ui/screenFlash.ts';
 import { initDamageNumbers, updateDamageNumbers } from './ui/damageNumbers.ts';
 import { initThreatIndicators, setThreatIndicatorsCamera, updateThreatIndicators } from './ui/threatIndicators.ts';
 import { initLockOnDisplay, setLockOnDisplayCamera, updateLockOnDisplay, setLockedEnemy, getLockedEnemy } from './ui/lockOnDisplay.ts';
-import { initVelocityIndicator, updateVelocityIndicator } from './ui/velocityIndicator.ts';
-import { initSpeedLines, updateSpeedLines } from './ui/speedLines.ts';
+import { initRadar, updateRadar } from './ui/radarDisplay.ts';
 import { getEnemies, getPlayerEntity } from '../ecs/systems/ecsRunner';
 import { Position } from '../ecs/components';
 
@@ -180,11 +179,8 @@ export class UI {
         // Initialize lock-on display
         initLockOnDisplay();
 
-        // Initialize velocity indicator
-        initVelocityIndicator();
-
-        // Initialize speed lines
-        initSpeedLines();
+        // Initialize radar display
+        initRadar();
 
         // Initialize damage numbers if camera and renderer are available
         if (this.camera && this.renderer) {
@@ -436,13 +432,11 @@ export class UI {
         // Update lock-on display
         updateLockOnDisplay(playerEid);
 
-        // Update velocity indicator
-        updateVelocityIndicator(playerEid);
-
-        // Update speed lines (convert deltaTime from ms to seconds)
-        updateSpeedLines(playerEid, deltaTime / 1000);
+        // Update radar display
+        updateRadar(performance.now());
 
         // Update touch controls if on mobile
+
         if (this.isMobile && this.controls && this.controls.touchControls) {
             this.controls.touchControls.update();
         }

@@ -1,6 +1,9 @@
 // asteroidBelt.ts - Creates and manages the asteroid belt
 
 import * as THREE from 'three';
+import { createGameEntity, removeGameEntity } from '../../ecs/world';
+import { Position, Asteroid as AsteroidTag } from '../../ecs/components';
+import { addAsteroid } from '../../ecs/systems/index';
 
 type ResourceType = 'iron' | 'gold' | 'platinum';
 
@@ -18,6 +21,7 @@ interface AsteroidRotationSpeed {
 
 interface AsteroidData {
     mesh: THREE.Mesh;
+    eid: number;
     size: number;
     orbitSpeed: number;
     orbitRadius: number;
@@ -152,10 +156,21 @@ export class AsteroidBelt {
             // Add to scene
             this.scene.add(mesh);
 
+            // Create bitECS entity for the radar and other systems
+            const eid = createGameEntity();
+            AsteroidTag.tag[eid] = 1;
+            
+            Position.x[eid] = mesh.position.x;
+            Position.y[eid] = mesh.position.y;
+            Position.z[eid] = mesh.position.z;
+            
+            addAsteroid(eid);
+
             // Add to asteroids array with metadata
             const baseResourceAmount = 50 + Math.random() * 50; // Base amount before multipliers
             this.asteroids.push({
                 mesh: mesh,
+                eid: eid, // Store entity ID
                 size: size,
                 orbitSpeed: orbitSpeed,
                 orbitRadius: orbitRadius,
@@ -268,6 +283,9 @@ export class AsteroidBelt {
     }
 
     removeAsteroid(asteroid: AsteroidData): void {
+        // Remove from bitECS
+        removeGameEntity(asteroid.eid);
+
         // Remove the asteroid from the scene
         this.scene.remove(asteroid.mesh);
 
@@ -337,6 +355,11 @@ export class AsteroidBelt {
                 asteroid.mesh.position.z = flatZ;
                 asteroid.mesh.position.y = asteroid.initialHeight;
             }
+
+            // Sync bitECS position for radar
+            Position.x[asteroid.eid] = asteroid.mesh.position.x;
+            Position.y[asteroid.eid] = asteroid.mesh.position.y;
+            Position.z[asteroid.eid] = asteroid.mesh.position.z;
         });
     }
 

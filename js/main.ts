@@ -15,6 +15,9 @@ import { mainMessageBus } from './globals/messageBus.ts';
 // import { GameLifecycle } from './main/gameLifecycle.ts';
 
 // Import bitECS systems
+import { createGameEntity } from './ecs/world';
+import { Position, Rotation, Player } from './ecs/components';
+import { setPlayerEntity } from './ecs/systems/index';
 // import { initECS, updateECS } from './ecs/systems/index.js'; // Removed direct import
 
 export class Game {
@@ -40,6 +43,7 @@ export class Game {
     world: any;
     renderer: any;
     audio: any;
+    playerEid?: number;
     private _environment: any;
     private _controls: any;
     private _updateECS: ((deltaTime: number) => void) | undefined; // New property
@@ -113,6 +117,12 @@ export class Game {
             const { initECS, updateECS } = await import('./ecs/systems/index.js');
             initECS(this.renderer?.scene);
             this._updateECS = updateECS;
+
+            // Create bitECS player entity for radar and other systems
+            const playerEid = createGameEntity();
+            Player.tag[playerEid] = 1;
+            setPlayerEntity(playerEid);
+            this.playerEid = playerEid;
 
             // Start the initialization sequence
             this.startupSequence.initializeGameSequence();
@@ -195,6 +205,18 @@ export class Game {
         // Update bitECS systems (parallel to legacy systems)
         if (this._updateECS) {
             this._updateECS(deltaTime);
+        }
+
+        // Sync player position/rotation to bitECS for radar and other systems
+        if (this.playerEid !== undefined && this.spaceship && this.spaceship.mesh) {
+            Position.x[this.playerEid] = this.spaceship.mesh.position.x;
+            Position.y[this.playerEid] = this.spaceship.mesh.position.y;
+            Position.z[this.playerEid] = this.spaceship.mesh.position.z;
+            
+            Rotation.x[this.playerEid] = this.spaceship.mesh.quaternion.x;
+            Rotation.y[this.playerEid] = this.spaceship.mesh.quaternion.y;
+            Rotation.z[this.playerEid] = this.spaceship.mesh.quaternion.z;
+            Rotation.w[this.playerEid] = this.spaceship.mesh.quaternion.w;
         }
 
         // Update spaceship

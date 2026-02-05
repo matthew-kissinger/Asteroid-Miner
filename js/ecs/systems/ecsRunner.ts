@@ -44,6 +44,8 @@ const entities: number[] = []
 // Track entity categories for systems
 const enemies: number[] = []
 const projectiles: number[] = []
+const asteroids: number[] = []
+const planets: number[] = []
 const entitiesWithHealth: number[] = []
 
 // Track player entity (if any)
@@ -104,6 +106,9 @@ export function initECS(scene?: THREE.Scene): void {
     Renderable.castShadow[testEntity] = 0
     Renderable.receiveShadow[testEntity] = 0
   }
+
+  // Add as enemy for testing radar/targeting
+  addEnemy(testEntity)
 
   console.log('[bitECS] Initialized - test entity created')
 }
@@ -234,6 +239,16 @@ export function removeTrackedEntity(eid: number): void {
     projectiles.splice(projectileIndex, 1)
   }
 
+  const asteroidIndex = asteroids.indexOf(eid)
+  if (asteroidIndex !== -1) {
+    asteroids.splice(asteroidIndex, 1)
+  }
+
+  const planetIndex = planets.indexOf(eid)
+  if (planetIndex !== -1) {
+    planets.splice(planetIndex, 1)
+  }
+
   const healthIndex = entitiesWithHealth.indexOf(eid)
   if (healthIndex !== -1) {
     entitiesWithHealth.splice(healthIndex, 1)
@@ -252,6 +267,26 @@ export function addEnemy(eid: number): void {
   addTrackedEntity(eid)
   if (enemies.indexOf(eid) === -1) {
     enemies.push(eid)
+  }
+}
+
+/**
+ * Add an entity to the asteroid category
+ */
+export function addAsteroid(eid: number): void {
+  addTrackedEntity(eid)
+  if (asteroids.indexOf(eid) === -1) {
+    asteroids.push(eid)
+  }
+}
+
+/**
+ * Add an entity to the planet category
+ */
+export function addPlanet(eid: number): void {
+  addTrackedEntity(eid)
+  if (planets.indexOf(eid) === -1) {
+    planets.push(eid)
   }
 }
 
@@ -289,6 +324,20 @@ export function setPlayerEntity(eid: number): void {
  */
 export function getEnemies(): number[] {
   return enemies
+}
+
+/**
+ * Get the asteroids array (for external systems like UI)
+ */
+export function getAsteroids(): number[] {
+  return asteroids
+}
+
+/**
+ * Get the planets array (for external systems like UI)
+ */
+export function getPlanets(): number[] {
+  return planets
 }
 
 /**

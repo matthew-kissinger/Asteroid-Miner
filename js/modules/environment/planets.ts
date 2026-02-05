@@ -1,6 +1,9 @@
 // planets.ts - Creates and manages the planets in the solar system
 
 import * as THREE from 'three';
+import { createGameEntity, removeGameEntity } from '../../ecs/world';
+import { Position, Planet as PlanetTag } from '../../ecs/components';
+import { addPlanet } from '../../ecs/systems/index';
 import { PlanetGenerator } from './planets/planetGenerator';
 import { PlanetFactory, PlanetData, PlanetMeshData } from './planets/planetFactory';
 
@@ -71,10 +74,21 @@ export class Planets {
         this.clearPlanets();
 
         planetData.forEach(planet => {
-            const planetObj = PlanetFactory.createPlanetMesh(planet);
+            const planetObj = PlanetFactory.createPlanetMesh(planet) as PlanetMeshData & { eid: number };
 
             // Add the planet to the scene
             this.scene.add(planetObj.mesh);
+
+            // Create bitECS entity for the radar and other systems
+            const eid = createGameEntity();
+            PlanetTag.tag[eid] = 1;
+            
+            Position.x[eid] = planetObj.mesh.position.x;
+            Position.y[eid] = planetObj.mesh.position.y;
+            Position.z[eid] = planetObj.mesh.position.z;
+            
+            addPlanet(eid);
+            planetObj.eid = eid;
 
             // Store planet data for orbiting
             this.planets.push(planetObj);
@@ -92,6 +106,9 @@ export class Planets {
     clearPlanets(): void {
         // Remove planets from scene and clear arrays
         this.planets.forEach(planet => {
+            if ((planet as any).eid !== undefined) {
+                removeGameEntity((planet as any).eid);
+            }
             this.scene.remove(planet.mesh);
         });
 
@@ -125,6 +142,14 @@ export class Planets {
             planet.mesh.position.x = Math.cos(planet.angle) * planet.distance;
             planet.mesh.position.z = Math.sin(planet.angle) * Math.cos(planet.orbitalTilt) * planet.distance;
             planet.mesh.position.y = Math.sin(planet.angle) * Math.sin(planet.orbitalTilt) * planet.distance;
+
+            // Sync bitECS position for radar
+            if ((planet as any).eid !== undefined) {
+                const eid = (planet as any).eid;
+                Position.x[eid] = planet.mesh.position.x;
+                Position.y[eid] = planet.mesh.position.y;
+                Position.z[eid] = planet.mesh.position.z;
+            }
 
             planet.mesh.rotation.y += deltaTime * 0.1;
 
