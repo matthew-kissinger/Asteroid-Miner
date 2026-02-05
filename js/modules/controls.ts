@@ -212,9 +212,15 @@ export class Controls {
         // Add key event handlers for targeting and mining
         document.addEventListener('keydown', (e: KeyboardEvent) => {
             switch (e.key.toLowerCase()) {
-                case 'e': 
+                case 'e':
                     // Toggle targeting system (changed from 't' to 'e')
                     this.targetingSystem.toggleLockOn();
+                    break;
+                case 'q':
+                    // Lock/unlock nearest enemy for combat (lock-on system)
+                    if ((window as any).mainMessageBus) {
+                        (window as any).mainMessageBus.publish('input.lockOnToggle', {});
+                    }
                     break;
                 case 'f7':
                     // Decrease gamepad sensitivity

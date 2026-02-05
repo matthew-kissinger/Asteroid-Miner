@@ -19,7 +19,9 @@ import { mainMessageBus } from '../globals/messageBus.ts';
 import { initScreenFlash } from './ui/screenFlash.ts';
 import { initDamageNumbers, updateDamageNumbers } from './ui/damageNumbers.ts';
 import { initThreatIndicators, setThreatIndicatorsCamera, updateThreatIndicators } from './ui/threatIndicators.ts';
+import { initLockOnDisplay, setLockOnDisplayCamera, updateLockOnDisplay, setLockedEnemy, getLockedEnemy } from './ui/lockOnDisplay.ts';
 import { getEnemies, getPlayerEntity } from '../ecs/systems/ecsRunner';
+import { Position } from '../ecs/components';
 
 // Type definitions for UI-related objects
 type SpaceshipForUI = any;
@@ -173,6 +175,9 @@ export class UI {
         // Initialize threat indicators
         initThreatIndicators();
 
+        // Initialize lock-on display
+        initLockOnDisplay();
+
         // Initialize damage numbers if camera and renderer are available
         if (this.camera && this.renderer) {
             initDamageNumbers(this.camera, this.renderer);
@@ -280,6 +285,9 @@ export class UI {
 
         // Set camera for threat indicators
         setThreatIndicatorsCamera(camera);
+
+        // Set camera for lock-on display
+        setLockOnDisplayCamera(camera);
     }
 
     // Initialize settings with the game instance
@@ -321,7 +329,10 @@ export class UI {
         
         // Listen for UI notification events
         mainMessageBus?.subscribe('ui.notification', this.handleNotification.bind(this));
-        
+
+        // Listen for lock-on toggle events
+        mainMessageBus?.subscribe('input.lockOnToggle', this.handleLockOnToggle.bind(this));
+
         // Add resize handler to update mobile detection
         window.addEventListener('resize', () => {
             const wasMobile = this.isMobile;
@@ -344,6 +355,47 @@ export class UI {
             const content = message.data.message || 'System notification';
             const duration = message.data.duration || 3000;
             this.showNotification(content, duration);
+        }
+    }
+
+    /**
+     * Handle lock-on toggle events
+     * Finds nearest enemy and toggles lock-on
+     */
+    handleLockOnToggle(_message: MessageBusEvent): void {
+        const currentLocked = getLockedEnemy();
+        const enemies = getEnemies();
+        const playerEid = getPlayerEntity();
+
+        if (currentLocked !== -1) {
+            // Already locked, unlock
+            setLockedEnemy(-1);
+            console.log('[LockOn] Unlocked');
+        } else if (enemies.length > 0 && playerEid !== -1) {
+            // Find nearest enemy
+            const playerX = Position.x[playerEid];
+            const playerY = Position.y[playerEid];
+            const playerZ = Position.z[playerEid];
+
+            let nearestEid = -1;
+            let nearestDist = Infinity;
+
+            for (const eid of enemies) {
+                const dx = Position.x[eid] - playerX;
+                const dy = Position.y[eid] - playerY;
+                const dz = Position.z[eid] - playerZ;
+                const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearestEid = eid;
+                }
+            }
+
+            if (nearestEid !== -1) {
+                setLockedEnemy(nearestEid);
+                console.log('[LockOn] Locked enemy', nearestEid);
+            }
         }
     }
     
@@ -372,6 +424,9 @@ export class UI {
         const enemies = getEnemies();
         const playerEid = getPlayerEntity();
         updateThreatIndicators(enemies, playerEid);
+
+        // Update lock-on display
+        updateLockOnDisplay(playerEid);
 
         // Update touch controls if on mobile
         if (this.isMobile && this.controls && this.controls.touchControls) {
