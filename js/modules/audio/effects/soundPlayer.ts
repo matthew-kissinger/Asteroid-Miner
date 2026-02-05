@@ -13,6 +13,10 @@ export class SoundPlayer {
     private sfxVolume: number = 0.5; // Default sound effects volume
     private muted: boolean = false;
     
+    private lastWeaponSoundPlayTime: number = 0;
+    private weaponSoundCooldown: number = 70; // milliseconds
+    
+    
     // Track active continuous sounds
     public activeSounds: {
         [key: string]: ActiveSoundNodes | null;
@@ -219,10 +223,21 @@ export class SoundPlayer {
             return;
         }
         
+        // Check for cooldown
+        const now = performance.now();
+        if (now - this.lastWeaponSoundPlayTime < this.weaponSoundCooldown) {
+            return;
+        }
+        this.lastWeaponSoundPlayTime = now;
+        
         try {
             // Create source node
             const sourceNode = audioContext.createBufferSource() as AudioBufferSourceNode & TrackableNode;
             sourceNode.buffer = sounds.projectile;
+
+            // Apply pitch variation (+/- 5% or 50 cents)
+            const pitchVariation = (Math.random() * 100) - 50; // -50 to +50 cents
+            sourceNode.detune.value = pitchVariation;
             
             // Create gain node with higher volume for weapon sound
             const gainNode = audioContext.createGain() as GainNode & TrackableNode;

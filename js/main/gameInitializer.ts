@@ -30,6 +30,7 @@ type GameSpaceship = PhysicsSpaceship & DockingSpaceship & {
 type GameUi = {
     setAudio: (audio: any) => Promise<void>;
     setControls: (controls: GameControls) => void;
+    setCameraAndRenderer: (camera: any, renderer: any) => void;
     initializeSettings: (game: GameInitializerContext) => Promise<void>;
     stargateInterface?: { showStargateUI?: (() => void) | undefined };
     initializeUIComponents: () => Promise<void>; // Add this method
@@ -113,6 +114,8 @@ export class GameInitializer {
         // Initialize UI
         const { UI } = await import('../modules/ui.js');
         this.game.ui = new UI(spaceship, environment);
+        // Pass camera and renderer to UI for damage numbers and other visual effects
+        this.game.ui.setCameraAndRenderer(this.game.camera, this.game.renderer);
         await this.game.ui.initializeUIComponents();
         
         // Share audio reference with UI for sound-based components

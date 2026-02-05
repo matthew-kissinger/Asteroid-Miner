@@ -104,11 +104,16 @@ export class CombatLogic {
         
         // Play sound
         if ((window as any).game && (window as any).game.audio) {
-            (window as any).game.audio.playEffect('laser_fire', 0.4);
+            (window as any).game.audio.playWeaponSound();
         }
 
-        // Trigger gamepad rumble
+        // Trigger camera recoil and gamepad rumble
         if ((window as any).mainMessageBus) {
+            // Publish event for camera recoil (e.g., 'weapon.fire')
+            (window as any).mainMessageBus.publish('weapon.fire', {
+                type: 'projectile', // Weapon type for recoil scaling (projectile, laser, heavy)
+                direction: direction.clone(), // Pass the firing direction
+            });
             (window as any).mainMessageBus.publish('input.vibrate', { intensity: 0.3, duration: 50 });
         }
         

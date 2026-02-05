@@ -64,6 +64,14 @@ export class Physics {
     static SHAKE_DECAY = 0.95;      // How fast shake decays per frame (0.95 = 5% per frame)
     static SHAKE_FREQUENCY = 15.0;  // Frequency for shake oscillation
 
+    // Camera recoil constants
+    static RECOIL_DECAY = 0.85;      // How fast recoil decays per frame (0.85 = 15% per frame)
+    static RECOIL_FREQUENCY = 20.0;  // Frequency for recoil oscillation
+    static RECOIL_DURATION = 0.05;   // Duration of the initial recoil impulse in seconds
+    static RECOIL_MAX_INTENSITY_PROJECTILE = 0.1; // Max recoil for projectile weapons
+    static RECOIL_MAX_INTENSITY_LASER = 0.2;      // Max recoil for laser weapons
+    static RECOIL_MAX_INTENSITY_HEAVY = 0.5;      // Max recoil for heavy weapons
+
     // Camera zoom constants
     static ZOOM_BOOST_MULTIPLIER = 1.3;  // Zoom out when boosting (1.3x = 30% zoom out)
     static ZOOM_LERP_SPEED = 0.05;       // Smooth transition speed for zoom (0.05 = moderate smoothness)
@@ -81,6 +89,11 @@ export class Physics {
     // Camera shake state
     shakeIntensity: number = 0;     // Current shake strength (0-1)
     shakeTime: number = 0;          // Time accumulator for shake oscillation
+
+    // Camera recoil state
+    recoilIntensity: number = 0;    // Current recoil strength (0-1)
+    recoilTime: number = 0;         // Time accumulator for recoil oscillation
+    recoilDirection: THREE.Vector3 = new THREE.Vector3(); // Direction of recoil (opposite to firing)
 
     // Camera zoom state
     currentZoom: number = 1.0;      // Current zoom multiplier (1.0 = normal, 1.3 = zoomed out)
@@ -127,6 +140,28 @@ export class Physics {
         mainMessageBus.subscribe('vfx.explosion', () => {
             this.triggerShake(0.8, 0.3);
         });
+
+        // Weapon fire - trigger camera recoil
+        mainMessageBus.subscribe('weapon.fire', (message: any) => {
+            const { type, direction } = message.data || {};
+            let intensity = 0;
+            switch (type) {
+                case 'projectile':
+                    intensity = Physics.RECOIL_MAX_INTENSITY_PROJECTILE;
+                    break;
+                case 'laser':
+                    intensity = Physics.RECOIL_MAX_INTENSITY_LASER;
+                    break;
+                case 'heavy':
+                    intensity = Physics.RECOIL_MAX_INTENSITY_HEAVY;
+                    break;
+                default:
+                    intensity = Physics.RECOIL_MAX_INTENSITY_PROJECTILE;
+            }
+            if (direction) {
+                this.triggerRecoil(intensity, direction);
+            }
+        });
     }
 
     /**
@@ -138,6 +173,17 @@ export class Physics {
         // Use maximum intensity if multiple shakes occur simultaneously
         this.shakeIntensity = Math.max(this.shakeIntensity, intensity);
         // Don't reset time - let it continue for organic motion
+    }
+
+    /**
+     * Trigger camera recoil effect
+     * @param intensity Recoil strength (0-1)
+     * @param direction Direction of the recoil (e.g., opposite to firing)
+     */
+    triggerRecoil(intensity: number, direction: THREE.Vector3): void {
+        this.recoilIntensity = Math.max(this.recoilIntensity, intensity);
+        this.recoilTime = 0; // Reset time to start recoil animation from beginning
+        this.recoilDirection.copy(direction).negate(); // Store opposite of firing direction
     }
     
     // Set spaceship reference
@@ -383,6 +429,11 @@ export class Physics {
             this.applyShake();
         }
 
+        // Apply camera recoil if active
+        if (this.recoilIntensity > 0.01) {
+            this.applyRecoil();
+        }
+
         // Calculate velocity-based look-ahead point
         const velocityDirection = this.spaceship.velocity.clone().normalize();
         const lookAheadOffset = velocityDirection.multiplyScalar(velocityNormalized * Physics.CAMERA_LOOKAHEAD_SCALE);
@@ -451,6 +502,38 @@ export class Physics {
         // Stop shake when intensity is negligible
         if (this.shakeIntensity < 0.01) {
             this.shakeIntensity = 0;
+        }
+    }
+
+    /**
+     * Apply camera recoil offset
+     * Applies a brief, decaying camera offset in the recoil direction.
+     */
+    private applyRecoil(): void {
+        if (!this.camera || !this.spaceship || this.recoilIntensity <= 0) return;
+
+        // Update recoil time
+        this.recoilTime += this.normalizedDeltaTime * 0.016; // Convert normalized time to seconds
+
+        // Calculate recoil offset using a decaying sine wave
+        const recoilOffset = new THREE.Vector3()
+            .copy(this.recoilDirection)
+            .multiplyScalar(
+                this.recoilIntensity *
+                Math.sin(this.recoilTime * Physics.RECOIL_FREQUENCY) *
+                Math.exp(-this.recoilTime / Physics.RECOIL_DURATION)
+            );
+
+        // Apply recoil in world space
+        this.camera.position.add(recoilOffset);
+
+        // Decay recoil intensity over time for a quick return
+        this.recoilIntensity *= Physics.RECOIL_DECAY;
+
+        // Stop recoil when intensity is negligible
+        if (this.recoilIntensity < 0.01) {
+            this.recoilIntensity = 0;
+            this.recoilTime = 0; // Reset time for next recoil
         }
     }
     

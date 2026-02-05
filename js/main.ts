@@ -228,7 +228,7 @@ export class Game {
         
         // Update UI
         if (this.ui.update) {
-            this.ui.update();
+            this.ui.update(deltaTime);
         }
         
         // Update audio

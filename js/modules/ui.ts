@@ -17,6 +17,7 @@ import { MobileDetector } from '../utils/mobileDetector.js';
 import { DEBUG_MODE } from '../globals/debug.ts';
 import { mainMessageBus } from '../globals/messageBus.ts';
 import { initScreenFlash } from './ui/screenFlash.ts';
+import { initDamageNumbers, updateDamageNumbers } from './ui/damageNumbers.ts';
 
 // Type definitions for UI-related objects
 type SpaceshipForUI = any;
@@ -137,6 +138,8 @@ export class UI {
     settings: SettingsComponent | null = null;
     startScreen: StartScreenComponent | null = null;
     statsInterval?: number;
+    camera: any = null;
+    renderer: any = null;
     
     constructor(spaceship: SpaceshipForUI, environment: EnvironmentForUI) {
         this.spaceship = spaceship;
@@ -164,6 +167,11 @@ export class UI {
     async initializeUIComponents() {
         // Initialize screen flash early so it's ready for any initialization-related flashes
         initScreenFlash();
+
+        // Initialize damage numbers if camera and renderer are available
+        if (this.camera && this.renderer) {
+            initDamageNumbers(this.camera, this.renderer);
+        }
 
         const { MiningDisplay } = await import('./ui/miningDisplay.ts');
         this.miningDisplay = new MiningDisplay();
@@ -260,7 +268,12 @@ export class UI {
         // Set up button handlers
         this.setupEventHandlers();
     }
-    
+
+    setCameraAndRenderer(camera: any, renderer: any): void {
+        this.camera = camera;
+        this.renderer = renderer;
+    }
+
     // Initialize settings with the game instance
     async initializeSettings(game: GameForUI): Promise<void> {
         if (!game) {
@@ -334,16 +347,19 @@ export class UI {
         // ... existing code ...
     }
     
-    update(): void {
+    update(deltaTime: number = 16): void {
         // Update appropriate HUD based on device type
         if (this.hud && this.hud.update) {
             this.hud.update();
         }
-        
+
         if (this.miningDisplay && this.miningDisplay.update) {
             this.miningDisplay.update();
         }
-        
+
+        // Update damage numbers animation
+        updateDamageNumbers(deltaTime);
+
         // Update touch controls if on mobile
         if (this.isMobile && this.controls && this.controls.touchControls) {
             this.controls.touchControls.update();
