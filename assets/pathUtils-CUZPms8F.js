@@ -1,0 +1,2 @@
+function l(o){if(console.log(`Original path: ${o}`),window.location.hostname!=="localhost"&&window.location.hostname!=="127.0.0.1"){const t=window.location.pathname.split("/").slice(0,-1).join("/"),s=o.startsWith("/")?o.substring(1):o,n=`${t}/${s}`;return console.log(`Adjusted path for hosted environment: ${n}`),n}return console.log(`Using original path for local environment: ${o}`),o}export{l as g};
+//# sourceMappingURL=pathUtils-CUZPms8F.js.map
