@@ -60,6 +60,14 @@ export class Physics {
     static CAMERA_VELOCITY_SCALE = 0.3; // How much velocity affects camera distance (0.3 = +30% at max speed)
     static CAMERA_LOOKAHEAD_SCALE = 20; // Max look-ahead distance based on velocity
 
+    // Camera shake constants
+    static SHAKE_DECAY = 0.95;      // How fast shake decays per frame (0.95 = 5% per frame)
+    static SHAKE_FREQUENCY = 15.0;  // Frequency for shake oscillation
+
+    // Camera zoom constants
+    static ZOOM_BOOST_MULTIPLIER = 1.3;  // Zoom out when boosting (1.3x = 30% zoom out)
+    static ZOOM_LERP_SPEED = 0.05;       // Smooth transition speed for zoom (0.05 = moderate smoothness)
+
     scene: THREE.Scene;
     spaceship: Spaceship | null;
     camera: THREE.Camera | null;
@@ -69,25 +77,67 @@ export class Physics {
     direction: THREE.Vector3;
     collisionDistance: number;
     normalizedDeltaTime: number = 0;
+
+    // Camera shake state
+    shakeIntensity: number = 0;     // Current shake strength (0-1)
+    shakeTime: number = 0;          // Time accumulator for shake oscillation
+
+    // Camera zoom state
+    currentZoom: number = 1.0;      // Current zoom multiplier (1.0 = normal, 1.3 = zoomed out)
+    targetZoom: number = 1.0;       // Target zoom multiplier for smooth interpolation
     
     constructor(scene: THREE.Scene) {
         this.scene = scene;
         this.spaceship = null; // Will be set later
         this.camera = null; // Will be set later
-        
+
         // Virtual rotation state for pointer lock
         this.rotationState = {
             x: 0,
             y: 0
         };
-        
+
         // Collision state
         this.collided = false;
-        
+
         // For collision detection
         this.raycaster = new THREE.Raycaster();
         this.direction = new THREE.Vector3(0, 0, -1);
         this.collisionDistance = Physics.COLLISION_DISTANCE; // Use the class constant for consistency
+
+        // Subscribe to combat events for camera shake
+        this.subscribeToEvents();
+    }
+
+    /**
+     * Subscribe to combat events to trigger camera shake
+     */
+    private subscribeToEvents(): void {
+        // Player damaged - medium shake
+        mainMessageBus.subscribe('player.damaged', () => {
+            this.triggerShake(0.5, 0.2);
+        });
+
+        // Enemy destroyed - small shake
+        mainMessageBus.subscribe('enemy.destroyed', () => {
+            this.triggerShake(0.3, 0.15);
+        });
+
+        // Explosion - large shake
+        mainMessageBus.subscribe('explosion', () => {
+            this.triggerShake(0.8, 0.3);
+        });
+    }
+
+    /**
+     * Trigger camera shake effect
+     * @param intensity Shake strength (0-1)
+     * @param duration Duration in seconds
+     */
+    triggerShake(intensity: number, _duration: number): void {
+        // Use maximum intensity if multiple shakes occur simultaneously
+        this.shakeIntensity = Math.max(this.shakeIntensity, intensity);
+        // Don't reset time - let it continue for organic motion
     }
     
     // Set spaceship reference
@@ -166,6 +216,9 @@ export class Physics {
             this.spaceship.thrust.left = leftPressed;
             this.spaceship.thrust.right = rightPressed;
             this.spaceship.thrust.boost = boostPressed;
+
+            // Update zoom target based on boost state
+            this.targetZoom = boostPressed ? Physics.ZOOM_BOOST_MULTIPLIER : 1.0;
 
             // Forward thrust handling
             if (forwardPressed) {
@@ -292,14 +345,17 @@ export class Physics {
     
     updateCamera(): void {
         if (!this.spaceship || !this.camera) return;
-        
+
         // Skip camera updates if intro sequence is active
         if (window.game && (window.game as { introSequenceActive?: boolean }).introSequenceActive) {
             console.log("Skipping camera update - intro sequence active");
             return;
         }
-        
+
         // Update the camera to follow the spaceship with smooth damping and velocity-based offset
+
+        // Smoothly interpolate current zoom toward target zoom
+        this.currentZoom += (this.targetZoom - this.currentZoom) * Physics.ZOOM_LERP_SPEED;
 
         // Calculate velocity magnitude (0-1 normalized)
         const maxVelocity = this.spaceship.maxVelocity || Physics.MAX_VELOCITY;
@@ -308,7 +364,9 @@ export class Physics {
 
         // Scale camera offset based on velocity (pull back when moving fast)
         const velocityScale = 1.0 + (velocityNormalized * Physics.CAMERA_VELOCITY_SCALE);
-        const cameraOffset = Physics.CAMERA_BASE_OFFSET.clone().multiplyScalar(velocityScale);
+        const cameraOffset = Physics.CAMERA_BASE_OFFSET.clone()
+            .multiplyScalar(velocityScale)
+            .multiplyScalar(this.currentZoom);  // Apply zoom multiplier to increase distance when boosting
 
         // Apply spaceship rotation to camera offset
         const rotatedOffset = cameraOffset.clone();
@@ -319,6 +377,11 @@ export class Physics {
 
         // Smoothly interpolate camera position (damping)
         this.camera.position.lerp(targetPosition, Physics.CAMERA_LAG);
+
+        // Apply camera shake if active
+        if (this.shakeIntensity > 0.01) {
+            this.applyShake();
+        }
 
         // Calculate velocity-based look-ahead point
         const velocityDirection = this.spaceship.velocity.clone().normalize();
@@ -334,11 +397,60 @@ export class Physics {
             .add(lookAheadOffset);
 
         this.camera.lookAt(lookAtPoint);
-        
+
         // Force visible frustum (debugging purposes)
         if (this.camera instanceof THREE.PerspectiveCamera || this.camera instanceof THREE.OrthographicCamera) {
             this.camera.far = 400000; // Ensure far clip plane is beyond skybox
             this.camera.updateProjectionMatrix();
+        }
+    }
+
+    /**
+     * Apply camera shake offset
+     * Uses dual-frequency sine waves for organic motion
+     */
+    private applyShake(): void {
+        if (!this.camera || !this.spaceship) return;
+
+        // Update shake time
+        this.shakeTime += this.normalizedDeltaTime * 0.016; // Convert normalized time to seconds
+
+        // Create organic shake using dual-frequency sine waves
+        // Primary frequency
+        const offsetX = Math.sin(this.shakeTime * Physics.SHAKE_FREQUENCY) * this.shakeIntensity * 0.5;
+        const offsetY = Math.sin(this.shakeTime * Physics.SHAKE_FREQUENCY * 1.3) * this.shakeIntensity * 0.5;
+        const offsetZ = Math.sin(this.shakeTime * Physics.SHAKE_FREQUENCY * 0.8) * this.shakeIntensity * 0.3;
+
+        // Secondary frequency for more organic feel
+        const offsetX2 = Math.sin(this.shakeTime * Physics.SHAKE_FREQUENCY * 2.5) * this.shakeIntensity * 0.25;
+        const offsetY2 = Math.sin(this.shakeTime * Physics.SHAKE_FREQUENCY * 3.1) * this.shakeIntensity * 0.25;
+
+        // Combine frequencies
+        const shakeOffset = new THREE.Vector3(
+            offsetX + offsetX2,
+            offsetY + offsetY2,
+            offsetZ
+        );
+
+        // Apply shake in camera's local space (relative to camera orientation)
+        // This makes the shake feel more natural as it moves with the camera
+        const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+        const cameraUp = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
+        const cameraForward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+
+        const worldShakeOffset = new THREE.Vector3()
+            .addScaledVector(cameraRight, shakeOffset.x)
+            .addScaledVector(cameraUp, shakeOffset.y)
+            .addScaledVector(cameraForward, shakeOffset.z);
+
+        this.camera.position.add(worldShakeOffset);
+
+        // Decay shake intensity
+        this.shakeIntensity *= Physics.SHAKE_DECAY;
+
+        // Stop shake when intensity is negligible
+        if (this.shakeIntensity < 0.01) {
+            this.shakeIntensity = 0;
         }
     }
     
