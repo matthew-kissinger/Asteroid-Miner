@@ -20,7 +20,7 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 - TypeScript with strict mode (tsconfig.json configured)
 - WebGPU renderer with automatic WebGL2 fallback
 - Directional sun lighting fixed
-- TSL laser material created and integrated (js/modules/render/laserMaterial.js)
+- TSL laser material created and integrated (js/modules/render/laserMaterial.ts)
 - Entry points converted to TypeScript (src/main.ts, js/main.ts)
 - js/main/ lifecycle modules converted to TypeScript (12 files, all TS - bootstrap.ts, gameLifecycle.ts committed at 3fef5c3)
 - Mining subsystem converted to TypeScript (5 modules in js/modules/controls/mining/)
@@ -70,7 +70,7 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 
 **Remaining Problems:**
 - **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment.
-- **Stale .d.ts files** - 8 type declaration files remain for modules that are now pure TypeScript (combat, effects, etc.). Should be deleted.
+- **Stale initialization.d.ts** - `js/modules/game/initialization.d.ts` is a type shim for a missing implementation. `game.ts` imports `GameInitializer` from `./game/initialization.js` but no such file exists. The actual `GameInitializer` is in `js/main/gameInitializer.ts` with a different API. Need to consolidate or create the missing implementation.
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
 - **Global state** - ~217 `window.*` usages across the codebase (down from 645). Concentrated in UI modules. js/globals/ module created but most code still uses window.* directly.
 - **enemyAISystem window.game** - 7 references to window.game in enemyAISystem.ts for difficulty scaling. Should use dependency injection.
