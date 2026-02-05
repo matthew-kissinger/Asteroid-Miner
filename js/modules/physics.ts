@@ -118,13 +118,13 @@ export class Physics {
             this.triggerShake(0.5, 0.2);
         });
 
-        // Enemy destroyed - small shake
-        mainMessageBus.subscribe('enemy.destroyed', () => {
+        // Entity destroyed - small shake (covers enemies and asteroids)
+        mainMessageBus.subscribe('entity.destroyed', () => {
             this.triggerShake(0.3, 0.15);
         });
 
-        // Explosion - large shake
-        mainMessageBus.subscribe('explosion', () => {
+        // Explosion VFX - large shake
+        mainMessageBus.subscribe('vfx.explosion', () => {
             this.triggerShake(0.8, 0.3);
         });
     }
