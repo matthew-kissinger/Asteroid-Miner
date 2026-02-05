@@ -6,20 +6,27 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 3 COMPLETE - Game Feel Overhaul Done
+## Current State: Phase 4 COMPLETE - Visual Indicators Done
 
-**MILESTONE: Phase 3 Game Feel Complete (2026-02-05)**
+**MILESTONE: Phase 4 Visual Indicators Complete (2026-02-05)**
 
 - 245 TypeScript files, 0 JavaScript files (pure TypeScript codebase)
 - bitECS systems ALL wired into game loop: physics, renderSync, enemyAI, combat, mining
 - Build succeeds, typecheck passes with 0 errors
 - Code splitting: game-core 184 kB, combat 35 kB, env 62 kB, ui 61 kB
 
+**Phase 4 Completed Features:**
+- Lock-on targeting: target reticle, lead indicator, health bar (ad26e0c)
+- Threat indicators: off-screen enemy arrows, color-coded by distance (f711765)
+- Enemy AI: state machine with IDLE/PATROL/CHASE/EVADE behaviors (ae668e6)
+- Radar minimap: 2D radar showing enemies, asteroids, stations (67ae92d)
+- Velocity indicator: direction arrow, speed display, color-coded (306af3a)
+- Speed lines: radial motion blur at high velocity (306af3a)
+
 **Phase 3 Completed Features:**
 - Controller tuning: response curves, dead zones, gamepad rumble
 - Combat feedback: screen flash, camera shake, weapon recoil, floating damage numbers
 - Camera system: damping, velocity offset, look-ahead, boost zoom
-- Threat awareness: off-screen enemy indicators (f711765)
 
 **Completed:**
 - TypeScript with strict mode (tsconfig.json configured)
@@ -76,7 +83,7 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 **Remaining Problems:**
 - **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment. (GitHub Pages deployment task completed - verify at live URL)
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
-- **Global state** - ~160 `window.*` usages remain in UI modules. js/globals/ module created. enemyAISystem window.game refs moved to ecsRunner.ts via dependency injection (4a8b9cc).
+- **Global state** - 278 `window.*` usages remain across 61 files. js/globals/ module created. enemyAISystem window.game refs moved to ecsRunner.ts via dependency injection (4a8b9cc). Gradual migration to proper imports ongoing.
 
 ## Target Stack (2026 Best Practices)
 
@@ -237,19 +244,19 @@ Health.current[eid] = Health.max[eid]
    - ~~Zoom on boost~~ Done (32854ea - 1.3x zoom out with smooth lerp)
    - ~~Look-ahead based on velocity~~ Done (978e50e - CAMERA_LOOKAHEAD_SCALE)
 
-### Phase 4: Visual Indicators - IN PROGRESS
+### Phase 4: Visual Indicators - COMPLETE
 1. **Lock-on system** - COMPLETE
    - ~~Target reticle with lead indicator~~ Done (ad26e0c - red crosshairs + green lead circle)
-   - Lock-on animation/sound - Done (keyboard Q, gamepad LB)
+   - ~~Lock-on animation/sound~~ Done (keyboard Q, gamepad LB)
    - ~~Target info display (health, distance, type)~~ Done (health bar, distance display)
-2. **Threat awareness** - PARTIAL
+2. **Threat awareness** - COMPLETE
    - ~~Off-screen enemy arrows~~ Done (f711765 - color-coded by distance, max 6 indicators)
-   - Incoming missile warnings
-   - Radar/minimap
-3. **Movement feedback**
-   - Velocity vector indicator
-   - Speed lines at high velocity
-   - G-force screen effects
+   - ~~Radar/minimap~~ Done (67ae92d - 2D radar with enemies, asteroids, stations)
+   - Incoming missile warnings - DEFERRED (requires missile AI enhancements first)
+3. **Movement feedback** - COMPLETE
+   - ~~Velocity vector indicator~~ Done (306af3a - direction arrow, speed in u/s, color-coded)
+   - ~~Speed lines at high velocity~~ Done (306af3a - radial lines above 10 u/s)
+   - G-force screen effects - DEFERRED (nice-to-have, low priority)
 4. **Enemy AI** - COMPLETE
    - ~~Enemy behavior variety (state machines)~~ Done (ae668e6 - IDLE/PATROL/CHASE/EVADE states)
    - ~~Difficulty-based spawning~~ Done via DifficultyConfig injection (4a8b9cc)
