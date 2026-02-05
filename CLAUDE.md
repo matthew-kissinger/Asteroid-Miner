@@ -70,16 +70,15 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 
 **Remaining Problems:**
 - **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment.
-- **Stale initialization.d.ts** - `js/modules/game/initialization.d.ts` is a type shim for a missing implementation. `game.ts` imports `GameInitializer` from `./game/initialization.js` but no such file exists. The actual `GameInitializer` is in `js/main/gameInitializer.ts` with a different API. Need to consolidate or create the missing implementation.
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
-- **Global state** - ~217 `window.*` usages across the codebase (down from 645). Concentrated in UI modules. js/globals/ module created but most code still uses window.* directly.
+- **Global state** - ~218 `window.*` usages across 61 files (down from 645). Concentrated in UI modules. js/globals/ module created but most code still uses window.* directly.
 - **enemyAISystem window.game** - 7 references to window.game in enemyAISystem.ts for difficulty scaling. Should use dependency injection.
 
 ## Target Stack (2026 Best Practices)
 
 | Layer | Current | Target | Status |
 |-------|---------|--------|--------|
-| Language | TypeScript (245 TS, 0 JS) | **TypeScript (strict)** | **COMPLETE** |
+| Language | TypeScript (242 TS, 0 JS) | **TypeScript (strict)** | **COMPLETE** |
 | Renderer | Three.js r180 WebGPU | **Three.js r180+ WebGPU** | Done |
 | Shaders | GLSL + TSL laser (integrated) | **TSL (Three Shading Language)** | Started |
 | ECS | bitECS (5 systems wired) | **bitECS** | **Active** |
@@ -217,20 +216,21 @@ Health.current[eid] = Health.max[eid]
 37. ~~Delete old custom ECS (js/components/, js/systems/)~~ Done (13c30a0)
 
 ### Phase 3: Game Feel Overhaul - IN PROGRESS
-1. **Controller tuning**
+1. **Controller tuning** - COMPLETE
    - ~~Response curves (not linear)~~ Done (407f1eb)
-   - Dead zones (already implemented in gamepadHandler.ts)
+   - ~~Dead zones~~ Already implemented in gamepadHandler.ts
    - ~~Acceleration/deceleration curves~~ Done (407f1eb - unified applyResponseCurve)
    - ~~Gamepad rumble feedback~~ Done (388f075 - combat events trigger vibration)
 2. **Combat system**
-   - Better hit feedback (screen shake, flash) - **In progress**
+   - ~~Screen flash on damage~~ Done (0da1d40 - HTML overlay with CSS transitions)
+   - ~~Camera shake on impact~~ Done (1934ba2 - dual-frequency sine waves in Physics.applyShake)
    - Weapon feel (recoil, sound sync)
    - Enemy behavior variety
    - Damage numbers or indicators
-3. **Camera system**
+3. **Camera system** - COMPLETE
    - ~~Smooth follow with lag~~ Done (978e50e - CAMERA_LAG damping)
-   - Shake on impact/explosion - **Needs implementation** (failed task 575f6daa)
-   - Zoom on boost
+   - ~~Shake on impact/explosion~~ Done (1934ba2 - event-driven via mainMessageBus)
+   - ~~Zoom on boost~~ Done (32854ea - 1.3x zoom out with smooth lerp)
    - ~~Look-ahead based on velocity~~ Done (978e50e - CAMERA_LOOKAHEAD_SCALE)
 
 ### Phase 4: Visual Indicators
