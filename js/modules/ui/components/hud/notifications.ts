@@ -1,8 +1,25 @@
-// notifications.js - Notification system and message display
+// notifications.ts - Notification system and message display
 
 import { HUDStyles } from './styles.ts';
 
+/**
+ * Interface for horde mode state that the notifications system needs
+ */
+export interface HordeState {
+    isActive: boolean;
+    survivalTime: number;
+    getFormattedTime: () => string;
+}
+
 export class HUDNotifications {
+    private static hordeState: HordeState | null = null;
+
+    /**
+     * Initialize with horde state from the game
+     */
+    static setHordeState(state: HordeState): void {
+        HUDNotifications.hordeState = state;
+    }
     static createNotificationsArea(parent: HTMLElement): HTMLDivElement {
         // Create notifications area in the top middle of the screen
         const notificationsArea: HTMLDivElement = document.createElement('div');
@@ -89,29 +106,24 @@ export class HUDNotifications {
         const hordeIndicator: HTMLDivElement | null = document.getElementById('horde-mode-indicator') as HTMLDivElement;
         const survivalTime: HTMLSpanElement | null = document.getElementById('horde-survival-time') as HTMLSpanElement;
         
-        if (!hordeIndicator || !survivalTime) return;
+        if (!hordeIndicator || !survivalTime || !HUDNotifications.hordeState) {
+            return;
+        }
         
-        // Check if horde mode is active in the game
-        if (window.game && (window.game as any).isHordeActive) {
+        // Check if horde mode is active
+        if (HUDNotifications.hordeState.isActive) {
             // Show the indicator if not already visible
             if (hordeIndicator.style.display === 'none') {
                 hordeIndicator.style.display = 'flex';
             }
             
             // Update the survival time display
-            if (window.game && (window.game as any).getFormattedHordeSurvivalTime) {
-                survivalTime.textContent = (window.game as any).getFormattedHordeSurvivalTime();
-            } else if (window.game && (window.game as any).hordeSurvivalTime !== undefined) {
-                // Fallback calculation if method not available
-                const totalSeconds: number = Math.floor((window.game as any).hordeSurvivalTime / 1000);
-                const minutes: number = Math.floor(totalSeconds / 60);
-                const seconds: number = totalSeconds % 60;
-                survivalTime.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
+            const timeText: string = HUDNotifications.hordeState.getFormattedTime();
+            survivalTime.textContent = timeText;
             
             // Increase pulsing intensity based on survival time
-            // After 3 minutes, make the pulsing more urgent
-            if (window.game && (window.game as any).hordeSurvivalTime > 3 * 60 * 1000) {
+            // After 3 minutes (180000ms), make the pulsing more urgent
+            if (HUDNotifications.hordeState.survivalTime > 3 * 60 * 1000) {
                 const styleEl: HTMLStyleElement = document.createElement('style');
                 styleEl.textContent = `
                     @keyframes pulse-horde {
