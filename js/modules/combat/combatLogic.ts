@@ -106,6 +106,11 @@ export class CombatLogic {
         if ((window as any).game && (window as any).game.audio) {
             (window as any).game.audio.playEffect('laser_fire', 0.4);
         }
+
+        // Trigger gamepad rumble
+        if ((window as any).mainMessageBus) {
+            (window as any).mainMessageBus.publish('input.vibrate', { intensity: 0.3, duration: 50 });
+        }
         
         return { newLastFireTime: now, success: true };
     }

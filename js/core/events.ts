@@ -11,6 +11,7 @@ export const EVENT = Object.freeze({
     MINING_STOP: 'player.mining.stop',
     ENEMY_DESTROYED: 'enemy.destroyed',
     WEAPON_FIRED: 'weapon.fired',
+    INPUT_VIBRATE: 'input.vibrate',
 });
 
 const SCHEMA: Record<string, Record<string, string>> = {
@@ -22,6 +23,7 @@ const SCHEMA: Record<string, Record<string, string>> = {
     [EVENT.MINING_STOP]: { sourceEntity: 'object' },
     [EVENT.ENEMY_DESTROYED]: { entityId: 'string' },
     [EVENT.WEAPON_FIRED]: { entity: 'object' },
+    [EVENT.INPUT_VIBRATE]: { intensity: 'number', duration: 'number' },
 };
 
 export function validateEventPayload(type: string, data: any): boolean {

@@ -144,13 +144,26 @@ export function updateECS(deltaTime: number): void {
   }
 
   // 3. Combat systems
-  if (projectiles.length > 0 && enemies.length > 0) {
+  if (projectiles.length > 0) {
     // Detect projectile-enemy collisions
-    const collisionEvents = projectileCollisionSystem(projectiles, enemies)
+    if (enemies.length > 0) {
+      const collisionEvents = projectileCollisionSystem(projectiles, enemies)
+      if (collisionEvents.length > 0) {
+        damageApplicationSystem(collisionEvents)
+      }
+    }
 
-    // Apply damage from collisions
-    if (collisionEvents.length > 0) {
-      damageApplicationSystem(collisionEvents)
+    // Detect projectile-player collisions
+    if (playerEntityId !== -1) {
+      const playerHits = projectileCollisionSystem(projectiles, [playerEntityId])
+      if (playerHits.length > 0) {
+        damageApplicationSystem(playerHits)
+        
+        // Trigger player damage vibration
+        if ((globalThis as any).mainMessageBus) {
+          (globalThis as any).mainMessageBus.publish('input.vibrate', { intensity: 0.6, duration: 150 });
+        }
+      }
     }
   }
 

@@ -173,6 +173,15 @@ export class GamepadHandler {
         this.rightStickXAxis = 3;
         this.rightStickYAxis = 4;
         this.axisDetectionMode = false;
+
+        // Subscribe to vibration events
+        if ((globalThis as any).mainMessageBus) {
+            (globalThis as any).mainMessageBus.subscribe('input.vibrate', (message: any) => {
+                if (message.data) {
+                    this.vibrate(message.data.intensity, message.data.duration);
+                }
+            });
+        }
     }
     
     init(): void {
@@ -290,6 +299,13 @@ export class GamepadHandler {
         
         // Handle triggers
         this.handleTriggers(gamepad);
+
+        // Continuous rumble while mining
+        if (this.vibrationEnabled && this.controls.miningSystem?.isMining) {
+            // Use a duration slightly longer than a frame (at 60fps, ~16.6ms)
+            // 100ms provides a consistent rumble even with slight frame drops
+            this.vibrate(0.2, 100);
+        }
     }
     
     handleMovement(gamepad: Gamepad): void {

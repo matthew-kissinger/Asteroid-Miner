@@ -515,6 +515,11 @@ export function enemyCollisionAttackSystem(
 
       // Update player health
       if (Health.current[playerEid] > 0) {
+        // Trigger player damage vibration
+        if (typeof window !== 'undefined' && (window as any).mainMessageBus) {
+          (window as any).mainMessageBus.publish('input.vibrate', { intensity: 0.6, duration: 150 });
+        }
+
         // First check shields
         if (Health.shield[playerEid] > 0) {
           if (Health.shield[playerEid] >= damage) {

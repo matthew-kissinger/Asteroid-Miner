@@ -87,6 +87,11 @@ export class ExplosionEffects {
             if ((window as any).game && (window as any).game.audio) {
                 (window as any).game.audio.playSound('boink');
             }
+
+            // Trigger strong gamepad rumble
+            if ((window as any).mainMessageBus) {
+                (window as any).mainMessageBus.publish('input.vibrate', { intensity: 0.8, duration: 200 });
+            }
             
             return explosion;
         } catch (error) {
