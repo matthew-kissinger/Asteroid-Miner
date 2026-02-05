@@ -18,6 +18,8 @@ import { DEBUG_MODE } from '../globals/debug.ts';
 import { mainMessageBus } from '../globals/messageBus.ts';
 import { initScreenFlash } from './ui/screenFlash.ts';
 import { initDamageNumbers, updateDamageNumbers } from './ui/damageNumbers.ts';
+import { initThreatIndicators, setThreatIndicatorsCamera, updateThreatIndicators } from './ui/threatIndicators.ts';
+import { getEnemies, getPlayerEntity } from '../ecs/systems/ecsRunner';
 
 // Type definitions for UI-related objects
 type SpaceshipForUI = any;
@@ -168,6 +170,9 @@ export class UI {
         // Initialize screen flash early so it's ready for any initialization-related flashes
         initScreenFlash();
 
+        // Initialize threat indicators
+        initThreatIndicators();
+
         // Initialize damage numbers if camera and renderer are available
         if (this.camera && this.renderer) {
             initDamageNumbers(this.camera, this.renderer);
@@ -272,6 +277,9 @@ export class UI {
     setCameraAndRenderer(camera: any, renderer: any): void {
         this.camera = camera;
         this.renderer = renderer;
+
+        // Set camera for threat indicators
+        setThreatIndicatorsCamera(camera);
     }
 
     // Initialize settings with the game instance
@@ -359,6 +367,11 @@ export class UI {
 
         // Update damage numbers animation
         updateDamageNumbers(deltaTime);
+
+        // Update threat indicators
+        const enemies = getEnemies();
+        const playerEid = getPlayerEntity();
+        updateThreatIndicators(enemies, playerEid);
 
         // Update touch controls if on mobile
         if (this.isMobile && this.controls && this.controls.touchControls) {

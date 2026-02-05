@@ -274,3 +274,17 @@ export function setPlayerEntity(eid: number): void {
   addTrackedEntity(eid)
   addEntityWithHealth(eid)
 }
+
+/**
+ * Get the enemies array (for external systems like UI)
+ */
+export function getEnemies(): number[] {
+  return enemies
+}
+
+/**
+ * Get the player entity ID (for external systems like UI)
+ */
+export function getPlayerEntity(): number {
+  return playerEntityId
+}

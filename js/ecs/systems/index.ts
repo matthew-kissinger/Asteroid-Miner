@@ -42,6 +42,8 @@ export {
   addProjectile,
   addEntityWithHealth,
   setPlayerEntity,
+  getEnemies,
+  getPlayerEntity,
 } from './ecsRunner'
 
 // Enemy AI system
