@@ -53,7 +53,13 @@ export class Physics {
     static ROTATION_SPEED = 0.3;    // Increased for more responsive controls
     static COLLISION_DISTANCE = 15; // Reduced from 70 to match actual ship size
     static FRICTION = 0.01;         // Small friction to help with control (new)
-    
+
+    // Camera constants for smooth following
+    static CAMERA_LAG = 0.1;        // Smoothing factor (0.08-0.15, lower = smoother/slower)
+    static CAMERA_BASE_OFFSET = new THREE.Vector3(0, 5, 25); // Base camera offset
+    static CAMERA_VELOCITY_SCALE = 0.3; // How much velocity affects camera distance (0.3 = +30% at max speed)
+    static CAMERA_LOOKAHEAD_SCALE = 20; // Max look-ahead distance based on velocity
+
     scene: THREE.Scene;
     spaceship: Spaceship | null;
     camera: THREE.Camera | null;
@@ -293,22 +299,40 @@ export class Physics {
             return;
         }
         
-        // Update the camera to follow the spaceship with offset
-        // Camera moved much closer to ship for a zoomed-in view
-        const cameraOffset = new THREE.Vector3(0, 5, 25); // Brought much closer (was 0, 15, 75)
-        
+        // Update the camera to follow the spaceship with smooth damping and velocity-based offset
+
+        // Calculate velocity magnitude (0-1 normalized)
+        const maxVelocity = this.spaceship.maxVelocity || Physics.MAX_VELOCITY;
+        const velocityMagnitude = this.spaceship.velocity.length();
+        const velocityNormalized = Math.min(velocityMagnitude / maxVelocity, 1.0);
+
+        // Scale camera offset based on velocity (pull back when moving fast)
+        const velocityScale = 1.0 + (velocityNormalized * Physics.CAMERA_VELOCITY_SCALE);
+        const cameraOffset = Physics.CAMERA_BASE_OFFSET.clone().multiplyScalar(velocityScale);
+
         // Apply spaceship rotation to camera offset
         const rotatedOffset = cameraOffset.clone();
         rotatedOffset.applyQuaternion(this.spaceship.mesh.quaternion);
-        
-        // Position camera behind and slightly above the spaceship
-        this.camera.position.copy(this.spaceship.mesh.position).add(rotatedOffset);
-        
-        // Look ahead of the spaceship
-        const lookAtPoint = new THREE.Vector3(0, 0, -60); // Adjusted lookAt point (was -200)
-        lookAtPoint.applyQuaternion(this.spaceship.mesh.quaternion);
-        lookAtPoint.add(this.spaceship.mesh.position);
-        
+
+        // Calculate target camera position
+        const targetPosition = new THREE.Vector3().copy(this.spaceship.mesh.position).add(rotatedOffset);
+
+        // Smoothly interpolate camera position (damping)
+        this.camera.position.lerp(targetPosition, Physics.CAMERA_LAG);
+
+        // Calculate velocity-based look-ahead point
+        const velocityDirection = this.spaceship.velocity.clone().normalize();
+        const lookAheadOffset = velocityDirection.multiplyScalar(velocityNormalized * Physics.CAMERA_LOOKAHEAD_SCALE);
+
+        // Look ahead of the spaceship in movement direction
+        const baseLookAt = new THREE.Vector3(0, 0, -60); // Base forward look point
+        baseLookAt.applyQuaternion(this.spaceship.mesh.quaternion);
+
+        const lookAtPoint = new THREE.Vector3()
+            .copy(this.spaceship.mesh.position)
+            .add(baseLookAt)
+            .add(lookAheadOffset);
+
         this.camera.lookAt(lookAtPoint);
         
         // Force visible frustum (debugging purposes)
