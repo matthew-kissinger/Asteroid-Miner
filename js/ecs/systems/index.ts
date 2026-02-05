@@ -55,6 +55,7 @@ export {
   enemySeparationSystem,
   difficultyScalingSystem,
   enemyCollisionAttackSystem,
+  type DifficultyConfig,
 } from './enemyAISystem'
 
 // Mining system

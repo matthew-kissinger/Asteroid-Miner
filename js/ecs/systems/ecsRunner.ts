@@ -21,6 +21,7 @@ import {
   enemyEvadeSystem,
   enemySeparationSystem,
   difficultyScalingSystem,
+  type DifficultyConfig,
   enemyCollisionAttackSystem,
   projectileCollisionSystem,
   damageApplicationSystem,
@@ -143,7 +144,11 @@ export function updateECS(deltaTime: number): void {
     enemyPursuitSystem(enemies, playerEntityId, deltaTime)
     enemyEvadeSystem(enemies, playerEntityId, deltaTime)
     enemySeparationSystem(enemies)
-    difficultyScalingSystem(enemies, gameTime)
+
+    // Build difficulty config from window.game (centralized dependency injection point)
+    const diffConfig: DifficultyConfig = buildDifficultyConfig()
+    difficultyScalingSystem(enemies, diffConfig)
+
     enemyCollisionAttackSystem(enemies, playerEntityId)
   }
 
@@ -291,4 +296,39 @@ export function getEnemies(): number[] {
  */
 export function getPlayerEntity(): number {
   return playerEntityId
+}
+
+/**
+ * Build difficulty configuration from global game state
+ *
+ * Centralizes window.game access to a single location, making it easier
+ * to transition away from global state in the future.
+ *
+ * @returns DifficultyConfig with values from window.game or sensible defaults
+ */
+function buildDifficultyConfig(): DifficultyConfig {
+  // Default config
+  const config: DifficultyConfig = {
+    healthMultiplier: 1,
+    damageMultiplier: 1,
+    speedMultiplier: 1,
+    isHordeMode: false,
+    hordeSurvivalTime: 0,
+  }
+
+  // Attempt to read from window.game (may not exist in all contexts)
+  if (typeof window !== 'undefined' && (window as any).game) {
+    const game = (window as any).game
+
+    config.isHordeMode = game.isHordeActive || false
+
+    if (config.isHordeMode && game.hordeSurvivalTime !== undefined) {
+      config.hordeSurvivalTime = game.hordeSurvivalTime / 1000 // Convert ms to seconds
+    }
+
+    // If difficulty manager exists, could extract more config here in future
+    // config.difficultyLevel = game.difficultyManager?.level || 1
+  }
+
+  return config
 }

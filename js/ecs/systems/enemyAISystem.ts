@@ -28,6 +28,25 @@ const SEPARATION_FORCE_MAGNITUDE = 150
 const SEPARATION_THRESHOLD_MULTIPLIER = 2.5
 const COLLISION_DISTANCE = 75 // Kamikaze attack distance
 
+/**
+ * Configuration for difficulty scaling
+ */
+export interface DifficultyConfig {
+  healthMultiplier: number
+  damageMultiplier: number
+  speedMultiplier: number
+  isHordeMode: boolean
+  hordeSurvivalTime: number // in seconds
+}
+
+const DEFAULT_DIFFICULTY_CONFIG: DifficultyConfig = {
+  healthMultiplier: 1,
+  damageMultiplier: 1,
+  speedMultiplier: 1,
+  isHordeMode: false,
+  hordeSurvivalTime: 0,
+}
+
 // State constants
 const STATE_IDLE = 0
 const STATE_PATROL = 1
@@ -581,47 +600,29 @@ export function enemySeparationSystem(enemies: number[]): void {
 /**
  * Difficulty Scaling System
  *
- * Scales enemy parameters based on game time or difficulty settings.
+ * Scales enemy parameters based on difficulty configuration.
  * Modifies enemy stats in-place to increase difficulty over time.
  *
- * This system reads from global game state (window.game) to get difficulty parameters.
- *
  * @param enemies - Array of enemy entity IDs
- * @param gameTime - Total game time in seconds
+ * @param config - Difficulty configuration (replaces global window.game dependency)
  */
 export function difficultyScalingSystem(
   enemies: number[],
-  _gameTime: number
+  config: DifficultyConfig = DEFAULT_DIFFICULTY_CONFIG
 ): void {
-  void _gameTime
-
-  // Check if global difficulty manager exists
-  if (
-    typeof window === 'undefined' ||
-    !window.game ||
-    !window.game.difficultyManager
-  ) {
-    return
-  }
-
-  const diffManager = window.game.difficultyManager
-
-  // Check if horde mode is active
-  const isHordeMode = window.game.isHordeActive || false
-
-  if (isHordeMode && window.game.hordeSurvivalTime !== undefined) {
+  if (config.isHordeMode && config.hordeSurvivalTime > 0) {
     // Horde mode scaling
-    const survivalTime = window.game.hordeSurvivalTime / 1000
+    const survivalTime = config.hordeSurvivalTime
     const minutesPassed = survivalTime / 60
 
     // Health multiplier
-    const healthMultiplier = 1 + minutesPassed * 0.5
+    const healthMultiplier = config.healthMultiplier || (1 + minutesPassed * 0.5)
 
     // Damage multiplier
-    const damageMultiplier = 1 + minutesPassed * 0.3
+    const damageMultiplier = config.damageMultiplier || (1 + minutesPassed * 0.3)
 
     // Speed multiplier
-    const speedMultiplier = 1 + minutesPassed * 0.2
+    const speedMultiplier = config.speedMultiplier || (1 + minutesPassed * 0.2)
 
     // Apply scaling to all enemies
     for (const eid of enemies) {
@@ -641,10 +642,6 @@ export function difficultyScalingSystem(
         }
       }
     }
-  } else if (diffManager.params) {
-    // Normal difficulty scaling (read from difficulty manager params)
-    // This system doesn't modify params - it reads them
-    // Spawning logic uses diffManager.params.maxEnemies and spawnInterval
   }
 }
 
