@@ -74,11 +74,9 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 - bitECS MovementSystem ported (cde26c6) - Newtonian physics in bitECS
 
 **Remaining Problems:**
-- **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment.
+- **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment. (GitHub Pages deployment task completed - verify at live URL)
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
-- **Global state** - ~220 `window.*` usages across 62 files (down from 645). Concentrated in UI modules. js/globals/ module created but most code still uses window.* directly.
-- **enemyAISystem window.game** - 7 references to window.game in enemyAISystem.ts for difficulty scaling. Should use dependency injection.
-- **Enemy AI variety** - Currently single behavior pattern (chase + spiral). State machine with multiple behaviors (patrol, evade, strafe) would improve gameplay.
+- **Global state** - ~160 `window.*` usages remain in UI modules. js/globals/ module created. enemyAISystem window.game refs moved to ecsRunner.ts via dependency injection (4a8b9cc).
 
 ## Target Stack (2026 Best Practices)
 
@@ -240,10 +238,10 @@ Health.current[eid] = Health.max[eid]
    - ~~Look-ahead based on velocity~~ Done (978e50e - CAMERA_LOOKAHEAD_SCALE)
 
 ### Phase 4: Visual Indicators - IN PROGRESS
-1. **Lock-on system**
-   - Target reticle with lead indicator
-   - Lock-on animation/sound
-   - Target info display (health, distance, type)
+1. **Lock-on system** - COMPLETE
+   - ~~Target reticle with lead indicator~~ Done (ad26e0c - red crosshairs + green lead circle)
+   - Lock-on animation/sound - Done (keyboard Q, gamepad LB)
+   - ~~Target info display (health, distance, type)~~ Done (health bar, distance display)
 2. **Threat awareness** - PARTIAL
    - ~~Off-screen enemy arrows~~ Done (f711765 - color-coded by distance, max 6 indicators)
    - Incoming missile warnings
@@ -252,9 +250,9 @@ Health.current[eid] = Health.max[eid]
    - Velocity vector indicator
    - Speed lines at high velocity
    - G-force screen effects
-4. **Enemy AI** (moved from Phase 3)
-   - Enemy behavior variety (state machines)
-   - Difficulty-based spawning
+4. **Enemy AI** - COMPLETE
+   - ~~Enemy behavior variety (state machines)~~ Done (ae668e6 - IDLE/PATROL/CHASE/EVADE states)
+   - ~~Difficulty-based spawning~~ Done via DifficultyConfig injection (4a8b9cc)
 
 ### Phase 5: HUD Overhaul
 1. Modern design (CSS/Tailwind, not inline)
