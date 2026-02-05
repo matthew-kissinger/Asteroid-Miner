@@ -294,15 +294,19 @@ export class GamepadHandler {
     
     handleMovement(gamepad: Gamepad): void {
         // Left stick - movement
-        const leftX = this.applyDeadZone(gamepad.axes[this.axisMap.LEFT_STICK_X]);
-        const leftY = this.applyDeadZone(gamepad.axes[this.axisMap.LEFT_STICK_Y]);
-        
+        let leftX = this.applyDeadZone(gamepad.axes[this.axisMap.LEFT_STICK_X]);
+        let leftY = this.applyDeadZone(gamepad.axes[this.axisMap.LEFT_STICK_Y]);
+
+        // Apply response curve for better precision at low deflections
+        leftX = this.applyResponseCurve(leftX, 2.5);
+        leftY = this.applyResponseCurve(leftY, 2.5);
+
         // Reset movement
         this.spaceship.thrust.forward = false;
         this.spaceship.thrust.backward = false;
         this.spaceship.thrust.left = false;
         this.spaceship.thrust.right = false;
-        
+
         // Apply movement based on stick position
         // Y-axis is inverted (up is negative)
         if (leftY < -0.1) {
@@ -312,7 +316,7 @@ export class GamepadHandler {
             this.spaceship.thrust.backward = true;
             this.spaceship.thrustPower = Math.abs(leftY);
         }
-        
+
         // X-axis strafing
         // FIXED: thrust.left actually moves RIGHT, thrust.right moves LEFT in physics
         // So we need to reverse the mapping
@@ -323,7 +327,7 @@ export class GamepadHandler {
             this.spaceship.thrust.left = true; // Right stick right = move right (uses left thrust)
             this.spaceship.strafePower = Math.abs(leftX);
         }
-        
+
         // Left stick click - boost
         if (gamepad.buttons[this.buttonMap.L3].pressed) {
             this.spaceship.thrust.boost = true;
@@ -335,36 +339,23 @@ export class GamepadHandler {
     handleCameraLook(gamepad: Gamepad, deltaTime: number): void {
         // YOUR CONTROLLER: Right stick is on axes 3 (horizontal) and 4 (vertical)
         void deltaTime;
-        const rightStickX = this.applyDeadZone(gamepad.axes[3] || 0); // Horizontal movement
-        const rightStickY = this.applyDeadZone(gamepad.axes[4] || 0); // Vertical movement
-        
-        // Apply response curve for finer control
-        // This makes small movements even smaller (for precision aiming)
-        // and keeps large movements responsive (for quick turns)
-        const applyCurve = (value: number) => {
-            const sign = Math.sign(value);
-            const abs = Math.abs(value);
-            // Quadratic curve for the first 50%, linear for the rest
-            if (abs < 0.5) {
-                return sign * abs * abs * 2; // Quadratic (slower near center)
-            } else {
-                return sign * (abs * 0.5 + 0.25); // Linear (faster at edges)
-            }
-        };
-        
-        const curvedX = applyCurve(rightStickX);
-        const curvedY = applyCurve(rightStickY);
-        
+        let rightStickX = this.applyDeadZone(gamepad.axes[3] || 0); // Horizontal movement
+        let rightStickY = this.applyDeadZone(gamepad.axes[4] || 0); // Vertical movement
+
+        // Apply response curve for finer control at low deflections
+        rightStickX = this.applyResponseCurve(rightStickX, 2.5);
+        rightStickY = this.applyResponseCurve(rightStickY, 2.5);
+
         // Update target rotation speeds
         const baseSpeed = 0.0015; // Reduced base speed for better control
-        this.rotationSmoothing.targetX = curvedX * baseSpeed * this.lookSensitivity * 60;
-        this.rotationSmoothing.targetY = curvedY * baseSpeed * this.lookSensitivity * 60;
-        
+        this.rotationSmoothing.targetX = rightStickX * baseSpeed * this.lookSensitivity * 60;
+        this.rotationSmoothing.targetY = rightStickY * baseSpeed * this.lookSensitivity * 60;
+
         // Apply exponential smoothing for smoother rotation
         const smoothing = this.rotationSmoothing.smoothingFactor;
         this.rotationSmoothing.currentX += (this.rotationSmoothing.targetX - this.rotationSmoothing.currentX) * smoothing;
         this.rotationSmoothing.currentY += (this.rotationSmoothing.targetY - this.rotationSmoothing.currentY) * smoothing;
-        
+
         // Only update rotation if there's meaningful input
         if (Math.abs(this.rotationSmoothing.currentX) > 0.0001 || Math.abs(this.rotationSmoothing.currentY) > 0.0001) {
             this.physics.updateRotation(this.rotationSmoothing.currentX, this.rotationSmoothing.currentY);
@@ -466,7 +457,7 @@ export class GamepadHandler {
         // Check triggers - most controllers use buttons 6 and 7
         let rtValue = 0;
         let ltValue = 0;
-        
+
         // Standard button mapping for triggers
         if (gamepad.buttons[7]) {
             rtValue = gamepad.buttons[7].value;
@@ -474,7 +465,7 @@ export class GamepadHandler {
         if (gamepad.buttons[6]) {
             ltValue = gamepad.buttons[6].value;
         }
-        
+
         // Some controllers report triggers as axes 4 and 5
         const axis4 = gamepad.axes[4] || 0;
         const axis5 = gamepad.axes[5] || 0;
@@ -484,7 +475,11 @@ export class GamepadHandler {
         if (ltValue < 0.01 && Math.abs(axis4) > 0.01) {
             ltValue = (axis4 + 1) / 2; // Convert from -1,1 to 0,1
         }
-        
+
+        // Apply response curve to triggers for more gradual pressure engagement
+        rtValue = this.applyResponseCurve(rtValue * 2 - 1, 2.5) * 0.5 + 0.5; // Scale to 0-1
+        ltValue = this.applyResponseCurve(ltValue * 2 - 1, 2.5) * 0.5 + 0.5; // Scale to 0-1
+
         // RIGHT TRIGGER - Fire weapons
         if (rtValue > this.triggerDeadZone) {
             if (!this.wasFiring) {
@@ -505,7 +500,7 @@ export class GamepadHandler {
                 }
             }
         }
-        
+
         // LEFT TRIGGER - Alternative mining button (optional)
         // Disabled for now to avoid conflicts - use B button instead
     }
@@ -603,6 +598,19 @@ export class GamepadHandler {
     
     isConnected(): boolean {
         return this.activeGamepadIndex !== null;
+    }
+
+    /**
+     * Apply non-linear response curve to analog input
+     * Provides better precision at low deflections and responsive full deflections
+     * @param input - Raw input value (-1 to 1)
+     * @param exponent - Curve exponent (higher = more precision at center)
+     * @returns Curved value (-1 to 1)
+     */
+    applyResponseCurve(input: number, exponent: number = 2.5): number {
+        const sign = Math.sign(input);
+        const magnitude = Math.abs(input);
+        return sign * Math.pow(magnitude, exponent);
     }
     
     // Debug methods for testing
