@@ -16,6 +16,7 @@ import { MemoryStats } from '../utils/memoryManager.js';
 import { MobileDetector } from '../utils/mobileDetector.js';
 import { DEBUG_MODE } from '../globals/debug.ts';
 import { mainMessageBus } from '../globals/messageBus.ts';
+import { initScreenFlash } from './ui/screenFlash.ts';
 
 // Type definitions for UI-related objects
 type SpaceshipForUI = any;
@@ -161,6 +162,9 @@ export class UI {
     
     // Add an async initialization method
     async initializeUIComponents() {
+        // Initialize screen flash early so it's ready for any initialization-related flashes
+        initScreenFlash();
+
         const { MiningDisplay } = await import('./ui/miningDisplay.ts');
         this.miningDisplay = new MiningDisplay();
         
