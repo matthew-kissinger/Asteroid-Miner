@@ -83,7 +83,9 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 **Remaining Problems:**
 - **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment. (GitHub Pages deployment task completed - verify at live URL)
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
-- **Global state** - 278 `window.*` usages remain across 61 files. js/globals/ module created. enemyAISystem window.game refs moved to ecsRunner.ts via dependency injection (4a8b9cc). Gradual migration to proper imports ongoing.
+- **Global state** - ~233 `window.*` usages remain across ~65 files. js/globals/ module created. enemyAISystem window.game refs moved to ecsRunner.ts via dependency injection (4a8b9cc). Top offenders: physics.ts (20), diagnostics.ts (16), renderer.ts (9). Gradual migration to proper imports ongoing.
+- **Dead legacy ECS code** - js/core/ has 1,354 lines total but only messageBus.ts, world.ts, and events.ts are imported. 7 files (entity.ts, entityManager.ts, systemManager.ts, system.ts, component.ts, difficultyManager.ts, EntityIndex.ts) plus js/core/optimized/ and js/core/spatial/ are dead code.
+- **Inline styles** - ~1,605 inline style manipulations across 50+ UI files. Top offenders: combat/styles.ts (185), mobileHUD.ts (126), combat/indicators.ts (72). No Tailwind/PostCSS setup exists yet.
 
 ## Target Stack (2026 Best Practices)
 
@@ -262,11 +264,14 @@ Health.current[eid] = Health.max[eid]
    - ~~Difficulty-based spawning~~ Done via DifficultyConfig injection (4a8b9cc)
 
 ### Phase 5: HUD Overhaul
-1. Modern design (CSS/Tailwind, not inline)
-2. Clean, minimal aesthetic
-3. Contextual UI (only show what's relevant)
-4. Mining progress with satisfying feedback
-5. Resource collection popups
+1. Install Tailwind CSS + PostCSS + autoprefixer, configure with Vite
+2. Delete dead legacy ECS code (7 orphaned files + optimized/ + spatial/ in js/core/)
+3. Migrate inline styles to CSS classes - ~1,605 instances across 50+ files
+   - Priority: combat/styles.ts (185), mobileHUD.ts (126), combat/indicators.ts (72)
+4. Clean, minimal aesthetic
+5. Contextual UI (only show what's relevant)
+6. Mining progress with satisfying feedback
+7. Resource collection popups
 
 ### Phase 6: TSL Shaders + Compute
 1. Convert GLSL shaders to TSL
