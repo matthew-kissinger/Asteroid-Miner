@@ -131,13 +131,14 @@ describe('Enemy AI System', () => {
 
     EnemyAI.state[enemyEid] = 2 // CHASE
     Health.current[enemyEid] = 100 // Not low health
+    EnemyAI.spiralAmplitude[enemyEid] = 0 // Disable spiral for this test
 
     enemyPursuitSystem([enemyEid], playerEid, 0.016)
 
     // Velocity should point toward player (positive X)
     expect(Velocity.x[enemyEid]).toBeGreaterThan(0)
-    expect(Velocity.y[enemyEid]).toBeCloseTo(0, 1)
-    expect(Velocity.z[enemyEid]).toBeCloseTo(0, 1)
+    expect(Velocity.y[enemyEid]).toBeCloseTo(0, 2)
+    expect(Velocity.z[enemyEid]).toBeCloseTo(0, 2)
   })
 
   it('should calculate separation force between nearby enemies', () => {
@@ -145,17 +146,17 @@ describe('Enemy AI System', () => {
     Position.x[enemyEid] = 0
     Position.y[enemyEid] = 0
     Position.z[enemyEid] = 0
-    Position.x[enemyEid2] = 30 // Within separation threshold (radius 10 * 2.5 = 25)
+    Position.x[enemyEid2] = 20 // Within separation threshold (radius 10 * 2.5 = 25)
     Position.y[enemyEid2] = 0
     Position.z[enemyEid2] = 0
 
     enemySeparationSystem([enemyEid, enemyEid2])
 
     // Should have separation forces pushing them apart
-    // enemyEid should have force pointing away from enemyEid2 (positive X)
-    expect(SeparationForce.x[enemyEid]).toBeGreaterThan(0)
-    // enemyEid2 should have force pointing away from enemyEid (negative X)
-    expect(SeparationForce.x[enemyEid2]).toBeLessThan(0)
+    // enemyEid should have force pointing away from enemyEid2 (negative X)
+    expect(SeparationForce.x[enemyEid]).toBeLessThan(0)
+    // enemyEid2 should have force pointing away from enemyEid (positive X)
+    expect(SeparationForce.x[enemyEid2]).toBeGreaterThan(0)
   })
 
   it('should transition from EVADE back to CHASE after timeout', () => {
