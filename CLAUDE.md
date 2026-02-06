@@ -6,11 +6,11 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 5 IN PROGRESS - HUD Overhaul
+## Current State: Phase 5 ESSENTIALLY COMPLETE - Phase 6 Starting
 
-**MILESTONE: Phase 5 HUD Overhaul Started (2026-02-06)**
+**MILESTONE: Phase 5 at Diminishing Returns, Phase 6 (TSL/GPU) Starting (2026-02-06)**
 
-- ~243 TypeScript files, 0 JavaScript files (pure TypeScript codebase)
+- 245 TypeScript files, 0 JavaScript files (pure TypeScript codebase)
 - bitECS systems ALL wired into game loop: physics, renderSync, enemyAI, combat, mining
 - Build succeeds, typecheck passes with 0 errors
 - Code splitting: game-core 182 kB, combat 27 kB, env 62 kB, ui 65 kB
@@ -88,14 +88,15 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 - bitECS MovementSystem ported (cde26c6) - Newtonian physics in bitECS
 
 **Remaining Problems:**
-- **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment. (GitHub Pages deployment task completed - verify at live URL)
+- **Runtime smoke test created** - Script at scripts/smoke-test.ts on branch mycel/task-c6842cb6 (unmerged). Uses Playwright headless Chromium. Needs merge and execution on a machine with browser support.
+- **TSL research completed** - docs/tsl-migration-research.md on branch mycel/task-ad7cf1b2 (unmerged). Confirms TSL post-processing is feasible in r180 via PostProcessing class + pass() + BloomNode.
 - ~~**CI/CD broken**~~ RESOLVED - deploy.yml fixed (ddecf48): targets master, Node 20, checkout@v4, setup-node@v4, typecheck + test gates. All 61 tests passing (73e7b9d).
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
-- **Global state** - ~213 non-API `window.*` usages across ~45 files (down from ~264). js/globals/ module created. physics.ts cleaned up (77fdb44), enemyAISystem cleaned up (4a8b9cc). Top remaining: src/main.ts (17), diagnostics.ts (16), starMap.ts (8), mobileHUD.ts (8).
+- **Global state** - 91 `window.game` usages across 32 files (down from ~264). js/globals/ module created. physics.ts cleaned up (77fdb44), enemyAISystem cleaned up (4a8b9cc). Top remaining: starMap.ts (8), mobileHUD.ts (8), statusIndicators.ts (8), missions.ts (6).
 - ~~**Dead legacy ECS code**~~ RESOLVED - 7 orphaned files + optimized/ + spatial/ deleted (d9d648f). Only 3 active files remain: messageBus.ts, world.ts, events.ts.
 - **Inline styles** - ~554 `.style.` manipulations remain (mostly dynamic values). 18 CSS files extracted (3,041 lines). Remaining are mostly runtime-dynamic values (widths, colors, animations) - diminishing returns for further migration.
 - **Test coverage growing** - 7 test files, 61 tests (all passing). ECS world, components, physics, combat, AI, mining, render sync covered.
-- **Global state** - ~180 non-API `window.*` usages across ~40 files. Top: src/main.ts (17), diagnostics.ts (16), renderer.ts (9), statusIndicators.ts (9), starMap.ts (8), mobileHUD.ts (8).
+- **Global state** - 91 `window.game` usages across 32 files. Top: starMap.ts (8), mobileHUD.ts (8), statusIndicators.ts (8), missions.ts (6), ui.ts (5), gameOverScreen.ts (5). physics.ts and enemyAI cleaned up via DI (77fdb44, 4a8b9cc).
 - ~~**Unused dependency**~~ RESOLVED - `serve-static` removed from package.json.
 
 ## Target Stack (2026 Best Practices)
