@@ -1,5 +1,6 @@
 @import "./combat.css";
 @import "./mobile-hud.css";
+@import "./touch-controls.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

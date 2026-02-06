@@ -13,37 +13,11 @@ export class SettingsStyles {
     createSettingsContainer(): HTMLDivElement {
         const settingsContainer: HTMLDivElement = document.createElement('div');
         settingsContainer.id = 'settings-container';
-        settingsContainer.style.position = 'absolute';
-        settingsContainer.style.top = '50%';
-        settingsContainer.style.left = '50%';
-        settingsContainer.style.transform = 'translate(-50%, -50%)';
+        settingsContainer.classList.add('settings-container');
         
         // Adjust size for mobile
         if (this.isMobile) {
-            settingsContainer.style.width = '95%';
-            settingsContainer.style.maxWidth = '600px';
-            settingsContainer.style.height = '90vh';
-        } else {
-            settingsContainer.style.width = '700px';
-            settingsContainer.style.maxHeight = '90vh';
-        }
-        
-        settingsContainer.style.overflowY = 'auto';
-        settingsContainer.style.backgroundColor = 'rgba(20, 30, 50, 0.9)';
-        settingsContainer.style.color = '#fff';
-        settingsContainer.style.padding = this.isMobile ? '20px' : '30px';
-        settingsContainer.style.borderRadius = '15px';
-        settingsContainer.style.border = '2px solid #33aaff';
-        settingsContainer.style.boxShadow = '0 0 30px #33aaff';
-        settingsContainer.style.fontFamily = 'Courier New, monospace';
-        settingsContainer.style.zIndex = '1000';
-        settingsContainer.style.display = 'none';
-        
-        // Add mobile-specific scroll support
-        if (this.isMobile) {
-            (settingsContainer.style as any).webkitOverflowScrolling = 'touch';
-            settingsContainer.style.touchAction = 'pan-y';
-            settingsContainer.style.overscrollBehavior = 'contain';
+            settingsContainer.classList.add('settings-container-mobile');
         }
         
         return settingsContainer;
@@ -53,169 +27,133 @@ export class SettingsStyles {
      * Gets responsive styles for settings rows
      */
     getSettingsRowStyle(): string {
-        return `display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-direction: ${this.isMobile ? 'column' : 'row'}; align-items: ${this.isMobile ? 'flex-start' : 'center'};`;
+        return `settings-row ${this.isMobile ? 'settings-row-mobile' : ''}`;
     }
 
     /**
      * Gets styles for setting labels
      */
     getSettingLabelStyle(): string {
-        return `margin-bottom: ${this.isMobile ? '8px' : '0'}; ${this.isMobile ? 'width: 100%' : ''}`;
+        return `settings-label-container ${this.isMobile ? 'settings-label-container-mobile' : ''}`;
     }
 
     /**
      * Gets styles for setting controls
      */
     getSettingControlStyle(): string {
-        return `${this.isMobile ? 'width: 100%' : ''}`;
+        return `settings-control-container ${this.isMobile ? 'settings-control-container-mobile' : ''}`;
     }
 
     /**
      * Gets styles for toggle controls
      */
     getToggleControlStyle(): string {
-        return `${this.isMobile ? 'width: 100%; display: flex; justify-content: flex-end;' : ''}`;
+        return `settings-control-container ${this.isMobile ? 'settings-toggle-container-mobile' : ''}`;
     }
 
     /**
      * Gets styles for label text
      */
     getLabelTextStyle(): string {
-        return `font-weight: bold; font-size: ${this.isMobile ? '15px' : 'inherit'};`;
+        return `settings-label-text ${this.isMobile ? 'settings-label-text-mobile' : ''}`;
     }
 
     /**
      * Gets styles for description text
      */
     getDescriptionTextStyle(): string {
-        return `margin: 5px 0 0 0; font-size: ${this.isMobile ? '11px' : '12px'}; color: #aaa;`;
+        return `settings-description ${this.isMobile ? 'settings-description-mobile' : ''}`;
     }
 
     /**
      * Gets styles for select elements
      */
     getSelectStyle(): string {
-        return `background-color: #2a3a5a; color: white; border: 1px solid #33aaff; padding: ${this.isMobile ? '10px' : '8px'}; border-radius: 5px; width: ${this.isMobile ? '100%' : 'auto'}; font-size: ${this.isMobile ? '16px' : 'inherit'};`;
+        return `settings-select ${this.isMobile ? 'settings-select-mobile' : ''}`;
     }
 
     /**
      * Gets styles for toggle switches
      */
     getToggleStyle(): string {
-        return `display: inline-block; position: relative; width: ${this.isMobile ? '70px' : '60px'}; height: ${this.isMobile ? '34px' : '30px'};`;
+        return `settings-toggle ${this.isMobile ? 'settings-toggle-mobile' : ''}`;
     }
 
     /**
      * Gets styles for toggle inputs
      */
     getToggleInputStyle(): string {
-        return 'opacity: 0; width: 0; height: 0;';
+        return 'settings-toggle-input';
     }
 
     /**
      * Gets styles for toggle sliders
      */
     getToggleSliderStyle(): string {
-        return `position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; border-radius: ${this.isMobile ? '17px' : '15px'}; transition: .4s;`;
+        return `settings-toggle-slider ${this.isMobile ? 'settings-toggle-slider-mobile' : ''}`;
     }
 
     /**
      * Gets styles for section headers
      */
     getSectionHeaderStyle(): string {
-        return `color: #33aaff; border-bottom: 1px solid #33aaff; padding-bottom: 10px; font-size: ${this.isMobile ? '18px' : '20px'};`;
+        return `settings-section-header ${this.isMobile ? 'settings-section-header-mobile' : ''}`;
     }
 
     /**
      * Gets styles for main title
      */
     getMainTitleStyle(): string {
-        return `text-align: center; color: #33aaff; margin-top: 0; font-size: ${this.isMobile ? '24px' : '28px'};`;
+        return `settings-title ${this.isMobile ? 'settings-title-mobile' : ''}`;
     }
 
     /**
      * Gets styles for preset buttons container
      */
     getPresetContainerStyle(): string {
-        return `display: flex; justify-content: space-between; margin-bottom: 20px; flex-direction: ${this.isMobile ? 'column' : 'row'}; gap: ${this.isMobile ? '10px' : '0'};`;
+        return `settings-preset-container ${this.isMobile ? 'settings-preset-container-mobile' : ''}`;
     }
 
     /**
      * Gets styles for preset buttons
      */
     getPresetButtonStyle(): string {
-        return `flex: 1; margin-right: ${this.isMobile ? '0' : '10px'}; padding: ${this.isMobile ? '15px' : '10px'}; background-color: #2a3a5a; color: white; border: 1px solid #33aaff; border-radius: 5px; cursor: pointer; font-size: ${this.isMobile ? '16px' : 'inherit'};`;
+        return `settings-preset-button ${this.isMobile ? 'settings-preset-button-mobile' : ''}`;
     }
 
     /**
      * Gets styles for action buttons container
      */
     getActionButtonsContainerStyle(): string {
-        return `display: flex; justify-content: space-between; flex-direction: ${this.isMobile ? 'column' : 'row'}; gap: ${this.isMobile ? '15px' : '0'};`;
+        return `settings-action-buttons ${this.isMobile ? 'settings-action-buttons-mobile' : ''}`;
     }
 
     /**
      * Gets styles for apply button
      */
     getApplyButtonStyle(): string {
-        return `flex: 1; margin-right: ${this.isMobile ? '0' : '10px'}; padding: ${this.isMobile ? '20px' : '15px'}; background-color: #33aaff; color: black; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: ${this.isMobile ? '18px' : '16px'};`;
+        return `settings-apply-button ${this.isMobile ? 'settings-apply-button-mobile' : ''}`;
     }
 
     /**
      * Gets styles for back button
      */
     getBackButtonStyle(): string {
-        return `flex: 1; padding: ${this.isMobile ? '20px' : '15px'}; background-color: #555; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; font-size: ${this.isMobile ? '18px' : '16px'};`;
+        return `settings-back-button ${this.isMobile ? 'settings-back-button-mobile' : ''}`;
     }
 
     /**
      * Gets styles for notification
      */
-    getNotificationStyle(): Record<string, string> {
-        return {
-            position: 'fixed',
-            top: this.isMobile ? '25%' : '20%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            color: '#33aaff',
-            padding: this.isMobile ? '20px 40px' : '15px 30px',
-            borderRadius: '10px',
-            fontFamily: 'Courier New, monospace',
-            fontSize: this.isMobile ? '18px' : '16px',
-            zIndex: '9999',
-            textAlign: 'center'
-        };
+    getNotificationStyle(): string {
+        return `settings-notification ${this.isMobile ? 'settings-notification-mobile' : ''}`;
     }
 
     /**
-     * Injects toggle slider CSS into the document head
+     * Injects toggle slider CSS into the document head (no longer needed - using external CSS)
      */
     injectToggleCSS(): void {
-        const style: HTMLStyleElement = document.createElement('style');
-        style.textContent = `
-            .slider:before {
-                position: absolute;
-                content: "";
-                height: ${this.isMobile ? '26px' : '22px'};
-                width: ${this.isMobile ? '26px' : '22px'};
-                left: 4px;
-                bottom: 4px;
-                background-color: white;
-                border-radius: 50%;
-                transition: .4s;
-            }
-            
-            input:checked + .slider {
-                background-color: #33aaff;
-            }
-            
-            input:checked + .slider:before {
-                transform: translateX(${this.isMobile ? '36px' : '30px'});
-            }
-        `;
-        
-        document.head.appendChild(style);
+        // CSS now in external stylesheet - this method kept for compatibility
     }
 
     /**
@@ -223,12 +161,12 @@ export class SettingsStyles {
      */
     createSettingRow(labelText: string, description: string, controlHtml: string): string {
         return `
-            <div class="settings-row" style="${this.getSettingsRowStyle()}">
-                <div style="${this.getSettingLabelStyle()}">
-                    <label style="${this.getLabelTextStyle()}">${labelText}</label>
-                    <p style="${this.getDescriptionTextStyle()}">${description}</p>
+            <div class="${this.getSettingsRowStyle()}">
+                <div class="${this.getSettingLabelStyle()}">
+                    <label class="${this.getLabelTextStyle()}">${labelText}</label>
+                    <p class="${this.getDescriptionTextStyle()}">${description}</p>
                 </div>
-                <div style="${this.getSettingControlStyle()}">
+                <div class="${this.getSettingControlStyle()}">
                     ${controlHtml}
                 </div>
             </div>
@@ -240,19 +178,19 @@ export class SettingsStyles {
      */
     createToggleRow(labelText: string, description: string, inputId: string): string {
         const toggleHtml: string = `
-            <label class="toggle" style="${this.getToggleStyle()}">
-                <input type="checkbox" id="${inputId}" style="${this.getToggleInputStyle()}">
-                <span class="slider" style="${this.getToggleSliderStyle()}"></span>
+            <label class="${this.getToggleStyle()}">
+                <input type="checkbox" id="${inputId}" class="${this.getToggleInputStyle()}">
+                <span class="${this.getToggleSliderStyle()}"></span>
             </label>
         `;
 
         return `
-            <div class="settings-row" style="${this.getSettingsRowStyle()}">
-                <div style="${this.getSettingLabelStyle()}">
-                    <label style="${this.getLabelTextStyle()}">${labelText}</label>
-                    <p style="${this.getDescriptionTextStyle()}">${description}</p>
+            <div class="${this.getSettingsRowStyle()}">
+                <div class="${this.getSettingLabelStyle()}">
+                    <label class="${this.getLabelTextStyle()}">${labelText}</label>
+                    <p class="${this.getDescriptionTextStyle()}">${description}</p>
                 </div>
-                <div style="${this.getToggleControlStyle()}">
+                <div class="${this.getToggleControlStyle()}">
                     ${toggleHtml}
                 </div>
             </div>
@@ -268,7 +206,7 @@ export class SettingsStyles {
         ).join('');
 
         const selectHtml: string = `
-            <select id="${selectId}" style="${this.getSelectStyle()}">
+            <select id="${selectId}" class="${this.getSelectStyle()}">
                 ${optionsHtml}
             </select>
         `;

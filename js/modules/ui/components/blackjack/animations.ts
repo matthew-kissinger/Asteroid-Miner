@@ -35,14 +35,12 @@ export class BlackjackAnimations {
         if (!cardElement) return;
         
         // Initial state
-        cardElement.style.transform = 'translateY(0px) scale(0.8)';
-        cardElement.style.opacity = '0';
+        cardElement.classList.add('bj-card', 'bj-card-deal-initial');
         
         // Animate to final position
         setTimeout(() => {
-            cardElement.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-            cardElement.style.transform = 'translateY(-5px) scale(1)';
-            cardElement.style.opacity = '1';
+            cardElement.classList.remove('bj-card-deal-initial');
+            cardElement.classList.add('bj-card-deal-final');
         }, delay);
     }
 
@@ -55,13 +53,13 @@ export class BlackjackAnimations {
         if (!cardElement) return;
         
         // First half of flip
-        cardElement.style.transition = 'transform 0.2s ease';
-        cardElement.style.transform = 'rotateY(90deg) translateY(-5px)';
+        cardElement.classList.add('bj-card-flip', 'bj-card-flip-midpoint');
         
         // At midpoint, execute callback and complete flip
         setTimeout(() => {
             if (callback) callback();
-            cardElement.style.transform = 'rotateY(0deg) translateY(-5px)';
+            cardElement.classList.remove('bj-card-flip-midpoint');
+            cardElement.classList.add('bj-card-flip-complete');
         }, 200);
     }
 
@@ -73,12 +71,12 @@ export class BlackjackAnimations {
         if (!buttonElement) return;
         
         // Scale down slightly
-        buttonElement.style.transition = 'transform 0.1s ease';
-        buttonElement.style.transform = 'scale(0.95)';
+        buttonElement.classList.add('bj-button-press');
         
         // Return to normal size
         setTimeout(() => {
-            buttonElement.style.transform = 'scale(1)';
+            buttonElement.classList.remove('bj-button-press');
+            buttonElement.classList.add('bj-button-normal');
         }, 100);
     }
 
@@ -90,9 +88,8 @@ export class BlackjackAnimations {
         if (!buttonElement) return;
         
         // Pulse effect
-        buttonElement.style.transition = 'transform 0.2s ease, border-width 0.2s ease';
-        buttonElement.style.transform = 'scale(1.05)';
-        buttonElement.style.borderWidth = '2px';
+        buttonElement.classList.remove('bj-resource-normal');
+        buttonElement.classList.add('bj-resource-selected');
     }
 
     /**
@@ -102,8 +99,8 @@ export class BlackjackAnimations {
     removeResourceSelection(buttonElement: HTMLElement | null): void {
         if (!buttonElement) return;
         
-        buttonElement.style.transform = 'scale(1)';
-        buttonElement.style.borderWidth = '1px';
+        buttonElement.classList.remove('bj-resource-selected');
+        buttonElement.classList.add('bj-resource-normal');
     }
 
     /**
@@ -115,13 +112,13 @@ export class BlackjackAnimations {
         if (!betElement) return;
         
         // Scale up briefly
-        betElement.style.transition = 'transform 0.15s ease';
-        betElement.style.transform = 'scale(1.1)';
+        betElement.classList.add('bj-bet-change');
         
         // Update text and scale back
         setTimeout(() => {
-        betElement.textContent = String(newAmount);
-            betElement.style.transform = 'scale(1)';
+            betElement.textContent = String(newAmount);
+            betElement.classList.remove('bj-bet-change');
+            betElement.classList.add('bj-bet-normal');
         }, 75);
     }
 
@@ -135,18 +132,18 @@ export class BlackjackAnimations {
         if (!scoreElement) return;
         
         // Color flash effect
-        const originalColor = scoreElement.style.color;
-        const flashColor = isBust ? '#ff6b6b' : '#30cfd0';
-        
-        scoreElement.style.transition = 'color 0.2s ease, transform 0.2s ease';
-        scoreElement.style.color = flashColor;
-        scoreElement.style.transform = 'scale(1.1)';
+        scoreElement.classList.add('bj-score-update');
+        if (isBust) {
+            scoreElement.classList.add('bj-score-bust');
+        } else {
+            scoreElement.classList.add('bj-score-flash');
+        }
         scoreElement.textContent = newScore;
         
         // Return to normal
         setTimeout(() => {
-            scoreElement.style.color = originalColor;
-            scoreElement.style.transform = 'scale(1)';
+            scoreElement.classList.remove('bj-score-update', 'bj-score-bust', 'bj-score-flash');
+            scoreElement.classList.add('bj-score-normal');
         }, 200);
     }
 
@@ -163,37 +160,40 @@ export class BlackjackAnimations {
     ): void {
         if (!statusElement) return;
         
-        // Determine colors based on type
-        let bgColor = 'rgba(51, 170, 255, 0.2)';
-        let borderColor = 'rgba(51, 170, 255, 0.4)';
+        // Remove all status classes
+        statusElement.classList.remove(
+            'bj-status-normal', 'bj-status-win', 'bj-status-blackjack',
+            'bj-status-lose', 'bj-status-bust', 'bj-status-push'
+        );
         
+        // Add appropriate status class based on type
         switch (type) {
             case 'win':
+                statusElement.classList.add('bj-status-win');
+                break;
             case 'blackjack':
-                bgColor = 'rgba(48, 207, 208, 0.3)';
-                borderColor = 'rgba(48, 207, 208, 0.6)';
+                statusElement.classList.add('bj-status-blackjack');
                 break;
             case 'lose':
+                statusElement.classList.add('bj-status-lose');
+                break;
             case 'bust':
-                bgColor = 'rgba(255, 107, 107, 0.3)';
-                borderColor = 'rgba(255, 107, 107, 0.6)';
+                statusElement.classList.add('bj-status-bust');
                 break;
             case 'push':
-                bgColor = 'rgba(255, 193, 7, 0.3)';
-                borderColor = 'rgba(255, 193, 7, 0.6)';
+                statusElement.classList.add('bj-status-push');
                 break;
+            default:
+                statusElement.classList.add('bj-status-normal');
         }
         
-        // Animate background change
-        statusElement.style.transition = 'background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease';
-        statusElement.style.backgroundColor = bgColor;
-        statusElement.style.borderColor = borderColor;
-        statusElement.style.transform = 'scale(1.05)';
+        statusElement.classList.add('bj-status-scaled');
         statusElement.textContent = message;
         
         // Return to normal size
         setTimeout(() => {
-            statusElement.style.transform = 'scale(1)';
+            statusElement.classList.remove('bj-status-scaled');
+            statusElement.classList.add('bj-status-normal-scale');
         }, 300);
     }
 
@@ -206,15 +206,13 @@ export class BlackjackAnimations {
         if (!speechElement) return;
         
         speechElement.textContent = message;
-        speechElement.style.opacity = '0';
-        speechElement.style.transform = 'translateY(10px) scale(0.9)';
+        speechElement.classList.add('bj-speech-bubble');
         speechElement.style.display = 'block';
         
         // Animate in
         setTimeout(() => {
-            speechElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            speechElement.style.opacity = '1';
-            speechElement.style.transform = 'translateY(0px) scale(1)';
+            speechElement.classList.remove('bj-speech-bubble');
+            speechElement.classList.add('bj-speech-bubble-visible');
         }, 50);
     }
 
@@ -225,12 +223,12 @@ export class BlackjackAnimations {
     hideSpeechBubble(speechElement: HTMLElement | null): void {
         if (!speechElement) return;
         
-        speechElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        speechElement.style.opacity = '0';
-        speechElement.style.transform = 'translateY(-10px) scale(0.9)';
+        speechElement.classList.remove('bj-speech-bubble-visible');
+        speechElement.classList.add('bj-speech-bubble-hidden');
         
         setTimeout(() => {
             speechElement.style.display = 'none';
+            speechElement.classList.remove('bj-speech-bubble-hidden');
         }, 300);
     }
 
@@ -242,12 +240,13 @@ export class BlackjackAnimations {
         if (!gameUI) return;
         
         // Add a glow effect
-        gameUI.style.transition = 'box-shadow 0.5s ease';
-        gameUI.style.boxShadow = '0 0 50px rgba(48, 207, 208, 0.8)';
+        gameUI.classList.remove('bj-game-ui-normal');
+        gameUI.classList.add('bj-game-ui-win');
         
         // Remove glow after celebration
         setTimeout(() => {
-            gameUI.style.boxShadow = '0 0 30px rgba(51, 170, 255, 0.5)';
+            gameUI.classList.remove('bj-game-ui-win');
+            gameUI.classList.add('bj-game-ui-normal');
         }, 2000);
     }
 
@@ -259,12 +258,13 @@ export class BlackjackAnimations {
         if (!gameUI) return;
         
         // Add a red glow effect
-        gameUI.style.transition = 'box-shadow 0.5s ease';
-        gameUI.style.boxShadow = '0 0 50px rgba(255, 107, 107, 0.6)';
+        gameUI.classList.remove('bj-game-ui-normal');
+        gameUI.classList.add('bj-game-ui-lose');
         
         // Remove glow after effect
         setTimeout(() => {
-            gameUI.style.boxShadow = '0 0 30px rgba(51, 170, 255, 0.5)';
+            gameUI.classList.remove('bj-game-ui-lose');
+            gameUI.classList.add('bj-game-ui-normal');
         }, 2000);
     }
 
@@ -276,14 +276,13 @@ export class BlackjackAnimations {
         if (!gameUI) return;
         
         // Intense glow and slight scale
-        gameUI.style.transition = 'box-shadow 0.5s ease, transform 0.5s ease';
-        gameUI.style.boxShadow = '0 0 80px rgba(48, 207, 208, 1)';
-        gameUI.style.transform = 'translate(-50%, -50%) scale(1.02)';
+        gameUI.classList.remove('bj-game-ui-normal');
+        gameUI.classList.add('bj-game-ui-blackjack');
         
         // Return to normal
         setTimeout(() => {
-            gameUI.style.boxShadow = '0 0 30px rgba(51, 170, 255, 0.5)';
-            gameUI.style.transform = 'translate(-50%, -50%) scale(1)';
+            gameUI.classList.remove('bj-game-ui-blackjack');
+            gameUI.classList.add('bj-game-ui-blackjack-normal');
         }, 3000);
     }
 
@@ -296,12 +295,11 @@ export class BlackjackAnimations {
         if (!cardElement) return;
         
         if (isHovering) {
-            cardElement.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
-            cardElement.style.transform = 'translateY(-10px) scale(1.05)';
-            cardElement.style.boxShadow = '0 0 20px rgba(51, 170, 255, 0.8)';
+            cardElement.classList.remove('bj-card-normal');
+            cardElement.classList.add('bj-card-hover');
         } else {
-            cardElement.style.transform = 'translateY(-5px) scale(1)';
-            cardElement.style.boxShadow = '0 0 10px rgba(51, 170, 255, 0.5)';
+            cardElement.classList.remove('bj-card-hover');
+            cardElement.classList.add('bj-card-normal');
         }
     }
 
@@ -373,6 +371,11 @@ export class BlackjackAnimations {
     resetAnimations(element: HTMLElement | null): void {
         if (!element) return;
         
+        // Remove all bj-* classes
+        const classesToRemove = Array.from(element.classList).filter(cls => cls.startsWith('bj-'));
+        element.classList.remove(...classesToRemove);
+        
+        // Clear inline styles that might have been set dynamically
         element.style.transition = '';
         element.style.transform = '';
         element.style.opacity = '';

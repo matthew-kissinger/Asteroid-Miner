@@ -111,26 +111,14 @@ export class SettingsEventHandlers {
         if (this.isMobile) {
             // Touch effects for mobile
             button.addEventListener('touchstart', () => {
-                button.style.backgroundColor = '#3a4b6a';
-                button.style.boxShadow = '0 0 10px #33aaff';
+                button.classList.add('settings-preset-button-touch-active');
             }, { passive: true });
             
             button.addEventListener('touchend', () => {
-                button.style.backgroundColor = '#2a3a5a';
-                button.style.boxShadow = 'none';
+                button.classList.remove('settings-preset-button-touch-active');
             }, { passive: true });
-        } else {
-            // Mouse effects for desktop
-            button.addEventListener('mouseover', () => {
-                button.style.backgroundColor = '#3a4b6a';
-                button.style.boxShadow = '0 0 10px #33aaff';
-            });
-            
-            button.addEventListener('mouseout', () => {
-                button.style.backgroundColor = '#2a3a5a';
-                button.style.boxShadow = 'none';
-            });
         }
+        // Desktop hover effects handled by CSS :hover
     }
 
     /**

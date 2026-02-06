@@ -71,7 +71,7 @@ export class DataManager {
         if (!system) {
             // Clear selection
             selectedCard.innerHTML = `
-                <div class="empty-selection" style="color: #777; text-align: center; padding: 20px;">
+                <div class="starmap-empty-selection">
                     No system selected.<br>${isMobile ? 'Tap' : 'Click'} on a star system in the map to select it.
                 </div>
             `;
@@ -79,32 +79,32 @@ export class DataManager {
         }
 
         selectedCard.innerHTML = `
-            <div id="selected-system-name" style="font-size: ${isMobile ? '16px' : '18px'}; font-weight: bold; color: #fff; margin-bottom: 5px;">${system.name}</div>
-            <div id="selected-system-class" style="font-size: ${isMobile ? '12px' : '14px'}; color: #aaa; margin-bottom: 10px;">Class ${system.starClass} - ${system.classification}</div>
-            <div id="selected-system-resources" style="margin-bottom: 10px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <div id="selected-system-name" class="starmap-system-name ${isMobile ? 'starmap-system-name-mobile' : ''}">${system.name}</div>
+            <div id="selected-system-class" class="starmap-system-class ${isMobile ? 'starmap-system-class-mobile' : ''}">Class ${system.starClass} - ${system.classification}</div>
+            <div id="selected-system-resources" class="starmap-resources">
+                <div class="starmap-resource-row">
                     <span>Iron:</span>
-                    <div class="resource-indicator" style="width: 100px; height: 8px; background: #333; border-radius: 4px; overflow: hidden;">
-                        <div style="height: 100%; width: ${system.resourceMultipliers.iron * 50}%; background: #aaa;"></div>
+                    <div class="starmap-resource-indicator">
+                        <div class="starmap-resource-bar starmap-resource-bar-iron" style="width: ${system.resourceMultipliers.iron * 50}%;"></div>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <div class="starmap-resource-row">
                     <span>Gold:</span>
-                    <div class="resource-indicator" style="width: 100px; height: 8px; background: #333; border-radius: 4px; overflow: hidden;">
-                        <div style="height: 100%; width: ${system.resourceMultipliers.gold * 50}%; background: #FFD700;"></div>
+                    <div class="starmap-resource-indicator">
+                        <div class="starmap-resource-bar starmap-resource-bar-gold" style="width: ${system.resourceMultipliers.gold * 50}%;"></div>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
+                <div class="starmap-resource-row">
                     <span>Platinum:</span>
-                    <div class="resource-indicator" style="width: 100px; height: 8px; background: #333; border-radius: 4px; overflow: hidden;">
-                        <div style="height: 100%; width: ${system.resourceMultipliers.platinum * 50}%; background: #E5E4E2;"></div>
+                    <div class="starmap-resource-indicator">
+                        <div class="starmap-resource-bar starmap-resource-bar-platinum" style="width: ${system.resourceMultipliers.platinum * 50}%;"></div>
                     </div>
                 </div>
             </div>
-            <div style="font-size: ${isMobile ? '11px' : '12px'}; color: #ccc; margin-bottom: 10px;">
+            <div class="starmap-system-description ${isMobile ? 'starmap-system-description-mobile' : ''}">
                 ${system.description}
             </div>
-            <div style="font-size: ${isMobile ? '11px' : '12px'}; color: #30cfd0;">
+            <div class="starmap-system-features ${isMobile ? 'starmap-system-features-mobile' : ''}">
                 Special Features: ${system.specialFeatures.join(', ')}
             </div>
         `;
@@ -126,15 +126,17 @@ export class DataManager {
         if (!systemId) {
             // No system selected
             travelButton.disabled = true;
-            travelButton.style.cursor = 'not-allowed';
-            travelButton.style.opacity = '0.5';
+            travelButton.classList.add('starmap-travel-button-disabled');
             travelButton.textContent = 'TRAVEL TO SYSTEM';
             return;
         }
 
         travelButton.disabled = isCurrentSystem || !isConnected;
-        travelButton.style.cursor = isCurrentSystem || !isConnected ? 'not-allowed' : 'pointer';
-        travelButton.style.opacity = isCurrentSystem || !isConnected ? '0.5' : '1';
+        if (isCurrentSystem || !isConnected) {
+            travelButton.classList.add('starmap-travel-button-disabled');
+        } else {
+            travelButton.classList.remove('starmap-travel-button-disabled');
+        }
         
         // Update button text
         travelButton.textContent = isCurrentSystem ? 'CURRENT LOCATION' : 

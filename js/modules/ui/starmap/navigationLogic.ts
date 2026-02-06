@@ -121,21 +121,10 @@ export class NavigationLogic {
     showTravelNotification(systemName: string, isMobile: boolean): void {
         // Create notification element
         const notification = document.createElement('div');
-        notification.style.position = 'fixed';
-        notification.style.top = isMobile ? '30%' : '20%';
-        notification.style.left = '50%';
-        notification.style.transform = 'translate(-50%, -50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        notification.style.color = '#30cfd0';
-        notification.style.padding = isMobile ? '15px 30px' : '20px 40px';
-        notification.style.borderRadius = '10px';
-        notification.style.border = '2px solid #30cfd0';
-        notification.style.boxShadow = '0 0 30px #30cfd0';
-        notification.style.fontFamily = 'Courier New, monospace';
-        notification.style.fontSize = isMobile ? '18px' : '20px';
-        notification.style.fontWeight = 'bold';
-        notification.style.zIndex = '9999';
-        notification.style.textAlign = 'center';
+        notification.classList.add('starmap-notification');
+        if (isMobile) {
+            notification.classList.add('starmap-notification-mobile');
+        }
         notification.textContent = `ARRIVED AT ${systemName}`;
         
         // Add to DOM

@@ -45,37 +45,20 @@ export class GameOverScreen {
         // Add game over container (hidden initially)
         const gameOverContainer = document.createElement('div');
         gameOverContainer.id = 'game-over-container';
-        gameOverContainer.style.position = 'absolute';
-        gameOverContainer.style.top = '0';
-        gameOverContainer.style.left = '0';
-        gameOverContainer.style.width = '100%';
-        gameOverContainer.style.height = '100%';
-        gameOverContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        gameOverContainer.style.display = 'flex';
-        gameOverContainer.style.flexDirection = 'column';
-        gameOverContainer.style.alignItems = 'center';
-        gameOverContainer.style.justifyContent = 'center';
-        gameOverContainer.style.color = '#fff';
-        gameOverContainer.style.fontFamily = 'Courier New, monospace';
-        gameOverContainer.style.zIndex = '1000';
-        gameOverContainer.style.display = 'none';
+        gameOverContainer.classList.add('game-over-container', 'game-over-container--hidden');
         document.body.appendChild(gameOverContainer);
         
         // Game over title
         const gameOverTitle = document.createElement('h1');
         gameOverTitle.textContent = 'GAME OVER';
-        gameOverTitle.style.fontSize = '50px';
-        gameOverTitle.style.color = '#ff0000';
-        gameOverTitle.style.textShadow = '0 0 10px #ff0000';
-        gameOverTitle.style.marginBottom = '20px';
+        gameOverTitle.classList.add('game-over-title');
         gameOverContainer.appendChild(gameOverTitle);
         
         // Game over message
         const gameOverMessage = document.createElement('p');
         gameOverMessage.id = 'game-over-message';
         gameOverMessage.textContent = 'Your ship was destroyed by asteroid collision';
-        gameOverMessage.style.fontSize = '18px';
-        gameOverMessage.style.marginBottom = '40px';
+        gameOverMessage.classList.add('game-over-message');
         gameOverContainer.appendChild(gameOverMessage);
         
         // Restart button
@@ -84,9 +67,7 @@ export class GameOverScreen {
         // Resources collected summary (for game over screen)
         const resourcesSummary = document.createElement('div');
         resourcesSummary.id = 'resources-summary';
-        resourcesSummary.style.marginTop = '30px';
-        resourcesSummary.style.fontSize = '16px';
-        resourcesSummary.style.textAlign = 'center';
+        resourcesSummary.classList.add('game-over-resources-summary');
         gameOverContainer.appendChild(resourcesSummary);
     }
     
@@ -94,26 +75,7 @@ export class GameOverScreen {
         const restartButton = document.createElement('button');
         restartButton.id = 'restart-game-button';
         restartButton.textContent = 'RESTART MISSION';
-        restartButton.style.backgroundColor = 'rgba(120, 220, 232, 0.2)';
-        restartButton.style.color = '#fff';
-        restartButton.style.border = '1px solid rgba(120, 220, 232, 0.5)';
-        restartButton.style.borderRadius = '5px';
-        restartButton.style.padding = '15px 30px';
-        restartButton.style.fontSize = '20px';
-        restartButton.style.fontFamily = '"Rajdhani", sans-serif';
-        restartButton.style.cursor = 'pointer';
-        restartButton.style.marginTop = '30px';
-        restartButton.style.transition = 'all 0.2s ease';
-        
-        restartButton.addEventListener('mouseover', () => {
-            restartButton.style.backgroundColor = 'rgba(120, 220, 232, 0.4)';
-            restartButton.style.boxShadow = '0 0 15px rgba(120, 220, 232, 0.5)';
-        });
-        
-        restartButton.addEventListener('mouseout', () => {
-            restartButton.style.backgroundColor = 'rgba(120, 220, 232, 0.2)';
-            restartButton.style.boxShadow = 'none';
-        });
+        restartButton.classList.add('game-over-restart-button');
         
         restartButton.addEventListener('click', () => {
             // Play the click sound
@@ -122,14 +84,11 @@ export class GameOverScreen {
             // Show loading status
             const loadingStatus = document.createElement('div');
             loadingStatus.textContent = 'Restarting mission...';
-            loadingStatus.style.color = 'rgba(120, 220, 232, 0.9)';
-            loadingStatus.style.marginTop = '10px';
+            loadingStatus.classList.add('game-over-loading-status');
             container.appendChild(loadingStatus);
             
             // Disable the button during reload
             restartButton.disabled = true;
-            restartButton.style.opacity = '0.5';
-            restartButton.style.cursor = 'default';
             
             // Reset game state before reloading
             // This is critical to ensure difficulty level resets properly
@@ -160,7 +119,8 @@ export class GameOverScreen {
         // Show game over screen
         const gameOverContainer = document.getElementById('game-over-container') as HTMLDivElement | null;
         if (gameOverContainer) {
-            gameOverContainer.style.display = 'flex';
+            gameOverContainer.classList.remove('game-over-container--hidden');
+            gameOverContainer.classList.add('game-over-container--visible');
         }
         
         // Set message based on reason
@@ -264,18 +224,22 @@ export class GameOverScreen {
                 }
                 
                 resourcesSummary.innerHTML = `
-                    <div style="margin-bottom:20px; padding:15px; background-color:rgba(255,48,48,0.2); border:1px solid #ff3030; border-radius:5px;">
-                        <h3 style="color:#ff3030; margin-top:0; text-shadow:0 0 5px rgba(255,48,48,0.5);">HORDE MODE</h3>
-                        <p style="font-size:18px; font-weight:bold;">SURVIVED: <span style="color:#ff9999; text-shadow:0 0 5px rgba(255,48,48,0.3);">${hordeSurvivalTime}</span></p>
+                    <div class="game-over-horde-section">
+                        <h3 class="game-over-horde-title">HORDE MODE</h3>
+                        <p class="game-over-horde-time">SURVIVED: <span class="game-over-horde-time-value">${hordeSurvivalTime}</span></p>
                         <p>${hordeMessage}</p>
                     </div>
-                    <p>Resources collected:</p>
-                    <p>IRON: ${iron} | GOLD: ${gold} | PLATINUM: ${platinum}</p>
+                    <div class="game-over-resources-list">
+                        <p>Resources collected:</p>
+                        <p>IRON: ${iron} | GOLD: ${gold} | PLATINUM: ${platinum}</p>
+                    </div>
                 `;
             } else {
                 resourcesSummary.innerHTML = `
-                    <p>Resources collected:</p>
-                    <p>IRON: ${iron} | GOLD: ${gold} | PLATINUM: ${platinum}</p>
+                    <div class="game-over-resources-list">
+                        <p>Resources collected:</p>
+                        <p>IRON: ${iron} | GOLD: ${gold} | PLATINUM: ${platinum}</p>
+                    </div>
                 `;
             }
         }

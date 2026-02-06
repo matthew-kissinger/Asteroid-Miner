@@ -89,7 +89,7 @@ export class SettingsView {
      */
     createSettingsHTML(): string {
         return `
-            <h2 style="${this.styles.getMainTitleStyle()}">GAME SETTINGS</h2>
+            <h2 class="${this.styles.getMainTitleStyle()}">GAME SETTINGS</h2>
             
             ${this.graphicsSettings.createGraphicsSettingsHTML()}
             
@@ -109,7 +109,7 @@ export class SettingsView {
     createPerformanceSettingsHTML(): string {
         return `
             <div style="margin-bottom: 20px;">
-                <h3 style="${this.styles.getSectionHeaderStyle()}">PERFORMANCE SETTINGS</h3>
+                <h3 class="${this.styles.getSectionHeaderStyle()}">PERFORMANCE SETTINGS</h3>
                 
                 ${this.styles.createSelectRow(
                     'Frame Rate Cap',
@@ -144,16 +144,16 @@ export class SettingsView {
     createPresetsHTML(): string {
         return `
             <div style="margin-bottom: 20px;">
-                <h3 style="${this.styles.getSectionHeaderStyle()}">PRESETS</h3>
+                <h3 class="${this.styles.getSectionHeaderStyle()}">PRESETS</h3>
                 
-                <div style="${this.styles.getPresetContainerStyle()}">
-                    <button id="preset-performance" style="${this.styles.getPresetButtonStyle()}">
+                <div class="${this.styles.getPresetContainerStyle()}">
+                    <button id="preset-performance" class="${this.styles.getPresetButtonStyle()}">
                         PERFORMANCE
                     </button>
-                    <button id="preset-balanced" style="${this.styles.getPresetButtonStyle()}">
+                    <button id="preset-balanced" class="${this.styles.getPresetButtonStyle()}">
                         BALANCED
                     </button>
-                    <button id="preset-quality" style="${this.styles.getPresetButtonStyle()}">
+                    <button id="preset-quality" class="${this.styles.getPresetButtonStyle()}">
                         QUALITY
                     </button>
                 </div>
@@ -166,11 +166,11 @@ export class SettingsView {
      */
     createActionButtonsHTML(): string {
         return `
-            <div style="${this.styles.getActionButtonsContainerStyle()}">
-                <button id="apply-settings" style="${this.styles.getApplyButtonStyle()}">
+            <div class="${this.styles.getActionButtonsContainerStyle()}">
+                <button id="apply-settings" class="${this.styles.getApplyButtonStyle()}">
                     APPLY
                 </button>
-                <button id="settings-back" style="${this.styles.getBackButtonStyle()}">
+                <button id="settings-back" class="${this.styles.getBackButtonStyle()}">
                     BACK
                 </button>
             </div>
@@ -222,10 +222,7 @@ export class SettingsView {
     showSettingsApplied(): void {
         // Create notification
         const notification: HTMLDivElement = document.createElement('div');
-        const notificationStyles: Record<string, string> = this.styles.getNotificationStyle();
-        
-        // Apply all styles
-        Object.assign(notification.style, notificationStyles);
+        notification.className = this.styles.getNotificationStyle();
         notification.textContent = 'Settings applied and saved';
         
         document.body.appendChild(notification);

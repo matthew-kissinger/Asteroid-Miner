@@ -1,0 +1,264 @@
+/* ==========================================================================
+   Blackjack UI Styles
+   Extracted from inline styles in js/modules/ui/components/blackjack/animations.ts
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Card Animations
+   --------------------------------------------------------------------------- */
+
+.bj-card {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.bj-card-deal-initial {
+  transform: translateY(0px) scale(0.8);
+  opacity: 0;
+}
+
+.bj-card-deal-final {
+  transform: translateY(-5px) scale(1);
+  opacity: 1;
+}
+
+.bj-card-flip {
+  transition: transform 0.2s ease;
+}
+
+.bj-card-flip-midpoint {
+  transform: rotateY(90deg) translateY(-5px);
+}
+
+.bj-card-flip-complete {
+  transform: rotateY(0deg) translateY(-5px);
+}
+
+.bj-card-hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 0 20px rgba(51, 170, 255, 0.8);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bj-card-normal {
+  transform: translateY(-5px) scale(1);
+  box-shadow: 0 0 10px rgba(51, 170, 255, 0.5);
+}
+
+/* ---------------------------------------------------------------------------
+   Button Animations
+   --------------------------------------------------------------------------- */
+
+.bj-button-press {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+.bj-button-normal {
+  transform: scale(1);
+}
+
+.bj-resource-selected {
+  transform: scale(1.05);
+  border-width: 2px;
+  transition: transform 0.2s ease, border-width 0.2s ease;
+}
+
+.bj-resource-normal {
+  transform: scale(1);
+  border-width: 1px;
+}
+
+/* ---------------------------------------------------------------------------
+   Bet & Score Animations
+   --------------------------------------------------------------------------- */
+
+.bj-bet-change {
+  transform: scale(1.1);
+  transition: transform 0.15s ease;
+}
+
+.bj-bet-normal {
+  transform: scale(1);
+}
+
+.bj-score-update {
+  transform: scale(1.1);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.bj-score-normal {
+  transform: scale(1);
+}
+
+.bj-score-bust {
+  color: #ff6b6b;
+}
+
+.bj-score-flash {
+  color: #30cfd0;
+}
+
+/* ---------------------------------------------------------------------------
+   Status Message Animations
+   --------------------------------------------------------------------------- */
+
+.bj-status-normal {
+  background-color: rgba(51, 170, 255, 0.2);
+  border-color: rgba(51, 170, 255, 0.4);
+  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.bj-status-win,
+.bj-status-blackjack {
+  background-color: rgba(48, 207, 208, 0.3);
+  border-color: rgba(48, 207, 208, 0.6);
+  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.bj-status-lose,
+.bj-status-bust {
+  background-color: rgba(255, 107, 107, 0.3);
+  border-color: rgba(255, 107, 107, 0.6);
+  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.bj-status-push {
+  background-color: rgba(255, 193, 7, 0.3);
+  border-color: rgba(255, 193, 7, 0.6);
+  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.bj-status-scaled {
+  transform: scale(1.05);
+}
+
+.bj-status-normal-scale {
+  transform: scale(1);
+}
+
+/* ---------------------------------------------------------------------------
+   Speech Bubble Animations
+   --------------------------------------------------------------------------- */
+
+.bj-speech-bubble {
+  display: block;
+  opacity: 0;
+  transform: translateY(10px) scale(0.9);
+}
+
+.bj-speech-bubble-visible {
+  opacity: 1;
+  transform: translateY(0px) scale(1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.bj-speech-bubble-hidden {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.9);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ---------------------------------------------------------------------------
+   Game UI Celebration Effects
+   --------------------------------------------------------------------------- */
+
+.bj-game-ui-normal {
+  box-shadow: 0 0 30px rgba(51, 170, 255, 0.5);
+  transition: box-shadow 0.5s ease;
+}
+
+.bj-game-ui-win {
+  box-shadow: 0 0 50px rgba(48, 207, 208, 0.8);
+  transition: box-shadow 0.5s ease;
+}
+
+.bj-game-ui-lose {
+  box-shadow: 0 0 50px rgba(255, 107, 107, 0.6);
+  transition: box-shadow 0.5s ease;
+}
+
+.bj-game-ui-blackjack {
+  box-shadow: 0 0 80px rgba(48, 207, 208, 1);
+  transform: translate(-50%, -50%) scale(1.02);
+  transition: box-shadow 0.5s ease, transform 0.5s ease;
+}
+
+.bj-game-ui-blackjack-normal {
+  box-shadow: 0 0 30px rgba(51, 170, 255, 0.5);
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ---------------------------------------------------------------------------
+   Keyframe Animations
+   --------------------------------------------------------------------------- */
+
+@keyframes bj-card-deal {
+  from {
+    transform: translateY(0px) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(-5px) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bj-card-flip {
+  0% {
+    transform: rotateY(0deg) translateY(-5px);
+  }
+  50% {
+    transform: rotateY(90deg) translateY(-5px);
+  }
+  100% {
+    transform: rotateY(0deg) translateY(-5px);
+  }
+}
+
+@keyframes bj-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bj-scale-up {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes bj-glow {
+  0% {
+    box-shadow: 0 0 10px rgba(51, 170, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(51, 170, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(51, 170, 255, 0.5);
+  }
+}
+
+@keyframes bj-celebration {
+  0% {
+    box-shadow: 0 0 30px rgba(51, 170, 255, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 80px rgba(48, 207, 208, 1);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 30px rgba(51, 170, 255, 0.5);
+    transform: scale(1);
+  }
+}

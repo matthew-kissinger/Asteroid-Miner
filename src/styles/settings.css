@@ -1,0 +1,337 @@
+/* ==========================================================================
+   Settings UI Styles
+   Extracted from inline styles in js/modules/ui/components/settings/
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Settings Container
+   --------------------------------------------------------------------------- */
+
+.settings-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background-color: rgba(20, 30, 50, 0.9);
+  color: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  border: 2px solid #33aaff;
+  box-shadow: 0 0 30px #33aaff;
+  font-family: 'Courier New', monospace;
+  z-index: 1000;
+  display: none;
+}
+
+.settings-container-mobile {
+  width: 95%;
+  max-width: 600px;
+  height: 90vh;
+  padding: 20px;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+/* ---------------------------------------------------------------------------
+   Title
+   --------------------------------------------------------------------------- */
+
+.settings-title {
+  text-align: center;
+  color: #33aaff;
+  margin-top: 0;
+  font-size: 28px;
+}
+
+.settings-title-mobile {
+  font-size: 24px;
+}
+
+/* ---------------------------------------------------------------------------
+   Section Headers
+   --------------------------------------------------------------------------- */
+
+.settings-section-header {
+  color: #33aaff;
+  border-bottom: 1px solid #33aaff;
+  padding-bottom: 10px;
+  font-size: 20px;
+}
+
+.settings-section-header-mobile {
+  font-size: 18px;
+}
+
+/* ---------------------------------------------------------------------------
+   Settings Rows
+   --------------------------------------------------------------------------- */
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-direction: row;
+}
+
+.settings-row-mobile {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.settings-label-container {
+  margin-bottom: 0;
+}
+
+.settings-label-container-mobile {
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.settings-control-container {
+}
+
+.settings-control-container-mobile {
+  width: 100%;
+}
+
+.settings-toggle-container-mobile {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------------------------------------------------------------------------
+   Labels and Text
+   --------------------------------------------------------------------------- */
+
+.settings-label-text {
+  font-weight: bold;
+}
+
+.settings-label-text-mobile {
+  font-size: 15px;
+}
+
+.settings-description {
+  margin: 5px 0 0 0;
+  font-size: 12px;
+  color: #aaa;
+}
+
+.settings-description-mobile {
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------------------------
+   Select Dropdowns
+   --------------------------------------------------------------------------- */
+
+.settings-select {
+  background-color: #2a3a5a;
+  color: white;
+  border: 1px solid #33aaff;
+  padding: 8px;
+  border-radius: 5px;
+  width: auto;
+}
+
+.settings-select-mobile {
+  padding: 10px;
+  width: 100%;
+  font-size: 16px;
+}
+
+/* ---------------------------------------------------------------------------
+   Toggle Switches
+   --------------------------------------------------------------------------- */
+
+.settings-toggle {
+  display: inline-block;
+  position: relative;
+  width: 60px;
+  height: 30px;
+}
+
+.settings-toggle-mobile {
+  width: 70px;
+  height: 34px;
+}
+
+.settings-toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.settings-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #555;
+  border-radius: 15px;
+  transition: .4s;
+}
+
+.settings-toggle-slider-mobile {
+  border-radius: 17px;
+}
+
+.settings-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  border-radius: 50%;
+  transition: .4s;
+}
+
+.settings-toggle-slider-mobile:before {
+  height: 26px;
+  width: 26px;
+}
+
+.settings-toggle-input:checked + .settings-toggle-slider {
+  background-color: #33aaff;
+}
+
+.settings-toggle-input:checked + .settings-toggle-slider:before {
+  transform: translateX(30px);
+}
+
+.settings-toggle-input:checked + .settings-toggle-slider-mobile:before {
+  transform: translateX(36px);
+}
+
+/* ---------------------------------------------------------------------------
+   Presets Section
+   --------------------------------------------------------------------------- */
+
+.settings-preset-container {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-direction: row;
+  gap: 0;
+}
+
+.settings-preset-container-mobile {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-preset-button {
+  flex: 1;
+  margin-right: 10px;
+  padding: 10px;
+  background-color: #2a3a5a;
+  color: white;
+  border: 1px solid #33aaff;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.settings-preset-button-mobile {
+  margin-right: 0;
+  padding: 15px;
+  font-size: 16px;
+}
+
+.settings-preset-button:hover {
+  background-color: #3a4b6a;
+  box-shadow: 0 0 10px #33aaff;
+}
+
+.settings-preset-button-touch-active {
+  background-color: #3a4b6a;
+  box-shadow: 0 0 10px #33aaff;
+}
+
+/* ---------------------------------------------------------------------------
+   Action Buttons
+   --------------------------------------------------------------------------- */
+
+.settings-action-buttons {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+  gap: 0;
+}
+
+.settings-action-buttons-mobile {
+  flex-direction: column;
+  gap: 15px;
+}
+
+.settings-apply-button {
+  flex: 1;
+  margin-right: 10px;
+  padding: 15px;
+  background-color: #33aaff;
+  color: black;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.settings-apply-button-mobile {
+  margin-right: 0;
+  padding: 20px;
+  font-size: 18px;
+}
+
+.settings-back-button {
+  flex: 1;
+  padding: 15px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.settings-back-button-mobile {
+  padding: 20px;
+  font-size: 18px;
+}
+
+/* ---------------------------------------------------------------------------
+   Notification
+   --------------------------------------------------------------------------- */
+
+.settings-notification {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #33aaff;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  z-index: 9999;
+  text-align: center;
+}
+
+.settings-notification-mobile {
+  top: 25%;
+  padding: 20px 40px;
+  font-size: 18px;
+}

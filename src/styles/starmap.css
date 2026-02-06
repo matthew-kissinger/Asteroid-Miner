@@ -1,0 +1,300 @@
+/* ==========================================================================
+   Star Map UI Styles
+   Extracted from inline styles in js/modules/ui/starmap/
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Star Map Container
+   --------------------------------------------------------------------------- */
+
+.starmap-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 900px;
+  height: 700px;
+  background-color: rgba(10, 15, 30, 0.95);
+  color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  border: 2px solid #30cfd0;
+  box-shadow: 0 0 30px #30cfd0;
+  font-family: 'Courier New', monospace;
+  z-index: 1500;
+  display: none;
+  overflow: hidden;
+}
+
+.starmap-container-mobile {
+  width: 95%;
+  height: 85vh;
+  max-height: 700px;
+  padding: 15px;
+}
+
+/* ---------------------------------------------------------------------------
+   Title
+   --------------------------------------------------------------------------- */
+
+.starmap-title {
+  text-align: center;
+  color: #30cfd0;
+  margin: 0 0 20px 0;
+  font-size: 28px;
+}
+
+.starmap-title-mobile {
+  font-size: 24px;
+}
+
+/* ---------------------------------------------------------------------------
+   Content Layout
+   --------------------------------------------------------------------------- */
+
+.starmap-content {
+  display: flex;
+  flex-direction: row;
+  height: calc(100% - 100px);
+  gap: 0;
+}
+
+.starmap-content-mobile {
+  flex-direction: column;
+  height: calc(100% - 120px);
+  gap: 15px;
+}
+
+/* ---------------------------------------------------------------------------
+   Map Container (Left Column)
+   --------------------------------------------------------------------------- */
+
+.starmap-visual {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 10px;
+  border: 1px solid #30cfd0;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+.starmap-visual-mobile {
+  height: 40%;
+  min-height: 250px;
+}
+
+.starmap-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   Info Panel (Right Column)
+   --------------------------------------------------------------------------- */
+
+.starmap-info-panel {
+  width: 350px;
+  margin-left: 20px;
+  overflow-y: auto;
+  height: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.starmap-info-panel-mobile {
+  width: 100%;
+  margin-left: 0;
+  height: 60%;
+}
+
+/* ---------------------------------------------------------------------------
+   System Info Sections
+   --------------------------------------------------------------------------- */
+
+.starmap-section-title {
+  color: #30cfd0;
+  margin-top: 0;
+  font-size: 18px;
+}
+
+.starmap-section-title-mobile {
+  font-size: 16px;
+}
+
+.starmap-system-card {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid #30cfd0;
+  margin-bottom: 20px;
+}
+
+.starmap-system-card-selected {
+  border: 1px solid #555;
+}
+
+.starmap-system-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 5px;
+}
+
+.starmap-system-name-mobile {
+  font-size: 16px;
+}
+
+.starmap-system-class {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 10px;
+}
+
+.starmap-system-class-mobile {
+  font-size: 12px;
+}
+
+.starmap-system-description {
+  font-size: 12px;
+  color: #ccc;
+  margin-bottom: 10px;
+}
+
+.starmap-system-description-mobile {
+  font-size: 11px;
+}
+
+.starmap-system-features {
+  font-size: 12px;
+  color: #30cfd0;
+}
+
+.starmap-system-features-mobile {
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------------------------
+   Resource Indicators
+   --------------------------------------------------------------------------- */
+
+.starmap-resources {
+  margin-bottom: 10px;
+}
+
+.starmap-resource-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.starmap-resource-indicator {
+  width: 100px;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.starmap-resource-bar {
+  height: 100%;
+}
+
+.starmap-resource-bar-iron {
+  background: #aaa;
+}
+
+.starmap-resource-bar-gold {
+  background: #FFD700;
+}
+
+.starmap-resource-bar-platinum {
+  background: #E5E4E2;
+}
+
+/* ---------------------------------------------------------------------------
+   Empty Selection State
+   --------------------------------------------------------------------------- */
+
+.starmap-empty-selection {
+  color: #777;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ---------------------------------------------------------------------------
+   Buttons
+   --------------------------------------------------------------------------- */
+
+.starmap-travel-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #30cfd0;
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 16px;
+  opacity: 1;
+}
+
+.starmap-travel-button-mobile {
+  padding: 15px;
+  font-size: 18px;
+}
+
+.starmap-travel-button-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.starmap-close-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background-color: #555;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.starmap-close-button-mobile {
+  padding: 15px;
+  font-size: 18px;
+  background-color: #30cfd0;
+  color: #000;
+  box-shadow: 0 0 15px rgba(48, 207, 208, 0.7);
+}
+
+/* ---------------------------------------------------------------------------
+   Travel Notification
+   --------------------------------------------------------------------------- */
+
+.starmap-notification {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #30cfd0;
+  padding: 20px 40px;
+  border-radius: 10px;
+  border: 2px solid #30cfd0;
+  box-shadow: 0 0 30px #30cfd0;
+  font-family: 'Courier New', monospace;
+  font-size: 20px;
+  font-weight: bold;
+  z-index: 9999;
+  text-align: center;
+}
+
+.starmap-notification-mobile {
+  top: 30%;
+  padding: 15px 30px;
+  font-size: 18px;
+}

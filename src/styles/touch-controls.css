@@ -1,0 +1,132 @@
+/* ==========================================================================
+   Touch Controls Styles
+   Extracted from inline styles in js/modules/controls/touch/ui/actionButtons.ts
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Keyframe Animations
+   --------------------------------------------------------------------------- */
+
+@keyframes touch-pulse {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ---------------------------------------------------------------------------
+   Button Containers
+   --------------------------------------------------------------------------- */
+
+.touch-action-buttons-left {
+  position: absolute;
+  bottom: 170px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+.touch-action-buttons-right {
+  position: absolute;
+  bottom: 170px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+/* ---------------------------------------------------------------------------
+   Action Buttons (Base)
+   --------------------------------------------------------------------------- */
+
+.touch-action-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: rgba(10, 20, 30, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
+  /* Hardware acceleration for mobile performance */
+  transform: translateZ(0);
+  -webkit-tap-highlight-color: transparent;
+  backface-visibility: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   Action Button Variants (by type)
+   --------------------------------------------------------------------------- */
+
+.touch-action-btn--fire {
+  border: 2px solid rgba(255, 80, 80, 0.8);
+  color: rgba(255, 80, 80, 0.8);
+  box-shadow: 0 0 10px rgba(255, 80, 80, 0.8);
+}
+
+.touch-action-btn--mine {
+  border: 2px solid rgba(120, 220, 232, 0.8);
+  color: rgba(120, 220, 232, 0.8);
+  box-shadow: 0 0 10px rgba(120, 220, 232, 0.8);
+}
+
+.touch-action-btn--target {
+  border: 2px solid rgba(255, 215, 0, 0.8);
+  color: rgba(255, 215, 0, 0.8);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+.touch-action-btn--dock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  font-size: 20px;
+  border: 2px solid rgba(51, 153, 255, 0.8);
+  color: rgba(51, 153, 255, 0.8);
+  box-shadow: 0 0 25px rgba(51, 153, 255, 0.8);
+  z-index: 10000;
+  display: none;
+}
+
+.touch-action-btn--dock.touch-action-btn--visible {
+  display: flex;
+  animation: touch-pulse 1.5s infinite;
+}
+
+.touch-action-btn--deploy {
+  border: 2px solid rgba(255, 100, 100, 0.8);
+  color: rgba(255, 100, 100, 0.8);
+  box-shadow: 0 0 10px rgba(255, 100, 100, 0.8);
+}
+
+/* ---------------------------------------------------------------------------
+   Button States
+   --------------------------------------------------------------------------- */
+
+.touch-action-btn--pressed {
+  transform: scale(0.95) translateZ(0);
+}
+
+.touch-action-btn--dock.touch-action-btn--pressed {
+  /* Dock button needs special transform to maintain centering */
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+/* ---------------------------------------------------------------------------
+   Container Visibility
+   --------------------------------------------------------------------------- */
+
+.touch-action-buttons-left--hidden,
+.touch-action-buttons-right--hidden {
+  display: none;
+}
