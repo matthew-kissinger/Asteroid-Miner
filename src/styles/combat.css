@@ -1,0 +1,630 @@
+/* ==========================================================================
+   Combat UI Styles
+   Extracted from inline styles in js/modules/ui/components/combat/
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Combat Container & Layout
+   --------------------------------------------------------------------------- */
+
+.combat-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(6, 22, 31, 0.8);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #ff3030;
+  box-shadow: 0 0 10px rgba(255, 48, 48, 0.5);
+}
+
+.combat-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #ff3030;
+  text-align: center;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------------
+   UI Items (label + value pairs)
+   --------------------------------------------------------------------------- */
+
+.combat-ui-item {
+  margin-bottom: 8px;
+}
+
+.combat-ui-label {
+  display: inline-block;
+  width: 120px;
+  color: #ff3030;
+}
+
+.combat-ui-value {
+  color: #fff;
+  font-weight: bold;
+}
+
+/* ---------------------------------------------------------------------------
+   Shield Section
+   --------------------------------------------------------------------------- */
+
+.combat-shield-container {
+  margin-bottom: 15px;
+}
+
+.combat-shield-label {
+  color: #3399ff;
+  margin-bottom: 5px;
+}
+
+.combat-progress-bar {
+  width: 100%;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.combat-shield-bar-container {
+  width: 100%;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid #3399ff;
+}
+
+.combat-shield-bar {
+  width: 100%;
+  height: 100%;
+  background-color: #3399ff;
+  transition: width 0.3s;
+}
+
+/* ---------------------------------------------------------------------------
+   Value Display
+   --------------------------------------------------------------------------- */
+
+.combat-value-display {
+  text-align: right;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Hull Section
+   --------------------------------------------------------------------------- */
+
+.combat-hull-container {
+  margin-bottom: 15px;
+}
+
+.combat-hull-label {
+  color: #ff9900;
+  margin-bottom: 5px;
+}
+
+.combat-hull-bar-container {
+  width: 100%;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid #ff9900;
+}
+
+.combat-hull-bar {
+  width: 100%;
+  height: 100%;
+  background-color: #ff9900;
+  transition: width 0.3s;
+}
+
+/* ---------------------------------------------------------------------------
+   Weapon Section
+   --------------------------------------------------------------------------- */
+
+.combat-weapon-container {
+  margin-bottom: 15px;
+}
+
+.combat-weapon-label {
+  color: #33ccff;
+  margin-bottom: 5px;
+}
+
+.combat-weapon-mode {
+  margin-bottom: 5px;
+}
+
+.combat-weapon-energy-container {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #33ccff;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.combat-weapon-energy-bar {
+  width: 100%;
+  height: 100%;
+  background-color: #33ccff;
+  transition: width 0.1s;
+}
+
+/* ---------------------------------------------------------------------------
+   Target Section (in sidebar panel)
+   --------------------------------------------------------------------------- */
+
+.combat-target-container {
+  margin-bottom: 15px;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 128, 0, 0.5);
+}
+
+.combat-target-header {
+  color: #ff8000;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.combat-target-info {
+  font-size: 12px;
+  color: #cccccc;
+  display: none;
+}
+
+.combat-target-health-container {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #ff5500;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 5px;
+  display: none;
+}
+
+.combat-target-health-bar {
+  width: 100%;
+  height: 100%;
+  background-color: #ff5500;
+  transition: width 0.3s;
+}
+
+.combat-target-shield-container {
+  width: 100%;
+  height: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #3399ff;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 3px;
+  display: none;
+}
+
+.combat-target-shield-bar {
+  width: 100%;
+  height: 100%;
+  background-color: #3399ff;
+  transition: width 0.3s;
+}
+
+/* ---------------------------------------------------------------------------
+   Special Weapons Section
+   --------------------------------------------------------------------------- */
+
+.combat-special-container {
+  margin-bottom: 15px;
+}
+
+.combat-special-header {
+  color: #33ccff;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.combat-special-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.combat-status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #555555;
+  margin-right: 6px;
+}
+
+.combat-special-name {
+  flex: 1;
+  font-size: 12px;
+}
+
+.combat-cooldown {
+  color: #55ff55;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* ---------------------------------------------------------------------------
+   Status Indicator States (weaponDisplay.ts)
+   --------------------------------------------------------------------------- */
+
+.combat-status-indicator--ready {
+  background-color: #55ff55;
+  box-shadow: 0 0 5px #55ff55;
+}
+
+.combat-status-indicator--cooldown {
+  background-color: #555555;
+  box-shadow: none;
+}
+
+/* Cooldown text states */
+.combat-cooldown--ready {
+  color: #55ff55;
+}
+
+.combat-cooldown--charging {
+  color: #ffcc00;
+}
+
+.combat-cooldown--no-ammo {
+  color: #ff3030;
+}
+
+/* ---------------------------------------------------------------------------
+   Combat Stats Section
+   --------------------------------------------------------------------------- */
+
+.combat-stats-container {
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 48, 48, 0.5);
+  padding-top: 10px;
+}
+
+.combat-stats-title {
+  color: #ff3030;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.combat-stat-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+
+.combat-stat-label {
+  color: #aaaaaa;
+}
+
+.combat-stat-value {
+  color: #ffffff;
+}
+
+/* ---------------------------------------------------------------------------
+   Controls Hint
+   --------------------------------------------------------------------------- */
+
+.combat-controls-hint {
+  font-size: 11px;
+  color: #cccccc;
+  margin-top: 10px;
+}
+
+/* ---------------------------------------------------------------------------
+   Notification Area
+   --------------------------------------------------------------------------- */
+
+.combat-notification {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #ff9900;
+  font-weight: bold;
+  z-index: 1000;
+  display: none;
+  transition: opacity 0.5s;
+}
+
+/* ---------------------------------------------------------------------------
+   Target HUD (overlay on enemies)
+   --------------------------------------------------------------------------- */
+
+.combat-target-hud {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+  width: 100px;
+  height: 100px;
+}
+
+.combat-target-bracket {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: #ff3030;
+  border-style: solid;
+  border-width: 0;
+}
+
+.combat-target-bracket--tl {
+  top: 0;
+  left: 0;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.combat-target-bracket--tr {
+  top: 0;
+  right: 0;
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+
+.combat-target-bracket--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+
+.combat-target-bracket--br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+.combat-target-hud-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #ff3030;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-top: 5px;
+}
+
+.combat-target-hud-health-container {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 3px;
+}
+
+.combat-target-hud-health-bar {
+  width: 100%;
+  height: 100%;
+  background-color: #ff3030;
+}
+
+/* ---------------------------------------------------------------------------
+   Visibility Utility
+   --------------------------------------------------------------------------- */
+
+.combat-hidden {
+  display: none !important;
+}
+
+.combat-visible {
+  display: block !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Damage Numbers & Hit Indicators (from indicators.ts)
+   --------------------------------------------------------------------------- */
+
+.combat-damage-number {
+  position: absolute;
+  font-size: 16px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1000;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  transition: all 1s ease-out;
+}
+
+.combat-damage-number--critical {
+  font-size: 20px;
+}
+
+.combat-damage-number--animate {
+  transform: translateY(-30px);
+  opacity: 0;
+}
+
+.combat-hit-indicator {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 999;
+  transition: all 0.5s ease-out;
+}
+
+.combat-hit-indicator--hit {
+  border: 2px solid #ff3030;
+  box-shadow: 0 0 10px #ff3030;
+}
+
+.combat-hit-indicator--critical {
+  border: 3px solid #ffff00;
+  box-shadow: 0 0 20px #ffff00;
+}
+
+.combat-hit-indicator--shield {
+  border: 2px solid #3399ff;
+  box-shadow: 0 0 15px #3399ff;
+}
+
+.combat-hit-indicator--miss {
+  border: 1px solid #666666;
+  box-shadow: 0 0 5px #666666;
+}
+
+.combat-hit-indicator--animate {
+  transform: scale(1.5);
+  opacity: 0;
+}
+
+.combat-status-effect {
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1000;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  transition: all 1.5s ease-out;
+}
+
+.combat-status-effect--animate {
+  transform: translateY(-40px);
+  opacity: 0;
+}
+
+.combat-emp-effect {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border: 2px solid #00ffff;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 999;
+  box-shadow: 0 0 30px #00ffff;
+  transition: all 0.8s ease-out;
+}
+
+.combat-emp-effect--animate {
+  transform: scale(3);
+  opacity: 0;
+}
+
+.combat-missile-lock {
+  position: absolute;
+  color: #ff5500;
+  font-size: 20px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1000;
+  text-shadow: 0 0 10px #ff5500;
+  animation: combat-pulse 0.5s infinite alternate;
+}
+
+/* ---------------------------------------------------------------------------
+   Target Info Inline Elements (from enemyDisplay.ts)
+   --------------------------------------------------------------------------- */
+
+.combat-target-faction {
+  color: #ff8000;
+}
+
+.combat-target-state {
+  font-size: 11px;
+}
+
+/* Enemy count color states */
+.combat-enemy-count--active {
+  color: #ff3030;
+}
+
+.combat-enemy-count--clear {
+  color: #ffffff;
+}
+
+/* Controls hint heading */
+.combat-controls-heading {
+  margin-bottom: 3px;
+}
+
+/* ---------------------------------------------------------------------------
+   Scan Line (from animations.ts animateTargetLock)
+   --------------------------------------------------------------------------- */
+
+.combat-scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #ff3030;
+  box-shadow: 0 0 10px #ff3030;
+}
+
+/* ---------------------------------------------------------------------------
+   Keyframe Animations (moved from animations.ts setupKeyframes + indicators.ts)
+   --------------------------------------------------------------------------- */
+
+@keyframes combat-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes combat-shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-1px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes combat-glow {
+  0% { box-shadow: 0 0 5px currentColor; }
+  50% { box-shadow: 0 0 20px currentColor; }
+  100% { box-shadow: 0 0 5px currentColor; }
+}
+
+@keyframes combat-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes combat-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes combat-slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes combat-slide-down {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(20px); opacity: 0; }
+}
+
+@keyframes combat-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes combat-warning-flash {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(255, 48, 48, 0.3); }
+  100% { background-color: transparent; }
+}

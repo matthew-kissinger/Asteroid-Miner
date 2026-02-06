@@ -1,4 +1,5 @@
 // animations.ts - Combat animations, visual effects, and transitions
+// Keyframe animations are defined in src/styles/combat.css (combat-pulse, combat-shake, etc.)
 
 export interface ActiveAnimation {
     element: HTMLElement;
@@ -11,70 +12,6 @@ export class CombatAnimations {
 
     constructor() {
         this.activeAnimations = [];
-        this.setupKeyframes();
-    }
-
-    /**
-     * Setup CSS keyframes for animations
-     */
-    setupKeyframes(): void {
-        if (document.querySelector('#combat-animations-keyframes')) return;
-        
-        const style = document.createElement('style');
-        style.id = 'combat-animations-keyframes';
-        style.textContent = `
-            @keyframes pulse {
-                0% { transform: scale(1); opacity: 1; }
-                50% { transform: scale(1.2); opacity: 0.7; }
-                100% { transform: scale(1); opacity: 1; }
-            }
-            
-            @keyframes shake {
-                0% { transform: translateX(0); }
-                25% { transform: translateX(-2px); }
-                50% { transform: translateX(2px); }
-                75% { transform: translateX(-1px); }
-                100% { transform: translateX(0); }
-            }
-            
-            @keyframes glow {
-                0% { box-shadow: 0 0 5px currentColor; }
-                50% { box-shadow: 0 0 20px currentColor; }
-                100% { box-shadow: 0 0 5px currentColor; }
-            }
-            
-            @keyframes fade-in {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            
-            @keyframes fade-out {
-                from { opacity: 1; }
-                to { opacity: 0; }
-            }
-            
-            @keyframes slide-up {
-                from { transform: translateY(20px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-            }
-            
-            @keyframes slide-down {
-                from { transform: translateY(0); opacity: 1; }
-                to { transform: translateY(20px); opacity: 0; }
-            }
-            
-            @keyframes rotate {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-            
-            @keyframes warning-flash {
-                0% { background-color: transparent; }
-                50% { background-color: rgba(255, 48, 48, 0.3); }
-                100% { background-color: transparent; }
-            }
-        `;
-        document.head.appendChild(style);
     }
 
     /**
@@ -164,7 +101,7 @@ export class CombatAnimations {
     pulseElement(element: HTMLElement | null, duration: number = 1000, count: number = 3): void {
         if (!element) return;
         
-        element.style.animation = `pulse ${duration / count}ms ease-in-out ${count}`;
+        element.style.animation = `combat-pulse ${duration / count}ms ease-in-out ${count}`;
         
         setTimeout(() => {
             element.style.animation = '';
@@ -180,25 +117,27 @@ export class CombatAnimations {
     shakeElement(element: HTMLElement | null, intensity: number = 2, duration: number = 500): void {
         if (!element) return;
         
-        const keyframes = `
-            @keyframes shake-${intensity} {
-                0% { transform: translateX(0); }
-                25% { transform: translateX(-${intensity}px); }
-                50% { transform: translateX(${intensity}px); }
-                75% { transform: translateX(-${intensity / 2}px); }
-                100% { transform: translateX(0); }
+        // For custom intensity, inject a dynamic keyframe
+        if (intensity !== 2) {
+            const keyframeId = `combat-shake-${intensity}-keyframes`;
+            if (!document.querySelector(`#${keyframeId}`)) {
+                const style = document.createElement('style');
+                style.id = keyframeId;
+                style.textContent = `
+                    @keyframes combat-shake-${intensity} {
+                        0% { transform: translateX(0); }
+                        25% { transform: translateX(-${intensity}px); }
+                        50% { transform: translateX(${intensity}px); }
+                        75% { transform: translateX(-${intensity / 2}px); }
+                        100% { transform: translateX(0); }
+                    }
+                `;
+                document.head.appendChild(style);
             }
-        `;
-        
-        // Add keyframes if not exists
-        if (!document.querySelector(`#shake-${intensity}-keyframes`)) {
-            const style = document.createElement('style');
-            style.id = `shake-${intensity}-keyframes`;
-            style.textContent = keyframes;
-            document.head.appendChild(style);
+            element.style.animation = `combat-shake-${intensity} ${duration}ms ease-in-out`;
+        } else {
+            element.style.animation = `combat-shake ${duration}ms ease-in-out`;
         }
-        
-        element.style.animation = `shake-${intensity} ${duration}ms ease-in-out`;
         
         setTimeout(() => {
             element.style.animation = '';
@@ -215,7 +154,7 @@ export class CombatAnimations {
         if (!element) return;
         
         const originalBoxShadow = element.style.boxShadow;
-        element.style.animation = 'glow 1s ease-in-out infinite';
+        element.style.animation = 'combat-glow 1s ease-in-out infinite';
         element.style.setProperty('--glow-color', color);
         
         setTimeout(() => {
@@ -235,7 +174,7 @@ export class CombatAnimations {
         
         let flashCount = 0;
         const flashInterval = setInterval(() => {
-            element.style.animation = `warning-flash ${speed}ms ease-in-out`;
+            element.style.animation = `combat-warning-flash ${speed}ms ease-in-out`;
             flashCount++;
             
             if (flashCount >= count) {
@@ -255,13 +194,11 @@ export class CombatAnimations {
     fadeIn(element: HTMLElement | null, duration: number = 500): void {
         if (!element) return;
         
-        element.style.opacity = '0';
-        element.style.display = 'block';
-        element.style.animation = `fade-in ${duration}ms ease-out forwards`;
+        element.classList.remove('combat-hidden');
+        element.style.animation = `combat-fade-in ${duration}ms ease-out forwards`;
         
         setTimeout(() => {
             element.style.animation = '';
-            element.style.opacity = '1';
         }, duration);
     }
 
@@ -274,14 +211,13 @@ export class CombatAnimations {
     fadeOut(element: HTMLElement | null, duration: number = 500, hideAfter: boolean = true): void {
         if (!element) return;
         
-        element.style.animation = `fade-out ${duration}ms ease-out forwards`;
+        element.style.animation = `combat-fade-out ${duration}ms ease-out forwards`;
         
         setTimeout(() => {
             element.style.animation = '';
             if (hideAfter) {
-                element.style.display = 'none';
+                element.classList.add('combat-hidden');
             }
-            element.style.opacity = '0';
         }, duration);
     }
 
@@ -293,7 +229,7 @@ export class CombatAnimations {
     slideUp(element: HTMLElement | null, duration: number = 300): void {
         if (!element) return;
         
-        element.style.animation = `slide-up ${duration}ms ease-out forwards`;
+        element.style.animation = `combat-slide-up ${duration}ms ease-out forwards`;
         
         setTimeout(() => {
             element.style.animation = '';
@@ -308,11 +244,11 @@ export class CombatAnimations {
     slideDown(element: HTMLElement | null, duration: number = 300): void {
         if (!element) return;
         
-        element.style.animation = `slide-down ${duration}ms ease-in forwards`;
+        element.style.animation = `combat-slide-down ${duration}ms ease-in forwards`;
         
         setTimeout(() => {
             element.style.animation = '';
-            element.style.display = 'none';
+            element.classList.add('combat-hidden');
         }, duration);
     }
 
@@ -325,7 +261,7 @@ export class CombatAnimations {
     rotateElement(element: HTMLElement | null, duration: number = 1000, infinite: boolean = false): void {
         if (!element) return;
         
-        const animation = `rotate ${duration}ms linear ${infinite ? 'infinite' : '1'}`;
+        const animation = `combat-rotate ${duration}ms linear ${infinite ? 'infinite' : '1'}`;
         element.style.animation = animation;
         
         if (!infinite) {
@@ -393,14 +329,8 @@ export class CombatAnimations {
         
         // Add scanning lines effect
         const scanLine = document.createElement('div');
-        scanLine.style.position = 'absolute';
-        scanLine.style.top = '0';
-        scanLine.style.left = '0';
-        scanLine.style.width = '100%';
-        scanLine.style.height = '2px';
-        scanLine.style.backgroundColor = '#ff3030';
-        scanLine.style.boxShadow = '0 0 10px #ff3030';
-        scanLine.style.animation = 'slide-down 1s ease-in-out 3';
+        scanLine.classList.add('combat-scan-line');
+        scanLine.style.animation = 'combat-slide-down 1s ease-in-out 3';
         
         targetElement.appendChild(scanLine);
         

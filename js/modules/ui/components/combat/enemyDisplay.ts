@@ -1,4 +1,5 @@
 // enemyDisplay.ts - Enemy health bars, status displays, and target tracking
+// Base styles are in src/styles/combat.css
 
 import { combatStyles } from './styles';
 
@@ -123,12 +124,11 @@ export class EnemyDisplay {
         // Check if we have a target
         if (!currentTarget || !this.isTargetValid(currentTarget)) {
             // No target or invalid target - hide it if we were showing combat info
-            // Only hide if it's currently showing combat info (has the enemy div structure)
             if (targetInfo.innerHTML.includes('State:')) {
-                targetInfo.style.display = 'none';
+                targetInfo.classList.add('combat-hidden');
             }
-            targetHealthContainer.style.display = 'none';
-            targetShieldContainer.style.display = 'none';
+            targetHealthContainer.classList.add('combat-hidden');
+            targetShieldContainer.classList.add('combat-hidden');
             return;
         }
         
@@ -138,8 +138,8 @@ export class EnemyDisplay {
         
         if (!enemyAI || !health) {
             // Don't modify target-info, let targeting system control it
-            targetHealthContainer.style.display = 'none';
-            targetShieldContainer.style.display = 'none';
+            targetHealthContainer.classList.add('combat-hidden');
+            targetShieldContainer.classList.add('combat-hidden');
             return;
         }
         
@@ -147,32 +147,32 @@ export class EnemyDisplay {
         const faction = enemyAI.faction.charAt(0).toUpperCase() + enemyAI.faction.slice(1);
         const type = enemyAI.type.charAt(0).toUpperCase() + enemyAI.type.slice(1);
         targetInfo.innerHTML = `
-            <div style="color:#ff8000">${faction} ${type}</div>
-            <div style="font-size:11px">State: ${enemyAI.currentState.toUpperCase()}</div>
+            <div class="combat-target-faction">${faction} ${type}</div>
+            <div class="combat-target-state">State: ${enemyAI.currentState.toUpperCase()}</div>
         `;
-        targetInfo.style.display = 'block'; // Show when we have a combat target
+        targetInfo.classList.remove('combat-hidden');
         
-        // Update health bar
+        // Update health bar (dynamic width and color)
         const healthPercent = health.getHealthPercentage();
-        targetHealthContainer.style.display = 'block';
+        targetHealthContainer.classList.remove('combat-hidden');
         targetHealthBar.style.width = `${healthPercent}%`;
         
         // Change health bar color based on percentage
         if (healthPercent < 25) {
-            targetHealthBar.style.backgroundColor = '#ff3030'; // Red for critical health
+            targetHealthBar.style.backgroundColor = '#ff3030';
         } else if (healthPercent < 50) {
-            targetHealthBar.style.backgroundColor = '#ffcc00'; // Yellow for damaged
+            targetHealthBar.style.backgroundColor = '#ffcc00';
         } else {
-            targetHealthBar.style.backgroundColor = '#ff5500'; // Orange for healthy
+            targetHealthBar.style.backgroundColor = '#ff5500';
         }
         
         // Update shield bar if target has shields
         if (health.maxShield > 0) {
             const shieldPercent = health.getShieldPercentage();
-            targetShieldContainer.style.display = 'block';
+            targetShieldContainer.classList.remove('combat-hidden');
             targetShieldBar.style.width = `${shieldPercent}%`;
         } else {
-            targetShieldContainer.style.display = 'none';
+            targetShieldContainer.classList.add('combat-hidden');
         }
     }
 
@@ -192,7 +192,7 @@ export class EnemyDisplay {
         
         // Hide target HUD if no target or invalid target
         if (!currentTarget || !this.isTargetValid(currentTarget)) {
-            targetHUD.style.display = 'none';
+            targetHUD.classList.add('combat-hidden');
             return;
         }
         
@@ -202,7 +202,7 @@ export class EnemyDisplay {
         const transform = currentTarget.getComponent('TransformComponent');
         
         if (!enemyAI || !health || !transform) {
-            targetHUD.style.display = 'none';
+            targetHUD.classList.add('combat-hidden');
             return;
         }
         
@@ -210,33 +210,31 @@ export class EnemyDisplay {
         const screenPosition = worldToScreen(transform.position);
         
         if (!screenPosition) {
-            targetHUD.style.display = 'none';
+            targetHUD.classList.add('combat-hidden');
             return;
         }
         
-        // Position target HUD
+        // Position target HUD (dynamic positioning - width/height set via CSS)
+        targetHUD.classList.remove('combat-hidden');
         targetHUD.style.display = 'block';
         targetHUD.style.left = `${screenPosition.x - 50}px`;
         targetHUD.style.top = `${screenPosition.y - 50}px`;
-        targetHUD.style.width = '100px';
-        targetHUD.style.height = '100px';
         
         // Update label
         const faction = enemyAI.faction.charAt(0).toUpperCase() + enemyAI.faction.slice(1);
         const type = enemyAI.type.charAt(0).toUpperCase() + enemyAI.type.slice(1);
         targetHUDLabel.textContent = `${faction} ${type}`;
         
-        // Update health bar
+        // Update health bar (dynamic width and color)
         const healthPercent = health.getHealthPercentage();
         targetHUDHealth.style.width = `${healthPercent}%`;
         
-        // Change health bar color based on percentage
         if (healthPercent < 25) {
-            targetHUDHealth.style.backgroundColor = '#ff3030'; // Red for critical health
+            targetHUDHealth.style.backgroundColor = '#ff3030';
         } else if (healthPercent < 50) {
-            targetHUDHealth.style.backgroundColor = '#ffcc00'; // Yellow for damaged
+            targetHUDHealth.style.backgroundColor = '#ffcc00';
         } else {
-            targetHUDHealth.style.backgroundColor = '#ff5500'; // Orange for healthy
+            targetHUDHealth.style.backgroundColor = '#ff5500';
         }
     }
 
@@ -290,9 +288,11 @@ export class EnemyDisplay {
         
         // Highlight when enemies are present
         if (enemyCount > 0) {
-            enemyCountElement.style.color = '#ff3030';
+            enemyCountElement.classList.remove('combat-enemy-count--clear');
+            enemyCountElement.classList.add('combat-enemy-count--active');
         } else {
-            enemyCountElement.style.color = '#ffffff';
+            enemyCountElement.classList.remove('combat-enemy-count--active');
+            enemyCountElement.classList.add('combat-enemy-count--clear');
         }
     }
 
@@ -302,7 +302,7 @@ export class EnemyDisplay {
     hide(): void {
         const targetHUD = document.getElementById('target-hud');
         if (targetHUD) {
-            targetHUD.style.display = 'none';
+            targetHUD.classList.add('combat-hidden');
         }
     }
 }

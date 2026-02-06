@@ -100,7 +100,7 @@ export class CombatHelpers {
         const controlsHint = document.createElement('div');
         styles.applyControlsHintStyles(controlsHint);
         controlsHint.innerHTML = `
-            <div style="margin-bottom:3px;">COMBAT CONTROLS:</div>
+            <div class="combat-controls-heading">COMBAT CONTROLS:</div>
             <div>• RMB: Fire Primary</div>
             <div>• MMB: Fire Secondary/Missile</div>
             <div>• Z: Shield</div>

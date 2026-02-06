@@ -1,4 +1,5 @@
 // weaponDisplay.ts - Weapon status, ammo, cooldowns, and special systems
+// Base styles are in src/styles/combat.css
 
 import { combatStyles } from './styles';
 
@@ -15,6 +16,15 @@ export interface WeaponComponent {
     shield?: number;
     getShieldPercentage?: () => number;
     getCooldownProgress?: () => number;
+}
+
+/** Helper to swap between mutually-exclusive modifier classes */
+function setModifierClass(el: HTMLElement, prefix: string, modifier: string): void {
+    // Remove any existing modifier with this prefix
+    const toRemove: string[] = [];
+    el.classList.forEach(c => { if (c.startsWith(prefix)) toRemove.push(c); });
+    toRemove.forEach(c => el.classList.remove(c));
+    el.classList.add(`${prefix}${modifier}`);
 }
 
 export class WeaponDisplay {
@@ -182,16 +192,14 @@ export class WeaponDisplay {
             maxEnergy = weaponInfo.maxEnergy;
         }
         
-        // Update weapon mode display
+        // Update weapon mode display (dynamic color per weapon type)
         weaponMode.textContent = weaponName;
         weaponMode.style.color = weaponColor;
         
-        // Update energy bar
+        // Update energy bar (dynamic width and color)
         const energyPercent = (energy / maxEnergy) * 100;
         weaponEnergyBar.style.width = `${energyPercent}%`;
         energyValue.textContent = `${Math.round(energy)}/${Math.round(maxEnergy)}`;
-        
-        // Set energy bar color to match weapon
         weaponEnergyBar.style.backgroundColor = weaponColor;
     }
 
@@ -256,13 +264,13 @@ export class WeaponDisplay {
                 if (cooldownText) {
                     if ((component.ammo || 0) <= 0) {
                         cooldownText.textContent = 'NO AMMO';
-                        cooldownText.style.color = '#ff3030';
+                        setModifierClass(cooldownText, 'combat-cooldown--', 'no-ammo');
                     } else if (!isReady) {
                         cooldownText.textContent = 'LOADING';
-                        cooldownText.style.color = '#ffcc00';
+                        setModifierClass(cooldownText, 'combat-cooldown--', 'charging');
                     } else {
                         cooldownText.textContent = `${component.ammo}/${component.maxAmmo}`;
-                        cooldownText.style.color = '#55ff55';
+                        setModifierClass(cooldownText, 'combat-cooldown--', 'ready');
                     }
                     
                     // Skip rest of function as we've already set the text
@@ -271,30 +279,36 @@ export class WeaponDisplay {
             }
         }
         
-        // Update status indicator color
+        // Update status indicator
         if (isActive) {
-            // Active
-            statusIndicator.style.backgroundColor = this.getColorForSpecialWeapon(id);
-            statusIndicator.style.boxShadow = `0 0 5px ${this.getColorForSpecialWeapon(id)}`;
+            // Active - use dynamic color per weapon type (can't be a static class)
+            const activeColor = this.getColorForSpecialWeapon(id);
+            statusIndicator.style.backgroundColor = activeColor;
+            statusIndicator.style.boxShadow = `0 0 5px ${activeColor}`;
+            statusIndicator.classList.remove('combat-status-indicator--ready', 'combat-status-indicator--cooldown');
         } else if (isReady) {
             // Ready but not active
-            statusIndicator.style.backgroundColor = '#55ff55';
-            statusIndicator.style.boxShadow = '0 0 5px #55ff55';
+            statusIndicator.classList.remove('combat-status-indicator--cooldown');
+            statusIndicator.classList.add('combat-status-indicator--ready');
+            statusIndicator.style.backgroundColor = '';
+            statusIndicator.style.boxShadow = '';
         } else {
             // Cooling down
-            statusIndicator.style.backgroundColor = '#555555';
-            statusIndicator.style.boxShadow = 'none';
+            statusIndicator.classList.remove('combat-status-indicator--ready');
+            statusIndicator.classList.add('combat-status-indicator--cooldown');
+            statusIndicator.style.backgroundColor = '';
+            statusIndicator.style.boxShadow = '';
         }
         
         // Update cooldown text
         if (cooldownProgress >= 1) {
             cooldownText.textContent = 'READY';
-            cooldownText.style.color = '#55ff55';
+            setModifierClass(cooldownText, 'combat-cooldown--', 'ready');
         } else {
             // Show percentage
             const percent = Math.floor(cooldownProgress * 100);
             cooldownText.textContent = `${percent}%`;
-            cooldownText.style.color = '#ffcc00';
+            setModifierClass(cooldownText, 'combat-cooldown--', 'charging');
         }
     }
 
