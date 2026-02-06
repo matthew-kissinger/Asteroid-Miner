@@ -15,11 +15,12 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 - Build succeeds, typecheck passes with 0 errors
 - Code splitting: game-core 182 kB, combat 27 kB, env 62 kB, ui 65 kB
 - Vite 6 + Tailwind CSS 3.4 + PostCSS installed and configured
-- 12 CSS files extracted (56.7 KB total) - combat, mobile-hud, touch-controls, blackjack, game-over, settings, starmap, hud, targeting, controls, trading, main.css
-- ~793 inline `.style.` usages remain across 65 files
+- 15 CSS files extracted (92 KB total) - combat, mobile-hud, touch-controls, blackjack, game-over, settings, starmap, hud, targeting, controls, trading, intro, lock-on, stargate, main.css
+- ~700 inline `.style.` usages remain across 64 files
 - physics.ts window.game globals removed via dependency injection (77fdb44)
-- Vitest: 6 test files, 33 tests (31 passing, 2 failing - enemy AI separation test bug)
+- Vitest: 6 test files, 33 tests (all passing)
 - CI/CD fixed (ddecf48) - targets master, Node 20, typecheck + test gate, actions/checkout@v4
+- serve-static removed from package.json (unused dependency)
 
 **Phase 4 Completed Features:**
 - Lock-on targeting: target reticle, lead indicator, health bar (ad26e0c)
@@ -88,13 +89,14 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 
 **Remaining Problems:**
 - **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment. (GitHub Pages deployment task completed - verify at live URL)
-- ~~**CI/CD broken**~~ RESOLVED - deploy.yml fixed (ddecf48): targets master, Node 20, checkout@v4, setup-node@v4, typecheck + test gates. But **test gate will block deploy** until 2 failing enemy AI separation tests are fixed.
+- ~~**CI/CD broken**~~ RESOLVED - deploy.yml fixed (ddecf48): targets master, Node 20, checkout@v4, setup-node@v4, typecheck + test gates. All tests passing (be53519).
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
 - **Global state** - ~213 non-API `window.*` usages across ~45 files (down from ~264). js/globals/ module created. physics.ts cleaned up (77fdb44), enemyAISystem cleaned up (4a8b9cc). Top remaining: src/main.ts (17), diagnostics.ts (16), starMap.ts (8), mobileHUD.ts (8).
 - ~~**Dead legacy ECS code**~~ RESOLVED - 7 orphaned files + optimized/ + spatial/ deleted (d9d648f). Only 3 active files remain: messageBus.ts, world.ts, events.ts.
-- **Inline styles** - ~965 `.style.` manipulations across 68 files. 8 CSS files extracted (46.3 KB). Top remaining: ui.ts (49), tradingView.ts (42), targetingUI.ts (39), combat/animations.ts (38), blackjack/gameView.ts (37), controls.ts (32), src/main.ts (29).
-- **Test coverage growing** - 6 test files, 33 tests (31 passing). ECS world, components, physics, combat, AI, mining covered. 2 enemy AI separation tests failing (test bug: distance 30 > threshold 25). Render sync has zero test coverage.
-- **Unused dependency** - `serve-static` in package.json is not imported anywhere.
+- **Inline styles** - ~700 `.style.` manipulations across 64 files. 15 CSS files extracted (92 KB). Top remaining: customSystem/validation.ts (27), stateManager.ts (27), gamepadHandler.ts (27), targetingSystem.ts (25), mining/uiUpdates.ts (25), controlsMenu.ts (23), blackjack/eventHandlers.ts (19), docking/dockingLogic.ts (19).
+- **Test coverage growing** - 6 test files, 33 tests (all passing). ECS world, components, physics, combat, AI, mining covered. Render sync has zero test coverage.
+- **Global state** - ~180 non-API `window.*` usages across ~40 files. Top: src/main.ts (17), diagnostics.ts (16), renderer.ts (9), statusIndicators.ts (9), starMap.ts (8), mobileHUD.ts (8).
+- ~~**Unused dependency**~~ RESOLVED - `serve-static` removed from package.json.
 
 ## Target Stack (2026 Best Practices)
 
@@ -107,7 +109,7 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 | Physics | Custom Newtonian (bitECS) | **Keep custom** (cleaned up) | Done |
 | Particles | CPU-based | **WebGPU Compute Shaders** | - |
 | Build | Vite 6 | **Vite 6** | **COMPLETE** |
-| UI | Inline styles + CSS (combat migrating) | **CSS/Tailwind** | **Active** |
+| UI | 15 CSS files (92 KB), ~700 inline remain | **CSS/Tailwind** | **Active** |
 
 ### Why This Stack
 
@@ -275,7 +277,7 @@ Health.current[eid] = Health.max[eid]
 ### Phase 5: HUD Overhaul - IN PROGRESS
 1. ~~Install Tailwind CSS + PostCSS + autoprefixer, configure with Vite~~ Done (2b45218)
 2. ~~Delete dead legacy ECS code (7 orphaned files + optimized/ + spatial/ in js/core/)~~ Done (d9d648f)
-3. Migrate inline styles to CSS classes - ~965 remaining across 68 files
+3. Migrate inline styles to CSS classes - ~700 remaining across 64 files (down from ~965)
    - ~~combat/ CSS extracted to src/styles/combat.css (630 lines)~~ Done (ce67697)
    - ~~mobileHUD.ts CSS extracted to src/styles/mobile-hud.css (254 lines)~~ Done (ce67697)
    - ~~touch-controls.ts CSS extracted to src/styles/touch-controls.css~~ Done
@@ -288,7 +290,12 @@ Health.current[eid] = Health.max[eid]
    - ~~tradingView.ts + blackjack/gameView.ts CSS extracted~~ Done (86203fc)
    - ~~controls.ts CSS extracted~~ Done (3d0688f)
    - ~~HUD + targeting CSS extracted~~ Done (12f68c9, e4ac885)
-   - Priority: combat/animations.ts (38), lockOnDisplay.ts (29), customSystem/validation.ts (27), stateManager.ts (27), gamepadHandler.ts (27), stargate/screen.ts (26), stargate/helpers.ts (25), introSequence.ts (25)
+   - ~~combat/animations + lockOnDisplay CSS extracted~~ Done (c04a15c)
+   - ~~intro subsystem CSS extracted to src/styles/intro.css~~ Done (cc62d0a)
+   - ~~stargate CSS extracted to src/styles/stargate.css~~ Done (96b0ba0)
+   - ~~serve-static removed from package.json~~ Done (bf436d8d)
+   - ~~Enemy AI separation tests fixed~~ Done (be53519)
+   - Priority: customSystem/validation.ts (27), stateManager.ts (27), gamepadHandler.ts (27), targetingSystem.ts (25), mining/uiUpdates.ts (25), controlsMenu.ts (23), blackjack/eventHandlers.ts (19), docking/dockingLogic.ts (19), audio/mobile/enabler.ts (19)
 4. Clean, minimal aesthetic
 5. Contextual UI (only show what's relevant)
 6. Mining progress with satisfying feedback
@@ -344,8 +351,7 @@ Current (package.json):
 {
   "dependencies": {
     "bitecs": "^0.4.0",
-    "three": "^0.180.0",
-    "serve-static": "^2.2.0"
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@types/three": "^0.180.0",
@@ -369,8 +375,21 @@ src/
 ├── global.d.ts          # Window interface extensions
 ├── three-imports.ts     # Centralized Three.js imports
 └── styles/
-    ├── main.css         # Tailwind directives + imports + theme vars
-    └── combat.css       # Combat UI styles (extracted from inline)
+    ├── main.css         # Tailwind directives + 14 @imports + theme vars
+    ├── combat.css       # Combat UI styles (630 lines)
+    ├── mobile-hud.css   # Mobile HUD styles
+    ├── touch-controls.css # Touch controls styles
+    ├── blackjack.css    # Blackjack minigame styles
+    ├── game-over.css    # Game over screen styles
+    ├── settings.css     # Settings menu styles
+    ├── starmap.css      # Star map styles
+    ├── hud.css          # HUD display styles
+    ├── targeting.css    # Targeting UI styles
+    ├── controls.css     # Controls menu styles
+    ├── trading.css      # Trading view styles
+    ├── intro.css        # Intro sequence styles
+    ├── lock-on.css      # Lock-on display styles
+    └── stargate.css     # Stargate interface styles
 
 js/
 ├── main.ts              # Game class, main loop (calls initECS/updateECS)
