@@ -15,7 +15,10 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 - Build succeeds, typecheck passes with 0 errors
 - Code splitting: game-core 184 kB, combat 27 kB, env 62 kB, ui 68 kB
 - Vite 6 + Tailwind CSS 3.4 + PostCSS installed and configured
-- Combat CSS migration in progress (src/styles/combat.css, 631 lines)
+- Combat CSS migration done (src/styles/combat.css, 630 lines) - uncommitted
+- Mobile HUD CSS migration done (src/styles/mobile-hud.css, 254 lines) - uncommitted
+- physics.ts window.game globals removed via dependency injection (77fdb44)
+- Vitest smoke tests: 3 test files, 10 tests passing (58f5fce)
 
 **Phase 4 Completed Features:**
 - Lock-on targeting: target reticle, lead indicator, health bar (ad26e0c)
@@ -85,9 +88,9 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 **Remaining Problems:**
 - **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment. (GitHub Pages deployment task completed - verify at live URL)
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
-- **Global state** - ~216 `window.*` usages remain across ~64 files. js/globals/ module created. enemyAISystem window.game refs moved to ecsRunner.ts via dependency injection (4a8b9cc). Top offenders: physics.ts (20), diagnostics.ts (16), renderer.ts (9). Gradual migration to proper imports ongoing.
+- **Global state** - ~264 `window.*` usages across ~64 files. js/globals/ module created. physics.ts cleaned up (77fdb44), enemyAISystem cleaned up (4a8b9cc). Top remaining: src/main.ts (17), diagnostics.ts (17), renderer.ts (14), starMap.ts (13). Many are legitimate browser APIs.
 - ~~**Dead legacy ECS code**~~ RESOLVED - 7 orphaned files + optimized/ + spatial/ deleted (d9d648f). Only 3 active files remain: messageBus.ts, world.ts, events.ts.
-- **Inline styles** - ~777 inline style manipulations across 40+ UI files (down from ~1,605). Combat CSS migration in progress (src/styles/combat.css). Top remaining: mobileHUD.ts (126), blackjack/animations.ts (60), starmap/uiCreator.ts (55). Tailwind CSS + PostCSS installed and configured (2b45218).
+- **Inline styles** - ~1,161 `.style.` manipulations across 71 files (combat + mobileHUD migrated but uncommitted). Top remaining: actionButtons.ts (72), blackjack/animations.ts (60), starmap/uiCreator.ts (55), ui.ts (49), gameOverScreen.ts (42). Tailwind CSS + PostCSS installed and configured (2b45218).
 
 ## Target Stack (2026 Best Practices)
 
@@ -268,9 +271,10 @@ Health.current[eid] = Health.max[eid]
 ### Phase 5: HUD Overhaul - IN PROGRESS
 1. ~~Install Tailwind CSS + PostCSS + autoprefixer, configure with Vite~~ Done (2b45218)
 2. ~~Delete dead legacy ECS code (7 orphaned files + optimized/ + spatial/ in js/core/)~~ Done (d9d648f)
-3. Migrate inline styles to CSS classes - ~777 remaining across 40+ files
-   - ~~combat/ CSS extracted to src/styles/combat.css~~ In progress (6 files modified, uncommitted)
-   - Priority: mobileHUD.ts (126), blackjack/animations.ts (60), starmap/uiCreator.ts (55)
+3. Migrate inline styles to CSS classes - ~1,161 remaining across 71 files
+   - ~~combat/ CSS extracted to src/styles/combat.css (630 lines)~~ Done (uncommitted)
+   - ~~mobileHUD.ts CSS extracted to src/styles/mobile-hud.css (254 lines)~~ Done (uncommitted)
+   - Priority: actionButtons.ts (72), blackjack/animations.ts (60), starmap/uiCreator.ts (55), ui.ts (49), gameOverScreen.ts (42)
 4. Clean, minimal aesthetic
 5. Contextual UI (only show what's relevant)
 6. Mining progress with satisfying feedback
