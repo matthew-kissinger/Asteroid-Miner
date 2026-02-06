@@ -1,0 +1,85 @@
+/* ==========================================================================
+   HUD UI Styles
+   Extracted from inline styles in js/modules/ui.ts
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Notifications
+   --------------------------------------------------------------------------- */
+
+.hud-notification {
+  background-color: rgba(6, 22, 31, 0.7);
+  backdrop-filter: blur(5px);
+  color: rgba(120, 220, 232, 0.9);
+  padding: 8px 15px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(120, 220, 232, 0.3);
+  box-shadow: 0 0 10px rgba(120, 220, 232, 0.2);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.hud-notification-visible {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Performance Stats (Debug)
+   --------------------------------------------------------------------------- */
+
+.hud-perf-stats {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #0ff;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  border-radius: 4px;
+  z-index: 1000;
+  max-width: 300px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   Fallback Game Over Screen
+   --------------------------------------------------------------------------- */
+
+.hud-fallback-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.hud-fallback-title {
+  color: #ff3030;
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.hud-fallback-text {
+  color: #fff;
+  font-size: 24px;
+  margin-bottom: 30px;
+}
+
+.hud-fallback-button {
+  padding: 15px 30px;
+  background-color: #ff3030;
+  color: #fff;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: 5px;
+}

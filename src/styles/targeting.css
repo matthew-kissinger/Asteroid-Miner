@@ -1,0 +1,105 @@
+/* ==========================================================================
+   Targeting UI Styles
+   Extracted from inline styles in js/modules/ui/targetingUI.ts
+   ========================================================================== */
+
+.targeting-lock-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150px;
+  height: 150px;
+  transform: translate(-50%, -50%);
+  border: 2px dashed #ff0000;
+  border-radius: 50%;
+  box-sizing: border-box;
+  display: none;
+  z-index: 997;
+  pointer-events: none;
+}
+
+.targeting-diagonal-lines {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.targeting-line-v-top {
+  position: absolute;
+  width: 2px;
+  height: 30px;
+  background-color: #ff0000;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.targeting-line-v-bottom {
+  position: absolute;
+  width: 2px;
+  height: 30px;
+  background-color: #ff0000;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.targeting-line-h-left {
+  position: absolute;
+  width: 30px;
+  height: 2px;
+  background-color: #ff0000;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.targeting-line-h-right {
+  position: absolute;
+  width: 30px;
+  height: 2px;
+  background-color: #ff0000;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.targeting-info-panel {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  text-align: center;
+  background-color: rgba(255, 50, 50, 0.4);
+  border: 1px solid #ff3030;
+  border-radius: 10px;
+  padding: 8px;
+  color: #ffffff;
+  font-family: monospace;
+  z-index: 100;
+  display: none;
+  box-shadow: 0 0 10px #ff3030;
+}
+
+.targeting-label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.targeting-resource {
+  color: #ffcc00;
+}
+
+/* Pulse animation for lock-on */
+@keyframes targetPulse {
+  0% { box-shadow: 0 0 10px #ff3030; }
+  50% { box-shadow: 0 0 20px #ff3030; }
+  100% { box-shadow: 0 0 10px #ff3030; }
+}
+
+.targeting-pulse {
+  animation: targetPulse 2s infinite;
+}

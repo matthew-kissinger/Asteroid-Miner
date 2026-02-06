@@ -9,60 +9,31 @@ export class TargetingUI {
         // Create lock-on display
         const lockOnDisplay = document.createElement('div');
         lockOnDisplay.id = 'lock-on-display';
-        lockOnDisplay.style.position = 'absolute';
-        lockOnDisplay.style.top = '50%';
-        lockOnDisplay.style.left = '50%';
-        lockOnDisplay.style.width = '150px';
-        lockOnDisplay.style.height = '150px';
-        lockOnDisplay.style.transform = 'translate(-50%, -50%)';
-        lockOnDisplay.style.border = '2px dashed #ff0000';
-        lockOnDisplay.style.borderRadius = '50%';
-        lockOnDisplay.style.boxSizing = 'border-box';
-        lockOnDisplay.style.display = 'none';
-        lockOnDisplay.style.zIndex = '997';
-        lockOnDisplay.style.pointerEvents = 'none';
+        lockOnDisplay.classList.add('targeting-lock-display');
         document.body.appendChild(lockOnDisplay);
         
         // Add diagonal lines for better targeting visual
         const diagonalLines = document.createElement('div');
-        diagonalLines.style.position = 'absolute';
-        diagonalLines.style.width = '100%';
-        diagonalLines.style.height = '100%';
-        diagonalLines.style.top = '0';
-        diagonalLines.style.left = '0';
+        diagonalLines.classList.add('targeting-diagonal-lines');
         diagonalLines.innerHTML = `
-            <div style="position: absolute; width: 2px; height: 30px; background-color: #ff0000; top: 0; left: 50%; transform: translateX(-50%);"></div>
-            <div style="position: absolute; width: 2px; height: 30px; background-color: #ff0000; bottom: 0; left: 50%; transform: translateX(-50%);"></div>
-            <div style="position: absolute; width: 30px; height: 2px; background-color: #ff0000; left: 0; top: 50%; transform: translateY(-50%);"></div>
-            <div style="position: absolute; width: 30px; height: 2px; background-color: #ff0000; right: 0; top: 50%; transform: translateY(-50%);"></div>
+            <div class="targeting-line-v-top"></div>
+            <div class="targeting-line-v-bottom"></div>
+            <div class="targeting-line-h-left"></div>
+            <div class="targeting-line-h-right"></div>
         `;
         lockOnDisplay.appendChild(diagonalLines);
         
         // Create target indicator for lock-on 
         const targetIndicator = document.createElement('div');
         targetIndicator.id = 'target-indicator';
-        targetIndicator.style.position = 'absolute';
-        targetIndicator.style.bottom = '120px';
-        targetIndicator.style.left = '50%';
-        targetIndicator.style.transform = 'translateX(-50%)';
-        targetIndicator.style.width = '200px';
-        targetIndicator.style.textAlign = 'center';
-        targetIndicator.style.backgroundColor = 'rgba(255, 50, 50, 0.4)';
-        targetIndicator.style.border = '1px solid #ff3030';
-        targetIndicator.style.borderRadius = '10px';
-        targetIndicator.style.padding = '8px';
-        targetIndicator.style.color = '#ffffff';
-        targetIndicator.style.fontFamily = 'monospace';
-        targetIndicator.style.zIndex = '100';
-        targetIndicator.style.display = 'none';
-        targetIndicator.style.boxShadow = '0 0 10px #ff3030';
+        targetIndicator.classList.add('targeting-info-panel');
         
         // Add targeting information
         targetIndicator.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 5px;">◎ TARGET LOCKED ◎</div>
+            <div class="targeting-label">◎ TARGET LOCKED ◎</div>
             <div id="target-type">Asteroid</div>
             <div id="target-distance">Distance: 0 units</div>
-            <div id="target-resource" style="color: #ffcc00;">Resource: Unknown</div>
+            <div id="target-resource" class="targeting-resource">Resource: Unknown</div>
         `;
         
         document.body.appendChild(targetIndicator);
@@ -121,27 +92,13 @@ export class TargetingUI {
     // Add a subtle pulse animation to the target indicator
     addPulseEffect(element: HTMLElement): void {
         // Remove any existing animation
-        element.style.animation = 'none';
+        element.classList.remove('targeting-pulse');
         
         // Force reflow
         void element.offsetWidth;
         
         // Add pulse animation
-        element.style.animation = 'targetPulse 2s infinite';
-        
-        // Add CSS keyframes if not already present
-        if (!document.getElementById('targeting-keyframes')) {
-            const style = document.createElement('style');
-            style.id = 'targeting-keyframes';
-            style.textContent = `
-                @keyframes targetPulse {
-                    0% { box-shadow: 0 0 10px #ff3030; }
-                    50% { box-shadow: 0 0 20px #ff3030; }
-                    100% { box-shadow: 0 0 10px #ff3030; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
+        element.classList.add('targeting-pulse');
     }
     
     hideTargetInfo(): void {

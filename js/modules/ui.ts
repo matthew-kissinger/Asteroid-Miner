@@ -487,30 +487,19 @@ export class UI {
         if (!notificationsArea) return;
         
         const notification = document.createElement('div');
-        notification.className = 'notification';
+        notification.className = 'hud-notification';
         notification.textContent = message;
-        notification.style.backgroundColor = 'rgba(6, 22, 31, 0.7)';
-        notification.style.backdropFilter = 'blur(5px)';
-        notification.style.color = 'rgba(120, 220, 232, 0.9)';
-        notification.style.padding = '8px 15px';
-        notification.style.borderRadius = '5px';
-        notification.style.marginBottom = '10px';
-        notification.style.border = '1px solid rgba(120, 220, 232, 0.3)';
-        notification.style.boxShadow = '0 0 10px rgba(120, 220, 232, 0.2)';
-        notification.style.textAlign = 'center';
-        notification.style.opacity = '0';
-        notification.style.transition = 'opacity 0.3s';
         
         notificationsArea.appendChild(notification);
         
         // Fade in
         setTimeout(() => {
-            notification.style.opacity = '1';
+            notification.classList.add('hud-notification-visible');
         }, 10);
         
         // Fade out and remove after duration
         setTimeout(() => {
-            notification.style.opacity = '0';
+            notification.classList.remove('hud-notification-visible');
             setTimeout(() => {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
@@ -546,16 +535,7 @@ export class UI {
             // Create a very simple fallback
             const fallbackOverlay = document.createElement('div');
             fallbackOverlay.id = 'fallback-overlay';
-            fallbackOverlay.style.position = 'fixed';
-            fallbackOverlay.style.top = '0';
-            fallbackOverlay.style.left = '0';
-            fallbackOverlay.style.width = '100%';
-            fallbackOverlay.style.height = '100%';
-            fallbackOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-            fallbackOverlay.style.display = 'flex';
-            fallbackOverlay.style.justifyContent = 'center';
-            fallbackOverlay.style.alignItems = 'center';
-            fallbackOverlay.style.zIndex = '9999';
+            fallbackOverlay.classList.add('hud-fallback-overlay');
             
             // Extract message text if it's an object
             const messageData = message as MessageBusEvent;
@@ -565,10 +545,9 @@ export class UI {
             
             const content = document.createElement('div');
             content.innerHTML = `
-                <h1 style="color: #ff3030; font-size: 48px; margin-bottom: 20px;">GAME OVER</h1>
-                <p style="color: #fff; font-size: 24px; margin-bottom: 30px;">${messageText}</p>
-                <button id="restart-btn" style="padding: 15px 30px; background-color: #ff3030; color: #fff; border: none; 
-                    font-size: 24px; cursor: pointer; border-radius: 5px;">RESTART GAME</button>
+                <h1 class="hud-fallback-title">GAME OVER</h1>
+                <p class="hud-fallback-text">${messageText}</p>
+                <button id="restart-btn" class="hud-fallback-button">RESTART GAME</button>
             `;
             fallbackOverlay.appendChild(content);
             document.body.appendChild(fallbackOverlay);
@@ -736,19 +715,7 @@ export class UI {
         // Create container for performance stats
         const statsContainer = document.createElement('div');
         statsContainer.id = 'performance-stats';
-        statsContainer.style.position = 'fixed';
-        statsContainer.style.bottom = '10px';
-        statsContainer.style.right = '10px';
-        statsContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        statsContainer.style.color = '#0ff';
-        statsContainer.style.padding = '10px';
-        statsContainer.style.fontFamily = 'monospace';
-        statsContainer.style.fontSize = '12px';
-        statsContainer.style.borderRadius = '4px';
-        statsContainer.style.zIndex = '1000';
-        statsContainer.style.maxWidth = '300px';
-        statsContainer.style.maxHeight = '200px';
-        statsContainer.style.overflow = 'auto';
+        statsContainer.classList.add('hud-perf-stats');
         
         // Memory stats container
         const memoryStats = document.createElement('div');
