@@ -53,28 +53,11 @@ export class DialogueSystem {
         // Create dialogue box
         this.dialogueBox = document.createElement('div');
         this.dialogueBox.id = 'intro-dialogue';
-        this.dialogueBox.style.position = 'fixed';
-        this.dialogueBox.style.bottom = '50px';
-        this.dialogueBox.style.left = '50%';
-        this.dialogueBox.style.transform = 'translateX(-50%)';
-        this.dialogueBox.style.width = '80%';
-        this.dialogueBox.style.maxWidth = '800px';
-        this.dialogueBox.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        this.dialogueBox.style.color = '#30f0c0';
-        this.dialogueBox.style.border = '1px solid #30f0c0';
-        this.dialogueBox.style.borderRadius = '5px';
-        this.dialogueBox.style.padding = '15px';
-        this.dialogueBox.style.fontFamily = 'Courier New, monospace';
-        this.dialogueBox.style.fontSize = '16px';
-        this.dialogueBox.style.zIndex = '10000';
-        this.dialogueBox.style.textShadow = '0 0 5px #30f0c0';
-        this.dialogueBox.style.boxShadow = '0 0 10px rgba(48, 240, 192, 0.3)';
-        this.dialogueBox.style.opacity = '0';
-        this.dialogueBox.style.transition = 'opacity 0.5s';
+        this.dialogueBox.classList.add('intro-dialogue-box');
         
         // Add dialogue text element
         this.dialogueText = document.createElement('div');
-        this.dialogueText.style.lineHeight = '1.5';
+        this.dialogueText.classList.add('intro-dialogue-text');
         
         this.dialogueBox.appendChild(this.dialogueText);
         document.body.appendChild(this.dialogueBox);
@@ -82,7 +65,7 @@ export class DialogueSystem {
         // Fade in dialogue box
         setTimeout(() => {
             if (this.dialogueBox) {
-                this.dialogueBox.style.opacity = '1';
+                this.dialogueBox.classList.add('intro-dialogue-box--visible');
             }
         }, 200);
     }
@@ -111,8 +94,8 @@ export class DialogueSystem {
         }
         
         // Show dialogue box if not visible
-        if (this.dialogueBox && this.dialogueBox.style.opacity === '0') {
-            this.dialogueBox.style.opacity = '1';
+        if (this.dialogueBox && !this.dialogueBox.classList.contains('intro-dialogue-box--visible')) {
+            this.dialogueBox.classList.add('intro-dialogue-box--visible');
         }
         
         // Type out text
@@ -126,10 +109,9 @@ export class DialogueSystem {
         
         // Special effects for transmission terminated line
         if (this.dialogueText) {
+            this.dialogueText.classList.remove('intro-dialogue-text--alert');
             if (line.includes("TRANSMISSION TERMINATED") || line.includes("DEPLOYMENT ACTIVE")) {
-                this.dialogueText.style.color = '#ff3030';
-            } else {
-                this.dialogueText.style.color = '#30f0c0';
+                this.dialogueText.classList.add('intro-dialogue-text--alert');
             }
         }
         

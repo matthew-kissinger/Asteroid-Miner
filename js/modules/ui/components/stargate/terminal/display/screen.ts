@@ -14,24 +14,9 @@ export class TerminalScreen {
     createDockingPrompt(): HTMLElement {
         const dockingPrompt = document.createElement('div');
         dockingPrompt.id = 'docking-prompt';
-        dockingPrompt.style.position = 'absolute';
-        dockingPrompt.style.top = '50%';
-        dockingPrompt.style.left = '50%';
-        dockingPrompt.style.transform = 'translate(-50%, -50%)';
-        dockingPrompt.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        dockingPrompt.style.color = '#33aaff';
-        dockingPrompt.style.padding = '20px';
-        dockingPrompt.style.borderRadius = '10px';
-        dockingPrompt.style.border = '2px solid #33aaff';
-        dockingPrompt.style.boxShadow = '0 0 20px #33aaff';
-        dockingPrompt.style.fontFamily = 'Courier New, monospace';
-        dockingPrompt.style.fontSize = '18px';
-        dockingPrompt.style.textAlign = 'center';
-        dockingPrompt.style.zIndex = '1000';
-        dockingPrompt.style.display = 'none';
+        dockingPrompt.classList.add('stargate-docking-prompt');
         
         if (this.isMobile) {
-            dockingPrompt.style.display = 'none';
             dockingPrompt.dataset.alwaysHide = 'true';
         } else {
             dockingPrompt.textContent = 'Press Q to dock with Stargate';
@@ -46,11 +31,7 @@ export class TerminalScreen {
         stargateUI.id = 'stargate-ui';
         
         if (this.isMobile) {
-            stargateUI.style.width = '95%';
-            stargateUI.style.maxWidth = '95vw';
-            (stargateUI.style as any).webkitOverflowScrolling = 'touch';
-            stargateUI.style.touchAction = 'pan-y';
-            stargateUI.style.overscrollBehavior = 'contain';
+            stargateUI.classList.add('stargate-ui-mobile-initial');
         }
         
         return stargateUI;
@@ -59,14 +40,14 @@ export class TerminalScreen {
     showDockingPrompt(): void {
         const dockingPrompt = document.getElementById('docking-prompt');
         if (dockingPrompt && dockingPrompt.dataset.alwaysHide !== 'true') {
-            dockingPrompt.style.display = 'block';
+            dockingPrompt.classList.add('stargate-docking-prompt-visible');
         }
     }
     
     hideDockingPrompt(): void {
         const dockingPrompt = document.getElementById('docking-prompt');
         if (dockingPrompt) {
-            dockingPrompt.style.display = 'none';
+            dockingPrompt.classList.remove('stargate-docking-prompt-visible');
         }
     }
     
@@ -122,14 +103,14 @@ export class TerminalScreen {
     showUI(): void {
         const ui = document.getElementById('stargate-ui');
         if (ui) {
-            ui.style.display = 'block';
+            ui.classList.add('stargate-ui-visible');
         }
     }
     
     hideUI(): void {
         const ui = document.getElementById('stargate-ui');
         if (ui) {
-            ui.style.display = 'none';
+            ui.classList.remove('stargate-ui-visible');
         }
     }
 }

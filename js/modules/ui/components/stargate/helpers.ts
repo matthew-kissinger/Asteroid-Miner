@@ -86,12 +86,12 @@ export class StargateHelpers {
         if (refuelBtn) {
             if (spaceship.credits < 100 || spaceship.fuel >= spaceship.maxFuel * 0.999) {
                 refuelBtn.disabled = true;
-                refuelBtn.style.backgroundColor = '#555';
-                refuelBtn.style.cursor = 'not-allowed';
+                refuelBtn.classList.add('stargate-service-btn-disabled');
+                refuelBtn.classList.remove('stargate-service-btn-enabled-fuel');
             } else {
                 refuelBtn.disabled = false;
-                refuelBtn.style.backgroundColor = '#00cc33';
-                refuelBtn.style.cursor = 'pointer';
+                refuelBtn.classList.remove('stargate-service-btn-disabled');
+                refuelBtn.classList.add('stargate-service-btn-enabled-fuel');
             }
         }
         
@@ -100,12 +100,12 @@ export class StargateHelpers {
         if (repairShieldBtn) {
             if (spaceship.credits < 150 || spaceship.shield >= spaceship.maxShield * 0.999) {
                 repairShieldBtn.disabled = true;
-                repairShieldBtn.style.backgroundColor = '#555';
-                repairShieldBtn.style.cursor = 'not-allowed';
+                repairShieldBtn.classList.add('stargate-service-btn-disabled');
+                repairShieldBtn.classList.remove('stargate-service-btn-enabled-shield');
             } else {
                 repairShieldBtn.disabled = false;
-                repairShieldBtn.style.backgroundColor = '#3399ff';
-                repairShieldBtn.style.cursor = 'pointer';
+                repairShieldBtn.classList.remove('stargate-service-btn-disabled');
+                repairShieldBtn.classList.add('stargate-service-btn-enabled-shield');
             }
         }
         
@@ -114,12 +114,12 @@ export class StargateHelpers {
         if (repairHullBtn) {
             if (spaceship.credits < 200 || spaceship.hull >= spaceship.maxHull * 0.999) {
                 repairHullBtn.disabled = true;
-                repairHullBtn.style.backgroundColor = '#555';
-                repairHullBtn.style.cursor = 'not-allowed';
+                repairHullBtn.classList.add('stargate-service-btn-disabled');
+                repairHullBtn.classList.remove('stargate-service-btn-enabled-hull');
             } else {
                 repairHullBtn.disabled = false;
-                repairHullBtn.style.backgroundColor = '#ff9900';
-                repairHullBtn.style.cursor = 'pointer';
+                repairHullBtn.classList.remove('stargate-service-btn-disabled');
+                repairHullBtn.classList.add('stargate-service-btn-enabled-hull');
             }
         }
     }
@@ -128,19 +128,7 @@ export class StargateHelpers {
         if (!isMobile) return;
         
         // Ensure proper mobile styling
-        stargateUI.style.width = '92%';
-        stargateUI.style.maxWidth = '92vw';
-        stargateUI.style.maxHeight = '85vh';
-        (stargateUI.style as any).webkitOverflowScrolling = 'touch';
-        stargateUI.style.touchAction = 'pan-y';
-        stargateUI.style.overscrollBehavior = 'auto';
-        
-        // Ensure proper positioning
-        stargateUI.style.position = 'absolute';
-        stargateUI.style.top = '50%';
-        stargateUI.style.left = '50%';
-        stargateUI.style.transform = 'translate(-50%, -50%)';
-        stargateUI.style.zIndex = '1000';
+        stargateUI.classList.add('stargate-ui-mobile-config');
         
         // Ensure body is in a state that allows the UI to be visible
         document.body.classList.remove('undocking', 'modal-open');

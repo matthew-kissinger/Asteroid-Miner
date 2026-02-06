@@ -1,4 +1,5 @@
 @import "./combat.css";
+@import "./lock-on.css";
 @import "./hud.css";
 @import "./targeting.css";
 @import "./mobile-hud.css";
@@ -9,6 +10,7 @@
 @import "./starmap.css";
 @import "./controls.css";
 @import "./trading.css";
+@import "./intro.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

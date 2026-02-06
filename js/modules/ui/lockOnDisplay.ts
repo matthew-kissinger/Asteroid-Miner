@@ -54,7 +54,7 @@ export function initLockOnDisplay(): void {
     // Create container
     const container = document.createElement('div');
     container.id = 'lock-on-display-container';
-    container.className = 'lock-on-container';
+    container.classList.add('lock-on-container');
     
     // Set initial display state (dynamic)
     container.style.display = 'none';
@@ -71,12 +71,10 @@ export function initLockOnDisplay(): void {
 
     // Create health bar
     const healthBar = document.createElement('div');
-    healthBar.className = 'lock-on-health-bar';
-    
-    // Set dynamic dimensions (now in CSS)
+    healthBar.classList.add('lock-on-health-bar');
 
     const healthFill = document.createElement('div');
-    healthFill.className = 'lock-on-health-fill';
+    healthFill.classList.add('lock-on-health-fill');
     
     // Initial color (dynamic)
     healthFill.style.backgroundColor = COLOR_HEALTH_HIGH;
@@ -86,7 +84,7 @@ export function initLockOnDisplay(): void {
 
     // Create info text (distance, type)
     const infoText = document.createElement('div');
-    infoText.className = 'lock-on-info-text';
+    infoText.classList.add('lock-on-info-text');
 
     container.appendChild(infoText);
 
@@ -108,9 +106,7 @@ export function initLockOnDisplay(): void {
  */
 function createReticleElement(): HTMLDivElement {
     const reticle = document.createElement('div');
-    reticle.className = 'lock-on-reticle';
-
-    // Set dynamic dimensions (now in CSS)
+    reticle.classList.add('lock-on-reticle');
 
     // SVG reticle with crosshairs
     reticle.innerHTML = `
@@ -136,9 +132,7 @@ function createReticleElement(): HTMLDivElement {
  */
 function createLeadIndicatorElement(): HTMLDivElement {
     const leadIndicator = document.createElement('div');
-    leadIndicator.className = 'lock-on-lead-indicator';
-
-    // Set dynamic dimensions (now in CSS)
+    leadIndicator.classList.add('lock-on-lead-indicator');
 
     // Filled circle SVG
     leadIndicator.innerHTML = `

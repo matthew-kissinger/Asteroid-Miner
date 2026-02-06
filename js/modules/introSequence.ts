@@ -184,16 +184,7 @@ export class IntroSequence {
         // Create a DOM overlay for the flash effect
         this.overlay = document.createElement('div');
         this.overlay.id = 'intro-overlay';
-        this.overlay.style.position = 'fixed';
-        this.overlay.style.top = '0';
-        this.overlay.style.left = '0';
-        this.overlay.style.width = '100%';
-        this.overlay.style.height = '100%';
-        this.overlay.style.backgroundColor = '#aa33ff'; // Match portal color
-        this.overlay.style.opacity = '0';
-        this.overlay.style.transition = 'opacity 0.5s';
-        this.overlay.style.pointerEvents = 'none';
-        this.overlay.style.zIndex = '9999';
+        this.overlay.classList.add('intro-overlay');
         
         // Add to DOM but hide initially
         document.body.appendChild(this.overlay);
@@ -334,19 +325,7 @@ export class IntroSequence {
         const skipButton = document.createElement('div');
         skipButton.id = 'skip-intro-button';
         skipButton.textContent = 'SKIP INTRO';
-        skipButton.style.position = 'fixed';
-        skipButton.style.bottom = '10px';
-        skipButton.style.left = '50%';
-        skipButton.style.transform = 'translateX(-50%)';
-        skipButton.style.padding = '10px 15px';
-        skipButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        skipButton.style.color = '#30f0c0';
-        skipButton.style.border = '1px solid #30f0c0';
-        skipButton.style.borderRadius = '5px';
-        skipButton.style.cursor = 'pointer';
-        skipButton.style.zIndex = '10000';
-        skipButton.style.fontFamily = 'Courier New, monospace';
-        skipButton.style.boxShadow = '0 0 10px rgba(48, 240, 192, 0.3)';
+        skipButton.classList.add('intro-skip-button');
         
         skipButton.addEventListener('click', () => {
             this.skipSequence();

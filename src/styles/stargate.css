@@ -1,0 +1,84 @@
+/* ==========================================================================
+   Stargate UI Styles
+   Extracted from inline styles in js/modules/ui/components/stargate/
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Docking Prompt
+   --------------------------------------------------------------------------- */
+
+.stargate-docking-prompt {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #33aaff;
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #33aaff;
+  box-shadow: 0 0 20px #33aaff;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  text-align: center;
+  z-index: 1000;
+  display: none;
+}
+
+.stargate-docking-prompt-visible {
+  display: block !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Stargate UI Visibility & Mobile Layout
+   --------------------------------------------------------------------------- */
+
+.stargate-ui-visible {
+  display: block !important;
+}
+
+.stargate-ui-mobile-initial {
+  width: 95%;
+  max-width: 95vw;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+.stargate-ui-mobile-config {
+  width: 92%;
+  max-width: 92vw;
+  max-height: 85vh;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+}
+
+/* ---------------------------------------------------------------------------
+   Service Button States
+   --------------------------------------------------------------------------- */
+
+.stargate-service-btn-disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+.stargate-service-btn-enabled-fuel {
+  background-color: #00cc33;
+  cursor: pointer;
+}
+
+.stargate-service-btn-enabled-shield {
+  background-color: #3399ff;
+  cursor: pointer;
+}
+
+.stargate-service-btn-enabled-hull {
+  background-color: #ff9900;
+  cursor: pointer;
+}

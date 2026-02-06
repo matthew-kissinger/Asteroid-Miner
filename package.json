@@ -29,7 +29,6 @@
   },
   "dependencies": {
     "bitecs": "^0.4.0",
-    "serve-static": "^2.2.0",
     "three": "^0.180.0"
   }
 }
