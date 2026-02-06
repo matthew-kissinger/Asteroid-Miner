@@ -15,10 +15,10 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 - Build succeeds, typecheck passes with 0 errors
 - Code splitting: game-core 182 kB, combat 27 kB, env 62 kB, ui 65 kB
 - Vite 6 + Tailwind CSS 3.4 + PostCSS installed and configured
-- 15 CSS files extracted (92 KB total) - combat, mobile-hud, touch-controls, blackjack, game-over, settings, starmap, hud, targeting, controls, trading, intro, lock-on, stargate, main.css
-- ~700 inline `.style.` usages remain across 64 files
+- 18 CSS files (3,041 lines) - combat, mobile-hud, touch-controls, blackjack, game-over, settings, starmap, hud, targeting, controls, trading, intro, lock-on, stargate, game-state, controls-ui, gameplay-ui, main.css
+- ~554 inline `.style.` usages remain (mostly dynamic - diminishing returns)
 - physics.ts window.game globals removed via dependency injection (77fdb44)
-- Vitest: 6 test files, 33 tests (all passing)
+- Vitest: 7 test files, 61 tests (all passing)
 - CI/CD fixed (ddecf48) - targets master, Node 20, typecheck + test gate, actions/checkout@v4
 - serve-static removed from package.json (unused dependency)
 
@@ -89,12 +89,12 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 
 **Remaining Problems:**
 - **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment. (GitHub Pages deployment task completed - verify at live URL)
-- ~~**CI/CD broken**~~ RESOLVED - deploy.yml fixed (ddecf48): targets master, Node 20, checkout@v4, setup-node@v4, typecheck + test gates. All tests passing (be53519).
+- ~~**CI/CD broken**~~ RESOLVED - deploy.yml fixed (ddecf48): targets master, Node 20, checkout@v4, setup-node@v4, typecheck + test gates. All 61 tests passing (73e7b9d).
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
 - **Global state** - ~213 non-API `window.*` usages across ~45 files (down from ~264). js/globals/ module created. physics.ts cleaned up (77fdb44), enemyAISystem cleaned up (4a8b9cc). Top remaining: src/main.ts (17), diagnostics.ts (16), starMap.ts (8), mobileHUD.ts (8).
 - ~~**Dead legacy ECS code**~~ RESOLVED - 7 orphaned files + optimized/ + spatial/ deleted (d9d648f). Only 3 active files remain: messageBus.ts, world.ts, events.ts.
-- **Inline styles** - ~700 `.style.` manipulations across 64 files. 15 CSS files extracted (92 KB). Top remaining: customSystem/validation.ts (27), stateManager.ts (27), gamepadHandler.ts (27), targetingSystem.ts (25), mining/uiUpdates.ts (25), controlsMenu.ts (23), blackjack/eventHandlers.ts (19), docking/dockingLogic.ts (19).
-- **Test coverage growing** - 6 test files, 33 tests (all passing). ECS world, components, physics, combat, AI, mining covered. Render sync has zero test coverage.
+- **Inline styles** - ~554 `.style.` manipulations remain (mostly dynamic values). 18 CSS files extracted (3,041 lines). Remaining are mostly runtime-dynamic values (widths, colors, animations) - diminishing returns for further migration.
+- **Test coverage growing** - 7 test files, 61 tests (all passing). ECS world, components, physics, combat, AI, mining, render sync covered.
 - **Global state** - ~180 non-API `window.*` usages across ~40 files. Top: src/main.ts (17), diagnostics.ts (16), renderer.ts (9), statusIndicators.ts (9), starMap.ts (8), mobileHUD.ts (8).
 - ~~**Unused dependency**~~ RESOLVED - `serve-static` removed from package.json.
 
@@ -109,7 +109,7 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 | Physics | Custom Newtonian (bitECS) | **Keep custom** (cleaned up) | Done |
 | Particles | CPU-based | **WebGPU Compute Shaders** | - |
 | Build | Vite 6 | **Vite 6** | **COMPLETE** |
-| UI | 15 CSS files (92 KB), ~700 inline remain | **CSS/Tailwind** | **Active** |
+| UI | 18 CSS files (3,041 lines), ~554 inline remain | **CSS/Tailwind** | **Active** |
 
 ### Why This Stack
 
@@ -389,7 +389,10 @@ src/
     ├── trading.css      # Trading view styles
     ├── intro.css        # Intro sequence styles
     ├── lock-on.css      # Lock-on display styles
-    └── stargate.css     # Stargate interface styles
+    ├── stargate.css     # Stargate interface styles
+    ├── game-state.css   # Game state UI styles
+    ├── controls-ui.css  # Controls UI styles
+    └── gameplay-ui.css  # Gameplay UI styles
 
 js/
 ├── main.ts              # Game class, main loop (calls initECS/updateECS)
@@ -517,7 +520,7 @@ After overhaul:
 - ~~**5 typecheck errors in gameInitializer.ts.**~~ RESOLVED - UI type mismatch fixed.
 - **codex/gpt-5.2-codex-fast failed on stale file deletion.** The fast model didn't produce usable output for the delete-stale-files task. Use a more capable model for file deletion + import rewiring tasks.
 - **Cursor agents may not commit.** cursor/composer-1 completed tasks but sometimes no commit was found (renderer/ conversion is latest example). Add explicit commit instructions to cursor task prompts, or avoid cursor for tasks requiring commits.
-- ~~**CI/CD workflow targets wrong branch.**~~ RESOLVED (ddecf48) - deploy.yml now targets master, Node 20, modern actions, with typecheck + test gates. However, 2 failing tests will block CI until fixed.
+- ~~**CI/CD workflow targets wrong branch.**~~ RESOLVED (ddecf48) - deploy.yml now targets master, Node 20, modern actions, with typecheck + test gates. All 61 tests passing (73e7b9d).
 - **CSS migration agents forget @import.** 4 CSS files were silently not loaded until d2990aa added the missing `@import` statements to main.css. Always include explicit instructions to update main.css when creating CSS migration tasks.
 
 ## Resources
