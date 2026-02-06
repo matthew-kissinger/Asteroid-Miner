@@ -440,38 +440,28 @@ export class Controls {
     // Show a notification when anomaly is found or orb is collected
     showAnomalyMessage(message: string, color: string): void {
         if (this.showingAnomalyNotification) return; // Don't stack notifications
-        
+
         this.showingAnomalyNotification = true;
-        
+
         // Create notification element
         const notification = document.createElement('div');
-        notification.style.position = 'fixed';
-        notification.style.top = '30%';
-        notification.style.left = '50%';
-        notification.style.transform = 'translate(-50%, -50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        notification.classList.add('controls-anomaly-notification');
+
+        // Dynamic color and border/shadow
         notification.style.color = color || '#ffffff';
-        notification.style.padding = '15px 30px';
-        notification.style.borderRadius = '10px';
         notification.style.border = `2px solid ${color || '#ffffff'}`;
         notification.style.boxShadow = `0 0 15px ${color || '#ffffff'}`;
-        notification.style.fontFamily = 'Courier New, monospace';
-        notification.style.fontSize = '18px';
-        notification.style.zIndex = '1000';
-        notification.style.textAlign = 'center';
-        notification.style.pointerEvents = 'none'; // Don't block mouse events
-        
+
         // Set notification text
         notification.textContent = message;
-        
+
         // Add to DOM
         document.body.appendChild(notification);
-        
+
         // Remove after a few seconds
         setTimeout(() => {
             notification.style.opacity = '0';
-            notification.style.transition = 'opacity 0.8s';
-            
+
             setTimeout(() => {
                 notification.remove();
                 this.showingAnomalyNotification = false;
@@ -483,25 +473,12 @@ export class Controls {
         // Create notification element
         const notification = document.createElement('div');
         notification.textContent = `Gamepad Sensitivity: ${sensitivity.toFixed(1)}`;
-        notification.style.position = 'fixed';
-        notification.style.top = '100px';
-        notification.style.left = '50%';
-        notification.style.transform = 'translateX(-50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        notification.style.color = '#30cfd0';
-        notification.style.padding = '10px 20px';
-        notification.style.borderRadius = '5px';
-        notification.style.border = '1px solid #30cfd0';
-        notification.style.fontFamily = 'monospace';
-        notification.style.fontSize = '16px';
-        notification.style.zIndex = '10000';
-        notification.style.pointerEvents = 'none';
-        
+        notification.classList.add('controls-sensitivity-notification');
+
         document.body.appendChild(notification);
-        
+
         // Fade out and remove after 2 seconds
         setTimeout(() => {
-            notification.style.transition = 'opacity 0.5s';
             notification.style.opacity = '0';
             setTimeout(() => notification.remove(), 500);
         }, 2000);

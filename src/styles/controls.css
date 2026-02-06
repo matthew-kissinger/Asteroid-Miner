@@ -1,0 +1,45 @@
+/* ==========================================================================
+   Controls UI Styles
+   Extracted from inline styles in js/modules/controls.ts
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Anomaly Notification (showAnomalyMessage)
+   --------------------------------------------------------------------------- */
+
+.controls-anomaly-notification {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  z-index: 1000;
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 0.8s;
+}
+
+/* ---------------------------------------------------------------------------
+   Sensitivity Notification (showSensitivityNotification)
+   --------------------------------------------------------------------------- */
+
+.controls-sensitivity-notification {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #30cfd0;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: 1px solid #30cfd0;
+  font-family: monospace;
+  font-size: 16px;
+  z-index: 10000;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
