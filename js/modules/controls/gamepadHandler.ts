@@ -571,18 +571,7 @@ export class GamepadHandler {
     showNotification(message: string): void {
         // Show a temporary notification for gamepad events
         const notification = document.createElement('div');
-        notification.style.position = 'fixed';
-        notification.style.bottom = '100px';
-        notification.style.left = '50%';
-        notification.style.transform = 'translateX(-50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        notification.style.color = '#30cfd0';
-        notification.style.padding = '10px 20px';
-        notification.style.borderRadius = '5px';
-        notification.style.border = '1px solid #30cfd0';
-        notification.style.fontFamily = 'monospace';
-        notification.style.fontSize = '14px';
-        notification.style.zIndex = '10000';
+        notification.className = 'gamepad-notification';
         notification.textContent = '🎮 ' + message;
         
         document.body.appendChild(notification);

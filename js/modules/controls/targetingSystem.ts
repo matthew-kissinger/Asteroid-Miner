@@ -516,26 +516,18 @@ export class TargetingSystem {
         // Create container for off-screen indicators
         this.offScreenContainer = document.createElement('div');
         this.offScreenContainer.id = 'off-screen-indicators';
-        this.offScreenContainer.style.position = 'absolute';
-        this.offScreenContainer.style.top = '0';
-        this.offScreenContainer.style.left = '0';
-        this.offScreenContainer.style.width = '100%';
-        this.offScreenContainer.style.height = '100%';
-        this.offScreenContainer.style.pointerEvents = 'none';
+        this.offScreenContainer.className = 'offscreen-indicator-container';
         this.offScreenContainer.style.display = 'none';
         document.body.appendChild(this.offScreenContainer);
         
         // Create the arrow indicator
         this.offScreenIndicator = document.createElement('div');
-        this.offScreenIndicator.style.position = 'absolute';
-        this.offScreenIndicator.style.width = '30px';
-        this.offScreenIndicator.style.height = '30px';
+        this.offScreenIndicator.className = 'offscreen-indicator-arrow';
         this.offScreenIndicator.innerHTML = `
             <svg width="30" height="30" viewBox="0 0 30 30">
                 <polygon points="15,0 30,30 15,22 0,30" fill="#ff3030" />
             </svg>
         `;
-        this.offScreenIndicator.style.transformOrigin = 'center center';
         this.offScreenIndicator.style.display = 'none';
         this.offScreenContainer.appendChild(this.offScreenIndicator);
     }

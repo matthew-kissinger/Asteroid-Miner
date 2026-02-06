@@ -120,22 +120,13 @@ export class UIUpdates {
             console.log("UIUpdates: Creating mining progress container");
             miningProgressContainer = document.createElement('div');
             miningProgressContainer.id = 'mining-progress-container';
-            miningProgressContainer.style.position = 'absolute';
-            miningProgressContainer.style.bottom = '20px';
-            miningProgressContainer.style.left = '50%';
-            miningProgressContainer.style.transform = 'translateX(-50%)';
-            miningProgressContainer.style.width = '200px';
-            miningProgressContainer.style.height = '10px';
-            miningProgressContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            miningProgressContainer.style.border = '1px solid #30cfd0';
-            miningProgressContainer.style.zIndex = '1000';
+            miningProgressContainer.className = 'mining-progress-container';
             document.body.appendChild(miningProgressContainer);
             
             const progressBar = document.createElement('div');
             progressBar.id = 'mining-progress-bar';
+            progressBar.className = 'mining-progress-bar';
             progressBar.style.width = '0%';
-            progressBar.style.height = '100%';
-            progressBar.style.backgroundColor = '#30cfd0';
             miningProgressContainer.appendChild(progressBar);
         } else {
             miningProgressContainer.style.display = 'block';

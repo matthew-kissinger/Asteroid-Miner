@@ -5,6 +5,12 @@ export default defineConfig({
   // Base path for GitHub Pages deployment
   base: '/Asteroid-Miner/',
   
+  // Test configuration
+  test: {
+    globals: true,
+    environment: 'node',
+  },
+  
   // Development server settings
   server: {
     port: 3000,

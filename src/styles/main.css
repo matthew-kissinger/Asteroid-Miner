@@ -1,3 +1,4 @@
+@import "./game-state.css";
 @import "./combat.css";
 @import "./lock-on.css";
 @import "./hud.css";
@@ -12,6 +13,8 @@
 @import "./controls.css";
 @import "./trading.css";
 @import "./intro.css";
+@import "./controls-ui.css";
+@import "./gameplay-ui.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

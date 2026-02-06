@@ -1,0 +1,87 @@
+/* Controls UI - extracted from controlsMenu.ts, enabler.ts, gamepadHandler.ts */
+
+/* Controls Menu */
+.controls-menu {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #30cfd0;
+  box-shadow: 0 0 10px #30cfd0;
+  z-index: 1000;
+}
+
+.controls-menu-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.controls-menu-key {
+  background-color: rgba(48, 207, 208, 0.2);
+  border: 1px solid #30cfd0;
+  border-radius: 4px;
+  padding: 0 5px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Audio Notification */
+.audio-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #ff4400;
+  padding: 10px 15px;
+  border-radius: 5px;
+  z-index: 9999;
+  font-size: 14px;
+  max-width: 80%;
+  text-align: center;
+}
+
+.audio-notification-close {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  cursor: pointer;
+  color: #aaa;
+}
+
+/* Gamepad Notification */
+.gamepad-notification {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #30cfd0;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: 1px solid #30cfd0;
+  font-family: monospace;
+  font-size: 14px;
+  z-index: 10000;
+}
+
+/* Gamepad Debug Display */
+.gamepad-debug {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #0f0;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  border-radius: 5px;
+  border: 1px solid #0f0;
+  z-index: 10001;
+  max-width: 300px;
+  pointer-events: none;
+}

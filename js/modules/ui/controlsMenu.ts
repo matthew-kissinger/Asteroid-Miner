@@ -9,16 +9,7 @@ export class ControlsMenu {
         // Create controls menu
         const controlsMenu = document.createElement('div');
         controlsMenu.id = 'controls-menu';
-        controlsMenu.style.position = 'absolute';
-        controlsMenu.style.top = '50%';
-        controlsMenu.style.left = '50%';
-        controlsMenu.style.transform = 'translate(-50%, -50%)';
-        controlsMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        controlsMenu.style.padding = '15px';
-        controlsMenu.style.borderRadius = '10px';
-        controlsMenu.style.border = '1px solid #30cfd0';
-        controlsMenu.style.boxShadow = '0 0 10px #30cfd0';
-        controlsMenu.style.zIndex = '1000';
+        controlsMenu.className = 'controls-menu';
         controlsMenu.style.display = 'none';
         document.body.appendChild(controlsMenu);
         
@@ -31,20 +22,11 @@ export class ControlsMenu {
         // Control rows
         const createControlRow = (keyText: string, actionText: string): HTMLDivElement => {
             const row = document.createElement('div');
-            row.className = 'control-row';
-            row.style.display = 'flex';
-            row.style.justifyContent = 'space-between';
-            row.style.marginBottom = '5px';
+            row.className = 'controls-menu-row';
             
             const keySpan = document.createElement('span');
             if (keyText !== 'Mouse') {
-                keySpan.className = 'key';
-                keySpan.style.backgroundColor = 'rgba(48, 207, 208, 0.2)';
-                keySpan.style.border = '1px solid #30cfd0';
-                keySpan.style.borderRadius = '4px';
-                keySpan.style.padding = '0 5px';
-                keySpan.style.minWidth = '20px';
-                keySpan.style.textAlign = 'center';
+                keySpan.className = 'controls-menu-key';
             }
             keySpan.textContent = keyText;
             row.appendChild(keySpan);

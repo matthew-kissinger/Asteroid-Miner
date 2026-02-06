@@ -25,18 +25,7 @@ export class MobileAudioEnabler {
         
         // Create a notification element
         const notification = document.createElement('div');
-        notification.style.position = 'fixed';
-        notification.style.top = '20px';
-        notification.style.left = '50%';
-        notification.style.transform = 'translateX(-50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        notification.style.color = '#ff4400';
-        notification.style.padding = '10px 15px';
-        notification.style.borderRadius = '5px';
-        notification.style.zIndex = '9999';
-        notification.style.fontSize = '14px';
-        notification.style.maxWidth = '80%';
-        notification.style.textAlign = 'center';
+        notification.className = 'audio-notification';
         
         // Add message
         notification.innerHTML = `
@@ -50,11 +39,7 @@ export class MobileAudioEnabler {
         
         // Add close button
         const closeButton = document.createElement('div');
-        closeButton.style.position = 'absolute';
-        closeButton.style.top = '5px';
-        closeButton.style.right = '10px';
-        closeButton.style.cursor = 'pointer';
-        closeButton.style.color = '#aaa';
+        closeButton.className = 'audio-notification-close';
         closeButton.textContent = '✕';
         closeButton.addEventListener('click', () => notification.remove());
         notification.appendChild(closeButton);

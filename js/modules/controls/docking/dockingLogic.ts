@@ -62,11 +62,9 @@ export class DockingLogic {
         if (this.isMobileDevice()) {
             console.log("Mobile device detected - preparing for stargate UI");
             document.body.classList.remove('undocking', 'modal-open');
+            document.body.classList.add('undocked-body');
             
             // Reset any problematic styles that might prevent UI from showing
-            document.body.style.position = 'static';
-            document.body.style.touchAction = 'auto';
-            document.body.style.pointerEvents = 'auto';
             document.body.style.overflow = 'auto';
         }
         
@@ -130,12 +128,8 @@ export class DockingLogic {
         requestAnimationFrame(() => {
             // FIX: More aggressive style clearing for Android
             document.body.style.cssText = '';
+            document.body.classList.add('undocked-body');
             document.body.style.overflow = 'auto';
-            document.body.style.position = 'static';
-            document.body.style.height = 'auto';
-            document.body.style.width = 'auto';
-            document.body.style.touchAction = 'auto';
-            document.body.style.pointerEvents = 'auto';
             document.body.style.setProperty('-webkit-overflow-scrolling', 'touch');
             
             // FIX: Ensure all restrictive classes are removed to prevent touch event issues

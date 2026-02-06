@@ -194,47 +194,24 @@ export class GameStateManager {
         // Create a simple game over overlay
         const gameOverContainer = document.createElement('div');
         gameOverContainer.id = 'fallback-game-over';
-        gameOverContainer.style.position = 'fixed';
-        gameOverContainer.style.top = '0';
-        gameOverContainer.style.left = '0';
-        gameOverContainer.style.width = '100%';
-        gameOverContainer.style.height = '100%';
-        gameOverContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        gameOverContainer.style.display = 'flex';
-        gameOverContainer.style.flexDirection = 'column';
-        gameOverContainer.style.alignItems = 'center';
-        gameOverContainer.style.justifyContent = 'center';
-        gameOverContainer.style.zIndex = '9999';
+        gameOverContainer.classList.add('game-over-overlay');
 
         // Game over title
         const title = document.createElement('h1');
         title.textContent = 'GAME OVER';
-        title.style.color = '#ff3030';
-        title.style.fontSize = '48px';
-        title.style.marginBottom = '20px';
-        title.style.fontFamily = 'Arial, sans-serif';
+        title.classList.add('game-over-title');
         gameOverContainer.appendChild(title);
 
         // Game over message
         const messageElem = document.createElement('p');
         messageElem.textContent = message || 'Your ship was destroyed!';
-        messageElem.style.color = '#ffffff';
-        messageElem.style.fontSize = '24px';
-        messageElem.style.marginBottom = '40px';
-        messageElem.style.fontFamily = 'Arial, sans-serif';
+        messageElem.classList.add('game-over-message');
         gameOverContainer.appendChild(messageElem);
 
         // Restart button
         const restartButton = document.createElement('button');
         restartButton.textContent = 'RESTART GAME';
-        restartButton.style.padding = '16px 32px';
-        restartButton.style.fontSize = '24px';
-        restartButton.style.backgroundColor = '#ff3030';
-        restartButton.style.color = '#ffffff';
-        restartButton.style.border = 'none';
-        restartButton.style.borderRadius = '8px';
-        restartButton.style.cursor = 'pointer';
-        restartButton.style.fontFamily = 'Arial, sans-serif';
+        restartButton.classList.add('game-over-button');
         restartButton.addEventListener('click', () => {
             location.reload();
         });

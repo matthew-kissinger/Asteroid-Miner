@@ -211,41 +211,18 @@ export class ValidationManager {
         if (this.isMobile) {
             // Create a custom alert overlay for mobile
             const alertOverlay = document.createElement('div');
-            alertOverlay.style.position = 'fixed';
-            alertOverlay.style.top = '0';
-            alertOverlay.style.left = '0';
-            alertOverlay.style.width = '100%';
-            alertOverlay.style.height = '100%';
-            alertOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-            alertOverlay.style.display = 'flex';
-            alertOverlay.style.justifyContent = 'center';
-            alertOverlay.style.alignItems = 'center';
-            alertOverlay.style.zIndex = '10000';
+            alertOverlay.classList.add('mobile-alert-overlay');
 
             const alertBox = document.createElement('div');
-            alertBox.style.backgroundColor = '#0a1a2a';
-            alertBox.style.color = '#c5d8f1';
-            alertBox.style.padding = '20px';
-            alertBox.style.borderRadius = '10px';
-            alertBox.style.maxWidth = '80%';
-            alertBox.style.textAlign = 'center';
-            alertBox.style.border = '2px solid #2c5a8c';
+            alertBox.classList.add('mobile-alert-content');
 
             const messageEl = document.createElement('p');
             messageEl.textContent = message;
-            messageEl.style.marginBottom = '20px';
-            messageEl.style.fontSize = '16px';
+            messageEl.classList.add('mobile-alert-message');
 
             const okButton = document.createElement('button');
             okButton.textContent = 'OK';
-            okButton.style.padding = '12px 30px';
-            okButton.style.fontSize = '16px';
-            okButton.style.backgroundColor = '#2c5a8c';
-            okButton.style.color = 'white';
-            okButton.style.border = 'none';
-            okButton.style.borderRadius = '5px';
-            okButton.style.minHeight = '48px';
-            okButton.style.minWidth = '120px';
+            okButton.classList.add('mobile-alert-button');
 
             alertBox.appendChild(messageEl);
             alertBox.appendChild(okButton);
