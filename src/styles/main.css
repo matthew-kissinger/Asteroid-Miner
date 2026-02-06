@@ -1,0 +1,23 @@
+@import "./combat.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom theme colors for HUD */
+@theme {
+  --color-space-dark: #0a0a1a;
+  --color-hud-green: #30cfd0;
+  --color-hud-red: #ff3030;
+  --color-hud-blue: #3030ff;
+}
+
+/* HUD Panel base class */
+.hud-panel {
+  background-color: rgb(10 10 26 / 0.9);
+  border: 1px solid rgb(48 207 208 / 0.5);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+  font-family: 'Courier New', monospace;
+  color: #fff;
+}

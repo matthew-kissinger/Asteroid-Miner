@@ -1,3 +1,6 @@
+// Import Tailwind CSS
+import './styles/main.css';
+
 // Import all Three.js modules from our centralized import file
 import * as ThreeImports from './three-imports.ts';
 
