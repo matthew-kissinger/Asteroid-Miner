@@ -28,7 +28,7 @@ const PROJECTILE_SPEED = 2000; // units/second (from combatLogic.ts raycaster.fa
 const RETICLE_SIZE = 80; // pixels
 const LEAD_INDICATOR_SIZE = 30; // pixels
 const HEALTH_BAR_WIDTH = 100; // pixels
-const HEALTH_BAR_HEIGHT = 8; // pixels
+// const HEALTH_BAR_HEIGHT = 8; // pixels (moved to CSS)
 
 // Colors
 const COLOR_LOCKED = '#ff3030'; // Red for locked target
@@ -73,9 +73,7 @@ export function initLockOnDisplay(): void {
     const healthBar = document.createElement('div');
     healthBar.className = 'lock-on-health-bar';
     
-    // Set dynamic dimensions
-    healthBar.style.width = `${HEALTH_BAR_WIDTH}px`;
-    healthBar.style.height = `${HEALTH_BAR_HEIGHT}px`;
+    // Set dynamic dimensions (now in CSS)
 
     const healthFill = document.createElement('div');
     healthFill.className = 'lock-on-health-fill';
@@ -112,9 +110,7 @@ function createReticleElement(): HTMLDivElement {
     const reticle = document.createElement('div');
     reticle.className = 'lock-on-reticle';
 
-    // Set dynamic dimensions
-    reticle.style.width = `${RETICLE_SIZE}px`;
-    reticle.style.height = `${RETICLE_SIZE}px`;
+    // Set dynamic dimensions (now in CSS)
 
     // SVG reticle with crosshairs
     reticle.innerHTML = `
@@ -142,9 +138,7 @@ function createLeadIndicatorElement(): HTMLDivElement {
     const leadIndicator = document.createElement('div');
     leadIndicator.className = 'lock-on-lead-indicator';
 
-    // Set dynamic dimensions
-    leadIndicator.style.width = `${LEAD_INDICATOR_SIZE}px`;
-    leadIndicator.style.height = `${LEAD_INDICATOR_SIZE}px`;
+    // Set dynamic dimensions (now in CSS)
 
     // Filled circle SVG
     leadIndicator.innerHTML = `

@@ -66,9 +66,7 @@ function createArrowElement(): HTMLDivElement {
     const arrow = document.createElement('div');
     arrow.className = 'threat-arrow';
 
-    // Set dynamic dimensions
-    arrow.style.width = `${ARROW_SIZE}px`;
-    arrow.style.height = `${ARROW_SIZE}px`;
+    // Set dynamic dimensions (now in CSS)
 
     return arrow;
 }

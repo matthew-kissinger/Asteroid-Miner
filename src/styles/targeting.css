@@ -121,7 +121,8 @@
 
 .lock-on-reticle {
   position: absolute;
-  /* width and height set in JS via RETICLE_SIZE */
+  width: 80px;
+  height: 80px;
   opacity: 0;
   transition: opacity 0.15s ease-out;
   pointer-events: none;
@@ -129,7 +130,8 @@
 
 .lock-on-lead-indicator {
   position: absolute;
-  /* width and height set in JS via LEAD_INDICATOR_SIZE */
+  width: 30px;
+  height: 30px;
   opacity: 0;
   transition: opacity 0.15s ease-out;
   pointer-events: none;
@@ -137,7 +139,8 @@
 
 .lock-on-health-bar {
   position: absolute;
-  /* width and height set in JS */
+  width: 100px;
+  height: 8px;
   border: 1px solid white;
   opacity: 0;
   transition: opacity 0.15s ease-out;
@@ -181,7 +184,8 @@
 
 .threat-arrow {
   position: absolute;
-  /* width and height set in JS */
+  width: 30px;
+  height: 30px;
   border-left: 3px solid;
   border-bottom: 3px solid;
   border-color: white;
