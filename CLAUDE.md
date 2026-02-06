@@ -6,14 +6,16 @@
 
 A polished space mining game running on WebGPU at locked 60fps. Clean architecture, modern tooling, production quality.
 
-## Current State: Phase 4 COMPLETE - Visual Indicators Done
+## Current State: Phase 5 IN PROGRESS - HUD Overhaul
 
-**MILESTONE: Phase 4 Visual Indicators Complete (2026-02-05)**
+**MILESTONE: Phase 5 HUD Overhaul Started (2026-02-06)**
 
-- 245 TypeScript files, 0 JavaScript files (pure TypeScript codebase)
+- ~235 TypeScript files, 0 JavaScript files (pure TypeScript codebase)
 - bitECS systems ALL wired into game loop: physics, renderSync, enemyAI, combat, mining
 - Build succeeds, typecheck passes with 0 errors
-- Code splitting: game-core 184 kB, combat 35 kB, env 62 kB, ui 61 kB
+- Code splitting: game-core 184 kB, combat 27 kB, env 62 kB, ui 68 kB
+- Vite 6 + Tailwind CSS 3.4 + PostCSS installed and configured
+- Combat CSS migration in progress (src/styles/combat.css, 631 lines)
 
 **Phase 4 Completed Features:**
 - Lock-on targeting: target reticle, lead indicator, health bar (ad26e0c)
@@ -83,22 +85,22 @@ A polished space mining game running on WebGPU at locked 60fps. Clean architectu
 **Remaining Problems:**
 - **Runtime unverified** - No browser available on NixOS hub. Game may not load. Needs testing on Windows PC or via GitHub Pages deployment. (GitHub Pages deployment task completed - verify at live URL)
 - **GLSL shaders** - 2 GLSL post-processing shaders in js/modules/renderer/shaders.ts remain GLSL (ShaderPass requires raw GLSL/WGSL, not TSL nodes). Converting to TSL requires switching to NodePostProcessing.
-- **Global state** - ~233 `window.*` usages remain across ~65 files. js/globals/ module created. enemyAISystem window.game refs moved to ecsRunner.ts via dependency injection (4a8b9cc). Top offenders: physics.ts (20), diagnostics.ts (16), renderer.ts (9). Gradual migration to proper imports ongoing.
-- **Dead legacy ECS code** - js/core/ has 1,354 lines total but only messageBus.ts, world.ts, and events.ts are imported. 7 files (entity.ts, entityManager.ts, systemManager.ts, system.ts, component.ts, difficultyManager.ts, EntityIndex.ts) plus js/core/optimized/ and js/core/spatial/ are dead code.
-- **Inline styles** - ~1,605 inline style manipulations across 50+ UI files. Top offenders: combat/styles.ts (185), mobileHUD.ts (126), combat/indicators.ts (72). No Tailwind/PostCSS setup exists yet.
+- **Global state** - ~216 `window.*` usages remain across ~64 files. js/globals/ module created. enemyAISystem window.game refs moved to ecsRunner.ts via dependency injection (4a8b9cc). Top offenders: physics.ts (20), diagnostics.ts (16), renderer.ts (9). Gradual migration to proper imports ongoing.
+- ~~**Dead legacy ECS code**~~ RESOLVED - 7 orphaned files + optimized/ + spatial/ deleted (d9d648f). Only 3 active files remain: messageBus.ts, world.ts, events.ts.
+- **Inline styles** - ~777 inline style manipulations across 40+ UI files (down from ~1,605). Combat CSS migration in progress (src/styles/combat.css). Top remaining: mobileHUD.ts (126), blackjack/animations.ts (60), starmap/uiCreator.ts (55). Tailwind CSS + PostCSS installed and configured (2b45218).
 
 ## Target Stack (2026 Best Practices)
 
 | Layer | Current | Target | Status |
 |-------|---------|--------|--------|
-| Language | TypeScript (242 TS, 0 JS) | **TypeScript (strict)** | **COMPLETE** |
+| Language | TypeScript (~235 TS, 0 JS) | **TypeScript (strict)** | **COMPLETE** |
 | Renderer | Three.js r180 WebGPU | **Three.js r180+ WebGPU** | Done |
 | Shaders | GLSL + TSL laser (integrated) | **TSL (Three Shading Language)** | Started |
 | ECS | bitECS (5 systems wired) | **bitECS** | **Active** |
 | Physics | Custom Newtonian (bitECS) | **Keep custom** (cleaned up) | Done |
 | Particles | CPU-based | **WebGPU Compute Shaders** | - |
-| Build | Vite 5 | Vite 6 | - |
-| UI | Inline styles | **CSS/Tailwind** | - |
+| Build | Vite 6 | **Vite 6** | **COMPLETE** |
+| UI | Inline styles + CSS (combat migrating) | **CSS/Tailwind** | **Active** |
 
 ### Why This Stack
 
@@ -263,11 +265,12 @@ Health.current[eid] = Health.max[eid]
    - ~~Enemy behavior variety (state machines)~~ Done (ae668e6 - IDLE/PATROL/CHASE/EVADE states)
    - ~~Difficulty-based spawning~~ Done via DifficultyConfig injection (4a8b9cc)
 
-### Phase 5: HUD Overhaul
-1. Install Tailwind CSS + PostCSS + autoprefixer, configure with Vite
-2. Delete dead legacy ECS code (7 orphaned files + optimized/ + spatial/ in js/core/)
-3. Migrate inline styles to CSS classes - ~1,605 instances across 50+ files
-   - Priority: combat/styles.ts (185), mobileHUD.ts (126), combat/indicators.ts (72)
+### Phase 5: HUD Overhaul - IN PROGRESS
+1. ~~Install Tailwind CSS + PostCSS + autoprefixer, configure with Vite~~ Done (2b45218)
+2. ~~Delete dead legacy ECS code (7 orphaned files + optimized/ + spatial/ in js/core/)~~ Done (d9d648f)
+3. Migrate inline styles to CSS classes - ~777 remaining across 40+ files
+   - ~~combat/ CSS extracted to src/styles/combat.css~~ In progress (6 files modified, uncommitted)
+   - Priority: mobileHUD.ts (126), blackjack/animations.ts (60), starmap/uiCreator.ts (55)
 4. Clean, minimal aesthetic
 5. Contextual UI (only show what's relevant)
 6. Mining progress with satisfying feedback
@@ -328,18 +331,12 @@ Current (package.json):
   },
   "devDependencies": {
     "@types/three": "^0.180.0",
+    "autoprefixer": "^10.4.20",
     "gh-pages": "^6.3.0",
+    "postcss": "^8.4.47",
     "rimraf": "^5.0.5",
+    "tailwindcss": "^3.4.4",
     "typescript": "^5.7.3",
-    "vite": "^5.0.0"
-  }
-}
-```
-
-Target additions:
-```json
-{
-  "devDependencies": {
     "vite": "^6.0.0"
   }
 }
@@ -352,7 +349,10 @@ Current:
 src/
 ├── main.ts              # Bootstrap, loading screen, asset preloading
 ├── global.d.ts          # Window interface extensions
-└── three-imports.ts     # Centralized Three.js imports
+├── three-imports.ts     # Centralized Three.js imports
+└── styles/
+    ├── main.css         # Tailwind directives + imports + theme vars
+    └── combat.css       # Combat UI styles (extracted from inline)
 
 js/
 ├── main.ts              # Game class, main loop (calls initECS/updateECS)
@@ -399,7 +399,7 @@ js/
 │   ├── ui/              # All TS (65+ files, fully converted)
 │   └── intro/           # 6 TS files (fully converted, 6d8f9fa)
 ├── globals/             # Module-level singletons (debug.ts, messageBus.ts, objectPool.ts)
-├── core/                # Legacy ECS framework (12 TS files - still active, bridges old patterns)
+├── core/                # Core framework (3 active files: messageBus.ts, world.ts, events.ts)
 └── config/
     └── lightingConfig.ts # Lighting config (wired to lighting.js, values in sync)
 ```
