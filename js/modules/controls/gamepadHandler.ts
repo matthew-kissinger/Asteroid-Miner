@@ -634,19 +634,7 @@ export class GamepadHandler {
         
         this.debugDisplay = document.createElement('div');
         this.debugDisplay.id = 'gamepad-debug';
-        this.debugDisplay.style.position = 'fixed';
-        this.debugDisplay.style.top = '10px';
-        this.debugDisplay.style.right = '10px';
-        this.debugDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        this.debugDisplay.style.color = '#0f0';
-        this.debugDisplay.style.padding = '10px';
-        this.debugDisplay.style.fontFamily = 'monospace';
-        this.debugDisplay.style.fontSize = '12px';
-        this.debugDisplay.style.borderRadius = '5px';
-        this.debugDisplay.style.border = '1px solid #0f0';
-        this.debugDisplay.style.zIndex = '10001';
-        this.debugDisplay.style.maxWidth = '300px';
-        this.debugDisplay.style.pointerEvents = 'none';
+        this.debugDisplay.className = 'gamepad-debug';
         
         document.body.appendChild(this.debugDisplay);
     }
