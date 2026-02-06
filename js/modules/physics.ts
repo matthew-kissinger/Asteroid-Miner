@@ -45,6 +45,19 @@ interface AsteroidBeltUserData {
     asteroids: AsteroidData[];
 }
 
+// Dependency injection interfaces
+interface GameStateAccessor {
+    isIntroSequenceActive(): boolean;
+}
+
+interface InputAccessor {
+    getInputIntent(): number | undefined;
+}
+
+interface AudioSystem {
+    playSound(sound: string): void;
+}
+
 export class Physics {
     // Physics constants - significantly increased for super-fast movement
     static THRUST_FORCE = 0.5;      // 5x increase from previous 0.1
@@ -98,11 +111,28 @@ export class Physics {
     // Camera zoom state
     currentZoom: number = 1.0;      // Current zoom multiplier (1.0 = normal, 1.3 = zoomed out)
     targetZoom: number = 1.0;       // Target zoom multiplier for smooth interpolation
-    
-    constructor(scene: THREE.Scene) {
+
+    // Injected dependencies (optional for backward compatibility)
+    private gameState?: GameStateAccessor;
+    private inputAccessor?: InputAccessor;
+    private audioSystem?: AudioSystem;
+
+    constructor(
+        scene: THREE.Scene,
+        options?: {
+            gameState?: GameStateAccessor;
+            inputAccessor?: InputAccessor;
+            audioSystem?: AudioSystem;
+        }
+    ) {
         this.scene = scene;
         this.spaceship = null; // Will be set later
         this.camera = null; // Will be set later
+
+        // Store injected dependencies
+        this.gameState = options?.gameState;
+        this.inputAccessor = options?.inputAccessor;
+        this.audioSystem = options?.audioSystem;
 
         // Virtual rotation state for pointer lock
         this.rotationState = {
@@ -198,12 +228,12 @@ export class Physics {
     
     update(deltaTime: number): void {
         if (!this.spaceship || this.spaceship.isDestroyed) return;
-        
+
         // Check if ship is docked - skip physics if docked
         if (this.spaceship.isDocked) return;
-        
+
         // Skip physics updates if intro sequence is active
-        if (window.game && (window.game as { introSequenceActive?: boolean }).introSequenceActive) {
+        if (this.gameState?.isIntroSequenceActive()) {
             return;
         }
         
@@ -230,8 +260,8 @@ export class Physics {
         // Physics only handles movement calculations
         
         if (hasFuel) {
-            // NOTE: Player authority migrating to ECS. Respect global inputIntent when available.
-            const intent = window.inputIntent;
+            // NOTE: Player authority migrating to ECS. Respect inputIntent when available.
+            const intent = this.inputAccessor?.getInputIntent();
 
             // Determine input source and compute thrust state without circular dependency
             let forwardPressed: boolean;
@@ -393,7 +423,7 @@ export class Physics {
         if (!this.spaceship || !this.camera) return;
 
         // Skip camera updates if intro sequence is active
-        if (window.game && (window.game as { introSequenceActive?: boolean }).introSequenceActive) {
+        if (this.gameState?.isIntroSequenceActive()) {
             console.log("Skipping camera update - intro sequence active");
             return;
         }
@@ -750,14 +780,8 @@ export class Physics {
             }
             
             // Play the "boink" sound for minor collisions
-            if (window.game && 
-                typeof window.game === 'object' &&
-                'audio' in window.game &&
-                window.game.audio &&
-                typeof window.game.audio === 'object' &&
-                'playSound' in window.game.audio &&
-                typeof window.game.audio.playSound === 'function') {
-                (window.game.audio as { playSound: (sound: string) => void }).playSound('boink');
+            if (this.audioSystem) {
+                this.audioSystem.playSound('boink');
             }
             
             // Reset collision state after a short delay
@@ -821,41 +845,14 @@ export class Physics {
         
         console.log("Physics: Initiating game over sequence for collision with", type);
         
-        // Use main message bus if available
-        if (mainMessageBus && typeof mainMessageBus.publish === 'function') {
-            console.log("Physics: Using main message bus");
-            mainMessageBus.publish('game.over', {
-                reason: explosionMessage,
-                source: "physics",
-                collisionType: type,
-                type: collisionType
-            });
-        } else if (window.game && 
-                   typeof window.game === 'object' &&
-                   'messageBus' in window.game &&
-                   window.game.messageBus &&
-                   typeof window.game.messageBus === 'object' &&
-                   'publish' in window.game.messageBus &&
-                   typeof window.game.messageBus.publish === 'function') {
-            // Use game message bus if main message bus not available
-            console.log("Physics: Using window.game.messageBus");
-            (window.game.messageBus as { publish: (event: string, data: unknown) => void }).publish('game.over', {
-                reason: explosionMessage,
-                source: "physics",
-                collisionType: type,
-                type: collisionType
-            });
-        } else {
-            // Only use MessageBus.triggerGameOver if no direct access
-            import('../core/messageBus.ts').then(module => {
-                const MessageBus = (module as { MessageBus: { triggerGameOver: (message: string, source: string) => void } }).MessageBus;
-                console.log("Physics: Using MessageBus.triggerGameOver");
-                
-                MessageBus.triggerGameOver(explosionMessage, "physics");
-            }).catch((err: unknown) => {
-                console.error("Physics: Error importing MessageBus:", err);
-            });
-        }
+        // Use main message bus (always available via import)
+        console.log("Physics: Publishing game over event");
+        mainMessageBus.publish('game.over', {
+            reason: explosionMessage,
+            source: "physics",
+            collisionType: type,
+            type: collisionType
+        });
     }
     
     // Method to attempt to recover from a collision based on hull resistance

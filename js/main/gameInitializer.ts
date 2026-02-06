@@ -87,9 +87,30 @@ export class GameInitializer {
         
         // Initialize essential components needed for the start screen
         if (DEBUG_MODE.enabled) console.log("Initializing essential components...");
-        
-        // Initialize physics
-        const physics = new Physics(this.game.scene);
+
+        // Initialize physics with dependency injection
+        const physics = new Physics(this.game.scene, {
+            gameState: {
+                isIntroSequenceActive: () => {
+                    // Access game instance through this.game reference
+                    return (this.game as any).introSequenceActive === true;
+                }
+            },
+            inputAccessor: {
+                getInputIntent: () => {
+                    // Access global inputIntent (set by keyboard handler)
+                    return (window as any).inputIntent;
+                }
+            },
+            audioSystem: {
+                playSound: (sound: string) => {
+                    // Access audio system through game instance
+                    if (this.game.audio && typeof this.game.audio.playSound === 'function') {
+                        this.game.audio.playSound(sound);
+                    }
+                }
+            }
+        });
         this.game.physics = physics;
         
         // Set camera reference in physics
