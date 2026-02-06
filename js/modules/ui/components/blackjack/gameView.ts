@@ -281,17 +281,13 @@ export class BlackjackGameView {
         // Resource name
         const resourceName: HTMLSpanElement = document.createElement('span');
         resourceName.textContent = resource.toUpperCase();
-        resourceName.style.fontWeight = 'bold';
-        resourceName.style.fontSize = '12px';
+        resourceName.className = 'bj-resource-name';
         btn.appendChild(resourceName);
         
         // Resource amount
         const resourceAmount: HTMLSpanElement = document.createElement('span');
-        resourceAmount.className = `${resource}-amount`;
+        resourceAmount.className = `${resource}-amount bj-resource-amount`;
         resourceAmount.textContent = '0 UNITS';
-        resourceAmount.style.fontSize = '10px';
-        resourceAmount.style.marginTop = '3px';
-        resourceAmount.style.opacity = '0.7';
         btn.appendChild(resourceAmount);
         
         return btn;
@@ -357,9 +353,9 @@ export class BlackjackGameView {
         const button: HTMLButtonElement = document.createElement('button');
         button.id = id;
         button.textContent = text;
+        button.className = 'bj-action-btn-disabled';
         this.styles.applyStyles(button, this.styles.getActionButtonStyles(color));
         button.disabled = true;
-        button.style.opacity = '0.5';
         return button;
     }
 
@@ -388,55 +384,47 @@ export class BlackjackGameView {
         
         // Card value at top-left
         const topValue: HTMLDivElement = document.createElement('div');
+        topValue.className = 'bj-card-value-top';
         topValue.textContent = card.value;
         topValue.style.color = color;
-        this.styles.applyStyles(topValue, this.styles.getCardValueStyles('top'));
         cardEl.appendChild(topValue);
         
         // Suit at top-right
         const topSuit: HTMLDivElement = document.createElement('div');
+        topSuit.className = 'bj-card-suit-top';
         topSuit.textContent = this.cardSymbols[card.suit];
         topSuit.style.color = color;
-        this.styles.applyStyles(topSuit, this.styles.getCardSuitStyles('top'));
         cardEl.appendChild(topSuit);
         
         // Center symbol
         const centerSymbol: HTMLDivElement = document.createElement('div');
+        centerSymbol.className = 'bj-card-center-symbol';
         centerSymbol.textContent = this.cardSymbols[card.suit];
         centerSymbol.style.color = color;
-        this.styles.applyStyles(centerSymbol, this.styles.getCenterSymbolStyles());
         cardEl.appendChild(centerSymbol);
         
         // Value at bottom-right (rotated)
         const bottomValue: HTMLDivElement = document.createElement('div');
+        bottomValue.className = 'bj-card-value-bottom';
         bottomValue.textContent = card.value;
         bottomValue.style.color = color;
-        this.styles.applyStyles(bottomValue, this.styles.getCardValueStyles('bottom'));
         cardEl.appendChild(bottomValue);
         
         // Suit at bottom-left (rotated)
         const bottomSuit: HTMLDivElement = document.createElement('div');
+        bottomSuit.className = 'bj-card-suit-bottom';
         bottomSuit.textContent = this.cardSymbols[card.suit];
         bottomSuit.style.color = color;
-        this.styles.applyStyles(bottomSuit, this.styles.getCardSuitStyles('bottom'));
         cardEl.appendChild(bottomSuit);
         
         // Card background pattern
         const pattern: HTMLDivElement = document.createElement('div');
-        pattern.style.position = 'absolute';
-        pattern.style.inset = '0';
-        pattern.style.opacity = '0.05';
-        pattern.style.backgroundImage = 'radial-gradient(circle, #fff 1px, transparent 1px)';
-        pattern.style.backgroundSize = '10px 10px';
-        pattern.style.pointerEvents = 'none';
+        pattern.className = 'bj-card-pattern';
         cardEl.appendChild(pattern);
         
         // Holographic effect
         const holoEffect: HTMLDivElement = document.createElement('div');
-        holoEffect.style.position = 'absolute';
-        holoEffect.style.inset = '0';
-        holoEffect.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.1) 100%)';
-        holoEffect.style.pointerEvents = 'none';
+        holoEffect.className = 'bj-card-holo-effect';
         cardEl.appendChild(holoEffect);
     }
 
@@ -446,20 +434,13 @@ export class BlackjackGameView {
     createFaceDownCard(cardEl: HTMLDivElement): void {
         // Back design for face-down card
         const backDesign: HTMLDivElement = document.createElement('div');
-        backDesign.style.width = '80%';
-        backDesign.style.height = '80%';
-        backDesign.style.border = '2px solid rgba(51, 170, 255, 0.4)';
-        backDesign.style.borderRadius = '5px';
-        backDesign.style.backgroundImage = 'radial-gradient(circle, rgba(51, 170, 255, 0.2) 10%, transparent 10%)';
-        backDesign.style.backgroundSize = '10px 10px';
+        backDesign.className = 'bj-card-back-design';
         cardEl.appendChild(backDesign);
         
         // Logo in center of back
         const logo: HTMLDivElement = document.createElement('div');
-        logo.style.position = 'absolute';
-        logo.style.fontWeight = 'bold';
+        logo.className = 'bj-card-back-logo';
         logo.style.fontSize = this.isMobile ? '12px' : '14px';
-        logo.style.color = 'rgba(51, 170, 255, 0.7)';
         logo.textContent = 'BJ';
         cardEl.appendChild(logo);
     }
@@ -469,7 +450,7 @@ export class BlackjackGameView {
      */
     show(gameUI: HTMLDivElement | null): void {
         if (gameUI) {
-            gameUI.style.display = 'block';
+            gameUI.classList.remove('hidden');
         }
     }
 
@@ -478,7 +459,7 @@ export class BlackjackGameView {
      */
     hide(gameUI: HTMLDivElement | null): void {
         if (gameUI) {
-            gameUI.style.display = 'none';
+            gameUI.classList.add('hidden');
         }
     }
 
@@ -579,10 +560,10 @@ export class BlackjackGameView {
         const speechBubble = document.getElementById('dealer-speech') as HTMLDivElement | null;
         if (speechBubble) {
             speechBubble.textContent = message;
-            speechBubble.style.display = 'block';
+            speechBubble.classList.remove('hidden');
             
             setTimeout(() => {
-                speechBubble.style.display = 'none';
+                speechBubble.classList.add('hidden');
             }, duration);
         }
     }

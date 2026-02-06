@@ -103,3 +103,90 @@
 .targeting-pulse {
   animation: targetPulse 2s infinite;
 }
+
+/* ==========================================================================
+   Lock-on Display (lockOnDisplay.ts)
+   ========================================================================== */
+
+.lock-on-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  display: none;
+}
+
+.lock-on-reticle {
+  position: absolute;
+  /* width and height set in JS via RETICLE_SIZE */
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+  pointer-events: none;
+}
+
+.lock-on-lead-indicator {
+  position: absolute;
+  /* width and height set in JS via LEAD_INDICATOR_SIZE */
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+  pointer-events: none;
+}
+
+.lock-on-health-bar {
+  position: absolute;
+  /* width and height set in JS */
+  border: 1px solid white;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+  pointer-events: none;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.lock-on-health-fill {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #30ff30; /* Default high health color */
+  transition: width 0.2s ease-out, background-color 0.2s ease-out;
+}
+
+.lock-on-info-text {
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-family: monospace;
+  text-shadow: 0 0 4px black;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Threat Indicators (threatIndicators.ts)
+   ========================================================================== */
+
+.threat-indicators-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.threat-arrow {
+  position: absolute;
+  /* width and height set in JS */
+  border-left: 3px solid;
+  border-bottom: 3px solid;
+  border-color: white;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+  pointer-events: none;
+  transform-origin: center center;
+}

@@ -471,7 +471,13 @@ export class UI {
             if (this.settings && this.settings.settings) {
                 const fpsDisplay = document.getElementById('fps-display');
                 if (fpsDisplay) {
-                    fpsDisplay.style.display = this.settings.settings.showFPS ? 'block' : 'none';
+                    if (this.settings.settings.showFPS) {
+                        fpsDisplay.classList.remove('hud-hidden');
+                        fpsDisplay.classList.add('hud-visible');
+                    } else {
+                        fpsDisplay.classList.add('hud-hidden');
+                        fpsDisplay.classList.remove('hud-visible');
+                    }
                 }
             }
         }
@@ -583,7 +589,8 @@ export class UI {
             // Hide each found element (being careful to check if it exists)
             elements.forEach(element => {
                 if (element) {
-                    element.style.display = 'none';
+                    element.classList.add('hud-hidden');
+                    element.classList.remove('hud-visible');
                 }
             });
             
@@ -591,7 +598,8 @@ export class UI {
             const allPanels = document.querySelectorAll('.ui-panel, .panel, .hud-panel, .status-panel');
             allPanels.forEach(panel => {
                 if (panel instanceof HTMLElement) {
-                    panel.style.display = 'none';
+                    panel.classList.add('hud-hidden');
+                    panel.classList.remove('hud-visible');
                 }
             });
             
@@ -667,9 +675,9 @@ export class UI {
         // Ensure HUD container is visible
         const hudContainer = document.getElementById('hud-container');
         if (hudContainer) {
-            console.log("Setting hudContainer to display:block");
-            hudContainer.style.display = 'block';
-            hudContainer.style.visibility = 'visible'; // Double ensure visibility
+            console.log("Setting hudContainer to visible");
+            hudContainer.classList.remove('hud-hidden');
+            hudContainer.classList.add('hud-visible');
         } else {
             console.warn("HUD container not found - could not make visible");
         }
@@ -677,22 +685,22 @@ export class UI {
         // Ensure mobile HUD is visible if on mobile
         const mobileHudContainer = document.getElementById('mobile-hud-container');
         if (mobileHudContainer) {
-            mobileHudContainer.style.display = 'block';
-            mobileHudContainer.style.visibility = 'visible';
+            mobileHudContainer.classList.remove('hud-hidden');
+            mobileHudContainer.classList.add('hud-visible');
         }
         
         // Show pointer lock instructions only if not locked
         const pointerLockInstructions = document.getElementById('pointer-lock-instructions');
         if (pointerLockInstructions && !document.pointerLockElement) {
-            pointerLockInstructions.style.display = 'block';
-            pointerLockInstructions.style.visibility = 'visible';
+            pointerLockInstructions.classList.remove('hud-hidden');
+            pointerLockInstructions.classList.add('hud-visible');
         }
         
         // Show notifications area
         const notificationsArea = document.getElementById('notifications-area');
         if (notificationsArea) {
-            notificationsArea.style.display = 'block';
-            notificationsArea.style.visibility = 'visible';
+            notificationsArea.classList.remove('hud-hidden');
+            notificationsArea.classList.add('hud-visible');
         }
 
         // Also show any panels that might have been hidden (except target-info which should stay hidden)
@@ -701,9 +709,9 @@ export class UI {
             if (panel instanceof HTMLElement) {
                 // Don't force target-info to be visible - let targeting system control it
                 if (panel.id !== 'target-info') {
-                    panel.style.display = 'block';
+                    panel.classList.remove('hud-hidden');
                 }
-                panel.style.visibility = 'visible';
+                panel.classList.add('hud-visible');
             }
         });
     }

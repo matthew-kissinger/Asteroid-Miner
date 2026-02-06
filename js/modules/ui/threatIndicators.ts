@@ -41,16 +41,7 @@ export function initThreatIndicators(): void {
     // Create container
     container = document.createElement('div');
     container.id = 'threat-indicators-container';
-
-    Object.assign(container.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: '1000'
-    });
+    container.className = 'threat-indicators-container';
 
     document.body.appendChild(container);
 
@@ -75,18 +66,9 @@ function createArrowElement(): HTMLDivElement {
     const arrow = document.createElement('div');
     arrow.className = 'threat-arrow';
 
-    Object.assign(arrow.style, {
-        position: 'absolute',
-        width: `${ARROW_SIZE}px`,
-        height: `${ARROW_SIZE}px`,
-        borderLeft: '3px solid',
-        borderBottom: '3px solid',
-        borderColor: 'white',
-        opacity: '0',
-        transition: 'opacity 0.15s ease-out',
-        pointerEvents: 'none',
-        transformOrigin: 'center center'
-    });
+    // Set dynamic dimensions
+    arrow.style.width = `${ARROW_SIZE}px`;
+    arrow.style.height = `${ARROW_SIZE}px`;
 
     return arrow;
 }

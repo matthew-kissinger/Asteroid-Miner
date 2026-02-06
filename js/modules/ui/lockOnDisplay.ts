@@ -54,17 +54,10 @@ export function initLockOnDisplay(): void {
     // Create container
     const container = document.createElement('div');
     container.id = 'lock-on-display-container';
-
-    Object.assign(container.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: '1000',
-        display: 'none'
-    });
+    container.className = 'lock-on-container';
+    
+    // Set initial display state (dynamic)
+    container.style.display = 'none';
 
     document.body.appendChild(container);
 
@@ -79,26 +72,16 @@ export function initLockOnDisplay(): void {
     // Create health bar
     const healthBar = document.createElement('div');
     healthBar.className = 'lock-on-health-bar';
-    Object.assign(healthBar.style, {
-        position: 'absolute',
-        width: `${HEALTH_BAR_WIDTH}px`,
-        height: `${HEALTH_BAR_HEIGHT}px`,
-        border: '1px solid white',
-        opacity: '0',
-        transition: 'opacity 0.15s ease-out',
-        pointerEvents: 'none',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)'
-    });
+    
+    // Set dynamic dimensions
+    healthBar.style.width = `${HEALTH_BAR_WIDTH}px`;
+    healthBar.style.height = `${HEALTH_BAR_HEIGHT}px`;
 
     const healthFill = document.createElement('div');
     healthFill.className = 'lock-on-health-fill';
-    Object.assign(healthFill.style, {
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        backgroundColor: COLOR_HEALTH_HIGH,
-        transition: 'width 0.2s ease-out, background-color 0.2s ease-out'
-    });
+    
+    // Initial color (dynamic)
+    healthFill.style.backgroundColor = COLOR_HEALTH_HIGH;
 
     healthBar.appendChild(healthFill);
     container.appendChild(healthBar);
@@ -106,17 +89,6 @@ export function initLockOnDisplay(): void {
     // Create info text (distance, type)
     const infoText = document.createElement('div');
     infoText.className = 'lock-on-info-text';
-    Object.assign(infoText.style, {
-        position: 'absolute',
-        color: 'white',
-        fontSize: '14px',
-        fontFamily: 'monospace',
-        textShadow: '0 0 4px black',
-        opacity: '0',
-        transition: 'opacity 0.15s ease-out',
-        pointerEvents: 'none',
-        whiteSpace: 'nowrap'
-    });
 
     container.appendChild(infoText);
 
@@ -140,14 +112,9 @@ function createReticleElement(): HTMLDivElement {
     const reticle = document.createElement('div');
     reticle.className = 'lock-on-reticle';
 
-    Object.assign(reticle.style, {
-        position: 'absolute',
-        width: `${RETICLE_SIZE}px`,
-        height: `${RETICLE_SIZE}px`,
-        opacity: '0',
-        transition: 'opacity 0.15s ease-out',
-        pointerEvents: 'none'
-    });
+    // Set dynamic dimensions
+    reticle.style.width = `${RETICLE_SIZE}px`;
+    reticle.style.height = `${RETICLE_SIZE}px`;
 
     // SVG reticle with crosshairs
     reticle.innerHTML = `
@@ -175,14 +142,9 @@ function createLeadIndicatorElement(): HTMLDivElement {
     const leadIndicator = document.createElement('div');
     leadIndicator.className = 'lock-on-lead-indicator';
 
-    Object.assign(leadIndicator.style, {
-        position: 'absolute',
-        width: `${LEAD_INDICATOR_SIZE}px`,
-        height: `${LEAD_INDICATOR_SIZE}px`,
-        opacity: '0',
-        transition: 'opacity 0.15s ease-out',
-        pointerEvents: 'none'
-    });
+    // Set dynamic dimensions
+    leadIndicator.style.width = `${LEAD_INDICATOR_SIZE}px`;
+    leadIndicator.style.height = `${LEAD_INDICATOR_SIZE}px`;
 
     // Filled circle SVG
     leadIndicator.innerHTML = `

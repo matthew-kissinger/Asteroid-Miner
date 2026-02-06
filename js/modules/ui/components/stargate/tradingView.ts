@@ -158,20 +158,9 @@ export class TradingView {
     showNotification(message: string, color = 0x33aaff): void {
         // Create notification element
         const notification = document.createElement('div');
-        notification.style.position = 'fixed';
-        notification.style.top = '35%';
-        notification.style.left = '50%';
-        notification.style.transform = 'translate(-50%, -50%)';
-        notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        notification.style.color = '#fff';
-        notification.style.padding = '15px 30px';
-        notification.style.borderRadius = '10px';
+        notification.className = 'trading-notification';
         notification.style.border = `2px solid #${color.toString(16).padStart(6, '0')}`;
         notification.style.boxShadow = `0 0 15px #${color.toString(16).padStart(6, '0')}`;
-        notification.style.fontFamily = 'Courier New, monospace';
-        notification.style.fontSize = '16px';
-        notification.style.zIndex = '1001'; // Above the stargate UI
-        notification.style.textAlign = 'center';
         
         // Set notification text
         notification.textContent = message;
@@ -182,7 +171,6 @@ export class TradingView {
         // Remove after a few seconds
         setTimeout(() => {
             notification.style.opacity = '0';
-            notification.style.transition = 'opacity 0.8s';
             
             setTimeout(() => {
                 notification.remove();
@@ -241,15 +229,10 @@ export class TradingView {
             
             if (orbCount === 0) {
                 button.disabled = true;
-                button.style.backgroundColor = 'rgba(40, 40, 40, 0.8)';
-                button.style.color = '#777';
-                button.style.cursor = 'not-allowed';
-                button.style.boxShadow = 'none';
+                button.className = 'orb-sell-btn-disabled';
             } else {
                 button.disabled = false;
-                button.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
-                button.style.color = '#fff';
-                button.style.cursor = 'pointer';
+                button.className = 'orb-sell-btn-enabled';
                 button.style.boxShadow = `0 0 10px ${borderColor}`;
             }
         };
@@ -275,12 +258,10 @@ export class TradingView {
         if (purchaseLaserBtn) {
             if (this.spaceship.credits < 1000) {
                 purchaseLaserBtn.disabled = true;
-                purchaseLaserBtn.style.backgroundColor = '#555';
-                purchaseLaserBtn.style.cursor = 'not-allowed';
+                purchaseLaserBtn.className = 'laser-purchase-btn-disabled';
             } else {
                 purchaseLaserBtn.disabled = false;
-                purchaseLaserBtn.style.backgroundColor = '#FF3333';
-                purchaseLaserBtn.style.cursor = 'pointer';
+                purchaseLaserBtn.className = 'laser-purchase-btn-enabled';
             }
         }
     }
@@ -306,10 +287,7 @@ export class TradingView {
         document.querySelectorAll('.sell-btn').forEach(btn => {
             const button = btn as HTMLButtonElement;
             if (button.disabled) {
-                button.style.backgroundColor = 'rgba(40, 40, 40, 0.8)';
-                button.style.color = '#777';
-                button.style.cursor = 'not-allowed';
-                button.style.boxShadow = 'none';
+                button.className = 'sell-btn sell-btn-disabled';
             }
         });
     }
@@ -321,21 +299,16 @@ export class TradingView {
         
         if (resourceAmount === 0) {
             button.disabled = true;
-            button.style.backgroundColor = 'rgba(40, 40, 40, 0.8)';
+            button.className = 'sell-btn sell-btn-disabled';
             button.style.borderColor = '#555';
-            button.style.color = '#777';
-            button.style.boxShadow = 'none';
-            button.style.cursor = 'not-allowed';
         } else {
             button.disabled = false;
-            button.style.backgroundColor = 'rgba(15, 40, 55, 0.8)';
+            button.className = 'sell-btn sell-btn-enabled';
             button.style.borderColor = borderColor;
-            button.style.color = '#fff';
             const r = parseInt(borderColor.slice(1, 3), 16);
             const g = parseInt(borderColor.slice(3, 5), 16);
             const b = parseInt(borderColor.slice(5, 7), 16);
             button.style.boxShadow = `0 0 10px rgba(${r}, ${g}, ${b}, 0.3)`;
-            button.style.cursor = 'pointer';
         }
     }
 }

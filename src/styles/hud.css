@@ -83,3 +83,17 @@
   cursor: pointer;
   border-radius: 5px;
 }
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+
+.hud-visible {
+  display: block !important;
+  visibility: visible !important;
+}
+
+.hud-hidden {
+  display: none !important;
+  visibility: hidden !important;
+}

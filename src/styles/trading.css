@@ -1,0 +1,72 @@
+/* ==========================================================================
+   Trading Interface Styles
+   Extracted from inline styles in js/modules/ui/components/stargate/tradingView.ts
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Notification
+   --------------------------------------------------------------------------- */
+
+.trading-notification {
+  position: fixed;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  z-index: 1001;
+  text-align: center;
+  transition: opacity 0.8s;
+}
+
+/* ---------------------------------------------------------------------------
+   Sell Buttons
+   --------------------------------------------------------------------------- */
+
+.sell-btn-enabled {
+  background-color: rgba(15, 40, 55, 0.8);
+  color: #fff;
+  cursor: pointer;
+}
+
+.sell-btn-disabled {
+  background-color: rgba(40, 40, 40, 0.8);
+  color: #777;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Orb Sell Buttons
+   --------------------------------------------------------------------------- */
+
+.orb-sell-btn-enabled {
+  background-color: rgba(15, 40, 55, 0.8);
+  color: #fff;
+  cursor: pointer;
+}
+
+.orb-sell-btn-disabled {
+  background-color: rgba(40, 40, 40, 0.8);
+  color: #777;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Laser Turret Purchase Button
+   --------------------------------------------------------------------------- */
+
+.laser-purchase-btn-enabled {
+  background-color: #FF3333;
+  cursor: pointer;
+}
+
+.laser-purchase-btn-disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
