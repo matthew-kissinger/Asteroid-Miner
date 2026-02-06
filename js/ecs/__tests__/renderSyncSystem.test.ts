@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { addEntity } from 'bitecs'
 import { world } from '../world'
 import {
@@ -16,21 +16,47 @@ import {
   type MeshRegistry,
 } from '../systems/renderSyncSystem'
 
-// Mock Three.js Object3D
+// Mock Three.js Object3D with .set() methods matching real Three.js API
+interface MockVec3 {
+  x: number; y: number; z: number
+  set(x: number, y: number, z: number): void
+}
+
+interface MockQuat {
+  x: number; y: number; z: number; w: number
+  set(x: number, y: number, z: number, w: number): void
+}
+
 interface MockObject3D {
-  position: { x: number; y: number; z: number }
-  quaternion: { x: number; y: number; z: number; w: number }
-  scale: { x: number; y: number; z: number }
+  position: MockVec3
+  quaternion: MockQuat
+  scale: MockVec3
   visible: boolean
   castShadow?: boolean
   receiveShadow?: boolean
 }
 
+function createMockVec3(x = 0, y = 0, z = 0): MockVec3 {
+  const v: MockVec3 = {
+    x, y, z,
+    set(nx: number, ny: number, nz: number) { v.x = nx; v.y = ny; v.z = nz },
+  }
+  return v
+}
+
+function createMockQuat(x = 0, y = 0, z = 0, w = 1): MockQuat {
+  const q: MockQuat = {
+    x, y, z, w,
+    set(nx: number, ny: number, nz: number, nw: number) { q.x = nx; q.y = ny; q.z = nz; q.w = nw },
+  }
+  return q
+}
+
 function createMockMesh(): MockObject3D {
   return {
-    position: { x: 0, y: 0, z: 0 },
-    quaternion: { x: 0, y: 0, z: 0, w: 1 },
-    scale: { x: 1, y: 1, z: 1 },
+    position: createMockVec3(),
+    quaternion: createMockQuat(),
+    scale: createMockVec3(1, 1, 1),
     visible: true,
     castShadow: false,
     receiveShadow: false,
@@ -108,7 +134,7 @@ describe('Render Sync System', () => {
       const mesh3 = createMockMesh()
 
       const index1 = registerMesh(meshRegistry, mesh1 as any)
-      const index2 = registerMesh(meshRegistry, mesh2 as any)
+      registerMesh(meshRegistry, mesh2 as any)
 
       // Unregister first mesh
       unregisterMesh(meshRegistry, index1)
@@ -235,9 +261,9 @@ describe('Render Sync System', () => {
 
       renderSyncSystem([eid], meshRegistry)
 
-      expect(mockMesh.scale.x).toBe(0.5)
-      expect(mockMesh.scale.y).toBe(0.25)
-      expect(mockMesh.scale.z).toBe(0.1)
+      expect(mockMesh.scale.x).toBeCloseTo(0.5)
+      expect(mockMesh.scale.y).toBeCloseTo(0.25)
+      expect(mockMesh.scale.z).toBeCloseTo(0.1)
     })
   })
 
@@ -309,9 +335,9 @@ describe('Render Sync System', () => {
     it('should handle mesh without shadow support', () => {
       // Create mesh without shadow properties
       const meshNoShadow = {
-        position: { x: 0, y: 0, z: 0 },
-        quaternion: { x: 0, y: 0, z: 0, w: 1 },
-        scale: { x: 1, y: 1, z: 1 },
+        position: createMockVec3(),
+        quaternion: createMockQuat(),
+        scale: createMockVec3(1, 1, 1),
         visible: true,
       }
 
@@ -413,10 +439,10 @@ describe('Render Sync System', () => {
       expect(mockMesh.position.x).toBe(10)
       expect(mockMesh.position.y).toBe(20)
       expect(mockMesh.position.z).toBe(30)
-      expect(mockMesh.quaternion.x).toBe(0.1)
-      expect(mockMesh.quaternion.y).toBe(0.2)
-      expect(mockMesh.quaternion.z).toBe(0.3)
-      expect(mockMesh.quaternion.w).toBe(0.9)
+      expect(mockMesh.quaternion.x).toBeCloseTo(0.1)
+      expect(mockMesh.quaternion.y).toBeCloseTo(0.2)
+      expect(mockMesh.quaternion.z).toBeCloseTo(0.3)
+      expect(mockMesh.quaternion.w).toBeCloseTo(0.9)
       expect(mockMesh.scale.x).toBe(2)
       expect(mockMesh.scale.y).toBe(3)
       expect(mockMesh.scale.z).toBe(4)
