@@ -45,16 +45,8 @@ export class WorldSetup {
             // Create player entity immediately - don't wait for full setup
             await this.createPlayerReferenceEntity(spaceship);
             
-            // Create optimized projectile store
-            if (!this.world.optimizedProjectiles) {
-                try {
-                    const { OptimizedProjectileStore } = await import('../../core/optimized/OptimizedProjectileStore.ts');
-                    this.world.optimizedProjectiles = new OptimizedProjectileStore(4096);
-                    console.log('[COMBAT] OptimizedProjectileStore created');
-                } catch (e) {
-                    console.warn('[COMBAT] OptimizedProjectileStore unavailable:', e);
-                }
-            }
+            // Optimized projectile store removed - legacy ECS code deleted
+            this.world.optimizedProjectiles = null;
             
             console.log("[COMBAT] ECS world initialization complete");
             return this.world;
