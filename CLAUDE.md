@@ -482,10 +482,23 @@ Types needed: lava, ocean, toxic, crystal, dead, jungle
 ## Commands
 
 ```bash
-npm run dev        # Dev server
-npm run build      # Production build
-npm run typecheck  # TypeScript check
+npm run dev          # Dev server
+npm run build        # Production build
+npm run typecheck    # TypeScript check
+npm run test         # Run unit tests (61 tests)
+npm run test:watch   # Run tests in watch mode
+npm run test:smoke   # Runtime smoke test (headless browser)
 ```
+
+### Smoke Test
+
+The `test:smoke` script performs a lightweight runtime verification:
+- Starts Vite dev server on port 9100
+- Opens headless Chromium via Playwright
+- Verifies no JS errors, canvas exists, window.game defined
+- Automatically cleans up server
+
+See `scripts/README.md` for details.
 
 ## Quality Bar
 
