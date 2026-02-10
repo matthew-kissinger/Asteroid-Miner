@@ -29,14 +29,17 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 ## Technologies Used
 
-*   **Frontend:** HTML5, CSS3, JavaScript (ES Modules)
-*   **3D Engine:** Three.js (r175+)
-*   **Build System:** Vite (v5+)
-*   **Architecture:** Hybrid ECS. Combat (enemies/projectiles) runs under ECS with fixed-step and instanced rendering; player ship physics and economy/UI run via modules. See `architecture.md`.
+*   **Language:** TypeScript 5.7 strict (248 pure TS files, 0 JavaScript)
+*   **3D Engine:** Three.js r180 WebGPU (WebGL2 fallback)
+*   **ECS:** bitECS v0.4.0 (29 components, 5 active systems)
+*   **Build System:** Vite 6 (code-split: game-core 180 kB, combat 27 kB, env 62 kB, ui 63 kB)
+*   **Styles:** Tailwind CSS 3.4 + 18 CSS files
+*   **Tests:** Vitest (7 files, 61 tests) + Playwright smoke test
+*   **Architecture:** Hybrid ECS/Module. Combat (enemies/projectiles) runs under bitECS with fixed-step and instanced rendering; player ship physics and economy/UI run via modules. See `architecture.md`.
 *   **Mobile Controls:** NippleJS
 *   **Audio:** Web Audio API, Tone.js (for intro sequence)
-*   **AI Generation API (Optional):** External API (likely FastAPI/Google Gemini) for custom system creation feature.
-*   **Shader Effects:** Custom GLSL shaders for advanced visual effects like volumetric lighting and sun surface
+*   **AI Generation API (Optional):** External API for custom system creation feature.
+*   **Shader Effects:** TSL laser material + 2 GLSL post-processing shaders (volumetric lighting, sun surface)
 
 ## Installation
 
@@ -129,7 +132,7 @@ This project uses Vite for an optimized development experience:
     *   **Start Button:** Pause/Menu
 *   **Goal:** Mine resources, sell them, upgrade your ship, and explore different systems. Survive encounters with hazards or enemies.
 
-## Performance Optimization (v0.7.0)
+## Performance Optimization
 
 The game includes several settings to optimize for different hardware capabilities:
 
@@ -140,19 +143,19 @@ The game includes several settings to optimize for different hardware capabiliti
 * **Instanced Rendering:** Enemies render as InstancedMesh per cell × archetype to collapse draw calls.
 * **Typed Events:** Enum + schema with dev-time validation to prevent stray event names.
 
-## Runbook (v0.7.0)
+## Runbook
 
 - Toggle Perf Overlay: Press `F3` in-game. Metrics: FPS, sim ms, render ms, draw calls, visible instances, pool stats, GC count, per-system timings.
-- Renderer Facade: Use `renderer.addView/removeView` or guarded `renderer.add`; avoid direct `scene.add/remove` in modules. Migrated hotspots: `js/modules/combat.js`, `js/modules/pooling/ProjectilePoolManager.js`, `js/modules/environment/spaceAnomalies.js`, shader warm-up in `js/main.js`.
+- Renderer Facade: Use `renderer.addView/removeView` or guarded `renderer.add`; avoid direct `scene.add/remove` in modules. Migrated hotspots: `js/modules/combat.ts`, `js/modules/pooling/ProjectilePoolManager.ts`, `js/modules/environment/spaceAnomalies.ts`, shader warm-up in `js/main.ts`.
 - Pooling: Use `window.objectPool` facade (delegates to `PoolRegistry`); ECS combat visuals use `ProjectilePoolManager` internally.
 - Fixed-Step Sim: 60 Hz physics with render interpolation, automatically used on high-refresh displays.
 - Typed Events: Publish via `window.mainMessageBus` with canonical event names; dev mode validates payloads.
 - Test Flow: Fire weapons (no emissive warnings; no facade warnings), wait for anomalies to spawn (no facade warnings), watch overlay for draw calls, visible instances, pool stats.
 
-### Upgrade Notes from v0.6.x to v0.7.0
-- Renderer facade now guards all `scene.add/remove`; modules should call the facade (already migrated for combat pools and space anomalies).
-- Input intent → ECS: Ship movement is progressively driven by ECS systems; avoid writing directly to `Spaceship.position/rotation` in new code.
-- Pooling: Use `window.objectPool` facade (delegates to `PoolRegistry`); for ECS combat visuals, continue using `ProjectilePoolManager` which internally reuses `ObjectPool` and respects the facade.
+### Developer Notes
+- Renderer facade guards all `scene.add/remove`; modules should call the facade.
+- Input intent -> ECS: Ship movement is progressively driven by ECS systems; avoid writing directly to `Spaceship.position/rotation` in new code.
+- Pooling: Use `window.objectPool` facade (delegates to `PoolRegistry`); for ECS combat visuals, use `ProjectilePoolManager`.
 - Fixed-step simulation with render interpolation is on by default, tuned for 60 Hz physics.
 
 ## Production Build
@@ -165,23 +168,17 @@ When you run `npm run build`, Vite creates an optimized production build:
 * **Code Splitting:** Improves initial load times by loading only what's needed
 * **Smart Chunking:** Optimized chunk sizes for better network performance
 
-## Future Scaling Capabilities
+## Architecture
 
-The codebase preserves foundational elements for advanced optimizations, intended for future scaling if needed. These are not all actively used in the current version but are maintained for potential integration:
+The game uses a **hybrid ECS/Module** pattern:
 
-*   **Data-Oriented Design (DOD) Components:**
-    *   Utilizes TypedArray-based component storage in `js/core/dataStore.js`.
-    *   Includes optimized component variants in `js/components/optimized/` (e.g., for transforms and rigidbodies).
-    *   These offer highly efficient memory layouts and access patterns, crucial for scenarios with thousands of entities.
-*   **Conceptual Basis for Instanced Rendering:** While specific `InstancedRenderSystem` files as detailed in `architecture.md` may not be in the current active path, the design anticipates leveraging `THREE.InstancedMesh` for rendering large numbers of similar objects (e.g., asteroids, debris) with minimal draw calls. The foundational DOD components would support managing data for such instanced systems.
-*   **Optimized Physics Concepts:** The architecture includes provisions for specialized physics systems, potentially using the DOD components, for high-performance simulation when dealing with a large number of entities.
+*   **bitECS** manages entities with many similar instances (enemies, projectiles, deployable turrets) using 29 SoA TypedArray components and 5 active systems.
+*   **Modules** manage unique objects (player ship, UI, environment) via traditional OOP patterns.
+*   **Instanced Rendering:** Enemies render as `InstancedMesh` to minimize draw calls.
+*   **Object Pooling:** `PoolRegistry` + `ProjectilePoolManager` reuse hot-path allocations.
+*   **Fixed-Step Simulation:** 60 Hz physics with render interpolation for smooth visuals.
 
-These preserved systems and concepts could be more fully implemented or re-activated to support:
-1.  Massive asteroid fields (e.g., 1000+ asteroids).
-2.  Large-scale space battles with numerous ships and projectiles.
-3.  Complex particle effects and debris systems.
-
-For a more detailed technical discussion of these preserved systems and their original design, please refer to `architecture.md`.
+See `architecture.md` for detailed technical discussion.
 
 ## Changelog
 
