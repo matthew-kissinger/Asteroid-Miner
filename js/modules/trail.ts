@@ -2,6 +2,10 @@
 
 import * as THREE from 'three';
 
+// Reusable temp objects - never allocate in update loop
+const _tempColor1 = new THREE.Color();
+const _tempColor2 = new THREE.Color();
+
 // Thrust state interface (matches physics.ts)
 interface ThrustState {
     forward: boolean;
@@ -81,7 +85,7 @@ export class TrailEffects {
                 
                 // Create material with gradient
                 const material = new THREE.MeshBasicMaterial({
-                    color: new THREE.Color(color).lerp(new THREE.Color(glowColor), t),
+                    color: _tempColor1.set(color).lerp(_tempColor2.set(glowColor), t),
                     transparent: true,
                     opacity: 1.0 - t * 0.3, // High opacity
                     blending: THREE.AdditiveBlending,

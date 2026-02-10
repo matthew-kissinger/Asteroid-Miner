@@ -4,6 +4,16 @@ import * as THREE from 'three';
 import { DEBUG_MODE } from '../globals/debug.ts';
 import { mainMessageBus } from '../globals/messageBus.ts';
 
+// Reusable temp objects - never allocate in update loop
+const _tempVec3A = new THREE.Vector3();
+const _tempVec3B = new THREE.Vector3();
+const _tempVec3C = new THREE.Vector3();
+const _tempVec3D = new THREE.Vector3();
+const _tempVec3E = new THREE.Vector3();
+const _tempVec3F = new THREE.Vector3();
+const _tempQuat = new THREE.Quaternion();
+const _tempEuler = new THREE.Euler();
+
 // Type definitions for physics-related objects
 interface RotationState {
     x: number;
@@ -245,11 +255,11 @@ export class Physics {
         const hasFuel = this.spaceship.consumeFuel();
         
         // Apply thrust based on controls - only if we have fuel
-        let thrustVector = new THREE.Vector3(0, 0, 0);
+        const thrustVector = _tempVec3A.set(0, 0, 0);
         let isThrusting = false;
         
         // Get the ship's forward direction
-        const shipForward = new THREE.Vector3(0, 0, -1);
+        const shipForward = _tempVec3B.set(0, 0, -1);
         shipForward.applyQuaternion(this.spaceship.mesh.quaternion);
         
         // Calculate dot product to determine how much we're moving forward
@@ -299,7 +309,7 @@ export class Physics {
             // Forward thrust handling
             if (forwardPressed) {
                 isThrusting = true;
-                const forwardThrust = new THREE.Vector3(0, 0, -Physics.THRUST_FORCE);
+                const forwardThrust = _tempVec3C.set(0, 0, -Physics.THRUST_FORCE);
                 if (boostPressed) forwardThrust.multiplyScalar(Physics.BOOST_MULTIPLIER);
                 thrustVector.add(forwardThrust);
                 
@@ -310,7 +320,7 @@ export class Physics {
             // Backward thrust handling
             if (backwardPressed) {
                 isThrusting = true;
-                thrustVector.add(new THREE.Vector3(0, 0, Physics.THRUST_FORCE));
+                thrustVector.add(_tempVec3C.set(0, 0, Physics.THRUST_FORCE));
                 
                 // Visual effects handled by trail module
             }
@@ -319,7 +329,7 @@ export class Physics {
             // Left thrust handling - A key pressed, move LEFT (negative X)
             if (leftPressed) {
                 isThrusting = true;
-                thrustVector.add(new THREE.Vector3(-Physics.THRUST_FORCE, 0, 0));
+                thrustVector.add(_tempVec3C.set(-Physics.THRUST_FORCE, 0, 0));
                 
                 // Visual effects handled by trail module
             }
@@ -328,7 +338,7 @@ export class Physics {
             // Right thrust handling - D key pressed, move RIGHT (positive X)
             if (rightPressed) {
                 isThrusting = true;
-                thrustVector.add(new THREE.Vector3(Physics.THRUST_FORCE, 0, 0));
+                thrustVector.add(_tempVec3C.set(Physics.THRUST_FORCE, 0, 0));
                 
                 // Visual effects handled by trail module
             }
@@ -373,7 +383,7 @@ export class Physics {
         // CRITICAL: Always update position based on current velocity (Newton's first law)
         // Objects in motion stay in motion unless acted upon by a force
         // Scale position update by normalized delta time
-        const positionDelta = this.spaceship.velocity.clone().multiplyScalar(this.normalizedDeltaTime);
+        const positionDelta = _tempVec3C.copy(this.spaceship.velocity).multiplyScalar(this.normalizedDeltaTime);
         this.spaceship.mesh.position.add(positionDelta);
         
         // Apply rotation based on rotationState
@@ -411,12 +421,12 @@ export class Physics {
         this.rotationState.y = Math.max(Math.min(this.rotationState.y, maxY), -maxY);
         
         // Create a quaternion for rotation
-        const euler = new THREE.Euler(this.rotationState.y, this.rotationState.x, 0, 'YXZ');
-        const targetQuaternion = new THREE.Quaternion().setFromEuler(euler);
+        _tempEuler.set(this.rotationState.y, this.rotationState.x, 0, 'YXZ');
+        _tempQuat.setFromEuler(_tempEuler);
         
         // Smoothly interpolate current rotation to target rotation
         // Use rotation speed scaled by normalized delta time
-        this.spaceship.mesh.quaternion.slerp(targetQuaternion, Physics.ROTATION_SPEED * this.normalizedDeltaTime);
+        this.spaceship.mesh.quaternion.slerp(_tempQuat, Physics.ROTATION_SPEED * this.normalizedDeltaTime);
     }
     
     updateCamera(): void {
@@ -449,7 +459,7 @@ export class Physics {
         rotatedOffset.applyQuaternion(this.spaceship.mesh.quaternion);
 
         // Calculate target camera position
-        const targetPosition = new THREE.Vector3().copy(this.spaceship.mesh.position).add(rotatedOffset);
+        const targetPosition = _tempVec3D.copy(this.spaceship.mesh.position).add(rotatedOffset);
 
         // Smoothly interpolate camera position (damping)
         this.camera.position.lerp(targetPosition, Physics.CAMERA_LAG);
@@ -465,14 +475,14 @@ export class Physics {
         }
 
         // Calculate velocity-based look-ahead point
-        const velocityDirection = this.spaceship.velocity.clone().normalize();
+        const velocityDirection = _tempVec3D.copy(this.spaceship.velocity).normalize();
         const lookAheadOffset = velocityDirection.multiplyScalar(velocityNormalized * Physics.CAMERA_LOOKAHEAD_SCALE);
 
         // Look ahead of the spaceship in movement direction
-        const baseLookAt = new THREE.Vector3(0, 0, -60); // Base forward look point
+        const baseLookAt = _tempVec3E.set(0, 0, -60); // Base forward look point
         baseLookAt.applyQuaternion(this.spaceship.mesh.quaternion);
 
-        const lookAtPoint = new THREE.Vector3()
+        const lookAtPoint = _tempVec3F
             .copy(this.spaceship.mesh.position)
             .add(baseLookAt)
             .add(lookAheadOffset);
@@ -507,7 +517,7 @@ export class Physics {
         const offsetY2 = Math.sin(this.shakeTime * Physics.SHAKE_FREQUENCY * 3.1) * this.shakeIntensity * 0.25;
 
         // Combine frequencies
-        const shakeOffset = new THREE.Vector3(
+        const shakeOffset = _tempVec3D.set(
             offsetX + offsetX2,
             offsetY + offsetY2,
             offsetZ
@@ -515,11 +525,11 @@ export class Physics {
 
         // Apply shake in camera's local space (relative to camera orientation)
         // This makes the shake feel more natural as it moves with the camera
-        const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
-        const cameraUp = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
-        const cameraForward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+        const cameraRight = _tempVec3A.set(1, 0, 0).applyQuaternion(this.camera.quaternion);
+        const cameraUp = _tempVec3B.set(0, 1, 0).applyQuaternion(this.camera.quaternion);
+        const cameraForward = _tempVec3C.set(0, 0, -1).applyQuaternion(this.camera.quaternion);
 
-        const worldShakeOffset = new THREE.Vector3()
+        const worldShakeOffset = _tempVec3E.set(0, 0, 0)
             .addScaledVector(cameraRight, shakeOffset.x)
             .addScaledVector(cameraUp, shakeOffset.y)
             .addScaledVector(cameraForward, shakeOffset.z);
@@ -546,7 +556,7 @@ export class Physics {
         this.recoilTime += this.normalizedDeltaTime * 0.016; // Convert normalized time to seconds
 
         // Calculate recoil offset using a decaying sine wave
-        const recoilOffset = new THREE.Vector3()
+        const recoilOffset = _tempVec3A
             .copy(this.recoilDirection)
             .multiplyScalar(
                 this.recoilIntensity *
@@ -771,7 +781,7 @@ export class Physics {
             
             // Bounce away from the collision point
             if (object && object.position) {
-                const bounceDirection = new THREE.Vector3()
+                const bounceDirection = _tempVec3A
                     .subVectors(this.spaceship.mesh.position, object.position)
                     .normalize();
                 
