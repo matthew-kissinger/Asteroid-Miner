@@ -6,7 +6,7 @@ import type { ValidationManager } from './validation.ts';
 export class FormViewManager {
     isMobile: boolean;
     styleManager: StyleManager | null;
-    scrollTimeout: number | null;
+    scrollTimeout: ReturnType<typeof setTimeout> | null;
     validationManager: ValidationManager | null;
 
     constructor(isMobile: boolean = false, styleManager: StyleManager | null = null) {
