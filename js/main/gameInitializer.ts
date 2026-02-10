@@ -166,15 +166,15 @@ export class GameInitializer {
     
     startDocked(): void {
         // Start the game with the spaceship docked at the stargate
-        console.log("Starting game in docked state");
+        if (DEBUG_MODE.enabled) console.log("Starting game in docked state");
         
         if (this.game.spaceship) {
             // Start docked at the stargate - position is handled by spaceship.dock()
             if (!this.game.spaceship.isDocked) {
-                console.log("Docking spaceship...");
+                if (DEBUG_MODE.enabled) console.log("Docking spaceship...");
                 this.game.spaceship.dock();
             } else {
-                console.log("Spaceship already docked");
+                if (DEBUG_MODE.enabled) console.log("Spaceship already docked");
             }
         } else {
             console.error("No spaceship found!");
@@ -183,19 +183,19 @@ export class GameInitializer {
         // Set initial camera position for docked state
         if (this.game.camera) {
             this.game.camera.position.set(0, 1500, 0);
-            console.log("Camera position set for docked state");
+            if (DEBUG_MODE.enabled) console.log("Camera position set for docked state");
         }
         
         // Update docking system to reflect docked state
         if (this.game.controls && this.game.controls.dockingSystem) {
             // The docking system tracks the spaceship's docked state automatically
             this.game.controls.dockingSystem.isDocked = true;
-            console.log("Docking system updated");
+            if (DEBUG_MODE.enabled) console.log("Docking system updated");
         }
         
         // Start the game UI
         if (this.game.ui && this.game.ui.stargateInterface) {
-            console.log("Showing stargate UI...");
+            if (DEBUG_MODE.enabled) console.log("Showing stargate UI...");
             this.game.ui.stargateInterface.showStargateUI?.();
         } else {
             console.error("No stargate interface found!", this.game.ui);

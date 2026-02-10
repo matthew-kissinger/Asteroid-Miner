@@ -1,4 +1,5 @@
 // miningHandler.js - Mining action handlers for touch controls
+import { DEBUG_MODE } from '../../../../globals/debug.ts';
 
 type MiningAsteroid = {
     resourceType?: string;
@@ -66,7 +67,7 @@ export class MiningHandler {
 
     handleMiningStart(): void {
         try {
-            console.log("MiningHandler: handleMiningStart called");
+            if (DEBUG_MODE.enabled) console.log("MiningHandler: handleMiningStart called");
             
             // First ensure we have targeting and mining systems
             if (!this.targetingSystem) {
@@ -81,11 +82,11 @@ export class MiningHandler {
             
             // First, get the current target
             let targetAsteroid = this.targetingSystem.getCurrentTarget();
-            console.log("MiningHandler: Initial target:", targetAsteroid);
+            if (DEBUG_MODE.enabled) console.log("MiningHandler: Initial target:", targetAsteroid);
             
             // If no target is selected, enable targeting and find nearest
             if (!targetAsteroid) {
-                console.log("MiningHandler: No target selected, enabling targeting and finding nearest target");
+                if (DEBUG_MODE.enabled) console.log("MiningHandler: No target selected, enabling targeting and finding nearest target");
                 
                 // Enable targeting if not already enabled
                 if (!this.targetingSystem.isLockOnEnabled()) {
@@ -94,10 +95,10 @@ export class MiningHandler {
                 
                 // Find nearest target
                 targetAsteroid = this.targetingSystem.findNearestTarget();
-                console.log("MiningHandler: Found nearest target:", targetAsteroid);
+                if (DEBUG_MODE.enabled) console.log("MiningHandler: Found nearest target:", targetAsteroid);
                 
                 if (!targetAsteroid) {
-                    console.log("MiningHandler: No targets in range after scan");
+                    if (DEBUG_MODE.enabled) console.log("MiningHandler: No targets in range after scan");
                     return;
                 }
             }
@@ -110,7 +111,7 @@ export class MiningHandler {
                 const windowWithGame = window as GameWindow;
                 const game = windowWithGame.gameInstance || windowWithGame.game;
                 if (game && game.environment && game.environment.asteroids && game.environment.asteroids.length > 0) {
-                    console.log("MiningHandler: Attempting to get asteroid directly from environment");
+                    if (DEBUG_MODE.enabled) console.log("MiningHandler: Attempting to get asteroid directly from environment");
                     // Find closest asteroid
                     let closestDist = Infinity;
                     let closestAsteroid = null;
@@ -126,7 +127,7 @@ export class MiningHandler {
                     }
                     
                     if (closestAsteroid) {
-                        console.log("MiningHandler: Found closest asteroid from environment:", closestAsteroid);
+                        if (DEBUG_MODE.enabled) console.log("MiningHandler: Found closest asteroid from environment:", closestAsteroid);
                         targetAsteroid = closestAsteroid;
                     } else {
                         console.error("MiningHandler: Could not find any valid asteroids in environment");
@@ -138,7 +139,7 @@ export class MiningHandler {
                 }
             }
             
-            console.log("MiningHandler: Target asteroid found:", targetAsteroid);
+            if (DEBUG_MODE.enabled) console.log("MiningHandler: Target asteroid found:", targetAsteroid);
             
             // Extra validation to make absolutely sure we have a valid targetAsteroid
             if (!targetAsteroid || !targetAsteroid.mesh || !targetAsteroid.mesh.position) {
@@ -150,7 +151,7 @@ export class MiningHandler {
             this.miningSystem.setTargetAsteroid(targetAsteroid);
             
             // Log asteroid details
-            console.log("MiningHandler: Target set for mining:", {
+            if (DEBUG_MODE.enabled) console.log("MiningHandler: Target set for mining:", {
                 resourceType: targetAsteroid.resourceType || "unknown",
                 position: targetAsteroid.mesh?.position?.toArray?.() ?? "no mesh",
                 distance: targetAsteroid.mesh?.position?.distanceTo && this.spaceship?.mesh?.position
@@ -159,11 +160,11 @@ export class MiningHandler {
             });
             
             // Start mining
-            console.log("MiningHandler: Starting mining operation");
+            if (DEBUG_MODE.enabled) console.log("MiningHandler: Starting mining operation");
             this.miningSystem.startMining();
             
             // Check if mining actually started
-            console.log("MiningHandler: Mining started:", this.miningSystem.isMining);
+            if (DEBUG_MODE.enabled) console.log("MiningHandler: Mining started:", this.miningSystem.isMining);
             
         } catch (error) {
             console.error("MiningHandler: Error in handleMiningStart:", error);
@@ -172,7 +173,7 @@ export class MiningHandler {
 
     handleMiningEnd(): void {
         try {
-            console.log("MiningHandler: handleMiningEnd called");
+            if (DEBUG_MODE.enabled) console.log("MiningHandler: handleMiningEnd called");
             
             // Make sure we have the mining system
             if (!this.miningSystem) {
@@ -182,7 +183,7 @@ export class MiningHandler {
             
             // Stop mining
             this.miningSystem.stopMining();
-            console.log("MiningHandler: Mining stopped");
+            if (DEBUG_MODE.enabled) console.log("MiningHandler: Mining stopped");
             
         } catch (e) {
             console.error("MiningHandler: Error stopping mining:", e);

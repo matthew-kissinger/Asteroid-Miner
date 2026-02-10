@@ -6,6 +6,7 @@
  */
 
 import { World } from '../../core/world.ts';
+import { DEBUG_MODE } from '../../globals/debug.ts';
 import * as THREE from 'three';
 
 export class WorldSetup {
@@ -22,33 +23,33 @@ export class WorldSetup {
      */
     async initializeECSWorld(scene: THREE.Scene, spaceship: any): Promise<any> {
         try {
-            console.log("[COMBAT] Starting ECS world initialization...");
-            
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] Starting ECS world initialization...");
+
             // Create a new World instance immediately to allow references
             this.world = new World((window as any).mainMessageBus);
-            console.log("[COMBAT] Created world with messageBus: ", 
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] Created world with messageBus: ",
                         this.world.messageBus === (window as any).mainMessageBus ? "Using shared messageBus" : "Created new messageBus");
-            
+
             // Make world globally available immediately
             if ((window as any).game) {
                 (window as any).game.ecsWorld = this.world;
-                console.log("[COMBAT] Made ECS world globally available via window.game.ecsWorld");
+                if (DEBUG_MODE.enabled) console.log("[COMBAT] Made ECS world globally available via window.game.ecsWorld");
             }
-            
+
             // Store scene reference in world for systems that need it
             this.world.scene = scene;
-            
+
             // Log scene reference for debugging
-            console.log(`[COMBAT] Set scene reference in ECS world for enemy rendering:`, 
+            if (DEBUG_MODE.enabled) console.log(`[COMBAT] Set scene reference in ECS world for enemy rendering:`,
                        scene ? "Scene available" : "No scene available");
-            
+
             // Create player entity immediately - don't wait for full setup
             await this.createPlayerReferenceEntity(spaceship);
-            
+
             // Optimized projectile store removed - legacy ECS code deleted
             this.world.optimizedProjectiles = null;
-            
-            console.log("[COMBAT] ECS world initialization complete");
+
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] ECS world initialization complete");
             return this.world;
         } catch (error) {
             console.error("[COMBAT] Error initializing ECS world:", error);
@@ -72,20 +73,20 @@ export class WorldSetup {
         }
         
         try {
-            console.log("[COMBAT] Creating player reference entity...");
-            
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] Creating player reference entity...");
+
             // If player entity already exists, check if it's valid
             if (this.playerEntity) {
                 const existingEntity = this.world.getEntity(this.playerEntity.id);
                 if (existingEntity) {
-                    console.log(`[COMBAT] Player entity already exists with ID: ${this.playerEntity.id}`);
-                    
+                    if (DEBUG_MODE.enabled) console.log(`[COMBAT] Player entity already exists with ID: ${this.playerEntity.id}`);
+
                     // Make sure it has the player tag (re-add if missing)
                     if (!existingEntity.hasTag('player')) {
-                        console.log("[COMBAT] Re-adding 'player' tag to existing entity");
+                        if (DEBUG_MODE.enabled) console.log("[COMBAT] Re-adding 'player' tag to existing entity");
                         existingEntity.addTag('player');
                     }
-                    
+
                     // Update its position
                     const transform = existingEntity.getComponent('TransformComponent');
                     if (transform && spaceship.mesh) {
@@ -96,16 +97,16 @@ export class WorldSetup {
                             transform.setUpdated();
                         }
                     }
-                    
+
                     // Make it globally accessible
                     if ((window as any).game) {
                         (window as any).game.combat = (window as any).game.combat || {};
                         (window as any).game.combat.playerEntity = existingEntity;
                     }
-                    
+
                     return existingEntity;
                 } else {
-                    console.log("[COMBAT] Previous player entity no longer exists, creating new one");
+                    if (DEBUG_MODE.enabled) console.log("[COMBAT] Previous player entity no longer exists, creating new one");
                 }
             }
             
@@ -114,7 +115,7 @@ export class WorldSetup {
             
             // Add player tag and log it
             playerEntity.addTag('player');
-            console.log(`[COMBAT] Added 'player' tag to entity ${playerEntity.id}`);
+            if (DEBUG_MODE.enabled) console.log(`[COMBAT] Added 'player' tag to entity ${playerEntity.id}`);
             
             // Legacy components removed; use minimal local shims.
             const TransformComponent = class FallbackTransform {
@@ -146,7 +147,7 @@ export class WorldSetup {
                 const position = spaceship.mesh ? spaceship.mesh.position.clone() : new THREE.Vector3();
                 const transform = new TransformComponent(position);
                 playerEntity.addComponent(transform);
-                console.log(`[COMBAT] Added TransformComponent to player entity with position: ${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}`);
+                if (DEBUG_MODE.enabled) console.log(`[COMBAT] Added TransformComponent to player entity with position: ${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}`);
             } catch (error) {
                 console.error("[COMBAT] Error adding TransformComponent to player entity:", error);
             }
@@ -155,32 +156,32 @@ export class WorldSetup {
             try {
                 const health = new HealthComponent(100, 50); // 100 health, 50 shield
                 playerEntity.addComponent(health);
-                console.log("[COMBAT] Added HealthComponent to player entity");
+                if (DEBUG_MODE.enabled) console.log("[COMBAT] Added HealthComponent to player entity");
             } catch (error) {
                 console.error("[COMBAT] Error adding HealthComponent to player entity:", error);
             }
-            
+
             // Store reference to player entity
             this.playerEntity = playerEntity;
-            
+
             // Make the player entity globally accessible for emergency access
             if ((window as any).game) {
                 (window as any).game.combat = (window as any).game.combat || {};
                 (window as any).game.combat.playerEntity = playerEntity;
-                console.log("[COMBAT] Made player entity globally accessible via window.game.combat.playerEntity");
+                if (DEBUG_MODE.enabled) console.log("[COMBAT] Made player entity globally accessible via window.game.combat.playerEntity");
             }
-            
+
             // Add direct player entity reference to the world
             this.world.playerEntity = playerEntity;
-            console.log("[COMBAT] Made player entity available directly via world.playerEntity");
-            
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] Made player entity available directly via world.playerEntity");
+
             // Explicitly publish an event for player entity creation
             if (this.world && this.world.messageBus) {
                 this.world.messageBus.publish('player.created', { entity: playerEntity });
-                console.log("[COMBAT] Published player.created event");
+                if (DEBUG_MODE.enabled) console.log("[COMBAT] Published player.created event");
             }
-            
-            console.log("[COMBAT] Successfully created player reference entity with ID:", playerEntity.id);
+
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] Successfully created player reference entity with ID:", playerEntity.id);
             
             // Return the entity for chaining
             return playerEntity;
@@ -199,7 +200,7 @@ export class WorldSetup {
         if (!this.world || !spaceship || !this.playerEntity) {
             // If we don't have a player entity, try to create one now if world is ready
             if (this.world && spaceship && !this.playerEntity) {
-                console.log("No player entity found, creating one...");
+                if (DEBUG_MODE.enabled) console.log("No player entity found, creating one...");
                 this.createPlayerReferenceEntity(spaceship);
                 return;
             }
@@ -259,40 +260,40 @@ export class WorldSetup {
             // IMPORTANT: Only update spaceship health if the health component shows MORE damage
             // (less health) than the spaceship currently has - this means damage was applied to the component
             if (health.health < spaceship.hull) {
-                console.log(`Damage detected in health component: ${health.health} (was ${spaceship.hull})`);
+                if (DEBUG_MODE.enabled) console.log(`Damage detected in health component: ${health.health} (was ${spaceship.hull})`);
                 spaceship.hull = health.health;
             }
-            
+
             // Similarly for shield
             if (health.shield < spaceship.shield) {
-                console.log(`Shield damage detected in health component: ${health.shield} (was ${spaceship.shield})`);
+                if (DEBUG_MODE.enabled) console.log(`Shield damage detected in health component: ${health.shield} (was ${spaceship.shield})`);
                 spaceship.shield = health.shield;
             }
-            
+
             // Check if health indicates the ship is destroyed
             if (health.isDestroyed && !spaceship.isDestroyed) {
-                console.log("Health component indicates player is destroyed - updating spaceship state");
+                if (DEBUG_MODE.enabled) console.log("Health component indicates player is destroyed - updating spaceship state");
                 spaceship.isDestroyed = true;
-                
+
                 // Call handle destruction for visual effects
                 if (typeof spaceship.handleDestruction === 'function') {
                     spaceship.handleDestruction();
                 }
             }
-            
+
             // Check for low health and update spaceship directly
             if (health.health <= 0 && !spaceship.isDestroyed) {
-                console.log("Player health is zero - marking spaceship as destroyed");
+                if (DEBUG_MODE.enabled) console.log("Player health is zero - marking spaceship as destroyed");
                 spaceship.isDestroyed = true;
-                
+
                 // Call handle destruction for visual effects
                 if (typeof spaceship.handleDestruction === 'function') {
                     spaceship.handleDestruction();
                 }
-                
+
                 // Force game over with a "pwned by space alien" message
                 if ((window as any).game) {
-                    console.log("FORCING GAME OVER FROM COMBAT MODULE!");
+                    if (DEBUG_MODE.enabled) console.log("FORCING GAME OVER FROM COMBAT MODULE!");
                     (window as any).game.gameOver("You were pwned by a space alien!");
                 }
             }
@@ -304,15 +305,15 @@ export class WorldSetup {
      */
     initializeWorld(): void {
         try {
-            console.log("[COMBAT] Calling world.initialize()...");
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] Calling world.initialize()...");
             this.world.initialize();
-            console.log("[COMBAT] World initialization completed successfully");
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] World initialization completed successfully");
         } catch (error) {
             console.error("[COMBAT] Error during world.initialize():", error);
             console.error("[COMBAT] Stack trace:", (error as Error).stack);
-            
+
             // Continue execution - don't let this error stop us
-            console.log("[COMBAT] Continuing despite initialization error");
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] Continuing despite initialization error");
         }
     }
 
@@ -329,7 +330,7 @@ export class WorldSetup {
     setSceneReference(scene: THREE.Scene): void {
         if (scene) {
             (scene as any).ecsWorld = this.world;
-            console.log("[COMBAT] Set ECS world reference in scene for cross-system access");
+            if (DEBUG_MODE.enabled) console.log("[COMBAT] Set ECS world reference in scene for cross-system access");
         }
     }
 

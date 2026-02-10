@@ -1,4 +1,5 @@
 // systemTransitionManager.ts - Handles system transitions and travel logic
+import { DEBUG_MODE } from '../../../globals/debug.ts';
 
 interface ResourceMultipliers {
     iron: number;
@@ -104,12 +105,12 @@ export class SystemTransitionManager {
             return false;
         }
 
-        console.log(`Starting transition to system: ${systemId}`);
+        if (DEBUG_MODE.enabled) console.log(`Starting transition to system: ${systemId}`);
 
         // Start the transition effect
         systemTransition.startTransition(() => {
             // This callback is called when transition is complete
-            console.log(`Transition complete, updating environment for: ${systemId}`);
+            if (DEBUG_MODE.enabled) console.log(`Transition complete, updating environment for: ${systemId}`);
 
             // Update the environment based on the new system
             updateEnvironmentCallback(systemId);
@@ -120,7 +121,7 @@ export class SystemTransitionManager {
             // If player is docked, make sure the stargate interface is correctly displayed
             const game = (window as any).game as GameGlobal | undefined;
             if (game?.spaceship && game.spaceship.isDocked) {
-                console.log("Player is docked after arriving in new system, showing interface");
+                if (DEBUG_MODE.enabled) console.log("Player is docked after arriving in new system, showing interface");
 
                 // Handle docking system to enforce proper dock state
                 if (game.controls && game.controls.dockingSystem) {
@@ -152,7 +153,7 @@ export class SystemTransitionManager {
             return;
         }
 
-        console.log(`Updating environment for system: ${systemId}`, systemData);
+        if (DEBUG_MODE.enabled) console.log(`Updating environment for system: ${systemId}`, systemData);
 
         // Update current system ID
         this.currentSystemId = systemId;
@@ -168,10 +169,10 @@ export class SystemTransitionManager {
                     isSolarSystem: true,  // Flag this as Solar System
                     resetTime: true  // Reset the time for consistent appearance
                 };
-                console.log(`Updating skybox for Solar System with enforced white color`);
+                if (DEBUG_MODE.enabled) console.log(`Updating skybox for Solar System with enforced white color`);
                 skybox.updateForSystem(solarSystemParams);
             } else {
-                console.log(`Updating skybox for ${systemId} with params:`, systemData.skyboxParams);
+                if (DEBUG_MODE.enabled) console.log(`Updating skybox for ${systemId} with params:`, systemData.skyboxParams);
                 skybox.updateForSystem(systemData.skyboxParams);
             }
         } else {
@@ -185,10 +186,10 @@ export class SystemTransitionManager {
 
             // Check which update method to use
             if (sun.updateSunType && systemData.starClass) {
-                console.log(`Updating sun type for ${systemId} to ${systemData.starClass} with intensity multiplier: ${lightIntensityMultiplier}`);
+                if (DEBUG_MODE.enabled) console.log(`Updating sun type for ${systemId} to ${systemData.starClass} with intensity multiplier: ${lightIntensityMultiplier}`);
                 sun.updateSunType(systemData.starClass, lightIntensityMultiplier);
             } else if (sun.updateColor) {
-                console.log(`Updating sun color for ${systemId} to:`, systemData.starColor.toString(16));
+                if (DEBUG_MODE.enabled) console.log(`Updating sun color for ${systemId} to:`, systemData.starColor.toString(16));
                 sun.updateColor(systemData.starColor);
 
                 // Store the multiplier for use in the update method
@@ -204,7 +205,7 @@ export class SystemTransitionManager {
 
         // Update planets for this system
         if (planets && planets.updateForSystem) {
-            console.log(`Updating planets for ${systemId}`);
+            if (DEBUG_MODE.enabled) console.log(`Updating planets for ${systemId}`);
             planets.updateForSystem(systemId);
 
             // Safely update planet regions if the method exists
@@ -225,25 +226,25 @@ export class SystemTransitionManager {
         if (asteroidBelt) {
             // Dispose of old asteroids before creating new ones
             if (asteroidBelt.dispose) {
-                console.log(`Disposing old asteroids before updating for ${systemId}`);
+                if (DEBUG_MODE.enabled) console.log(`Disposing old asteroids before updating for ${systemId}`);
                 asteroidBelt.dispose();
             }
 
             // Recreate asteroid belt for new system
             if (asteroidBelt.createAsteroidBelt) {
-                console.log(`Creating new asteroids for ${systemId}`);
+                if (DEBUG_MODE.enabled) console.log(`Creating new asteroids for ${systemId}`);
                 asteroidBelt.createAsteroidBelt();
             }
 
             // Apply resource multipliers from system
             if (asteroidBelt.setResourceMultipliers) {
-                console.log(`Updating asteroid resources for ${systemId}:`, systemData.resourceMultipliers);
+                if (DEBUG_MODE.enabled) console.log(`Updating asteroid resources for ${systemId}:`, systemData.resourceMultipliers);
                 asteroidBelt.setResourceMultipliers(systemData.resourceMultipliers);
             }
 
             // Update asteroid density if the method exists
             if (asteroidBelt.updateDensity) {
-                console.log(`Updating asteroid density for ${systemId}:`, systemData.asteroidDensity);
+                if (DEBUG_MODE.enabled) console.log(`Updating asteroid density for ${systemId}:`, systemData.asteroidDensity);
                 asteroidBelt.updateDensity(systemData.asteroidDensity);
             }
         } else {
@@ -252,13 +253,13 @@ export class SystemTransitionManager {
 
         // Update space anomalies for this system
         if (spaceAnomalies && spaceAnomalies.updateForSystem) {
-            console.log(`Updating space anomalies for ${systemId}`);
+            if (DEBUG_MODE.enabled) console.log(`Updating space anomalies for ${systemId}`);
             spaceAnomalies.updateForSystem(systemData);
         } else {
             console.warn("SpaceAnomalies or updateForSystem method not available");
         }
 
-        console.log(`Environment updated for ${systemId}`);
+        if (DEBUG_MODE.enabled) console.log(`Environment updated for ${systemId}`);
     }
 
     // Show welcome notification when arriving at a new system

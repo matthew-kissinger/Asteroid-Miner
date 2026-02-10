@@ -1,4 +1,5 @@
 // stateManager.ts - Game state management and stats tracking
+import { DEBUG_MODE } from '../../globals/debug.ts';
 import * as THREE from 'three';
 import { Game } from '../game';
 
@@ -88,11 +89,11 @@ export class GameStateManager {
     handleGameOverEvent(message: any): void {
         // Check if game is already in game over state to prevent duplicate handling
         if (this.game.isGameOver) {
-            console.log("Game: Already in game over state, ignoring duplicate event");
+            if (DEBUG_MODE.enabled) console.log("Game: Already in game over state, ignoring duplicate event");
             return;
         }
 
-        console.log("Game: handleGameOverEvent called with message:", message);
+        if (DEBUG_MODE.enabled) console.log("Game: handleGameOverEvent called with message:", message);
 
         // Validate message format
         if (!message || !message.data) {
@@ -103,11 +104,11 @@ export class GameStateManager {
 
         // Extract reason from message data
         const reason = message.data.reason || "Unknown reason";
-        console.log("Game: Game over event received:", reason, "from source:", message.data.source);
+        if (DEBUG_MODE.enabled) console.log("Game: Game over event received:", reason, "from source:", message.data.source);
 
         // Call the actual game over method with the reason
         try {
-            console.log("Game: Calling gameOver method with reason:", reason);
+            if (DEBUG_MODE.enabled) console.log("Game: Calling gameOver method with reason:", reason);
             this.gameOver(reason);
         } catch (err) {
             console.error("Game: Error in gameOver method:", err);
@@ -120,16 +121,16 @@ export class GameStateManager {
      */
     gameOver(message: string | any): void {
         if (this.game.isGameOver) {
-            console.log("Game over already triggered, ignoring duplicate call");
+            if (DEBUG_MODE.enabled) console.log("Game over already triggered, ignoring duplicate call");
             return;
         }
 
-        console.log("Game over:", message);
+        if (DEBUG_MODE.enabled) console.log("Game over:", message);
         this.game.isGameOver = true;
 
         // Play explosion sound if available
         if (this.game.audio) {
-            console.log("Game: Playing boink sound");
+            if (DEBUG_MODE.enabled) console.log("Game: Playing boink sound");
             this.game.audio.playSound('boink');
         }
 
@@ -149,12 +150,12 @@ export class GameStateManager {
         };
 
         // Show game over UI
-        console.log("Game: Showing game over UI");
+        if (DEBUG_MODE.enabled) console.log("Game: Showing game over UI");
         if (this.game.ui && (this.game.ui as any).showGameOver) {
             // Pass the entire message object to the UI so it can access both reason and type
             (this.game.ui as any).showGameOver(gameStats, typeof message === 'string' ? message : message);
         } else {
-            console.log("Game: UI not available, using fallback");
+            if (DEBUG_MODE.enabled) console.log("Game: UI not available, using fallback");
             // For fallback, extract the reason string if message is an object
             const reasonText = typeof message === 'string' ? message : 
                               (message && message.reason ? message.reason : "Unknown reason");
@@ -175,7 +176,7 @@ export class GameStateManager {
             (this.game.controls as any).inputHandler.exitPointerLock();
         }
 
-        console.log("Game: Game over handling complete");
+        if (DEBUG_MODE.enabled) console.log("Game: Game over handling complete");
     }
 
     /**
@@ -183,11 +184,11 @@ export class GameStateManager {
      * @param message The reason for game over
      */
     showFallbackGameOver(message: string): void {
-        console.log("Creating fallback game over screen");
+        if (DEBUG_MODE.enabled) console.log("Creating fallback game over screen");
 
         // Check if game over screen already exists
         if (document.getElementById('fallback-game-over')) {
-            console.log("Fallback game over screen already exists");
+            if (DEBUG_MODE.enabled) console.log("Fallback game over screen already exists");
             return;
         }
 
@@ -227,7 +228,7 @@ export class GameStateManager {
     activateHordeMode(): void {
         if (this.game.isHordeActive) return; // Already active
         
-        console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
+        if (DEBUG_MODE.enabled) console.log("ACTIVATING HORDE MODE - EXTREME SURVIVAL CHALLENGE");
         this.game.isHordeActive = true;
         this.game.hordeStartTime = performance.now();
         this.game.hordeSurvivalTime = 0;
