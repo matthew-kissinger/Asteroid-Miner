@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 // @ts-ignore
 import { PostProcessing } from 'three/webgpu';
-import { pass, uniform, float, vec2, vec3, uv, mix, dot, pow, vec4 } from 'three/tsl';
+import { pass, uniform, float, vec3, uv, mix, dot, pow, vec4 } from 'three/tsl';
 // @ts-ignore
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 // @ts-ignore
@@ -171,7 +171,8 @@ export class TSLPostProcessingManager {
             
             // 1. Scene Pass
             const scenePass = pass(this.scene, this.camera);
-            let currentOutput = scenePass;
+            // Use any for pipeline to avoid type issues with TSL node chaining
+            let currentOutput: any = scenePass;
 
             // 2. Volumetric Lights
             // We calculate both and mix based on enabled state to avoid rebuilding graph
@@ -261,13 +262,12 @@ export class TSLPostProcessingManager {
             
             // I need to animate the noise. The standard FilmNode might not animate noise by default unless it uses 'time'.
             // I'll use the imported 'film' and hope it supports animation or I might need a custom one.
-            // For now:
+            // Note: TSL film() takes 1-3 arguments, not 5 like the GLSL FilmPass
+            // film(input, noiseIntensity, scanlineIntensity)
             currentOutput = film(
                 currentOutput,
                 this.uniforms.film.nIntensity,
-                this.uniforms.film.sIntensity,
-                float(648), // scanline count
-                this.uniforms.film.grayscale
+                this.uniforms.film.sIntensity
             );
 
             // 7. Vignette
