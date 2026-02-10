@@ -2,13 +2,32 @@
 // Static styles are defined in src/styles/mobile-hud.css
 // This module applies CSS classes instead of inline styles.
 
+interface EnvironmentState {
+    anomalyCount?: number;
+}
+
+interface GameState {
+    isHordeActive?: boolean;
+    hordeSurvivalTime?: number;
+    introSequenceActive?: boolean;
+    getFormattedHordeSurvivalTime?: () => string;
+}
+
 export class MobileHUD {
     spaceship: MobileHUDSpaceship | null;
     controls: MobileHUDControls | null;
+    environment: EnvironmentState | null;
+    gameState: GameState | null;
 
-    constructor(spaceship: MobileHUDSpaceship) {
+    constructor(
+        spaceship: MobileHUDSpaceship,
+        environment: EnvironmentState | null = null,
+        gameState: GameState | null = null
+    ) {
         this.spaceship = spaceship;
         this.controls = null; // Will be set from UI class
+        this.environment = environment;
+        this.gameState = gameState;
         this.setupMobileHUD();
     }
     
@@ -275,16 +294,16 @@ export class MobileHUD {
     updateAnomalyCount(): void {
         const anomalyCount = document.getElementById('anomaly-count-mobile') as HTMLDivElement | null;
         if (!anomalyCount) return;
-        
-        // Get anomaly count from game object if available
+
+        // Get anomaly count from environment if available
         let count = 0;
-        if (window.game && window.game.environment && window.game.environment.anomalyCount) {
-            count = window.game.environment.anomalyCount;
+        if (this.environment && this.environment.anomalyCount !== undefined) {
+            count = this.environment.anomalyCount;
         }
-        
+
         // Update the anomaly counter
         anomalyCount.textContent = count.toString();
-        
+
         // Highlight if anomalies are present via CSS class
         if (count > 0) {
             anomalyCount.classList.add('mobile-hud-anomaly-count--active');
@@ -299,36 +318,36 @@ export class MobileHUD {
     updateHordeModeDisplay(): void {
         const hordeIndicator = document.getElementById('mobile-horde-indicator') as HTMLDivElement | null;
         const hordeTimer = document.getElementById('mobile-horde-timer') as HTMLDivElement | null;
-        
+
         if (!hordeIndicator || !hordeTimer) return;
-        
+
         // Check if horde mode is active
-        if (window.game && window.game.isHordeActive) {
+        if (this.gameState && this.gameState.isHordeActive) {
             // Show the indicator if not already visible
             if (hordeIndicator.classList.contains('mobile-hud-hidden')) {
                 hordeIndicator.classList.remove('mobile-hud-hidden');
-                
+
                 // Create horde title element with CSS class
                 const hordeTitle = document.createElement('div');
                 hordeTitle.classList.add('mobile-hud-horde-title');
                 hordeTitle.textContent = 'HORDE MODE';
                 hordeIndicator.insertBefore(hordeTitle, hordeTimer);
             }
-            
+
             // Update the timer
-            if (window.game.getFormattedHordeSurvivalTime) {
-                hordeTimer.textContent = window.game.getFormattedHordeSurvivalTime();
+            if (this.gameState.getFormattedHordeSurvivalTime) {
+                hordeTimer.textContent = this.gameState.getFormattedHordeSurvivalTime();
             } else {
                 // Fallback calculation
-                const hordeSurvivalTime = window.game.hordeSurvivalTime ?? 0;
+                const hordeSurvivalTime = this.gameState.hordeSurvivalTime ?? 0;
                 const totalSeconds = Math.floor(hordeSurvivalTime / 1000);
                 const minutes = Math.floor(totalSeconds / 60);
                 const seconds = totalSeconds % 60;
                 hordeTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
-            
+
             // Increase pulsing intensity after 3 minutes via CSS class
-            if ((window.game.hordeSurvivalTime ?? 0) > 3 * 60 * 1000) {
+            if ((this.gameState.hordeSurvivalTime ?? 0) > 3 * 60 * 1000) {
                 hordeIndicator.classList.add('mobile-hud-horde--intense');
             } else {
                 hordeIndicator.classList.remove('mobile-hud-horde--intense');
@@ -349,11 +368,11 @@ export class MobileHUD {
     
     show(): void {
         // Check if intro sequence is active
-        if (window.game && window.game.introSequenceActive) {
+        if (this.gameState && this.gameState.introSequenceActive) {
             console.log("MobileHUD: Not showing HUD during intro sequence");
             return; // Don't show during intro
         }
-        
+
         const container = document.getElementById('mobile-hud-container') as HTMLDivElement | null;
         if (container) {
             container.classList.remove('mobile-hud-hidden');

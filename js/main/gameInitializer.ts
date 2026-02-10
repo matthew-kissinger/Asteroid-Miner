@@ -32,6 +32,8 @@ type GameUi = {
     setControls: (controls: GameControls) => void;
     setCameraAndRenderer: (camera: any, renderer: any) => void;
     initializeSettings: (game: GameInitializerContext) => Promise<void>;
+    setGameState: (gameState: any) => void;
+    setWorld: (world: any) => void;
     stargateInterface?: { showStargateUI?: (() => void) | undefined };
     initializeUIComponents: () => Promise<void>; // Add this method
 };
@@ -50,6 +52,7 @@ type GameInitializerContext = {
     spaceship?: GameSpaceship;
     ui?: GameUi;
     controls?: GameControls;
+    world?: any;
     handleResize: () => void;
     handleVisibilityChange: () => void;
     handleKeyDown: (event: KeyboardEvent) => void;
@@ -138,7 +141,15 @@ export class GameInitializer {
         // Pass camera and renderer to UI for damage numbers and other visual effects
         this.game.ui.setCameraAndRenderer(this.game.camera, this.game.renderer);
         await this.game.ui.initializeUIComponents();
-        
+
+        // Share game state reference with UI for mobile HUD
+        this.game.ui.setGameState(this.game);
+
+        // Share world reference with UI for desktop HUD
+        if (this.game.world) {
+            this.game.ui.setWorld(this.game.world);
+        }
+
         // Share audio reference with UI for sound-based components
         await this.game.ui.setAudio(this.game.audio);
         
