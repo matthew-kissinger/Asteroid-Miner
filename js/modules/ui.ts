@@ -162,7 +162,9 @@ export class UI {
         
         // Initialize UI components
         if (this.isMobile) {
-            this.hud = new MobileHUD(spaceship, environment, null);
+            // MobileHUD expects EnvironmentState with anomalyCount, environment has starSystemGenerator
+            // Pass null for environment, will be set via setEnvironment if needed
+            this.hud = new MobileHUD(spaceship, null, null);
         } else {
             this.hud = new HUD(spaceship);
         }
