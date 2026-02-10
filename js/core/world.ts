@@ -6,7 +6,7 @@
  * removed.
  */
 
-import { MessageBus } from './messageBus.js';
+import { MessageBus } from './messageBus.ts';
 import { DEBUG_MODE } from '../globals/debug.ts';
 
 export class World {

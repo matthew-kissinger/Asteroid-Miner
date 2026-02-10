@@ -2,13 +2,13 @@
 // Refactored to delegate to specialized modules
 
 import * as THREE from 'three';
-import { DreadnoughtHull } from './structure/hull.js';
-import { DreadnoughtBridge } from './structure/bridge.js';
-import { DreadnoughtEngines } from './systems/engines.js';
-import { DreadnoughtWeapons } from './systems/weapons.js';
-import { TeleportBeam } from './teleporter/beam.js';
-import { TeleportParticles } from './teleporter/particles.js';
-import { TeleportController } from './teleporter/controller.js';
+import { DreadnoughtHull } from './structure/hull.ts';
+import { DreadnoughtBridge } from './structure/bridge.ts';
+import { DreadnoughtEngines } from './systems/engines.ts';
+import { DreadnoughtWeapons } from './systems/weapons.ts';
+import { TeleportBeam } from './teleporter/beam.ts';
+import { TeleportParticles } from './teleporter/particles.ts';
+import { TeleportController } from './teleporter/controller.ts';
 
 export class StarDreadnought {
     scene: THREE.Scene;

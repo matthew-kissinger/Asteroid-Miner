@@ -1,6 +1,6 @@
 // planetGenerator.ts - Procedural planet generation logic
 
-import { PlanetData } from './planetFactory.js';
+import { PlanetData } from './planetFactory.ts';
 
 // Type definition for star system generator
 interface StarSystemGenerator {

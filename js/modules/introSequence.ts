@@ -1,13 +1,13 @@
 // introSequence.ts - Manages the cinematic Star Dreadnought intro sequence
 
 import * as THREE from 'three';
-import { StarDreadnought } from './environment/starDreadnought.js';
-import { createIntroSoundEffects } from './intro/audio/soundEffects.js';
-import { loadDialogueWavs } from './intro/audio/dialogueManager.js';
-import { PortalEffect } from './intro/effects/portalEffect.js';
+import { StarDreadnought } from './environment/starDreadnought.ts';
+import { createIntroSoundEffects } from './intro/audio/soundEffects.ts';
+import { loadDialogueWavs } from './intro/audio/dialogueManager.ts';
+import { PortalEffect } from './intro/effects/portalEffect.ts';
 import { DialogueSystem } from './intro/ui/dialogueSystem.ts';
-import { updateArrivalPhase } from './intro/animation/arrivalPhase.js';
-import { updateDeparturePhase } from './intro/animation/departurePhase.js';
+import { updateArrivalPhase } from './intro/animation/arrivalPhase.ts';
+import { updateDeparturePhase } from './intro/animation/departurePhase.ts';
 
 type IntroSoundEffect = {
     play?: () => void;

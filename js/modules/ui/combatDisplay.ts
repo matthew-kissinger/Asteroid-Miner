@@ -1,12 +1,12 @@
 // combatDisplay.js - Main combat display orchestrator
 
-import { combatStyles } from './components/combat/styles.js';
-import { CombatIndicators } from './components/combat/indicators.js';
-import { EnemyDisplay } from './components/combat/enemyDisplay.js';
-import { WeaponDisplay } from './components/combat/weaponDisplay.js';
-import { CombatAnimations } from './components/combat/animations.js';
-import { CombatEventHandlers } from './components/combat/eventHandlers.js';
-import { CombatHelpers } from './components/combat/helpers.js';
+import { combatStyles } from './components/combat/styles.ts';
+import { CombatIndicators } from './components/combat/indicators.ts';
+import { EnemyDisplay } from './components/combat/enemyDisplay.ts';
+import { WeaponDisplay } from './components/combat/weaponDisplay.ts';
+import { CombatAnimations } from './components/combat/animations.ts';
+import { CombatEventHandlers } from './components/combat/eventHandlers.ts';
+import { CombatHelpers } from './components/combat/helpers.ts';
 import type { Vector3 } from 'three';
 
 type CombatScreenPosition = {

@@ -1,10 +1,10 @@
 // starMap.js - Handles the star map UI for interstellar travel
 
 import { MobileDetector } from '../../utils/mobileDetector.ts';
-import { CanvasRenderer } from './starmap/canvasRenderer.js';
-import { NavigationLogic } from './starmap/navigationLogic.js';
-import { DataManager } from './starmap/dataManager.js';
-import { UICreator } from './starmap/uiCreator.js';
+import { CanvasRenderer } from './starmap/canvasRenderer.ts';
+import { NavigationLogic } from './starmap/navigationLogic.ts';
+import { DataManager } from './starmap/dataManager.ts';
+import { UICreator } from './starmap/uiCreator.ts';
 
 // Star system generator shape varies across game systems; use loose typing.
 type StarSystemGenerator = any;

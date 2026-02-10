@@ -1,6 +1,6 @@
 // diagnostics.js - Performance overlay and debug toggles
 
-import { initPerfOverlay } from '../modules/debug/perfOverlay.js';
+import { initPerfOverlay } from '../modules/debug/perfOverlay.ts';
 import { DEBUG_MODE, toggleDebugMode } from '../globals/debug.ts';
 import { objectPool } from '../globals/objectPool.ts';
 

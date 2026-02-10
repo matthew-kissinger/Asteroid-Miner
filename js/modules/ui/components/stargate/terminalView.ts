@@ -1,12 +1,12 @@
 // terminalView.ts - Main terminal view coordinator
 
 // Import all terminal modules
-import { TerminalScreen } from './terminal/display/screen.js';
-import { TerminalEffects } from './terminal/display/effects.js';
-import { CommandParser } from './terminal/commands/parser.js';
-import { CommandHandlers } from './terminal/commands/handlers.js';
-import { TerminalMessages } from './terminal/content/messages.js';
-import { TerminalKeyboard } from './terminal/input/keyboard.js';
+import { TerminalScreen } from './terminal/display/screen.ts';
+import { TerminalEffects } from './terminal/display/effects.ts';
+import { CommandParser } from './terminal/commands/parser.ts';
+import { CommandHandlers } from './terminal/commands/handlers.ts';
+import { TerminalMessages } from './terminal/content/messages.ts';
+import { TerminalKeyboard } from './terminal/input/keyboard.ts';
 
 export class TerminalView {
     private screen: TerminalScreen;

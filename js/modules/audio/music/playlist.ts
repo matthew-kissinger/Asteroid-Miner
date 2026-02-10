@@ -1,5 +1,5 @@
 // playlist.ts - Music queue management and shuffling
-import { getAbsolutePath } from '../../../utils/pathUtils.js';
+import { getAbsolutePath } from '../../../utils/pathUtils.ts';
 
 export class MusicPlaylist {
     private music: HTMLAudioElement[] = []; // Store all background music tracks

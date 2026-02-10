@@ -1,6 +1,6 @@
 // loader.ts - Audio file loading, decoding, and caching
-import { getAbsolutePath } from '../../../utils/pathUtils.js';
-import { AudioContextManager } from './context.js';
+import { getAbsolutePath } from '../../../utils/pathUtils.ts';
+import { AudioContextManager } from './context.ts';
 
 export interface SoundMap {
     [key: string]: AudioBuffer | null;

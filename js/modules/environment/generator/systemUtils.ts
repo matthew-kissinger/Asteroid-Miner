@@ -1,7 +1,7 @@
 // systemUtils.ts - Utility functions for star system generation
 
 import * as THREE from 'three';
-import { STAR_CLASSES, SYSTEM_CLASSIFICATIONS, SKYBOX_TEXTURES, StarClass, SystemClassification } from './systemConfig.js';
+import { STAR_CLASSES, SYSTEM_CLASSIFICATIONS, SKYBOX_TEXTURES, StarClass, SystemClassification } from './systemConfig.ts';
 
 export class SystemUtils {
     static getRandomStarClass(): StarClass {

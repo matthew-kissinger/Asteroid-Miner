@@ -1,6 +1,6 @@
 // enabler.ts - Mobile audio unlock handling and user interaction detection
-import { AudioContextManager } from '../core/context.js';
-import { MusicPlayer } from '../music/player.js';
+import { AudioContextManager } from '../core/context.ts';
+import { MusicPlayer } from '../music/player.ts';
 
 export class MobileAudioEnabler {
     private audioContextManager: AudioContextManager;

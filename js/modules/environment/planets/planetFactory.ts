@@ -1,7 +1,7 @@
 // planetFactory.ts - Planet mesh creation and ring generation
 
 import * as THREE from 'three';
-import { PlanetMaterials } from './planetMaterials.js';
+import { PlanetMaterials } from './planetMaterials.ts';
 
 // Type definitions for planet objects
 export interface PlanetData {

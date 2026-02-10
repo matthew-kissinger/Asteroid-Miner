@@ -1,13 +1,13 @@
 // stargateInterface.js - Handles the stargate docking and trading UI
 
 import { MobileDetector } from '../../utils/mobileDetector.ts';
-import { TerminalView } from './components/stargate/terminalView.js';
-import { SystemsView } from './components/stargate/systemsView.js';
-import { TradingView } from './components/stargate/tradingView.js';
-import { UpgradesView } from './components/stargate/upgrades.js';
-import { MissionsView } from './components/stargate/missions.js';
-import { EventHandlers } from './components/stargate/eventHandlers.js';
-import { StargateHelpers } from './components/stargate/helpers.js';
+import { TerminalView } from './components/stargate/terminalView.ts';
+import { SystemsView } from './components/stargate/systemsView.ts';
+import { TradingView } from './components/stargate/tradingView.ts';
+import { UpgradesView } from './components/stargate/upgrades.ts';
+import { MissionsView } from './components/stargate/missions.ts';
+import { EventHandlers } from './components/stargate/eventHandlers.ts';
+import { StargateHelpers } from './components/stargate/helpers.ts';
 
 type StargateStarMap = any;
 

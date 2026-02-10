@@ -6,7 +6,7 @@ import { MiningSystem } from './controls/miningSystem.ts';
 import { TargetingSystem } from './controls/targetingSystem.ts';
 import { DockingSystem } from './controls/dockingSystem.ts';
 import { TouchControls } from './controls/touchControls.ts';
-import { MobileDetector } from '../utils/mobileDetector.js';
+import { MobileDetector } from '../utils/mobileDetector.ts';
 import * as THREE from 'three';
 import type { DockingSpaceship, DockingUI, ResourceInventory } from './controls/docking/types.ts';
 

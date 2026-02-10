@@ -1,7 +1,7 @@
 // laserControl.js - Handles laser beam visuals and control
 
 import * as THREE from 'three';
-import { createLaserMaterial } from '../../render/laserMaterial.js';
+import { createLaserMaterial } from '../../render/laserMaterial.ts';
 
 interface SceneLike {
     isScene?: boolean;

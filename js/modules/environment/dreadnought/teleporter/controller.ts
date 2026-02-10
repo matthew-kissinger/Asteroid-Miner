@@ -1,7 +1,7 @@
 // controller.ts - Controls teleport beam activation and animation for the Star Dreadnought
 
 import * as THREE from 'three';
-import { TeleportParticles } from './particles.js';
+import { TeleportParticles } from './particles.ts';
 
 export class TeleportController {
     teleportBeam: THREE.Mesh | null;

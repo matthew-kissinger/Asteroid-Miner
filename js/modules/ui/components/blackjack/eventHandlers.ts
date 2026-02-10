@@ -2,7 +2,7 @@
  * Blackjack Event Handlers - User interactions, button clicks, game events
  */
 
-import type { BlackjackSoundType } from './animations.js';
+import type { BlackjackSoundType } from './animations.ts';
 
 type ResourceType = 'iron' | 'gold' | 'platinum';
 type BlackjackBet = {

@@ -1,8 +1,8 @@
 // planetMaterials.ts - Planet material creation and management
 
 import * as THREE from 'three';
-import { planetTextures, proceduralTextures } from './planetTextures.js';
-import type { PlanetData } from './planetFactory.js';
+import { planetTextures, proceduralTextures } from './planetTextures.ts';
+import type { PlanetData } from './planetFactory.ts';
 
 const textureLoader = new THREE.TextureLoader();
 
