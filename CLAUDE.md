@@ -13,21 +13,18 @@ npm run test         # 61 tests (all passing)
 npm run test:smoke   # Headless browser runtime test (Playwright)
 ```
 
-## Code Hygiene: 155 Stale `.js` Import Extensions
+## Unmerged Branches (6 - all conflict-free, ready to merge)
 
-155 import statements across 48 files in `js/` use `.js` extensions pointing to `.ts` files. Vite resolves these correctly at both dev and build time (`moduleResolution: "bundler"` + Vite's resolve), so the game builds and runs normally. However, these should be cleaned up for code consistency and portability.
+Six completed task branches await merge into master:
 
-**Example** (`js/main.ts`):
-```typescript
-import { initializeGlobals } from './main/globals.js';  // File is globals.ts - works via Vite
-```
-
-**Fix**: Bulk find-and-replace `.js'` to `.ts'` in import statements across `js/`:
-```bash
-grep -r "from '.*\.js'" js/ --include="*.ts" -l  # 48 files affected
-```
-
-**Note**: `src/three-imports.ts` and `src/global.d.ts` also use `.js` in Three.js package imports (`three/addons/...`) - these are correct and should NOT be changed.
+| Branch | Task | Files | Impact |
+|--------|------|-------|--------|
+| `mycel/task-39ffe169` | Fix 155 stale .js imports | 46 | Code hygiene |
+| `mycel/task-d18c7e13` | Pool Vector3/Quaternion in physics | 3 | -20 per-frame allocs |
+| `mycel/task-3933ce70` | ecsRunner integration tests | 3 | +7 tests |
+| `mycel/task-8ae7a791` | Type-safe messageBus events | 2 | 40+ typed events |
+| `mycel/task-ddca8300` | Remove window.game from 3 UI files | 6 | -24 global usages |
+| `mycel/task-cf662b0b` | TSL post-processing for WebGPU | 3 | Phase 6 feature |
 
 ## Stack
 
@@ -36,7 +33,7 @@ grep -r "from '.*\.js'" js/ --include="*.ts" -l  # 48 files affected
 | Graphics | Three.js r180 WebGPU (WebGL2 fallback) |
 | ECS | bitECS v0.4.0 (29 components, 5 systems) |
 | Physics | Custom Newtonian (thrust, drag, collision) |
-| Shaders | TSL laser material + 2 GLSL post-processing |
+| Shaders | TSL laser material + TSL post-processing (branch) + 2 GLSL fallback |
 | Build | Vite 6, TypeScript 5.7 strict |
 | Styles | Tailwind CSS 3.4 + 18 CSS files |
 | Tests | Vitest - 7 files, 61 tests, all passing |
@@ -86,9 +83,21 @@ css/                     # 18 CSS files
 
 ## Remaining Work
 
-- **155 stale `.js` import extensions** across 48 files (code hygiene - Vite resolves them)
-- 91 `window.game` global usages across 32 files (top: starMap 8, mobileHUD 8, statusIndicators 8)
+### Completed (awaiting merge)
+- ~~155 stale `.js` import extensions~~ - Fixed in branch `mycel/task-39ffe169`
+- ~~TSL post-processing conversion~~ - Done in branch `mycel/task-cf662b0b`
+- ~~window.game in top 3 UI files (24 usages)~~ - Done in branch `mycel/task-ddca8300`
+- ~~Physics per-frame allocations~~ - Pooled in branch `mycel/task-d18c7e13`
+- ~~Type-safe messageBus~~ - Done in branch `mycel/task-8ae7a791`
+- ~~ecsRunner integration tests~~ - Done in branch `mycel/task-3933ce70`
+
+### Active
+- 499 unguarded `console.log` statements (task running - opencode)
+- 67 `window.game` global usages remaining across ~29 files (after branch merge)
+- 649 `as any` type casts (~80 tied to window.game pattern)
+- 183 addEventListener vs 31 removeEventListener - memory leak risk
 - ~525 inline `.style.` manipulations (mostly dynamic values, diminishing returns)
-- 2 GLSL post-processing shaders need TSL conversion (requires NodePostProcessing)
-- Phase 6 planned: TSL shaders + WebGPU compute particles
-- Phase 7 planned: Polish, remove global state, profile
+
+### Planned
+- Phase 6: TSL shaders + WebGPU compute particles
+- Phase 7: Polish, remove global state, profile, test coverage expansion
