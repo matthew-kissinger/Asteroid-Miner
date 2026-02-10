@@ -5,6 +5,7 @@
 
 import { mainMessageBus } from '../../globals/messageBus.ts';
 import { Message } from '../../core/messageBus.ts';
+import type { GameEventMap } from '../../core/events.ts';
 
 let flashOverlay: HTMLDivElement | null = null;
 let flashTimeout: number | null = null;
@@ -45,13 +46,13 @@ export function initScreenFlash(): void {
  */
 function setupEventListeners(): void {
     // Player damage - Red or Blue flash based on shield vs hull
-    mainMessageBus.subscribe('player.damaged', (message: Message) => {
+    mainMessageBus.subscribe('player.damaged', (message: Message<GameEventMap['player.damaged']>) => {
         const { damage, shieldDamage } = message.data;
-        
-        if (damage > 0) {
+
+        if (damage && damage > 0) {
             // Hull damage - Red flash
             flashScreen('rgba(255, 0, 0, 0.3)', 150);
-        } else if (shieldDamage > 0) {
+        } else if (shieldDamage && shieldDamage > 0) {
             // Shield hit - Blue flash
             flashScreen('rgba(0, 100, 255, 0.2)', 100);
         }

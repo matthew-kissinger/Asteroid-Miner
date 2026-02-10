@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { mainMessageBus } from '../../globals/messageBus.ts';
 import { Message } from '../../core/messageBus.ts';
+import type { GameEventMap } from '../../core/events.ts';
 
 interface DamageNumber {
     element: HTMLDivElement;
@@ -69,31 +70,32 @@ export function initDamageNumbers(cam: THREE.Camera, rend: { domElement: HTMLEle
  */
 function setupEventListeners(): void {
     // Player damage - Red for hull, Blue for shield
-    mainMessageBus.subscribe('player.damaged', (message: Message) => {
+    mainMessageBus.subscribe('player.damaged', (message: Message<GameEventMap['player.damaged']>) => {
         const { damage, shieldDamage, position } = message.data;
 
-        if (damage > 0 && position) {
+        if (damage && damage > 0 && position) {
             showDamageNumber(position, damage, '#FF4444');
         }
-        if (shieldDamage > 0 && position) {
+        if (shieldDamage && shieldDamage > 0 && position) {
             showDamageNumber(position, shieldDamage, '#4488FF');
         }
     });
 
     // Enemy damage - Red numbers
-    mainMessageBus.subscribe('enemy.damaged', (message: Message) => {
-        const { damage, position } = message.data;
+    mainMessageBus.subscribe('enemy.damaged', (message: Message<GameEventMap['enemy.damaged']>) => {
+        const { amount, damage, position } = message.data;
+        const damageAmount = damage ?? amount;
 
-        if (damage > 0 && position) {
-            showDamageNumber(position, damage, '#FF4444');
+        if (damageAmount > 0 && position) {
+            showDamageNumber(position, damageAmount, '#FF4444');
         }
     });
 
     // Generic entity damage fallback
-    mainMessageBus.subscribe('entity.damaged', (message: Message) => {
+    mainMessageBus.subscribe('entity.damaged', (message: Message<GameEventMap['entity.damaged']>) => {
         const { damage, damageType, position } = message.data;
 
-        if (damage > 0 && position) {
+        if (damage && damage > 0 && position) {
             // Color based on damage type
             let color = '#FF4444';
             if (damageType === 'shield') {
@@ -106,7 +108,7 @@ function setupEventListeners(): void {
     });
 
     // Healing numbers - Green
-    mainMessageBus.subscribe('player.healed', (message: Message) => {
+    mainMessageBus.subscribe('player.healed', (message: Message<GameEventMap['player.healed']>) => {
         const { amount, position } = message.data;
 
         if (amount > 0 && position) {
