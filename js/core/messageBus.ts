@@ -1,28 +1,42 @@
 /**
  * MessageBus - Event system for decoupled communication between systems
- * 
+ *
  * The MessageBus enables systems to communicate without direct references
  * by publishing and subscribing to specific message types.
+ *
+ * @template TEvents - Event map defining event names and their payload types
  */
 
-import { validateEventPayload } from './events.ts';
+import { validateEventPayload, type GameEventMap } from './events.js';
 
-export interface Message {
+export interface Message<T = unknown> {
     type: string;
-    data: any;
+    data: T;
     timestamp: number;
 }
 
-export type MessageCallback = (message: Message) => void;
+export type MessageCallback<T = unknown> = (message: Message<T>) => void;
 
-interface Listener {
-    callback: MessageCallback;
-    context: any;
+interface Listener<T = unknown> {
+    callback: MessageCallback<T>;
+    context: unknown;
 }
 
-export class MessageBus {
+interface GlobalWithMessageBus {
+    mainMessageBus?: MessageBus<GameEventMap>;
+    messageRegistry?: Set<MessageBus<GameEventMap>>;
+}
+
+interface WindowWithGame {
+    game?: {
+        messageBus?: MessageBus<GameEventMap>;
+        gameOver?: (reason: string) => void;
+    };
+}
+
+export class MessageBus<TEvents extends Record<string, unknown> = GameEventMap> {
     public listeners: Map<string, Listener[]>;
-    private queuedMessages: { type: string, data: any }[];
+    private queuedMessages: { type: string; data: unknown }[];
     private dispatching: boolean;
     private highFrequencyTypes: Set<string>;
 
@@ -30,89 +44,102 @@ export class MessageBus {
         this.listeners = new Map();
         this.queuedMessages = [];
         this.dispatching = false;
-        
+
         // High-frequency message types to minimize logging
         this.highFrequencyTypes = new Set([
             'transform.updated',
             'physics.update',
             'render.update'
         ]);
-        
+
         // Store this instance in a global registry for emergency access
-        if (!(window as any).messageRegistry) {
-            (window as any).messageRegistry = new Set();
+        const globalWithRegistry = globalThis as GlobalWithMessageBus & { messageRegistry?: Set<MessageBus<GameEventMap>> };
+        if (!globalWithRegistry.messageRegistry) {
+            globalWithRegistry.messageRegistry = new Set();
         }
-        (window as any).messageRegistry.add(this);
-        
+        globalWithRegistry.messageRegistry.add(this as unknown as MessageBus<GameEventMap>);
+
         // Always ensure that mainMessageBus is set - critically important for game over events
-        if (!(globalThis as any).mainMessageBus) {
-            (globalThis as any).mainMessageBus = this;
-        } else if ((globalThis as any).mainMessageBus !== this) {
-            // If this is not the main message bus, make sure game.over events are 
+        const globalWithBus = globalThis as GlobalWithMessageBus;
+        if (!globalWithBus.mainMessageBus) {
+            globalWithBus.mainMessageBus = this as unknown as MessageBus<GameEventMap>;
+        } else if (globalWithBus.mainMessageBus !== (this as unknown as MessageBus<GameEventMap>)) {
+            // If this is not the main message bus, make sure game.over events are
             // forwarded to the main message bus for centralized handling
         }
     }
     
     /**
      * Register a listener for a message type
-     * @param {string} messageType The message type to listen for
-     * @param {MessageCallback} callback Function to call when message is published
-     * @param {any} context Context to use when calling the callback
-     * @returns {Function} Unsubscribe function
+     * @param messageType The message type to listen for
+     * @param callback Function to call when message is published
+     * @param context Context to use when calling the callback
+     * @returns Unsubscribe function
      */
-    subscribe(messageType: string, callback: MessageCallback, context: any = null): () => void {
-        if (!this.listeners.has(messageType)) {
-            this.listeners.set(messageType, []);
+    subscribe<K extends keyof TEvents>(
+        messageType: K,
+        callback: MessageCallback<TEvents[K]>,
+        context: unknown = null
+    ): () => void {
+        const eventName = messageType as string;
+        if (!this.listeners.has(eventName)) {
+            this.listeners.set(eventName, []);
         }
-        
-        this.listeners.get(messageType)!.push({
-            callback,
+
+        this.listeners.get(eventName)!.push({
+            callback: callback as MessageCallback,
             context
         });
-        
+
         // Return unsubscribe function for convenience
         return () => this.unsubscribe(messageType, callback, context);
     }
-    
+
     /**
      * Remove a listener
-     * @param {string} messageType The message type to unsubscribe from
-     * @param {MessageCallback} callback The callback to remove
-     * @param {any} context The context used when subscribing
+     * @param messageType The message type to unsubscribe from
+     * @param callback The callback to remove
+     * @param context The context used when subscribing
      */
-    unsubscribe(messageType: string, callback: MessageCallback, context: any = null): void {
-        if (!this.listeners.has(messageType)) return;
-        
-        const listeners = this.listeners.get(messageType)!;
-        const index = listeners.findIndex(listener => 
-            listener.callback === callback && listener.context === context);
-            
+    unsubscribe<K extends keyof TEvents>(
+        messageType: K,
+        callback: MessageCallback<TEvents[K]>,
+        context: unknown = null
+    ): void {
+        const eventName = messageType as string;
+        if (!this.listeners.has(eventName)) return;
+
+        const listeners = this.listeners.get(eventName)!;
+        const index = listeners.findIndex(listener =>
+            listener.callback === (callback as MessageCallback) && listener.context === context);
+
         if (index !== -1) {
             listeners.splice(index, 1);
         }
-        
+
         if (listeners.length === 0) {
-            this.listeners.delete(messageType);
+            this.listeners.delete(eventName);
         }
     }
     
     /**
      * Fast publish for high-frequency events with minimal overhead
-     * @param {string} messageType The message type to publish
-     * @param {any} data Data to include with the message
+     * @param messageType The message type to publish
+     * @param data Data to include with the message
      */
-    fastPublish(messageType: string, data: any = {}): void {
+    fastPublish<K extends keyof TEvents>(messageType: K, data: TEvents[K]): void {
+        const eventName = messageType as string;
         // Typed event validation in dev
-        try { validateEventPayload && validateEventPayload(messageType, data); } catch {}
-        if (!this.listeners.has(messageType)) return;
-        
-        const listeners = this.listeners.get(messageType)!;
-        const messageObj: Message = {
-            type: messageType,
+        try { validateEventPayload && validateEventPayload(eventName, data); } catch {}
+        if (!this.listeners.has(eventName)) return;
+
+        const listeners = this.listeners.get(eventName)!;
+        const messageObj: Message<TEvents[K]> = {
+            type: eventName,
             data: data,
             timestamp: Date.now()
         };
-        
+
         for (let i = 0; i < listeners.length; i++) {
             const listener = listeners[i];
             listener.callback.call(listener.context, messageObj);
@@ -121,54 +148,58 @@ export class MessageBus {
     
     /**
      * Send a message immediately
-     * @param {string} messageType The message type to publish
-     * @param {any} data Data to include with the message
+     * @param messageType The message type to publish
+     * @param data Data to include with the message
      */
-    publish(messageType: string, data: any = {}): void {
+    publish<K extends keyof TEvents>(messageType: K, data: TEvents[K]): void {
+        const eventName = messageType as string;
         // Typed event validation in dev
-        try { validateEventPayload && validateEventPayload(messageType, data); } catch {}
+        try { validateEventPayload && validateEventPayload(eventName, data); } catch {}
         // Use fast path for high-frequency messages
-        if (this.highFrequencyTypes.has(messageType)) {
+        if (this.highFrequencyTypes.has(eventName)) {
             return this.fastPublish(messageType, data);
         }
-        
+
         // Enhanced handling for game.over events to ensure they are properly processed
-        if (messageType === 'game.over') {
+        if (eventName === 'game.over') {
+            const globalWithBus = globalThis as GlobalWithMessageBus;
             // Always forward game.over events to the main message bus if this isn't it
-            if ((globalThis as any).mainMessageBus && (globalThis as any).mainMessageBus !== this) {
-                (globalThis as any).mainMessageBus.publish(messageType, data);
+            if (globalWithBus.mainMessageBus && globalWithBus.mainMessageBus !== (this as unknown as MessageBus<GameEventMap>)) {
+                globalWithBus.mainMessageBus.publish(messageType as keyof GameEventMap, data as GameEventMap[keyof GameEventMap]);
                 return; // Let the main message bus handle it
             }
-            
+
             // Only proceed if we have listeners or we are the main message bus
-            if (!this.listeners.has(messageType)) {
+            if (!this.listeners.has(eventName)) {
                 // Verify main game instance
-                if ((window as any).game) {
+                const windowWithGame = window as unknown as WindowWithGame;
+                if (windowWithGame.game?.gameOver) {
+                    const gameOverData = data as GameEventMap['game.over'];
                     // Try to directly call gameOver as a last resort
-                    (window as any).game.gameOver(data.reason || "Unknown reason");
-                } 
-                
+                    windowWithGame.game.gameOver(gameOverData.reason || "Unknown reason");
+                }
+
                 return;
             }
         }
-        
-        if (!this.listeners.has(messageType)) return;
-        
+
+        if (!this.listeners.has(eventName)) return;
+
         // If we're already dispatching, queue this message
         if (this.dispatching) {
-            this.queuedMessages.push({ type: messageType, data });
+            this.queuedMessages.push({ type: eventName, data });
             return;
         }
-        
+
         try {
             // Set flag to prevent nested dispatch issues
             this.dispatching = true;
-            
-            const listeners = this.listeners.get(messageType)!;
+
+            const listeners = this.listeners.get(eventName)!;
             listeners.forEach((listener) => {
                 try {
                     listener.callback.call(listener.context, {
-                        type: messageType,
+                        type: eventName,
                         data: data,
                         timestamp: Date.now()
                     });
@@ -179,14 +210,16 @@ export class MessageBus {
         } finally {
             // Always clear the dispatching flag, even if an error occurs
             this.dispatching = false;
-            
+
             // Process any queued messages
             if (this.queuedMessages.length > 0) {
                 const queuedMessages = [...this.queuedMessages];
                 this.queuedMessages = [];
-                
+
                 queuedMessages.forEach(message => {
-                    this.publish(message.type, message.data);
+                    // Type assertion needed here since we're replaying queued messages
+                    // We use the actual string type from the queued message
+                    this.publish(message.type as keyof TEvents, message.data as TEvents[keyof TEvents]);
                 });
             }
         }
@@ -194,34 +227,37 @@ export class MessageBus {
     
     /**
      * Queue a message for next update
-     * @param {string} messageType The message type to queue
-     * @param {any} data Data to include with the message
+     * @param messageType The message type to queue
+     * @param data Data to include with the message
      */
-    queue(messageType: string, data: any = {}): void {
+    queue<K extends keyof TEvents>(messageType: K, data: TEvents[K]): void {
         this.queuedMessages.push({
-            type: messageType,
+            type: messageType as string,
             data: data
         });
     }
-    
+
     /**
      * Universal handler for game over events - used by multiple components
-     * @param {string} reason Reason for game over
-     * @param {string} source Source of the game over event
+     * @param reason Reason for game over
+     * @param source Source of the game over event
      */
     static triggerGameOver(reason: string, source: string): void {
         // Try to find a message bus to use - prioritization order for reliability
         let messageBusToUse: MessageBus | null = null;
-        
+
+        const globalWithBus = globalThis as GlobalWithMessageBus;
+        const windowWithGame = window as unknown as WindowWithGame;
+
         // Use main message bus if available (highest priority)
-        if ((globalThis as any).mainMessageBus) {
-            messageBusToUse = (globalThis as any).mainMessageBus;
+        if (globalWithBus.mainMessageBus) {
+            messageBusToUse = globalWithBus.mainMessageBus;
         }
         // Use window.game.messageBus if available and mainMessageBus not found
-        else if ((window as any).game && (window as any).game.messageBus) {
-            messageBusToUse = (window as any).game.messageBus;
-        } 
-        
+        else if (windowWithGame.game?.messageBus) {
+            messageBusToUse = windowWithGame.game.messageBus;
+        }
+
         // Check if we found a message bus to use
         if (messageBusToUse) {
             // Publish the event
