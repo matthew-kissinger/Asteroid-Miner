@@ -1,6 +1,6 @@
 // soundPlayer.ts - Sound effects playback with 3D audio and volume control
-import { AudioContextManager, TrackableNode } from '../core/context.js';
-import { AudioLoader } from '../core/loader.js';
+import { AudioContextManager, TrackableNode } from '../core/context.ts';
+import { AudioLoader } from '../core/loader.ts';
 
 interface ActiveSoundNodes {
     source: AudioBufferSourceNode & TrackableNode;

@@ -6,10 +6,10 @@
  */
 
 import * as THREE from 'three';
-import { ExplosionEffects } from './effects/explosionEffects.js';
-import { MaterialManager } from './effects/materialManager.js';
-import { GeometryManager } from './effects/geometryManager.js';
-import { ProjectileEffects } from './effects/projectileEffects.js';
+import { ExplosionEffects } from './effects/explosionEffects.ts';
+import { MaterialManager } from './effects/materialManager.ts';
+import { GeometryManager } from './effects/geometryManager.ts';
+import { ProjectileEffects } from './effects/projectileEffects.ts';
 
 export class EffectsManager {
     scene: THREE.Scene;

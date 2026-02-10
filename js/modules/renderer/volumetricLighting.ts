@@ -1,8 +1,8 @@
 // volumetricLighting.ts - Handles volumetric lighting effects and light position updates
 
 import * as THREE from 'three';
-import { PostProcessingManager } from './post.js';
-import { SceneApiManager } from './sceneApi.js';
+import { PostProcessingManager } from './post.ts';
+import { SceneApiManager } from './sceneApi.ts';
 
 interface VolumetricLightParams {
     intensity?: number;

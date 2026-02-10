@@ -1,6 +1,6 @@
 // systemNames.ts - System name generation and descriptions
 
-import type { StarClass, SystemClassification } from './systemConfig.js';
+import type { StarClass, SystemClassification } from './systemConfig.ts';
 
 export class SystemNames {
     static generateSystemName(starClass: StarClass | string): string {

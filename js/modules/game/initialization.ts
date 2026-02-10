@@ -1,7 +1,7 @@
 // initialization.ts - Game initialization wrapper for the game module
 
-import { GameInitializer as MainGameInitializer } from '../../main/gameInitializer.js';
-import { ObjectPools } from '../../main/objectPools.js';
+import { GameInitializer as MainGameInitializer } from '../../main/gameInitializer.ts';
+import { ObjectPools } from '../../main/objectPools.ts';
 
 type GameContext = {
     scene?: any;

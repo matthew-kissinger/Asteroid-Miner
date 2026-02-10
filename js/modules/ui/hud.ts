@@ -1,11 +1,11 @@
 // hud.js - Refactored HUD orchestrator class
 
-import { HUDStyles } from './components/hud/styles.js';
-import { HUDDisplays } from './components/hud/displays.js';
-import { HUDNotifications } from './components/hud/notifications.js';
-import { HUDStatusIndicators } from './components/hud/statusIndicators.js';
-import { HUDEventHandlers } from './components/hud/eventHandlers.js';
-import { HUDHelpers } from './components/hud/helpers.js';
+import { HUDStyles } from './components/hud/styles.ts';
+import { HUDDisplays } from './components/hud/displays.ts';
+import { HUDNotifications } from './components/hud/notifications.ts';
+import { HUDStatusIndicators } from './components/hud/statusIndicators.ts';
+import { HUDEventHandlers } from './components/hud/eventHandlers.ts';
+import { HUDHelpers } from './components/hud/helpers.ts';
 
 type HUDSpaceship = {
     [key: string]: unknown;

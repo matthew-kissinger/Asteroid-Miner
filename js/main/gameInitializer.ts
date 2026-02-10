@@ -1,15 +1,15 @@
 // gameInitializer.js - Game initialization logic
 
 import * as THREE from 'three';
-import { Renderer } from '../modules/renderer.js';
+import { Renderer } from '../modules/renderer.ts';
 import { Spaceship } from '../modules/spaceship';
 import { Physics } from '../modules/physics';
-import { Controls } from '../modules/controls.js';
+import { Controls } from '../modules/controls.ts';
 import { DEBUG_MODE } from '../globals/debug.ts';
 import type { DockingSpaceship } from '../modules/controls/docking/types.ts';
 // import { Environment } from '../modules/environment';
 // import { UI } from '../modules/ui';
-// import { AudioManager } from '../modules/audio/audio.js';
+// import { AudioManager } from '../modules/audio/audio.ts';
 
 type GameRenderer = {
     scene: THREE.Scene;
@@ -65,7 +65,7 @@ export class GameInitializer {
     async initializeCore(): Promise<void> {
         // Create audio manager first but don't initialize yet
         if (DEBUG_MODE.enabled) console.log("Creating audio manager...");
-        const { AudioManager } = await import('../modules/audio/audio.js');
+        const { AudioManager } = await import('../modules/audio/audio.ts');
         this.game.audio = new AudioManager();
         
         // Initialize renderer first
@@ -117,7 +117,7 @@ export class GameInitializer {
         physics.setCamera(this.game.camera);
         
         // Initialize environment (essential components only)
-        const { Environment } = await import('../modules/environment.js');
+        const { Environment } = await import('../modules/environment.ts');
         const environment = new Environment(this.game.scene);
         this.game.environment = environment;
         
@@ -133,7 +133,7 @@ export class GameInitializer {
         environment.setSpaceship(spaceship);
         
         // Initialize UI
-        const { UI } = await import('../modules/ui.js');
+        const { UI } = await import('../modules/ui.ts');
         this.game.ui = new UI(spaceship, environment);
         // Pass camera and renderer to UI for damage numbers and other visual effects
         this.game.ui.setCameraAndRenderer(this.game.camera, this.game.renderer);

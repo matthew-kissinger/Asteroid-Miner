@@ -1,14 +1,14 @@
 // sceneInitializer.ts - Handles scene setup and initialization logic
 
-import { Skybox } from '../skybox.js';
-import { Sun } from '../sun.js';
-import { Planets } from '../planets.js';
-import { Stargate } from '../stargate.js';
-import { StarSystemGenerator } from '../starSystemGenerator.js';
-import type { AsteroidBelt } from '../asteroidBelt.js';
-import type { SpaceAnomalies } from '../spaceAnomalies.js';
-import type { SystemTransition } from '../systemTransition.js';
-import type { VibeVersePortals } from '../vibeVersePortals.js';
+import { Skybox } from '../skybox.ts';
+import { Sun } from '../sun.ts';
+import { Planets } from '../planets.ts';
+import { Stargate } from '../stargate.ts';
+import { StarSystemGenerator } from '../starSystemGenerator.ts';
+import type { AsteroidBelt } from '../asteroidBelt.ts';
+import type { SpaceAnomalies } from '../spaceAnomalies.ts';
+import type { SystemTransition } from '../systemTransition.ts';
+import type { VibeVersePortals } from '../vibeVersePortals.ts';
 
 interface EnvironmentComponents {
     skybox: Skybox;
@@ -77,15 +77,15 @@ export class SceneInitializer {
         console.log("Loading remaining environment components...");
 
         // Initialize asteroid belt - slightly defer to prioritize UI loading
-        const { AsteroidBelt } = await import('../asteroidBelt.js');
+        const { AsteroidBelt } = await import('../asteroidBelt.ts');
         this.asteroidBelt = new AsteroidBelt(this.scene);
 
         // Initialize space anomalies
-        const { SpaceAnomalies } = await import('../spaceAnomalies.js');
+        const { SpaceAnomalies } = await import('../spaceAnomalies.ts');
         this.spaceAnomalies = new SpaceAnomalies(this.scene);
 
         // Initialize system transition effects
-        const { SystemTransition } = await import('../systemTransition.js');
+        const { SystemTransition } = await import('../systemTransition.ts');
         this.systemTransition = new SystemTransition(this.scene, this.scene.camera);
 
         // Initialize the custom system creator
@@ -106,7 +106,7 @@ export class SceneInitializer {
 
     // Initialize VibeVerse portals - requires spaceship reference
     async initializePortals(spaceship: unknown): Promise<VibeVersePortals> {
-        const { VibeVersePortals } = await import('../vibeVersePortals.js');
+        const { VibeVersePortals } = await import('../vibeVersePortals.ts');
         this.vibeVersePortals = new VibeVersePortals(this.scene, spaceship as any);
         console.log("VibeVerse portals initialized");
         return this.vibeVersePortals;

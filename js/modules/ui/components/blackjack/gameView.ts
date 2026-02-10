@@ -2,8 +2,8 @@
  * Blackjack Game View - DOM creation, card display, table layout
  */
 
-import { BlackjackStyles } from './styles.js';
-import type { BlackjackCard, CardSuit } from './cardDeck.js';
+import { BlackjackStyles } from './styles.ts';
+import type { BlackjackCard, CardSuit } from './cardDeck.ts';
 
 type BlackjackSpaceship = {
     cargo?: {

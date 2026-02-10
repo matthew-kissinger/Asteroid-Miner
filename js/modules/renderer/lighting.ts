@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import type { WebGPURenderer } from 'three/webgpu';
-import { LIGHTING_CONFIG } from '../../config/lightingConfig.js';
+import { LIGHTING_CONFIG } from '../../config/lightingConfig.ts';
 
 type RendererType = THREE.WebGLRenderer | WebGPURenderer;
 

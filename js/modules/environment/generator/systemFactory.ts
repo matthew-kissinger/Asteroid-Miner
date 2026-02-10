@@ -8,10 +8,10 @@ import {
     SKYBOX_COLORS,
     StarClass,
     SystemClassification
-} from './systemConfig.js';
-import { SystemNames } from './systemNames.js';
-import { SystemUtils } from './systemUtils.js';
-import type { PlanetData } from '../planets/planetFactory.js';
+} from './systemConfig.ts';
+import { SystemNames } from './systemNames.ts';
+import { SystemUtils } from './systemUtils.ts';
+import type { PlanetData } from '../planets/planetFactory.ts';
 
 interface ResourceMultipliers {
     iron: number;

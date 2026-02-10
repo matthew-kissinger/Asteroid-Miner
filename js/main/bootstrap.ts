@@ -19,7 +19,7 @@ export async function startGameMainModule(): Promise<void> {
 
 
         // Initialize the game
-        window.game = new (await import('../main.js')).Game();
+        window.game = new (await import('../main.ts')).Game();
 
     } catch (error) {
 

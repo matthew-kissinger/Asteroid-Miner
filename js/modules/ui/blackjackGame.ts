@@ -9,12 +9,12 @@
  */
 
 import { MobileDetector } from '../../utils/mobileDetector.ts';
-import { BlackjackGameView } from './components/blackjack/gameView.js';
-import { BlackjackCardDeck } from './components/blackjack/cardDeck.js';
-import { BlackjackGameLogic } from './components/blackjack/gameLogic.js';
-import { BlackjackAnimations } from './components/blackjack/animations.js';
-import { BlackjackBetting } from './components/blackjack/betting.js';
-import { BlackjackEventHandlers } from './components/blackjack/eventHandlers.js';
+import { BlackjackGameView } from './components/blackjack/gameView.ts';
+import { BlackjackCardDeck } from './components/blackjack/cardDeck.ts';
+import { BlackjackGameLogic } from './components/blackjack/gameLogic.ts';
+import { BlackjackAnimations } from './components/blackjack/animations.ts';
+import { BlackjackBetting } from './components/blackjack/betting.ts';
+import { BlackjackEventHandlers } from './components/blackjack/eventHandlers.ts';
 
 type BlackjackAudio = {
     playSound?: (sound: string) => void;

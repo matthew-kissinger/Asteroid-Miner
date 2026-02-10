@@ -5,7 +5,7 @@
  * by publishing and subscribing to specific message types.
  */
 
-import { validateEventPayload } from './events.js';
+import { validateEventPayload } from './events.ts';
 
 export interface Message {
     type: string;

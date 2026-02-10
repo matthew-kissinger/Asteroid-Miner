@@ -2,7 +2,7 @@
  * Blackjack Game Logic - Blackjack rules, hand evaluation, win conditions
  */
 
-import type { BlackjackCard } from './cardDeck.js';
+import type { BlackjackCard } from './cardDeck.ts';
 
 type GameResult = 'win' | 'blackjack' | 'lose' | 'bust' | 'push';
 type DealerPhraseType = 'win' | 'lose' | 'blackjack' | 'push';

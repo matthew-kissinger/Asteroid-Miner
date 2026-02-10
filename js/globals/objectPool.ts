@@ -1,5 +1,5 @@
 import { getGlobalPoolRegistry } from '../modules/pooling/PoolRegistry.ts';
-import { DEBUG_MODE } from './debug.js';
+import { DEBUG_MODE } from './debug.ts';
 
 type PoolRegistry = {
     get: (type: string, ...args: unknown[]) => unknown;

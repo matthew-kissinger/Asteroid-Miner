@@ -1,10 +1,10 @@
 // audio.ts - Main AudioManager facade that delegates to specialized modules
-import { AudioContextManager } from './core/context.js';
-import { AudioLoader, SoundMap } from './core/loader.js';
-import { MusicPlaylist } from './music/playlist.js';
-import { MusicPlayer } from './music/player.js';
-import { SoundPlayer } from './effects/soundPlayer.js';
-import { MobileAudioEnabler } from './mobile/enabler.js';
+import { AudioContextManager } from './core/context.ts';
+import { AudioLoader, SoundMap } from './core/loader.ts';
+import { MusicPlaylist } from './music/playlist.ts';
+import { MusicPlayer } from './music/player.ts';
+import { SoundPlayer } from './effects/soundPlayer.ts';
+import { MobileAudioEnabler } from './mobile/enabler.ts';
 
 export class AudioManager {
     private audioContextManager: AudioContextManager;

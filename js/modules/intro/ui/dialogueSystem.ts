@@ -1,6 +1,6 @@
 // dialogueSystem.ts - Manages dialogue UI and typing animation for intro sequence
 
-import { playDialogueWav } from '../audio/dialogueManager.js';
+import { playDialogueWav } from '../audio/dialogueManager.ts';
 
 export class DialogueSystem {
     private dialogueBox: HTMLDivElement | null = null;

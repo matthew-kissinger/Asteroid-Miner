@@ -1,24 +1,24 @@
 // main.ts - Main entry point for the game (ultra-lean refactored version)
 
 // Import refactored modules
-import { initializeGlobals } from './main/globals.js';
-import { StartupSequence } from './main/startupSequence.js';
-import { GameLoop } from './main/gameLoop.js';
-import { Diagnostics } from './main/diagnostics.js';
-import { GameInitializer } from './main/gameInitializer.js';
+import { initializeGlobals } from './main/globals.ts';
+import { StartupSequence } from './main/startupSequence.ts';
+import { GameLoop } from './main/gameLoop.ts';
+import { Diagnostics } from './main/diagnostics.ts';
+import { GameInitializer } from './main/gameInitializer.ts';
 import { mainMessageBus } from './globals/messageBus.ts';
 // Removed direct imports for ObjectPools, DifficultyManager, HordeMode, AudioUpdater, GameLifecycle
-// import { ObjectPools } from './main/objectPools.js';
-// import { DifficultyManager } from './main/difficultyManager.js';
-// import { HordeMode } from './main/hordeMode.js';
-// import { AudioUpdater } from './main/audioUpdater.js';
+// import { ObjectPools } from './main/objectPools.ts';
+// import { DifficultyManager } from './main/difficultyManager.ts';
+// import { HordeMode } from './main/hordeMode.ts';
+// import { AudioUpdater } from './main/audioUpdater.ts';
 // import { GameLifecycle } from './main/gameLifecycle.ts';
 
 // Import bitECS systems
 import { createGameEntity } from './ecs/world';
 import { Position, Rotation, Player } from './ecs/components';
 import { setPlayerEntity } from './ecs/systems/index';
-// import { initECS, updateECS } from './ecs/systems/index.js'; // Removed direct import
+// import { initECS, updateECS } from './ecs/systems/index.ts'; // Removed direct import
 
 export class Game {
     initializer: any;
@@ -80,19 +80,19 @@ export class Game {
                            (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
 
             // Initialize managers
-            const { DifficultyManager } = await import('./main/difficultyManager.js');
+            const { DifficultyManager } = await import('./main/difficultyManager.ts');
             this.difficultyManager = new DifficultyManager();
             
-            const { HordeMode } = await import('./main/hordeMode.js');
+            const { HordeMode } = await import('./main/hordeMode.ts');
             this.hordeMode = new HordeMode(this);
             
-            const { AudioUpdater } = await import('./main/audioUpdater.js');
+            const { AudioUpdater } = await import('./main/audioUpdater.ts');
             this.audioUpdater = new AudioUpdater(this);
             
             const { GameLifecycle } = await import('./main/gameLifecycle.ts');
             this.lifecycle = new GameLifecycle(this);
             
-            const { ObjectPools } = await import('./main/objectPools.js');
+            const { ObjectPools } = await import('./main/objectPools.ts');
             this.objectPools = new ObjectPools(this);
 
             // Register event handlers
@@ -114,7 +114,7 @@ export class Game {
             this.diagnostics = new Diagnostics(this);
 
             // Initialize bitECS systems (pass scene for test entity mesh)
-            const { initECS, updateECS } = await import('./ecs/systems/index.js');
+            const { initECS, updateECS } = await import('./ecs/systems/index.ts');
             initECS(this.renderer?.scene);
             this._updateECS = updateECS;
 

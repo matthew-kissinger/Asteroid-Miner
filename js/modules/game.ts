@@ -1,18 +1,18 @@
 // game.ts - Enhanced game logic with combat systems (refactored with delegation pattern)
-import { GameInitializer } from './game/initialization.js';
-import { GameStateManager } from './game/stateManager.js';
-import { GameSystemCoordinator } from './game/systemCoordinator.js';
-import { GameLifecycleManager } from './game/lifecycle.js';
-import { GameEventHandlers } from './game/eventHandlers.js';
-import { GameHelpers } from './game/helpers.js';
+import { GameInitializer } from './game/initialization.ts';
+import { GameStateManager } from './game/stateManager.ts';
+import { GameSystemCoordinator } from './game/systemCoordinator.ts';
+import { GameLifecycleManager } from './game/lifecycle.ts';
+import { GameEventHandlers } from './game/eventHandlers.ts';
+import { GameHelpers } from './game/helpers.ts';
 import * as THREE from 'three';
 import { MessageBus } from '../core/messageBus.ts';
 import { Physics } from './physics';
 import { Spaceship } from './spaceship';
 import { Environment } from './environment';
-import { Controls } from './controls.js';
+import { Controls } from './controls.ts';
 import { UI } from './ui';
-import { AudioManager } from './audio/audio.js';
+import { AudioManager } from './audio/audio.ts';
 import { Combat } from './combat';
 
 type GameOverMessage = string | Record<string, unknown>;

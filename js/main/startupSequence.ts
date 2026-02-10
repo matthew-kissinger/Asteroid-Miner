@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { mainMessageBus } from '../globals/messageBus.ts';
-// import { IntroSequence } from '../modules/introSequence.js'; // Removed direct import
+// import { IntroSequence } from '../modules/introSequence.ts'; // Removed direct import
 
 type AudioContextLike = {
     state: string;
@@ -137,7 +137,7 @@ export class StartupSequence {
             
             // Initialize combat systems asynchronously
             if (!this.game.combat) {
-                const { Combat } = await import('../modules/combat.js');
+                const { Combat } = await import('../modules/combat.ts');
                 this.game.combat = new Combat(this.game.scene as THREE.Scene, this.game.spaceship);
                 
                 // Ensure the ECS world in combat is properly initialized
@@ -192,7 +192,7 @@ export class StartupSequence {
     
     async initIntroSequence(): Promise<void> {
         // Initialize the intro sequence module
-        const { IntroSequence } = await import('../modules/introSequence.js');
+        const { IntroSequence } = await import('../modules/introSequence.ts');
         this.introSequence = new IntroSequence(
             this.game.scene as THREE.Scene,
             this.game.camera as THREE.Camera,

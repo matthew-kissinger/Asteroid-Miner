@@ -1,9 +1,9 @@
 // environment.ts - Main environment class that integrates all environment components
 
 import * as THREE from 'three';
-import { SceneInitializer } from './environment/core/sceneInitializer.js';
-import { RegionManager } from './environment/core/regionManager.js';
-import { SystemTransitionManager } from './environment/core/systemTransitionManager.js';
+import { SceneInitializer } from './environment/core/sceneInitializer.ts';
+import { RegionManager } from './environment/core/regionManager.ts';
+import { SystemTransitionManager } from './environment/core/systemTransitionManager.ts';
 
 interface EnvironmentComponents {
     skybox?: any;

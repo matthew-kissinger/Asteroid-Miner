@@ -1,6 +1,6 @@
 // dialogueManager.ts - Manages loading and playing dialogue WAV files for intro sequence
 
-import { getAbsolutePath } from '../../../utils/pathUtils.js';
+import { getAbsolutePath } from '../../../utils/pathUtils.ts';
 
 /**
  * Load dialogue WAV files (1.wav through 8.wav)

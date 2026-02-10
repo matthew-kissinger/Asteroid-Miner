@@ -1,13 +1,13 @@
 // settings.js - Handles game settings and performance options
 
 import { MobileDetector } from '../../utils/mobileDetector.ts';
-import { SettingsStyles } from './components/settings/styles.js';
-import { AudioSettings } from './components/settings/audioSettings.js';
-import { GraphicsSettings } from './components/settings/graphicsSettings.js';
-import { SettingsView } from './components/settings/settingsView.js';
-import { SettingsPersistence } from './components/settings/persistence.js';
-import { SettingsEventHandlers } from './components/settings/eventHandlers.js';
-import { SettingsHelpers } from './components/settings/helpers.js';
+import { SettingsStyles } from './components/settings/styles.ts';
+import { AudioSettings } from './components/settings/audioSettings.ts';
+import { GraphicsSettings } from './components/settings/graphicsSettings.ts';
+import { SettingsView } from './components/settings/settingsView.ts';
+import { SettingsPersistence } from './components/settings/persistence.ts';
+import { SettingsEventHandlers } from './components/settings/eventHandlers.ts';
+import { SettingsHelpers } from './components/settings/helpers.ts';
 
 type SettingsData = {
     frameRateCap: string;

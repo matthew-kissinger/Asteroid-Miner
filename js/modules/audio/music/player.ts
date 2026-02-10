@@ -1,5 +1,5 @@
 // player.ts - Music playback control and volume management
-import { MusicPlaylist } from './playlist.js';
+import { MusicPlaylist } from './playlist.ts';
 
 interface ExtendedAudioElement extends HTMLAudioElement {
     hasEndedListener?: boolean;

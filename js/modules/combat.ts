@@ -11,12 +11,12 @@
  * - aiAndSpawners.js: Enemy pool/spawner management
  */
 
-import { WorldSetup } from './combat/worldSetup.js';
-import { SystemRegistrar } from './combat/registerSystems.js';
-import { EventManager } from './combat/events.js';
-import { EffectsManager } from './combat/effects.js';
-import { AISpawnerManager } from './combat/aiAndSpawners.js';
-import { CombatLogic } from './combat/combatLogic.js';
+import { WorldSetup } from './combat/worldSetup.ts';
+import { SystemRegistrar } from './combat/registerSystems.ts';
+import { EventManager } from './combat/events.ts';
+import { EffectsManager } from './combat/effects.ts';
+import { AISpawnerManager } from './combat/aiAndSpawners.ts';
+import { CombatLogic } from './combat/combatLogic.ts';
 import * as THREE from 'three';
 
 // Define interfaces for submodules until they are converted
