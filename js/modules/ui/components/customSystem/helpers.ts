@@ -1,7 +1,7 @@
 // helpers.ts - Utility functions and data formatting
 
 export class HelperManager {
-    scrollTimeout: number | null;
+    scrollTimeout: ReturnType<typeof setTimeout> | null;
 
     constructor() {
         this.scrollTimeout = null;
@@ -80,7 +80,7 @@ export class HelperManager {
         wait: number,
         immediate: boolean = false
     ): (...args: Parameters<T>) => void {
-        let timeout: number | null;
+        let timeout: ReturnType<typeof setTimeout> | null;
         return function executedFunction(...args: Parameters<T>): void {
             const later = (): void => {
                 timeout = null;
