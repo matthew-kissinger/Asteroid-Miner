@@ -5,6 +5,7 @@ import WebGL from 'three/addons/capabilities/WebGL.js';
 import { WebGPURenderer } from 'three/webgpu';
 import { LightingManager } from './renderer/lighting';
 import { PostProcessingManager } from './renderer/post';
+import { TSLPostProcessingManager } from './renderer/postTSL';
 import { SceneApiManager } from './renderer/sceneApi';
 import { RenderHelpers } from './renderer/helpers';
 import { VolumetricLightingManager } from './renderer/volumetricLighting';
@@ -22,7 +23,7 @@ export class Renderer {
     renderer!: RendererType;
     renderAlpha: number = 0;
     lightingManager?: LightingManager;
-    postProcessingManager?: PostProcessingManager;
+    postProcessingManager?: PostProcessingManager | TSLPostProcessingManager;
     sceneApiManager?: SceneApiManager;
     renderHelpers?: RenderHelpers;
     volumetricLightingManager?: VolumetricLightingManager;
@@ -66,10 +67,22 @@ export class Renderer {
 
         // Initialize submodules
         this.lightingManager = new LightingManager(this.scene, this.renderer, this.camera);
-        this.postProcessingManager = new PostProcessingManager(this.renderer, this.scene, this.camera);
+        
+        // Choose post-processing manager based on renderer type
+        // Check if it's a WebGPURenderer (using helper or class check)
+        // Note: isWebGPURenderer property is common check
+        if ('isWebGPURenderer' in this.renderer && this.renderer.isWebGPURenderer) {
+            console.log("Using TSL Post-Processing for WebGPU");
+            this.postProcessingManager = new TSLPostProcessingManager(this.renderer, this.scene, this.camera);
+        } else {
+            console.log("Using GLSL Post-Processing for WebGL");
+            this.postProcessingManager = new PostProcessingManager(this.renderer as THREE.WebGLRenderer, this.scene, this.camera);
+        }
+
         this.sceneApiManager = new SceneApiManager(this.scene);
         this.renderHelpers = new RenderHelpers(this.scene);
-        this.volumetricLightingManager = new VolumetricLightingManager(this.postProcessingManager, this.sceneApiManager, this.camera);
+        // Cast postProcessingManager to any because VolumetricLightingManager expects PostProcessingManager but we have a compatible interface
+        this.volumetricLightingManager = new VolumetricLightingManager(this.postProcessingManager as any, this.sceneApiManager, this.camera);
 
         // Setup through submodules
         this.lightingManager.setupLighting();
@@ -184,8 +197,13 @@ export class Renderer {
         if (this.lightingManager) {
             this.lightingManager.handleResize();
         }
+
+        // Delegate to post-processing manager
+        if (this.postProcessingManager) {
+            this.postProcessingManager.handleResize();
+        }
         
-        // Update composer size if it exists
+        // Update composer size if it exists (legacy GLSL path)
         if (this.composer) {
             this.composer.setSize(window.innerWidth, window.innerHeight);
         
