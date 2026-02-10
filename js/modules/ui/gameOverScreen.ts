@@ -30,10 +30,16 @@ type GameOverMessage = {
 export class GameOverScreen {
     isVisible: boolean;
     audio?: GameOverAudio;
+    private gameRef: { difficultyManager?: { gameTime: number; currentLevel: number }; gameTime?: number } | null;
 
     constructor() {
         this.isVisible = false;
+        this.gameRef = null;
         this.setupGameOverScreen();
+    }
+    
+    setGameReference(gameRef: { difficultyManager?: { gameTime: number; currentLevel: number }; gameTime?: number }): void {
+        this.gameRef = gameRef;
     }
     
     // Helper method to handle paths for GitHub Pages and local development
@@ -92,16 +98,18 @@ export class GameOverScreen {
             
             // Reset game state before reloading
             // This is critical to ensure difficulty level resets properly
-            if (window.game) {
+            if (this.gameRef) {
                 // Reset time-based difficulty scaling
-                if (window.game.difficultyManager) {
-                    window.game.difficultyManager.gameTime = 0;
-                    window.game.difficultyManager.currentLevel = 1;
+                if (this.gameRef.difficultyManager) {
+                    this.gameRef.difficultyManager.gameTime = 0;
+                    this.gameRef.difficultyManager.currentLevel = 1;
                     console.log("Reset difficulty level to 1");
                 }
                 
                 // Reset game time counter
-                window.game.gameTime = 0;
+                if (typeof this.gameRef.gameTime !== 'undefined') {
+                    this.gameRef.gameTime = 0;
+                }
             }
             
             // Reload the page with a small delay to allow the UI update to be seen

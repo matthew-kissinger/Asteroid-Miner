@@ -34,6 +34,7 @@ type GameUi = {
     initializeSettings: (game: GameInitializerContext) => Promise<void>;
     setGameState: (gameState: any) => void;
     setWorld: (world: any) => void;
+    setGameStateReference: (gameState: any) => void;
     stargateInterface?: { showStargateUI?: (() => void) | undefined };
     initializeUIComponents: () => Promise<void>; // Add this method
 };
@@ -152,6 +153,9 @@ export class GameInitializer {
 
         // Share audio reference with UI for sound-based components
         await this.game.ui.setAudio(this.game.audio);
+        
+        // Share game state reference with UI for intro sequence and FPS display
+        this.game.ui.setGameStateReference(this.game);
         
         // Initialize controls last, as it depends on other components
         this.game.controls = new Controls(spaceship, physics as any, environment as any, this.game.ui);

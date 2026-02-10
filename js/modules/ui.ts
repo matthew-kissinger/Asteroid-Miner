@@ -145,6 +145,7 @@ export class UI {
     statsInterval?: number;
     camera: any = null;
     renderer: any = null;
+    private gameStateRef: { introSequenceActive?: boolean; currentFPS?: number; difficultyManager?: any; gameTime?: number; ecsWorld?: any; activateHordeMode?: () => void; audio?: any } | null = null;
     
     constructor(spaceship: SpaceshipForUI, environment: EnvironmentForUI) {
         this.spaceship = spaceship;
@@ -188,6 +189,17 @@ export class UI {
     setHUDSettings(settings: any): void {
         if (!this.isMobile && this.hud) {
             (this.hud as any).settings = settings;
+        }
+    }
+    
+    // Method to set game state reference
+    setGameStateReference(gameState: { introSequenceActive?: boolean; currentFPS?: number; difficultyManager?: any; gameTime?: number; ecsWorld?: any; activateHordeMode?: () => void; audio?: any }): void {
+        this.gameStateRef = gameState;
+        if (this.gameOverScreen) {
+            (this.gameOverScreen as any).setGameReference?.(gameState);
+        }
+        if (this.stargateInterface) {
+            (this.stargateInterface as any).setGameReference?.(gameState);
         }
     }
     
@@ -277,6 +289,11 @@ export class UI {
             const { BlackjackGame } = await import('./ui/blackjackGame.ts');
             this.blackjackGame = new BlackjackGame(null, this.spaceship, this.audio);
             console.log("UI: Created BlackjackGame with spaceship:", this.spaceship);
+            
+            // Set game resources reference if available
+            if (this.gameStateRef) {
+                (this.blackjackGame as any).setGameResourcesRef(this.gameStateRef);
+            }
             
             // Link blackjackGame to stargateInterface
             this.stargateInterface.setBlackjackGame?.(this.blackjackGame);
@@ -601,7 +618,7 @@ export class UI {
         console.log("Hiding UI elements");
         
         // Force hide ALL UI elements during intro sequence
-        if (window.game && window.game.introSequenceActive) {
+        if (this.gameStateRef?.introSequenceActive) {
             console.log("Intro sequence active - forcing ALL UI elements to be hidden");
             
             // Get references to each UI element we need to hide
@@ -664,7 +681,7 @@ export class UI {
         console.log("Showing UI elements");
         
         // Don't show UI if intro sequence is active
-        if (window.game && window.game.introSequenceActive) {
+        if (this.gameStateRef?.introSequenceActive) {
             console.warn("showUI called while intro is still active - not showing UI elements");
             return; // Exit early - don't show any UI during intro
         }
@@ -692,7 +709,7 @@ export class UI {
         
         // FORCE restore elements that might have been forcibly hidden
         // But only if intro is not active
-        if (window.game && window.game.introSequenceActive) {
+        if (this.gameStateRef?.introSequenceActive) {
             return; // Double-check intro is not active before forcing visibility
         }
         
@@ -770,8 +787,8 @@ export class UI {
             memoryStats.innerHTML = MemoryStats.getReport().replace(/\n/g, '<br>');
             
             // Display current FPS if available
-            if (window.game && window.game.currentFPS) {
-                fpsCounter.innerHTML = `FPS: ${Math.round(window.game.currentFPS)}`;
+            if (this.gameStateRef?.currentFPS) {
+                fpsCounter.innerHTML = `FPS: ${Math.round(this.gameStateRef.currentFPS)}`;
             }
         }, 1000);
     }
