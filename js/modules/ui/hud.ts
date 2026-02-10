@@ -16,6 +16,8 @@ type HUDNotificationType = 'info' | 'warning' | 'error' | 'success';
 export class HUD {
     spaceship: HUDSpaceship | null;
     eventHandlers: HUDEventHandlers | null;
+    world: any = null;
+    settings: any = null;
 
     constructor(spaceship: HUDSpaceship) {
         this.spaceship = spaceship;
@@ -56,13 +58,13 @@ export class HUD {
     
     update(): void {
         if (!this.spaceship) return;
-        
+
         // Update all status indicators
-        HUDStatusIndicators.updateShieldDisplay(this.spaceship);
-        HUDStatusIndicators.updateHullDisplay(this.spaceship);
+        HUDStatusIndicators.updateShieldDisplay(this.spaceship, this.world);
+        HUDStatusIndicators.updateHullDisplay(this.spaceship, this.world);
         HUDStatusIndicators.updateFuelDisplay(this.spaceship);
         HUDStatusIndicators.updateCreditsDisplay(this.spaceship);
-        
+
         // Update horde mode display
         HUDNotifications.updateHordeModeDisplay();
     }
@@ -78,7 +80,7 @@ export class HUD {
     }
     
     updateFPS(fps: number, cap?: number): void {
-        HUDStatusIndicators.updateFPS(fps, cap ?? 0);
+        HUDStatusIndicators.updateFPS(fps, cap ?? 0, this.settings);
     }
     
     hide(): void {
@@ -105,11 +107,11 @@ export class HUD {
     
     // Backward compatibility methods
     updateShieldDisplay(): void {
-        HUDStatusIndicators.updateShieldDisplay(this.spaceship);
+        HUDStatusIndicators.updateShieldDisplay(this.spaceship, this.world);
     }
-    
+
     updateHullDisplay(): void {
-        HUDStatusIndicators.updateHullDisplay(this.spaceship);
+        HUDStatusIndicators.updateHullDisplay(this.spaceship, this.world);
     }
     
     updateHordeModeDisplay(): void {

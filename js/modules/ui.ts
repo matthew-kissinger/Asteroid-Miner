@@ -162,9 +162,30 @@ export class UI {
         
         // Initialize UI components
         if (this.isMobile) {
-            this.hud = new MobileHUD(spaceship);
+            this.hud = new MobileHUD(spaceship, environment, null);
         } else {
             this.hud = new HUD(spaceship);
+        }
+    }
+
+    // Method to set game state reference for MobileHUD
+    setGameState(gameState: any): void {
+        if (this.isMobile && this.hud) {
+            (this.hud as any).gameState = gameState;
+        }
+    }
+
+    // Method to set world reference for HUD
+    setWorld(world: any): void {
+        if (!this.isMobile && this.hud) {
+            (this.hud as any).world = world;
+        }
+    }
+
+    // Method to set settings reference for HUD (called after settings initialization)
+    setHUDSettings(settings: any): void {
+        if (!this.isMobile && this.hud) {
+            (this.hud as any).settings = settings;
         }
     }
     
@@ -203,8 +224,8 @@ export class UI {
         this.controlsMenu = new ControlsMenu();
         
         const { StarMap } = await import('./ui/starMap.ts');
-        // Initialize star map (requires environment, docking system, and stargate interface)
-        this.starMap = new StarMap(this.environment.starSystemGenerator ?? null, null, this.stargateInterface);
+        // Initialize star map (requires environment, docking system, stargate interface, and audio)
+        this.starMap = new StarMap(this.environment.starSystemGenerator ?? null, null, this.stargateInterface, this.audio ?? null);
         
         // Initialize Blackjack game (will be fully initialized after audio is set)
         this.blackjackGame = null;
@@ -300,18 +321,21 @@ export class UI {
             console.error("Cannot initialize settings without game instance");
             return;
         }
-        
+
         // Create settings
         const { Settings } = await import('./ui/settings.ts');
         this.settings = new Settings(game);
-        
+
         // Link settings to stargateInterface
         this.stargateInterface.setSettings?.(this.settings);
-        
+
+        // Link settings to HUD for FPS display
+        this.setHUDSettings(this.settings);
+
         // Initialize start screen now that we have game instance
         const { StartScreen } = await import('./ui/startScreen.ts');
         this.startScreen = new StartScreen(game, this);
-        
+
         console.log("Settings and StartScreen initialized with game instance");
     }
     

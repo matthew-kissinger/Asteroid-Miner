@@ -157,31 +157,31 @@ export class HUDStatusIndicators {
     /**
      * Update shield display with current shield status
      */
-    static updateShieldDisplay(spaceship: any): void {
+    static updateShieldDisplay(spaceship: any, world?: any): void {
         const shieldBar: HTMLDivElement | null = document.getElementById('shield-bar') as HTMLDivElement;
         if (!shieldBar) return;
-        
+
         let shieldPercentage: number = 100;
         let shieldFound: boolean = false;
-        
+
         // Try to directly access player's health component
         try {
-            if (window.game && (window.game as any).world) {
-                const players: any[] = (window.game as any).world.getEntitiesByTag('player');
+            if (world) {
+                const players: any[] = world.getEntitiesByTag('player');
                 if (players && players.length > 0) {
                     const player: any = players[0];
                     const health: any = player.getComponent('HealthComponent');
-                    
+
                     if (health) {
                         shieldPercentage = health.getShieldPercentage();
-                        
+
                         // Ensure spaceship object is in sync with the HealthComponent
                         if (spaceship) {
                             // If HealthComponent shield is higher, use that value
                             if (health.shield > spaceship.shield) {
                                 spaceship.shield = health.shield;
                                 spaceship.maxShield = health.maxShield;
-                            } 
+                            }
                             // If spaceship shield is higher (e.g., after repair), update health component
                             else if (spaceship.shield > health.shield) {
                                 health.shield = spaceship.shield;
@@ -190,7 +190,7 @@ export class HUDStatusIndicators {
                                 shieldPercentage = health.getShieldPercentage();
                             }
                         }
-                        
+
                         shieldFound = true;
                     }
                 }
@@ -198,15 +198,15 @@ export class HUDStatusIndicators {
         } catch (e: any) {
             console.error("Error accessing player shield component:", e);
         }
-        
+
         // Fallback to spaceship object if health component not found
         if (!shieldFound && spaceship && spaceship.shield !== undefined) {
             shieldPercentage = (spaceship.shield / spaceship.maxShield) * 100;
         }
-        
+
         // Update the shield bar
         shieldBar.style.width = `${shieldPercentage}%`;
-        
+
         // Change color based on shield status
         if (shieldPercentage < 25) {
             shieldBar.style.backgroundColor = 'rgba(255, 80, 80, 0.8)'; // Red for low shields
@@ -220,24 +220,24 @@ export class HUDStatusIndicators {
     /**
      * Update hull display with current hull status
      */
-    static updateHullDisplay(spaceship: any): void {
+    static updateHullDisplay(spaceship: any, world?: any): void {
         const hullBar: HTMLDivElement | null = document.getElementById('hull-bar') as HTMLDivElement;
         if (!hullBar) return;
-        
+
         let hullPercentage: number = 100;
         let healthFound: boolean = false;
-        
+
         // Try to directly access player's health component
         try {
-            if (window.game && (window.game as any).world) {
-                const players: any[] = (window.game as any).world.getEntitiesByTag('player');
+            if (world) {
+                const players: any[] = world.getEntitiesByTag('player');
                 if (players && players.length > 0) {
                     const player: any = players[0];
                     const health: any = player.getComponent('HealthComponent');
-                    
+
                     if (health) {
                         hullPercentage = health.getHealthPercentage();
-                        
+
                         // Ensure spaceship object is in sync with the HealthComponent
                         if (spaceship) {
                             // If HealthComponent health is higher, use that value
@@ -253,7 +253,7 @@ export class HUDStatusIndicators {
                                 hullPercentage = health.getHealthPercentage();
                             }
                         }
-                        
+
                         healthFound = true;
                     }
                 }
@@ -261,15 +261,15 @@ export class HUDStatusIndicators {
         } catch (e: any) {
             console.error("Error accessing player health component:", e);
         }
-        
+
         // Fallback to spaceship object if health component not found
         if (!healthFound && spaceship && spaceship.hull !== undefined) {
             hullPercentage = (spaceship.hull / spaceship.maxHull) * 100;
         }
-        
+
         // Update the hull bar
         hullBar.style.width = `${hullPercentage}%`;
-        
+
         // Change color based on hull status
         if (hullPercentage < 30) {
             hullBar.style.backgroundColor = 'rgba(255, 80, 80, 0.8)';
@@ -332,13 +332,13 @@ export class HUDStatusIndicators {
     /**
      * Update FPS display
      */
-    static updateFPS(fps: number, cap: number): void {
+    static updateFPS(fps: number, cap: number, settings?: any): void {
         const fpsElement: HTMLElement | null = document.getElementById('fps-display');
         if (fpsElement) {
             if (cap) {
                 // Show actual FPS and the cap
                 fpsElement.textContent = `FPS: ${Math.round(fps)}/${cap}`;
-                
+
                 // Color code based on performance relative to cap
                 if (fps < cap * 0.9) {
                     // Below 90% of target - indicate performance issues
@@ -352,13 +352,9 @@ export class HUDStatusIndicators {
                 fpsElement.textContent = `FPS: ${Math.round(fps)}`;
                 fpsElement.style.color = "rgba(120, 220, 232, 0.8)";
             }
-            
+
             // Add auto indicator if using monitor refresh rate
-            if (window.game && 
-                (window.game as any).ui && 
-                (window.game as any).ui.settings && 
-                (window.game as any).ui.settings.settings.frameRateCap === 'auto') {
-                
+            if (settings && settings.settings && settings.settings.frameRateCap === 'auto') {
                 if (cap > 0) {
                     // Show it's using auto mode with the detected refresh rate
                     fpsElement.textContent = `FPS: ${Math.round(fps)}/${cap} (Auto)`;

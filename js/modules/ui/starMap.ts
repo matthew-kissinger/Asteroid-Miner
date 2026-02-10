@@ -15,12 +15,17 @@ type StargateInterfaceRef = {
     showStargateUI?: () => void;
 };
 
+type AudioSystem = {
+    playSound?: (sound: string) => void;
+};
+
 type MapInteractionEvent = MouseEvent | Touch;
 
 export class StarMap {
     starSystemGenerator: StarSystemGenerator;
     dockingSystem: DockingSystem | null;
     stargateInterface: StargateInterfaceRef | null;
+    audio: AudioSystem | null;
     isVisible: boolean;
     isMobile: boolean;
     canvasRenderer: CanvasRenderer;
@@ -28,10 +33,16 @@ export class StarMap {
     dataManager: DataManager;
     uiCreator: UICreator;
 
-    constructor(starSystemGenerator: StarSystemGenerator | null | undefined, dockingSystem: DockingSystem | null, stargateInterface: StargateInterfaceRef | null) {
+    constructor(
+        starSystemGenerator: StarSystemGenerator | null | undefined,
+        dockingSystem: DockingSystem | null,
+        stargateInterface: StargateInterfaceRef | null,
+        audio: AudioSystem | null = null
+    ) {
         this.starSystemGenerator = starSystemGenerator;
         this.dockingSystem = dockingSystem;
         this.stargateInterface = stargateInterface;
+        this.audio = audio;
         this.isVisible = false;
         this.isMobile = MobileDetector.isMobile();
         
@@ -56,19 +67,19 @@ export class StarMap {
         const closeButton = document.getElementById('close-star-map') as HTMLButtonElement | null;
         if (closeButton) {
             closeButton.addEventListener('click', () => {
-                if (window.game && window.game.audio) {
-                    window.game.audio.playSound('boink');
+                if (this.audio && this.audio.playSound) {
+                    this.audio.playSound('boink');
                 }
                 this.hide();
             });
-            
+
             // Add touch event for mobile
             if (this.isMobile) {
                 closeButton.addEventListener('touchend', (e: TouchEvent) => {
                     e.preventDefault();
-                    if (window.game && window.game.audio) {
+                    if (this.audio && this.audio.playSound) {
                         console.log("Mobile: Playing sound on star map close button");
-                        window.game.audio.playSound('boink');
+                        this.audio.playSound('boink');
                         // Give time for the sound to start before hiding
                         setTimeout(() => this.hide(), 50);
                     } else {
@@ -174,11 +185,11 @@ export class StarMap {
         this.selectSystem(null);
         
         // Force audio context resumption for mobile
-        if (this.isMobile && window.game && window.game.audio) {
+        if (this.isMobile && this.audio && this.audio.playSound) {
             // Play a sound to kickstart the audio context
             setTimeout(() => {
                 console.log("Mobile: Attempting to play initial sound in StarMap");
-                window.game.audio.playSound('boink');
+                this.audio!.playSound!('boink');
             }, 100);
         }
         
@@ -200,11 +211,8 @@ export class StarMap {
             // Show the stargate UI when returning from star map
             if (this.stargateInterface?.showStargateUI) {
                 this.stargateInterface.showStargateUI();
-            } else if (window.game && window.game.ui && window.game.ui.stargateInterface) {
-                // Try to find stargate UI via game instance if direct reference fails
-                window.game.ui.stargateInterface.showStargateUI();
             } else {
-                // Direct DOM access as last resort
+                // Direct DOM access as fallback
                 const stargateUI = document.getElementById('stargate-ui') as HTMLDivElement | null;
                 if (stargateUI) {
                     stargateUI.style.display = 'block';
