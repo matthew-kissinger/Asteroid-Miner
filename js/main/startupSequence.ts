@@ -139,7 +139,12 @@ export class StartupSequence {
             if (!this.game.combat) {
                 const { Combat } = await import('../modules/combat.ts');
                 this.game.combat = new Combat(this.game.scene as THREE.Scene, this.game.spaceship);
-                
+
+                // Initialize combat stats HUD after combat is created
+                if (this.game.ui && this.game.ui.hud && this.game.combat.combatStats) {
+                    this.game.ui.hud.initializeCombatStats(this.game.combat.combatStats);
+                }
+
                 // Ensure the ECS world in combat is properly initialized
                 if (!this.game.combat.world) {
                     // Add a check to ensure the player entity exists
