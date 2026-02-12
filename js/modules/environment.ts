@@ -1,44 +1,79 @@
 // environment.ts - Main environment class that integrates all environment components
 
 import * as THREE from 'three';
+import type { Skybox } from './environment/skybox.ts';
+import type { Sun } from './environment/sun.ts';
+import type { Planets } from './environment/planets.ts';
+import type { Stargate } from './environment/stargate.ts';
+import type { StarSystemGenerator } from './environment/starSystemGenerator.ts';
+import type { AsteroidBelt } from './environment/asteroidBelt.ts';
+import type { SpaceAnomalies } from './environment/spaceAnomalies.ts';
+import type { SystemTransition } from './environment/systemTransition.ts';
 import { SceneInitializer } from './environment/core/sceneInitializer.ts';
 import { RegionManager } from './environment/core/regionManager.ts';
 import { SystemTransitionManager } from './environment/core/systemTransitionManager.ts';
 
+interface VibeVersePortalsUpdatable {
+    update(deltaTime: number): void;
+}
+
+interface CustomSystemCreator {
+    // unknown type - no specific methods accessed
+}
+
+interface EnvironmentAsteroidData {
+    mesh: THREE.Object3D;
+    [key: string]: unknown;
+}
+
+interface EnvironmentAnomalyData {
+    position: THREE.Vector3;
+    type: string;
+    orbCollected: boolean;
+    mesh: THREE.Object3D;
+    orb: unknown;
+    [key: string]: unknown;
+}
+
+interface OrbReward {
+    rarity: string;
+    value: number;
+}
+
 interface EnvironmentComponents {
-    skybox?: any;
-    sun?: any;
-    starSystemGenerator?: any;
-    planets?: any;
-    stargate?: any;
-    asteroidBelt?: any;
-    spaceAnomalies?: any;
-    systemTransition?: any;
-    customSystemCreator?: any;
+    skybox?: Skybox;
+    sun?: Sun;
+    starSystemGenerator?: StarSystemGenerator;
+    planets?: Planets;
+    stargate?: Stargate;
+    asteroidBelt?: AsteroidBelt;
+    spaceAnomalies?: SpaceAnomalies;
+    systemTransition?: SystemTransition;
+    customSystemCreator?: CustomSystemCreator;
 }
 
 export class Environment {
     scene: THREE.Scene;
     componentsLoaded: boolean;
-    sceneInitializer: any;
-    regionManager: any;
-    transitionManager: any;
-    
+    sceneInitializer: SceneInitializer;
+    regionManager: RegionManager;
+    transitionManager: SystemTransitionManager;
+
     // Components assigned from sceneInitializer
-    skybox: any;
-    sun: any;
-    starSystemGenerator: any;
-    planets: any;
-    stargate: any;
-    asteroidBelt: any;
-    spaceAnomalies: any;
-    systemTransition: any;
-    customSystemCreator: any;
-    
-    asteroids: any[];
+    skybox?: Skybox;
+    sun?: Sun;
+    starSystemGenerator?: StarSystemGenerator;
+    planets?: Planets;
+    stargate?: Stargate;
+    asteroidBelt?: AsteroidBelt;
+    spaceAnomalies?: SpaceAnomalies;
+    systemTransition?: SystemTransition;
+    customSystemCreator?: CustomSystemCreator;
+
+    asteroids: EnvironmentAsteroidData[];
     currentSystemId: string;
-    spaceship: any;
-    vibeVersePortals: any;
+    spaceship: unknown;
+    vibeVersePortals?: VibeVersePortalsUpdatable;
 
     constructor(scene: THREE.Scene) {
         this.scene = scene;
@@ -58,7 +93,9 @@ export class Environment {
         this.currentSystemId = this.transitionManager.getCurrentSystemId();
         
         // Setup initial regions for location tracking (minimal setup)
-        this.regionManager.setupInitialRegions(this.sun, this.stargate, this.planets);
+        if (this.sun && this.stargate && this.planets) {
+            this.regionManager.setupInitialRegions(this.sun, this.stargate, this.planets);
+        }
         
         // Schedule loading of remaining components after a short delay to not block startup
         setTimeout(async () => {
@@ -67,135 +104,143 @@ export class Environment {
             
             // Connect asteroids from asteroidBelt to environment
             if (this.asteroidBelt) {
-                this.asteroids = this.asteroidBelt.getAsteroids();
+                this.asteroids = this.asteroidBelt.getAsteroids() as unknown as EnvironmentAsteroidData[];
             }
             
             this.componentsLoaded = true;
         }, 500);
     }
     
-    
+
     // Called after spaceship is created - we need this to initialize portals
-    async setSpaceship(spaceship: any): Promise<void> {
+    async setSpaceship(spaceship: unknown): Promise<void> {
         this.spaceship = spaceship;
         this.vibeVersePortals = await this.sceneInitializer.initializePortals(spaceship);
     }
-    
+
     // Travel to a new star system
-    travelToSystem(systemId: string): any {
+    travelToSystem(systemId: string): boolean {
+        if (!this.starSystemGenerator || !this.systemTransition) {
+            return false;
+        }
         return this.transitionManager.travelToSystem(
-            systemId, 
-            this.starSystemGenerator, 
-            this.systemTransition, 
+            systemId,
+            this.starSystemGenerator,
+            this.systemTransition,
             (id: string) => this.updateEnvironmentForSystem(id)
         );
     }
     
     // Update environment visuals and properties for the new system
     updateEnvironmentForSystem(systemId: string): void {
+        if (!this.starSystemGenerator || !this.skybox || !this.sun || !this.planets ||
+            !this.asteroidBelt || !this.spaceAnomalies) {
+            console.warn('Cannot update environment: missing required components');
+            return;
+        }
+
         this.transitionManager.updateEnvironmentForSystem(
-            systemId, 
-            this.starSystemGenerator, 
-            this.skybox, 
-            this.sun, 
-            this.planets, 
-            this.asteroidBelt, 
-            this.spaceAnomalies, 
+            systemId,
+            this.starSystemGenerator,
+            this.skybox as unknown as Parameters<typeof this.transitionManager.updateEnvironmentForSystem>[2],
+            this.sun as unknown as Parameters<typeof this.transitionManager.updateEnvironmentForSystem>[3],
+            this.planets,
+            this.asteroidBelt,
+            this.spaceAnomalies,
             this.regionManager
         );
         this.currentSystemId = this.transitionManager.getCurrentSystemId();
     }
-    
+
     // Get the player's current location based on position
-    getPlayerLocation(playerPosition: THREE.Vector3): any {
+    getPlayerLocation(playerPosition: THREE.Vector3): string {
         return this.regionManager.getPlayerLocation(
-            playerPosition, 
-            this.spaceAnomalies, 
-            this.asteroids, 
+            playerPosition,
+            this.spaceAnomalies || null,
+            this.asteroids,
             this.componentsLoaded
         );
     }
 
     // Get planet regions for external access
-    getPlanetRegions(): any {
+    getPlanetRegions(): Record<string, unknown> {
         return this.regionManager.getPlanetRegions();
     }
-    
+
     // Find the closest asteroid to a position
-    findClosestAsteroid(position: THREE.Vector3, maxDistance: number): any {
-        if (this.componentsLoaded && this.asteroidBelt && typeof this.asteroidBelt.findClosestAsteroid === 'function') {
-            return this.asteroidBelt.findClosestAsteroid(position, maxDistance);
+    findClosestAsteroid(position: THREE.Vector3, maxDistance: number): EnvironmentAsteroidData | null {
+        if (this.componentsLoaded && this.asteroidBelt) {
+            return this.asteroidBelt.findClosestAsteroid(position, maxDistance) as unknown as EnvironmentAsteroidData | null;
         }
         return null;
     }
-    
+
     // Find the closest space anomaly
-    findClosestAnomaly(position: THREE.Vector3, maxDistance: number): any {
-        if (this.componentsLoaded && this.spaceAnomalies && typeof this.spaceAnomalies.findClosestAnomaly === 'function') {
-            return this.spaceAnomalies.findClosestAnomaly(position, maxDistance);
+    findClosestAnomaly(position: THREE.Vector3, maxDistance: number): EnvironmentAnomalyData | null {
+        if (this.componentsLoaded && this.spaceAnomalies) {
+            return this.spaceAnomalies.findClosestAnomaly(position, maxDistance) as unknown as EnvironmentAnomalyData | null;
         }
         return null;
     }
-    
+
     // Check if position collides with any anomaly
-    checkAnomalyCollision(position: THREE.Vector3): any {
+    checkAnomalyCollision(position: THREE.Vector3): EnvironmentAnomalyData | null {
         if (!this.componentsLoaded || !this.spaceAnomalies) return null;
-        
-        const closestAnomaly = this.spaceAnomalies.findClosestAnomaly(position, 8000);
-        if (closestAnomaly && this.spaceAnomalies.checkCollision(position, closestAnomaly)) {
+
+        const closestAnomaly = this.spaceAnomalies.findClosestAnomaly(position, 8000) as unknown as EnvironmentAnomalyData | null;
+        if (closestAnomaly && this.spaceAnomalies.checkCollision(position, closestAnomaly as unknown as Parameters<typeof this.spaceAnomalies.checkCollision>[1])) {
             return closestAnomaly;
         }
-        
+
         return null;
     }
-    
+
     // Collect energy orb from anomaly
-    collectAnomalyOrb(anomaly: any): any {
-        if (this.componentsLoaded && this.spaceAnomalies && typeof this.spaceAnomalies.collectOrb === 'function') {
-            return this.spaceAnomalies.collectOrb(anomaly);
+    collectAnomalyOrb(anomaly: EnvironmentAnomalyData): OrbReward | null | undefined {
+        if (this.componentsLoaded && this.spaceAnomalies) {
+            return this.spaceAnomalies.collectOrb(anomaly as unknown as Parameters<typeof this.spaceAnomalies.collectOrb>[0]) as unknown as OrbReward | null;
         }
+        return undefined;
     }
     
-    update(deltaTime: number = 0.016, camera: THREE.Camera): void {
-        // Update skybox if it has an update method
-        if (this.skybox && typeof this.skybox.update === 'function') {
+    update(deltaTime: number = 0.016, _camera?: THREE.Camera): void {
+        // Update skybox
+        if (this.skybox) {
             this.skybox.update(deltaTime);
         }
-        
-        // Update sun if it has an update method
-        if (this.sun && typeof this.sun.update === 'function') {
+
+        // Update sun
+        if (this.sun) {
             this.sun.update(deltaTime);
         }
-        
-        // Update planets if they have an update method
-        if (this.planets && typeof this.planets.update === 'function') {
+
+        // Update planets
+        if (this.planets) {
             this.planets.update(deltaTime);
         }
-        
-        // Update system transition effects if active - this needs to run regardless of componentsLoaded
-        if (this.systemTransition && typeof this.systemTransition.update === 'function') {
-            this.systemTransition.update(deltaTime);
-        }
-        
+
+        // SystemTransition handles its own animation loop via requestAnimationFrame,
+        // no update call needed
+
         // Only update non-essential components if they're loaded
         if (this.componentsLoaded) {
             // Update asteroids
-            if (this.asteroidBelt && typeof this.asteroidBelt.update === 'function') {
+            if (this.asteroidBelt) {
                 this.asteroidBelt.update(deltaTime);
             }
-            
+
             // Update stargate
-            if (this.stargate && typeof this.stargate.update === 'function') {
-                this.stargate.update(deltaTime);
+            if (this.stargate) {
+                this.stargate.update();
             }
-            
+
             // Update space anomalies
-            if (this.spaceAnomalies && typeof this.spaceAnomalies.update === 'function') {
-                this.spaceAnomalies.update(deltaTime, camera);
+            if (this.spaceAnomalies) {
+                this.spaceAnomalies.update(deltaTime);
             }
-            
+
             // Update vibe verse portals
-            if (this.vibeVersePortals && typeof this.vibeVersePortals.update === 'function') {
+            if (this.vibeVersePortals) {
                 this.vibeVersePortals.update(deltaTime);
             }
         }
