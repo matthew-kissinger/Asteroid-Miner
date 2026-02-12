@@ -341,6 +341,11 @@ export class UI {
 
         // Set camera for lock-on display
         setLockOnDisplayCamera(camera);
+
+        // Set camera for HUD stargate indicator
+        if (!this.isMobile && this.hud) {
+            (this.hud as any).camera = camera;
+        }
     }
 
     // Initialize settings with the game instance
