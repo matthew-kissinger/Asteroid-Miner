@@ -293,6 +293,23 @@ export class GamepadHandler {
         
         // Handle camera look (right stick)
         this.handleCameraLook(gamepad, deltaTime);
+
+        // Check for manual input to cancel autopilot
+        const autopilot = (windowWithGame as any).game?.controls?.autopilot;
+        if (autopilot?.isActive()) {
+            // Check left stick movement
+            const leftX = gamepad.axes[this.axisMap.LEFT_STICK_X] || 0;
+            const leftY = gamepad.axes[this.axisMap.LEFT_STICK_Y] || 0;
+            // Check right stick movement
+            const rightX = gamepad.axes[this.rightStickXAxis] || 0;
+            const rightY = gamepad.axes[this.rightStickYAxis] || 0;
+            
+            if (Math.abs(leftX) > this.deadZone || Math.abs(leftY) > this.deadZone ||
+                Math.abs(rightX) > this.deadZone || Math.abs(rightY) > this.deadZone) {
+                autopilot.disable();
+                (windowWithGame as any).game?.ui?.hideAutopilotIndicator?.();
+            }
+        }
         
         // Handle buttons
         this.handleButtons(gamepad);
@@ -449,6 +466,22 @@ export class GamepadHandler {
             const windowWithGame = window as GameWindow;
             if (windowWithGame.game && windowWithGame.game.deployTurret) {
                 windowWithGame.game.deployTurret();
+            }
+        }
+
+        if (this.wasButtonPressed(this.buttonMap.DPAD_LEFT)) {
+            // Toggle autopilot
+            const windowWithGame = window as GameWindow;
+            if ((windowWithGame as any).game?.controls?.autopilot) {
+                const autopilot = (windowWithGame as any).game.controls.autopilot;
+                const ui = (windowWithGame as any).game.ui;
+                if (autopilot.isActive()) {
+                    autopilot.disable();
+                    ui?.hideAutopilotIndicator?.();
+                } else {
+                    autopilot.enable();
+                    ui?.showAutopilotIndicator?.();
+                }
             }
         }
         

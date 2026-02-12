@@ -7,6 +7,7 @@ import { TargetingSystem } from './controls/targetingSystem.ts';
 import { DockingSystem } from './controls/dockingSystem.ts';
 import { TouchControls } from './controls/touchControls.ts';
 import { MobileDetector } from '../utils/mobileDetector.ts';
+import { Autopilot } from './autopilot.ts';
 import type { Scene, Camera, Object3D, Vector3 } from 'three';
 import { debugLog } from '../globals/debug.ts';
 import type { DockingSpaceship, DockingUI, ResourceInventory } from './controls/docking/types.ts';
@@ -47,6 +48,9 @@ type EnvironmentType = {
 
 type UIType = DockingUI & {
     setControls: (controls: Controls) => void;
+    showAutopilotIndicator?: () => void;
+    hideAutopilotIndicator?: () => void;
+    updateAutopilotDistance?: (distance: number) => void;
 };
 
 type ResourcesType = ResourceInventory;
@@ -109,6 +113,7 @@ export class Controls {
     currentAnomaly: AnomalyType | null;
     showingAnomalyNotification: boolean;
     deploymentSystem?: any;
+    autopilot?: Autopilot;
 
     constructor(spaceship: SpaceshipType, physics: PhysicsType, environment: EnvironmentType, ui: UIType) {
         debugLog("Initializing controls systems...");
@@ -148,6 +153,9 @@ export class Controls {
 
         // Initialize docking system with all needed references
         this.dockingSystem = new DockingSystem(spaceship, environment.stargate, ui);
+
+        // Initialize autopilot system
+        this.autopilot = new Autopilot(spaceship as any, environment.stargate);
 
         // Share the resources reference between components - use live reference, not a copy
         this.resources = this.miningSystem.resourceExtraction.resources;
@@ -212,7 +220,28 @@ export class Controls {
         
         // Add key event handlers for targeting and mining
         document.addEventListener('keydown', (e: KeyboardEvent) => {
+            // Check for manual input that should cancel autopilot
+            if (this.autopilot?.isActive()) {
+                const cancelKeys = ['w', 'a', 's', 'd', ' ']; // WASD and space (boost)
+                if (cancelKeys.includes(e.key.toLowerCase())) {
+                    this.autopilot.disable();
+                    this.ui.hideAutopilotIndicator?.();
+                }
+            }
+
             switch (e.key.toLowerCase()) {
+                case 'h':
+                    // Toggle autopilot to stargate
+                    if (this.autopilot) {
+                        if (this.autopilot.isActive()) {
+                            this.autopilot.disable();
+                            this.ui.hideAutopilotIndicator?.();
+                        } else {
+                            this.autopilot.enable();
+                            this.ui.showAutopilotIndicator?.();
+                        }
+                    }
+                    break;
                 case 'e':
                     // Toggle targeting system (changed from 't' to 'e')
                     this.targetingSystem.toggleLockOn();
@@ -306,6 +335,17 @@ export class Controls {
                 // Stop firing
                 if ((window as any).game && (window as any).game.combat) {
                     (window as any).game.combat.setFiring(false);
+                }
+            }
+        });
+
+        // Add mouse movement detection to cancel autopilot
+        document.addEventListener('mousemove', (e: MouseEvent) => {
+            if (this.autopilot?.isActive() && this.inputHandler.isLocked()) {
+                // Any mouse movement while pointer is locked cancels autopilot
+                if (Math.abs(e.movementX) > 1 || Math.abs(e.movementY) > 1) {
+                    this.autopilot.disable();
+                    this.ui.hideAutopilotIndicator?.();
                 }
             }
         });
@@ -523,6 +563,15 @@ export class Controls {
         // Update gamepad input if available
         if (this.gamepadHandler) {
             this.gamepadHandler.update(deltaTime);
+        }
+
+        // Update autopilot if active
+        if (this.autopilot?.isActive()) {
+            this.autopilot.update(deltaTime);
+            
+            // Update distance display
+            const distance = this.autopilot.getDistanceToStargate();
+            this.ui.updateAutopilotDistance?.(distance);
         }
         
         // Update all control systems
