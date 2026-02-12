@@ -10,6 +10,10 @@ type HordeModeData = {
     active: boolean;
     survivalTime?: string;
     rawSurvivalTime?: number;
+    wave?: number;
+    score?: number;
+    isNewHighScore?: boolean;
+    topScores?: Array<{ score: number; wave: number; survivalTime: number; date: string }>;
 };
 
 type GameOverResources = {
@@ -190,12 +194,20 @@ export class GameOverScreen {
         let wasHordeMode = false;
         let hordeSurvivalTime = "00:00";
         let rawSurvivalTime = 0;
+        let hordeWave = 1;
+        let hordeScore = 0;
+        let isNewHighScore = false;
+        let topScores: Array<{ score: number; wave: number; survivalTime: number; date: string }> = [];
         
         const typedResources = resources as GameOverResources | null;
         if (typedResources && typedResources.hordeMode) {
             wasHordeMode = typedResources.hordeMode.active;
             hordeSurvivalTime = typedResources.hordeMode.survivalTime || "00:00";
             rawSurvivalTime = typedResources.hordeMode.rawSurvivalTime || 0;
+            hordeWave = typedResources.hordeMode.wave || 1;
+            hordeScore = typedResources.hordeMode.score || 0;
+            isNewHighScore = typedResources.hordeMode.isNewHighScore || false;
+            topScores = typedResources.hordeMode.topScores || [];
         }
         
         // Handle different resource data formats
@@ -231,11 +243,35 @@ export class GameOverScreen {
                     hordeMessage = "Well done! You held back the horde longer than most!";
                 }
                 
+                // Build high score display
+                let highScoreHTML = '';
+                if (isNewHighScore) {
+                    highScoreHTML = '<p class="game-over-new-high-score">🏆 NEW HIGH SCORE! 🏆</p>';
+                }
+                
+                // Build top scores list
+                let topScoresHTML = '';
+                if (topScores.length > 0) {
+                    topScoresHTML = '<div class="game-over-high-scores"><h4>TOP SCORES</h4><ol>';
+                    topScores.slice(0, 3).forEach((s, i) => {
+                        const timeStr = `${Math.floor(s.survivalTime / 60)}:${(s.survivalTime % 60).toString().padStart(2, '0')}`;
+                        const highlight = i === 0 && isNewHighScore ? ' class="highlight"' : '';
+                        topScoresHTML += `<li${highlight}>${s.score} pts - Wave ${s.wave} - ${timeStr}</li>`;
+                    });
+                    topScoresHTML += '</ol></div>';
+                }
+                
                 resourcesSummary.innerHTML = `
                     <div class="game-over-horde-section">
                         <h3 class="game-over-horde-title">HORDE MODE</h3>
-                        <p class="game-over-horde-time">SURVIVED: <span class="game-over-horde-time-value">${hordeSurvivalTime}</span></p>
+                        ${highScoreHTML}
+                        <p class="game-over-horde-stats">
+                            <span>SCORE: <strong>${hordeScore}</strong></span><br>
+                            <span>WAVE: <strong>${hordeWave}</strong></span><br>
+                            <span>SURVIVED: <strong>${hordeSurvivalTime}</strong></span>
+                        </p>
                         <p>${hordeMessage}</p>
+                        ${topScoresHTML}
                     </div>
                     <div class="game-over-resources-list">
                         <p>Resources collected:</p>

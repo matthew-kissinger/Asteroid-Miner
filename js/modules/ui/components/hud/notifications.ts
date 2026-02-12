@@ -8,6 +8,9 @@ import { HUDStyles } from './styles.ts';
 export interface HordeState {
     isActive: boolean;
     survivalTime: number;
+    currentWave: number;
+    score: number;
+    enemiesRemainingInWave: number;
     getFormattedTime: () => string;
 }
 
@@ -48,7 +51,7 @@ export class HUDNotifications {
         hordeIndicator.className = 'hud-panel';
         HUDStyles.applyStyles(hordeIndicator, {
             display: 'none', // Hidden by default, will be changed to 'flex' when active
-            padding: '8px 12px',
+            padding: '12px 16px',
             backgroundColor: 'rgba(51, 10, 10, 0.8)',
             backdropFilter: 'blur(5px)',
             borderRadius: '8px',
@@ -56,7 +59,7 @@ export class HUDNotifications {
             boxShadow: '0 0 15px rgba(255, 48, 48, 0.5)',
             animation: 'pulse-horde 2s infinite',
             marginBottom: '10px',
-            fontSize: '18px',
+            fontSize: '16px',
             fontWeight: '600',
             letterSpacing: '1px'
         });
@@ -65,16 +68,24 @@ export class HUDNotifications {
         const hordeContent: HTMLDivElement = document.createElement('div');
         HUDStyles.applyStyles(hordeContent, {
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px'
+            gap: '8px'
         });
         
-        // Add the text and timer elements
+        // Top row: HORDE MODE label and survival time
+        const topRow: HTMLDivElement = document.createElement('div');
+        HUDStyles.applyStyles(topRow, {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+        });
+        
         const hordeLabel: HTMLSpanElement = document.createElement('span');
         HUDStyles.applyStyles(hordeLabel, {
             color: '#ff3030',
-            textShadow: '0 0 5px rgba(255,48,48,0.5)'
+            textShadow: '0 0 5px rgba(255,48,48,0.5)',
+            fontSize: '18px'
         });
         hordeLabel.textContent = 'HORDE MODE';
         
@@ -86,9 +97,46 @@ export class HUDNotifications {
         });
         survivalTime.textContent = '00:00';
         
-        // Add the elements to the container
-        hordeContent.appendChild(hordeLabel);
-        hordeContent.appendChild(survivalTime);
+        topRow.appendChild(hordeLabel);
+        topRow.appendChild(survivalTime);
+        
+        // Bottom row: Wave, Score, Enemies
+        const statsRow: HTMLDivElement = document.createElement('div');
+        HUDStyles.applyStyles(statsRow, {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            fontSize: '14px'
+        });
+        
+        const waveDisplay: HTMLSpanElement = document.createElement('span');
+        waveDisplay.id = 'horde-wave-display';
+        HUDStyles.applyStyles(waveDisplay, {
+            color: '#ffaa00'
+        });
+        waveDisplay.innerHTML = 'WAVE <strong>1</strong>';
+        
+        const scoreDisplay: HTMLSpanElement = document.createElement('span');
+        scoreDisplay.id = 'horde-score-display';
+        HUDStyles.applyStyles(scoreDisplay, {
+            color: '#00ff88'
+        });
+        scoreDisplay.innerHTML = 'SCORE: <strong>0</strong>';
+        
+        const enemiesDisplay: HTMLSpanElement = document.createElement('span');
+        enemiesDisplay.id = 'horde-enemies-display';
+        HUDStyles.applyStyles(enemiesDisplay, {
+            color: '#ff6666'
+        });
+        enemiesDisplay.innerHTML = 'ENEMIES: <strong>0</strong>';
+        
+        statsRow.appendChild(waveDisplay);
+        statsRow.appendChild(scoreDisplay);
+        statsRow.appendChild(enemiesDisplay);
+        
+        // Add rows to content
+        hordeContent.appendChild(topRow);
+        hordeContent.appendChild(statsRow);
         hordeIndicator.appendChild(hordeContent);
         
         // Add decorative corner elements
@@ -105,6 +153,9 @@ export class HUDNotifications {
     static updateHordeModeDisplay(): void {
         const hordeIndicator: HTMLDivElement | null = document.getElementById('horde-mode-indicator') as HTMLDivElement;
         const survivalTime: HTMLSpanElement | null = document.getElementById('horde-survival-time') as HTMLSpanElement;
+        const waveDisplay: HTMLSpanElement | null = document.getElementById('horde-wave-display') as HTMLSpanElement;
+        const scoreDisplay: HTMLSpanElement | null = document.getElementById('horde-score-display') as HTMLSpanElement;
+        const enemiesDisplay: HTMLSpanElement | null = document.getElementById('horde-enemies-display') as HTMLSpanElement;
         
         if (!hordeIndicator || !survivalTime || !HUDNotifications.hordeState) {
             return;
@@ -120,6 +171,17 @@ export class HUDNotifications {
             // Update the survival time display
             const timeText: string = HUDNotifications.hordeState.getFormattedTime();
             survivalTime.textContent = timeText;
+            
+            // Update wave, score, and enemies
+            if (waveDisplay) {
+                waveDisplay.innerHTML = `WAVE <strong>${HUDNotifications.hordeState.currentWave}</strong>`;
+            }
+            if (scoreDisplay) {
+                scoreDisplay.innerHTML = `SCORE: <strong>${HUDNotifications.hordeState.score}</strong>`;
+            }
+            if (enemiesDisplay) {
+                enemiesDisplay.innerHTML = `ENEMIES: <strong>${HUDNotifications.hordeState.enemiesRemainingInWave}</strong>`;
+            }
             
             // Increase pulsing intensity based on survival time
             // After 3 minutes (180000ms), make the pulsing more urgent
