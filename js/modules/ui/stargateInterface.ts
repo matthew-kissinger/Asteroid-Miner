@@ -78,6 +78,11 @@ export class StargateInterface {
     setGameReference(gameRef: any): void {
         this.missionsView.setGameReference(gameRef);
         this.tradingView.setAudio(gameRef.audio);
+        
+        // Connect mission manager to missions view
+        if (gameRef.missionManager) {
+            this.missionsView.setMissionManager(gameRef.missionManager);
+        }
     }
     
     setupStargateUI(): void {
@@ -127,6 +132,9 @@ export class StargateInterface {
         if (gameData) {
             this.updateStargateUI(gameData.spaceship, gameData.resources);
         }
+        
+        // Render mission contracts
+        this.missionsView.renderContracts();
     }
     
     hideStargateUI(): void {

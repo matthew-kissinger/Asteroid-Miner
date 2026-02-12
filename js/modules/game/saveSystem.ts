@@ -54,6 +54,36 @@ export interface SaveSchema {
         unlockedAt: number | null;
         progress: number;
     }>;
+    missions?: {
+        availableMissions: Array<{
+            id: string;
+            title: string;
+            description: string;
+            category: string;
+            targetAmount: number;
+            currentProgress: number;
+            creditReward: number;
+            timeLimit: number | null;
+            status: string;
+            startedAt: number | null;
+            targetResource?: string;
+        }>;
+        activeMission: {
+            id: string;
+            title: string;
+            description: string;
+            category: string;
+            targetAmount: number;
+            currentProgress: number;
+            creditReward: number;
+            timeLimit: number | null;
+            status: string;
+            startedAt: number | null;
+            targetResource?: string;
+        } | null;
+        completedCount: number;
+        totalCreditsEarned: number;
+    };
     settings?: {
         audio: {
             masterVolume: number;
@@ -253,6 +283,11 @@ export class SaveSystem {
                     totalKills: existing?.highScores?.totalKills ?? 0,
                 },
             };
+
+            // Save mission state
+            if (game.missionManager && typeof game.missionManager.exportState === 'function') {
+                data.missions = game.missionManager.exportState();
+            }
 
             // Update horde scores if active
             if (game.hordeMode?.isActive) {

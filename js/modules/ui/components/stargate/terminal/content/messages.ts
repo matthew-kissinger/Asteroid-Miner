@@ -48,6 +48,12 @@ export class TerminalMessages {
                     ${this.getFeaturesContent()}
                 </div>
                 
+                <!-- Contracts Section -->
+                <div id="contracts-section" class="stargate-section">
+                    <h3>CONTRACTS</h3>
+                    ${this.getContractsContent()}
+                </div>
+                
                 <!-- Challenge Section -->
                 <div id="challenge-section" class="stargate-section">
                     <h3>EXTREME CHALLENGE</h3>
@@ -315,6 +321,19 @@ export class TerminalMessages {
                     SETTINGS
                     <small>Adjust graphics and audio options</small>
                 </button>
+            </div>
+        `;
+    }
+    
+    getContractsContent(): string {
+        return `
+            <div style="font-size:13px;color:#88aacc;margin-bottom:10px;">
+                Accept missions for credit rewards. Complete objectives in the field to earn bonuses.
+            </div>
+            <div id="mission-contracts-list">
+                <div style="text-align:center;color:#556677;padding:20px;font-size:14px;">
+                    Loading contracts...
+                </div>
             </div>
         `;
     }

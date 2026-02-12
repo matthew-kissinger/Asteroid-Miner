@@ -8,6 +8,7 @@ import { Diagnostics } from './main/diagnostics.ts';
 import { GameInitializer } from './main/gameInitializer.ts';
 import { mainMessageBus } from './globals/messageBus.ts';
 import { SaveSystem } from './modules/game/saveSystem.ts';
+import { MissionManager } from './modules/game/missions.ts';
 // Removed direct imports for ObjectPools, DifficultyManager, HordeMode, AudioUpdater, GameLifecycle
 // import { ObjectPools } from './main/objectPools.ts';
 // import { DifficultyManager } from './main/difficultyManager.ts';
@@ -49,6 +50,7 @@ export class Game {
     private _controls: any;
     private _updateECS: ((deltaTime: number) => void) | undefined; // New property
     saveSystem: SaveSystem;
+    missionManager: MissionManager;
 
     constructor() {
         // Initialize globals first
@@ -56,6 +58,9 @@ export class Game {
         
         // Initialize save system
         this.saveSystem = new SaveSystem();
+        
+        // Initialize mission manager
+        this.missionManager = new MissionManager();
         
         // Make game instance globally accessible for emergency access
         window.game = this;
@@ -154,6 +159,17 @@ export class Game {
                 delete (this as any)._pendingAudioSettings;
             }
             
+            // Wire mission manager
+            if (this.spaceship) {
+                this.missionManager.setSpaceship(this.spaceship);
+            }
+            this.missionManager.subscribeToEvents();
+
+            // Restore missions from save
+            if (savedState && (savedState as any).missions) {
+                this.missionManager.importState((savedState as any).missions);
+            }
+
             // Subscribe to events and start auto-save
             this.saveSystem.subscribeToEvents(this);
             this.saveSystem.startAutoSave(this);
