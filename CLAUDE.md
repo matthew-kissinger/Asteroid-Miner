@@ -76,13 +76,13 @@ css/                     # 18 CSS files
 - Three.js mock pattern: position/quaternion/scale need .set() methods
 - bitECS uses Float32Array - use `toBeCloseTo()` not `toBe()` for fractional test values
 - TSL PostProcessing replaces EffectComposer for WebGPU, uses `pass()` + `BloomNode`
-- `debugLog` in `js/globals/debug.ts` is the canonical logging gate (import and use instead of `console.log`)
+- `js/globals/debug.ts` exports `DEBUG_MODE.enabled` boolean + `setDebugMode()`/`isDebugMode()` - no `debugLog()` wrapper yet, needs to be created
 
 ## Active Issues
 
-- 502 unguarded `console.log` across 105 files (use `debugLog` from `js/globals/debug.ts` instead)
-- 49 `window.game` global usages across ~25 files
-- 682 `as any`/`: any` type casts across 92 files (worst: combat/eventHandlers 38, postTSL 34, controls 33, environment 32)
-- 142 addEventListener vs 36 removeEventListener - remaining memory leak risk (worst offenders: combat/eventHandlers, others now cleaned up)
+- 502 unguarded `console.log` across 105 files (create `debugLog` in `js/globals/debug.ts`, then replace all calls)
+- 49 `window.game` global usages across 25 files
+- 684 `as any`/`: any` type casts across 93 files (worst: combat/eventHandlers 38, postTSL 34, controls 33, environment 32)
+- 142 addEventListener vs 36 removeEventListener - remaining memory leak risk (5 worst files cleaned up)
 - Three.js bundle 1,370 kB - 101 files use `import * as THREE` preventing tree-shaking
 - Test coverage gaps: controls, combat, environment, ui, renderer, game, spaceship modules have zero tests
