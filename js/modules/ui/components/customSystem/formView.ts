@@ -3,17 +3,35 @@
 import type { StyleManager } from './styles.ts';
 import type { ValidationManager } from './validation.ts';
 
+interface ListenerBinding {
+    element: EventTarget;
+    event: string;
+    handler: EventListenerOrEventListenerObject;
+    options?: AddEventListenerOptions;
+}
+
 export class FormViewManager {
     isMobile: boolean;
     styleManager: StyleManager | null;
     scrollTimeout: ReturnType<typeof setTimeout> | null;
     validationManager: ValidationManager | null;
+    private bindings: ListenerBinding[] = [];
 
     constructor(isMobile: boolean = false, styleManager: StyleManager | null = null) {
         this.isMobile = isMobile;
         this.styleManager = styleManager;
         this.scrollTimeout = null;
         this.validationManager = null;
+    }
+
+    private addBinding(
+        element: EventTarget,
+        event: string,
+        handler: EventListenerOrEventListenerObject,
+        options?: AddEventListenerOptions
+    ): void {
+        element.addEventListener(event, handler, options);
+        this.bindings.push({ element, event, handler, options });
     }
 
     createMainContainer(): HTMLDivElement {
@@ -238,24 +256,19 @@ export class FormViewManager {
             if (playUISound) playUISound();
         };
 
-        removeBtn.addEventListener('click', removeHandler);
-
+        this.addBinding(removeBtn, 'click', removeHandler as EventListener);
         if (this.isMobile) {
-            removeBtn.addEventListener('touchend', removeHandler as EventListener);
+            this.addBinding(removeBtn, 'touchend', removeHandler as EventListener);
         }
     }
 
     enhanceMobileInteraction(planetDiv: HTMLElement): void {
-        // Add touch events to sliders for better mobile interaction
         const sliders = planetDiv.querySelectorAll<HTMLInputElement>('input[type="range"]');
         sliders.forEach(slider => {
-            slider.addEventListener('touchstart', () => {
-                slider.classList.add('slider-active');
-            });
-
-            slider.addEventListener('touchend', () => {
-                slider.classList.remove('slider-active');
-            });
+            const onTouchStart = (): void => slider.classList.add('slider-active');
+            const onTouchEnd = (): void => slider.classList.remove('slider-active');
+            this.addBinding(slider, 'touchstart', onTouchStart, { passive: true });
+            this.addBinding(slider, 'touchend', onTouchEnd, { passive: true });
         });
 
         // Add character counter to planet description
@@ -317,49 +330,37 @@ export class FormViewManager {
     }
 
     setupSliderListeners(index: number): void {
-        // Size slider
         const sizeSlider = document.getElementById(`planet-size-${index}`) as HTMLInputElement | null;
         const sizeValue = document.getElementById(`planet-size-value-${index}`);
-
         if (sizeSlider && sizeValue) {
-            sizeSlider.addEventListener('input', () => {
-                sizeValue.textContent = sizeSlider.value;
-            });
+            const handler = (): void => { sizeValue.textContent = sizeSlider.value; };
+            this.addBinding(sizeSlider, 'input', handler);
         }
 
-        // Distance slider
         const distanceSlider = document.getElementById(`planet-distance-${index}`) as HTMLInputElement | null;
         const distanceValue = document.getElementById(`planet-distance-value-${index}`);
-
         if (distanceSlider && distanceValue) {
-            distanceSlider.addEventListener('input', () => {
-                distanceValue.textContent = distanceSlider.value;
-            });
+            const handler = (): void => { distanceValue.textContent = distanceSlider.value; };
+            this.addBinding(distanceSlider, 'input', handler);
         }
 
-        // Speed slider
         const speedSlider = document.getElementById(`planet-speed-${index}`) as HTMLInputElement | null;
         const speedValue = document.getElementById(`planet-speed-value-${index}`);
-
         if (speedSlider && speedValue) {
-            speedSlider.addEventListener('input', () => {
-                // Convert 1-10 range to 0.001-0.002 range
+            const handler = (): void => {
                 const speed = 0.001 + (parseFloat(speedSlider.value) - 1) * (0.001 / 9);
                 speedValue.textContent = speed.toFixed(4);
-            });
+            };
+            this.addBinding(speedSlider, 'input', handler);
         }
 
-        // Add mobile visual feedback
         if (this.isMobile) {
             const sliders = [sizeSlider, distanceSlider, speedSlider].filter((s): s is HTMLInputElement => s !== null);
             sliders.forEach(slider => {
-                slider.addEventListener('touchstart', () => {
-                    slider.classList.add('slider-active');
-                });
-
-                slider.addEventListener('touchend', () => {
-                    slider.classList.remove('slider-active');
-                });
+                const onTouchStart = (): void => slider.classList.add('slider-active');
+                const onTouchEnd = (): void => slider.classList.remove('slider-active');
+                this.addBinding(slider, 'touchstart', onTouchStart, { passive: true });
+                this.addBinding(slider, 'touchend', onTouchEnd, { passive: true });
             });
         }
     }
@@ -369,5 +370,9 @@ export class FormViewManager {
             clearTimeout(this.scrollTimeout);
             this.scrollTimeout = null;
         }
+        for (const { element, event, handler, options } of this.bindings) {
+            element.removeEventListener(event, handler, options);
+        }
+        this.bindings.length = 0;
     }
 }

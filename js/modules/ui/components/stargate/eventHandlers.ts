@@ -1,5 +1,12 @@
 // eventHandlers.ts - Event handling and MessageBus subscriptions
 
+interface Binding {
+    element: EventTarget;
+    event: string;
+    handler: EventListenerOrEventListenerObject;
+    options?: AddEventListenerOptions;
+}
+
 interface TradingView {
     sellEnergyOrb(rarity: string): boolean;
     purchaseLaserTurret(): void;
@@ -8,165 +15,149 @@ interface TradingView {
 export class EventHandlers {
     private tradingView: TradingView | null;
     private isMobile: boolean;
-    
+    private bindings: Binding[] = [];
+    private touchBindings: Binding[] = [];
+
     constructor() {
         this.tradingView = null;
         this.isMobile = false;
     }
-    
+
     setTradingView(tradingView: TradingView): void {
         this.tradingView = tradingView;
     }
-    
+
     setMobile(isMobile: boolean): void {
         this.isMobile = isMobile;
     }
-    
+
+    private addBinding(
+        list: Binding[],
+        element: EventTarget,
+        event: string,
+        handler: EventListenerOrEventListenerObject,
+        options?: AddEventListenerOptions
+    ): void {
+        element.addEventListener(event, handler, options);
+        list.push({ element, event, handler, options });
+    }
+
+    private removeBindings(list: Binding[]): void {
+        for (const { element, event, handler, options } of list) {
+            element.removeEventListener(event, handler, options);
+        }
+        list.length = 0;
+    }
+
     setupOrbSellHandlers(updateUICallback: () => void): void {
-        // Energy orb sell handlers
-        const sellOrbCommon = document.getElementById('sell-orb-common');
-        if (sellOrbCommon) {
-            sellOrbCommon.addEventListener('click', () => {
-                if (this.tradingView && this.tradingView.sellEnergyOrb('common')) {
-                    updateUICallback();
-                }
-            });
-        }
-        
-        const sellOrbUncommon = document.getElementById('sell-orb-uncommon');
-        if (sellOrbUncommon) {
-            sellOrbUncommon.addEventListener('click', () => {
-                if (this.tradingView && this.tradingView.sellEnergyOrb('uncommon')) {
-                    updateUICallback();
-                }
-            });
-        }
-        
-        const sellOrbRare = document.getElementById('sell-orb-rare');
-        if (sellOrbRare) {
-            sellOrbRare.addEventListener('click', () => {
-                if (this.tradingView && this.tradingView.sellEnergyOrb('rare')) {
-                    updateUICallback();
-                }
-            });
-        }
-        
-        const sellOrbEpic = document.getElementById('sell-orb-epic');
-        if (sellOrbEpic) {
-            sellOrbEpic.addEventListener('click', () => {
-                if (this.tradingView && this.tradingView.sellEnergyOrb('epic')) {
-                    updateUICallback();
-                }
-            });
-        }
-        
-        const sellOrbLegendary = document.getElementById('sell-orb-legendary');
-        if (sellOrbLegendary) {
-            sellOrbLegendary.addEventListener('click', () => {
-                if (this.tradingView && this.tradingView.sellEnergyOrb('legendary')) {
-                    updateUICallback();
-                }
-            });
+        const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'] as const;
+        for (const rarity of rarities) {
+            const el = document.getElementById(`sell-orb-${rarity}`);
+            if (el) {
+                const handler = (): void => {
+                    if (this.tradingView && this.tradingView.sellEnergyOrb(rarity)) {
+                        updateUICallback();
+                    }
+                };
+                this.addBinding(this.bindings, el, 'click', handler);
+            }
         }
     }
-    
+
     setupLaserPurchaseHandler(updateUICallback: () => void): void {
-        // Add handler for purchasing laser turrets
         const purchaseLaserBtn = document.getElementById('purchase-laser');
         if (purchaseLaserBtn) {
-            purchaseLaserBtn.addEventListener('click', () => {
+            const handler = (): void => {
                 if (this.tradingView) {
                     this.tradingView.purchaseLaserTurret();
                     updateUICallback();
                 }
-            });
+            };
+            this.addBinding(this.bindings, purchaseLaserBtn, 'click', handler);
         }
     }
-    
-    // Add a new method for setting up touch events
+
     setupTouchEvents(): void {
         if (!this.isMobile) return;
-        
+
         const stargateUI = document.getElementById('stargate-ui');
         if (!stargateUI) return;
-        
+
         console.log("Setting up touch events for stargate UI");
-        
-        // Make sure the undock button has proper touch handling
+
         const undockBtn = document.getElementById('undock-btn');
         if (undockBtn) {
             undockBtn.style.touchAction = 'manipulation';
             (undockBtn.style as any).webkitTapHighlightColor = 'transparent';
             undockBtn.style.position = 'relative';
             undockBtn.style.zIndex = '9999';
-            
-            // Ensure proper touch handling
-            undockBtn.addEventListener('touchstart', (e: TouchEvent) => {
+
+            const onUndockTouchStart = (e: TouchEvent): void => {
                 console.log("Touch start on undock button");
-                // Change appearance to show it's being touched
                 undockBtn.style.backgroundColor = '#1b88db';
                 undockBtn.style.transform = 'scale(0.98)';
-                // Prevent any default behavior that might interfere
                 e.stopPropagation();
-            }, { passive: false });
-            
-            undockBtn.addEventListener('touchend', (e: TouchEvent) => {
+            };
+            const onUndockTouchEnd = (e: TouchEvent): void => {
                 console.log("Touch end on undock button");
-                // Reset appearance
                 undockBtn.style.backgroundColor = '#33aaff';
                 undockBtn.style.transform = 'scale(1)';
-                // Prevent any default behavior that might interfere
                 e.stopPropagation();
-            }, { passive: false });
+            };
+            this.addBinding(this.touchBindings, undockBtn, 'touchstart', onUndockTouchStart as EventListener, { passive: false });
+            this.addBinding(this.touchBindings, undockBtn, 'touchend', onUndockTouchEnd as EventListener, { passive: false });
         }
-        
-        // Prevent default touchmove on body but allow scrolling within the stargate UI
-        stargateUI.addEventListener('touchmove', (e: TouchEvent) => {
-            // Allow the default scroll behavior within the stargate UI
+
+        const onStargateTouchMove = (e: TouchEvent): void => {
             e.stopPropagation();
-        }, { passive: true });
-        
-        // Fix for iOS scrolling issues - only prevent at the top, not at the bottom
-        stargateUI.addEventListener('touchstart', (e: TouchEvent) => {
-            // Only prevent pull-to-refresh at the top, don't interfere with bottom scrolling
+        };
+        this.addBinding(this.touchBindings, stargateUI, 'touchmove', onStargateTouchMove as EventListener, { passive: true });
+
+        const onStargateTouchStart = (e: TouchEvent): void => {
             const scrollTop = stargateUI.scrollTop;
-            
             if (scrollTop <= 0 && e.touches[0].screenY < e.touches[0].clientY) {
                 e.preventDefault();
             }
-            // Removed condition that was preventing scrolling at the bottom
-        }, { passive: false });
-        
-        // Handle tabbed content for better touch experience
+        };
+        this.addBinding(this.touchBindings, stargateUI, 'touchstart', onStargateTouchStart as EventListener, { passive: false });
+
         const tabButtons = stargateUI.querySelectorAll('.tablinks');
         if (tabButtons.length > 0) {
             tabButtons.forEach(button => {
-                button.addEventListener('touchend', ((e: TouchEvent) => {
-                    // Prevent rapid multiple touches
+                const onTabTouchEnd = (e: TouchEvent): void => {
                     e.preventDefault();
-
-                    // Simulate a click event
                     (button as HTMLElement).click();
-                }) as EventListener);
+                };
+                this.addBinding(this.touchBindings, button, 'touchend', onTabTouchEnd as EventListener);
             });
         }
-        
-        // Improve touch experience for all buttons in the stargate UI
+
         const allButtons = stargateUI.querySelectorAll('button');
         allButtons.forEach(button => {
-            if (button !== undockBtn) { // We already handled the undock button specially
+            if (button !== undockBtn) {
                 button.style.touchAction = 'manipulation';
                 (button.style as any).webkitTapHighlightColor = 'transparent';
-                
-                // Provide visual feedback on touch
-                button.addEventListener('touchstart', () => {
+
+                const onBtnTouchStart = (): void => {
                     button.style.transform = 'scale(0.98)';
-                }, { passive: true });
-                
-                button.addEventListener('touchend', () => {
+                };
+                const onBtnTouchEnd = (): void => {
                     button.style.transform = 'scale(1)';
-                }, { passive: true });
+                };
+                this.addBinding(this.touchBindings, button, 'touchstart', onBtnTouchStart, { passive: true });
+                this.addBinding(this.touchBindings, button, 'touchend', onBtnTouchEnd, { passive: true });
             }
         });
+    }
+
+    /** Removes only touch event listeners (call when hiding stargate UI to avoid duplicates on next show). */
+    destroyTouchEvents(): void {
+        this.removeBindings(this.touchBindings);
+    }
+
+    /** Removes all event listeners. Call when tearing down the stargate UI. */
+    destroy(): void {
+        this.removeBindings(this.touchBindings);
+        this.removeBindings(this.bindings);
     }
 }

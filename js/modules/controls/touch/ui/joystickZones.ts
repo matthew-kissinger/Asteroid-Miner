@@ -1,12 +1,35 @@
 // joystickZones.js - Joystick UI zone creation and management
 
+interface ListenerBinding {
+    element: EventTarget;
+    event: string;
+    handler: EventListener;
+    options?: AddEventListenerOptions;
+}
+
 export class JoystickZones {
     leftJoystickZone: HTMLDivElement | null;
     rightJoystickZone: HTMLDivElement | null;
+    private bindings: ListenerBinding[] = [];
 
     constructor() {
         this.leftJoystickZone = null;
         this.rightJoystickZone = null;
+    }
+
+    private addPreventDefaultListeners(zone: HTMLDivElement): void {
+        const opts = { passive: false };
+        const onTouchStart: EventListener = (e) => (e as TouchEvent).preventDefault();
+        const onTouchMove: EventListener = (e) => (e as TouchEvent).preventDefault();
+        const onTouchEnd: EventListener = (e) => (e as TouchEvent).preventDefault();
+        zone.addEventListener('touchstart', onTouchStart, opts);
+        zone.addEventListener('touchmove', onTouchMove, opts);
+        zone.addEventListener('touchend', onTouchEnd, opts);
+        this.bindings.push(
+            { element: zone, event: 'touchstart', handler: onTouchStart, options: opts },
+            { element: zone, event: 'touchmove', handler: onTouchMove, options: opts },
+            { element: zone, event: 'touchend', handler: onTouchEnd, options: opts }
+        );
     }
 
     createJoystickZones(): { leftZone: HTMLDivElement | null; rightZone: HTMLDivElement | null } {
@@ -19,7 +42,6 @@ export class JoystickZones {
     }
 
     createLeftJoystickZone(): HTMLDivElement {
-        // Create left joystick zone (thrust control)
         const leftJoystickZone = document.createElement('div');
         leftJoystickZone.id = 'leftJoystickZone';
         leftJoystickZone.style.position = 'absolute';
@@ -28,20 +50,16 @@ export class JoystickZones {
         leftJoystickZone.style.width = '100px';
         leftJoystickZone.style.height = '100px';
         leftJoystickZone.style.zIndex = '1000';
-        
-        // Prevent default browser behavior to avoid scrolling when using joysticks
-        leftJoystickZone.addEventListener('touchstart', (e: TouchEvent) => e.preventDefault(), { passive: false });
-        leftJoystickZone.addEventListener('touchmove', (e: TouchEvent) => e.preventDefault(), { passive: false });
-        leftJoystickZone.addEventListener('touchend', (e: TouchEvent) => e.preventDefault(), { passive: false });
-        
+
+        this.addPreventDefaultListeners(leftJoystickZone);
+
         document.body.appendChild(leftJoystickZone);
         this.leftJoystickZone = leftJoystickZone;
-        
+
         return leftJoystickZone;
     }
 
     createRightJoystickZone(): HTMLDivElement {
-        // Create right joystick zone (rotation control)
         const rightJoystickZone = document.createElement('div');
         rightJoystickZone.id = 'rightJoystickZone';
         rightJoystickZone.style.position = 'absolute';
@@ -50,15 +68,12 @@ export class JoystickZones {
         rightJoystickZone.style.width = '100px';
         rightJoystickZone.style.height = '100px';
         rightJoystickZone.style.zIndex = '1000';
-        
-        // Prevent default browser behavior to avoid scrolling when using joysticks
-        rightJoystickZone.addEventListener('touchstart', (e: TouchEvent) => e.preventDefault(), { passive: false });
-        rightJoystickZone.addEventListener('touchmove', (e: TouchEvent) => e.preventDefault(), { passive: false });
-        rightJoystickZone.addEventListener('touchend', (e: TouchEvent) => e.preventDefault(), { passive: false });
-        
+
+        this.addPreventDefaultListeners(rightJoystickZone);
+
         document.body.appendChild(rightJoystickZone);
         this.rightJoystickZone = rightJoystickZone;
-        
+
         return rightJoystickZone;
     }
 
@@ -70,6 +85,14 @@ export class JoystickZones {
     showZones(): void {
         if (this.leftJoystickZone) this.leftJoystickZone.style.display = 'block';
         if (this.rightJoystickZone) this.rightJoystickZone.style.display = 'block';
+    }
+
+    /** Removes all event listeners from joystick zones. Call when tearing down touch controls. */
+    destroy(): void {
+        for (const { element, event, handler, options } of this.bindings) {
+            element.removeEventListener(event, handler, options);
+        }
+        this.bindings.length = 0;
     }
 
     getLeftZone(): HTMLDivElement | null {

@@ -1,5 +1,12 @@
 // actionButtons.js - Action button creation and styling
 
+interface ListenerBinding {
+    element: EventTarget;
+    event: string;
+    handler: EventListenerOrEventListenerObject;
+    options?: AddEventListenerOptions;
+}
+
 export class ActionButtons {
     buttons: {
         fire: HTMLDivElement | null;
@@ -12,6 +19,7 @@ export class ActionButtons {
         left: HTMLDivElement | null;
         right: HTMLDivElement | null;
     };
+    private listenerBindings: ListenerBinding[] = [];
 
     constructor() {
         this.buttons = {
@@ -27,6 +35,16 @@ export class ActionButtons {
         };
     }
 
+    private addListener(
+        element: EventTarget,
+        event: string,
+        handler: EventListenerOrEventListenerObject,
+        options?: AddEventListenerOptions
+    ): void {
+        element.addEventListener(event, handler, options);
+        this.listenerBindings.push({ element, event, handler, options });
+    }
+
     createActionButtons(): {
         fire: HTMLDivElement | null;
         mine: HTMLDivElement | null;
@@ -40,7 +58,7 @@ export class ActionButtons {
         this.createTargetButton();
         this.createDockButton();
         this.createDeployLaserButton();
-        
+
         return this.buttons;
     }
 
@@ -51,7 +69,7 @@ export class ActionButtons {
         leftActionButtonsContainer.classList.add('touch-action-buttons-left');
         document.body.appendChild(leftActionButtonsContainer);
         this.containers.left = leftActionButtonsContainer;
-        
+
         // Create a container for right side action buttons
         const rightActionButtonsContainer = document.createElement('div');
         rightActionButtonsContainer.id = 'mobile-action-buttons-right';
@@ -91,11 +109,11 @@ export class ActionButtons {
         const button = document.createElement('div');
         button.classList.add('touch-action-btn', `touch-action-btn--${variant}`);
         button.textContent = text;
-        
+
         if (parent) {
             parent.appendChild(button);
         }
-        
+
         return button;
     }
 
@@ -123,113 +141,111 @@ export class ActionButtons {
         if (this.containers.right) this.containers.right.classList.remove('touch-action-buttons-right--hidden');
     }
 
+    /** Removes all event listeners from buttons. Call when tearing down touch controls. */
+    destroy(): void {
+        for (const { element, event, handler, options } of this.listenerBindings) {
+            element.removeEventListener(event, handler, options);
+        }
+        this.listenerBindings.length = 0;
+    }
+
     // Helper method to add events to buttons
     addButtonEvents(button: HTMLElement | null, startHandler: () => void, endHandler: (() => void) | null = null): void {
         if (!button) {
             console.error("ActionButtons: Cannot add events to null button");
             return;
         }
-        
+
         // For continuous actions (like firing and mining)
         if (endHandler) {
-            // Touch events with passive: false to allow preventDefault
-            button.addEventListener('touchstart', (e: TouchEvent) => {
+            const onTouchStart = (e: TouchEvent): void => {
                 e.preventDefault();
                 button.classList.add('touch-action-btn--pressed');
                 startHandler();
-            }, { passive: false });
-            
-            button.addEventListener('touchend', (e: TouchEvent) => {
+            };
+            const onTouchEnd = (e: TouchEvent): void => {
                 e.preventDefault();
                 button.classList.remove('touch-action-btn--pressed');
                 endHandler();
-            }, { passive: false });
-            
-            // Add pointer events
-            button.addEventListener('pointerdown', (e: PointerEvent) => {
+            };
+            this.addListener(button, 'touchstart', onTouchStart as EventListener, { passive: false });
+            this.addListener(button, 'touchend', onTouchEnd as EventListener, { passive: false });
+
+            const onPointerDown = (e: PointerEvent): void => {
                 e.preventDefault();
-                if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
+                if (e.pointerType === 'touch') return;
                 button.classList.add('touch-action-btn--pressed');
                 startHandler();
-            });
-            
-            button.addEventListener('pointerup', (e: PointerEvent) => {
+            };
+            const onPointerUp = (e: PointerEvent): void => {
                 e.preventDefault();
-                if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
+                if (e.pointerType === 'touch') return;
                 button.classList.remove('touch-action-btn--pressed');
                 endHandler();
-            });
-            
-            // Keep mouse events for backward compatibility
-            button.addEventListener('mousedown', () => {
+            };
+            this.addListener(button, 'pointerdown', onPointerDown as EventListener);
+            this.addListener(button, 'pointerup', onPointerUp as EventListener);
+
+            const onMouseDown = (): void => {
                 button.classList.add('touch-action-btn--pressed');
                 startHandler();
-            });
-            
-            button.addEventListener('mouseup', () => {
+            };
+            const onMouseUp = (): void => {
                 button.classList.remove('touch-action-btn--pressed');
                 endHandler();
-            });
+            };
+            this.addListener(button, 'mousedown', onMouseDown);
+            this.addListener(button, 'mouseup', onMouseUp);
         }
         // For single actions (like targeting and docking)
         else {
-            // Touch events
-            button.addEventListener('touchstart', (e: TouchEvent) => {
+            const onTouchStart = (e: TouchEvent): void => {
                 e.preventDefault();
                 button.classList.add('touch-action-btn--pressed');
-                
-                // For dock button specifically, add debug logging
                 if (button === this.buttons.dock) {
                     console.log("Dock button touchstart event fired");
                 }
-            }, { passive: false });
-            
-            button.addEventListener('touchend', (e: TouchEvent) => {
+            };
+            const onTouchEnd = (e: TouchEvent): void => {
                 e.preventDefault();
                 button.classList.remove('touch-action-btn--pressed');
-                
-                // For dock button specifically, add debug logging
                 if (button === this.buttons.dock) {
                     console.log("Dock button touchend event fired, calling handler");
                 }
-                
                 startHandler();
-            }, { passive: false });
-            
-            // Add pointer events
-            button.addEventListener('pointerdown', (e: PointerEvent) => {
+            };
+            this.addListener(button, 'touchstart', onTouchStart as EventListener, { passive: false });
+            this.addListener(button, 'touchend', onTouchEnd as EventListener, { passive: false });
+
+            const onPointerDown = (e: PointerEvent): void => {
                 e.preventDefault();
-                if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
+                if (e.pointerType === 'touch') return;
                 button.classList.add('touch-action-btn--pressed');
-                
-                // For dock button specifically, add debug logging
                 if (button === this.buttons.dock) {
                     console.log("Dock button pointerdown event fired");
                 }
-            });
-            
-            button.addEventListener('pointerup', (e: PointerEvent) => {
+            };
+            const onPointerUp = (e: PointerEvent): void => {
                 e.preventDefault();
-                if (e.pointerType === 'touch') return; // Skip if touch (handled by touch events)
+                if (e.pointerType === 'touch') return;
                 button.classList.remove('touch-action-btn--pressed');
-                
-                // For dock button specifically, add debug logging
                 if (button === this.buttons.dock) {
                     console.log("Dock button pointerup event fired, calling handler");
                 }
-                
                 startHandler();
-            });
-            
-            // Keep mouse events for backward compatibility
-            button.addEventListener('mousedown', () => {
+            };
+            this.addListener(button, 'pointerdown', onPointerDown as EventListener);
+            this.addListener(button, 'pointerup', onPointerUp as EventListener);
+
+            const onMouseDown = (): void => {
                 button.classList.add('touch-action-btn--pressed');
-            });
-            
-            button.addEventListener('mouseup', () => {
+            };
+            const onMouseUp = (): void => {
                 button.classList.remove('touch-action-btn--pressed');
                 startHandler();
-            });
+            };
+            this.addListener(button, 'mousedown', onMouseDown);
+            this.addListener(button, 'mouseup', onMouseUp);
         }
     }
 }
