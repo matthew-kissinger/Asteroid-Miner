@@ -10,6 +10,8 @@ import type { SpaceAnomalies } from '../spaceAnomalies.ts';
 import type { SystemTransition } from '../systemTransition.ts';
 import type { VibeVersePortals } from '../vibeVersePortals.ts';
 import type { HazardManager } from '../hazards/hazardManager.ts';
+import type { LootDropManager } from '../../combat/lootDrops.ts';
+import { mainMessageBus } from '../../../globals/messageBus.ts';
 
 interface EnvironmentComponents {
     skybox: Skybox;
@@ -25,6 +27,7 @@ interface RemainingComponents {
     systemTransition: SystemTransition;
     customSystemCreator: unknown;
     hazardManager: HazardManager;
+    lootDropManager: LootDropManager;
 }
 
 export class SceneInitializer {
@@ -41,6 +44,7 @@ export class SceneInitializer {
     customSystemCreator?: unknown;
     vibeVersePortals?: VibeVersePortals;
     hazardManager?: HazardManager;
+    lootDropManager?: LootDropManager;
 
     constructor(scene: any) {
         this.scene = scene;
@@ -108,6 +112,11 @@ export class SceneInitializer {
         }
         this.hazardManager.generateHazards();
 
+        // Initialize loot drop manager
+        const { LootDropManager: LootDropManagerClass } = await import('../../combat/lootDrops.ts');
+        this.lootDropManager = new LootDropManagerClass(this.scene, mainMessageBus);
+        this.lootDropManager.init();
+
         this.componentsLoaded = true;
         console.log("All environment components initialized");
 
@@ -117,6 +126,7 @@ export class SceneInitializer {
             systemTransition: this.systemTransition,
             customSystemCreator: this.customSystemCreator,
             hazardManager: this.hazardManager,
+            lootDropManager: this.lootDropManager,
         };
     }
 
@@ -137,6 +147,7 @@ export class SceneInitializer {
         if (this.stargate) this.stargate.dispose();
         if (this.spaceAnomalies) this.spaceAnomalies.clearAllAnomalies();
         if (this.hazardManager) this.hazardManager.dispose();
+        if (this.lootDropManager) this.lootDropManager.cleanup();
         if (this.vibeVersePortals) this.vibeVersePortals.dispose();
     }
 }

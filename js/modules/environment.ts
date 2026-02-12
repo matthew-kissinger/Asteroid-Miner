@@ -10,6 +10,7 @@ import type { AsteroidBelt } from './environment/asteroidBelt.ts';
 import type { SpaceAnomalies } from './environment/spaceAnomalies.ts';
 import type { SystemTransition } from './environment/systemTransition.ts';
 import type { HazardManager } from './environment/hazards/hazardManager.ts';
+import type { LootDropManager } from './combat/lootDrops.ts';
 import { SceneInitializer } from './environment/core/sceneInitializer.ts';
 import { RegionManager } from './environment/core/regionManager.ts';
 import { SystemTransitionManager } from './environment/core/systemTransitionManager.ts';
@@ -52,6 +53,7 @@ interface EnvironmentComponents {
     systemTransition?: SystemTransition;
     customSystemCreator?: CustomSystemCreator;
     hazardManager?: HazardManager;
+    lootDropManager?: LootDropManager;
 }
 
 export class Environment {
@@ -72,6 +74,7 @@ export class Environment {
     systemTransition?: SystemTransition;
     customSystemCreator?: CustomSystemCreator;
     hazardManager?: HazardManager;
+    lootDropManager?: LootDropManager;
 
     asteroids: EnvironmentAsteroidData[];
     currentSystemId: string;
@@ -246,6 +249,11 @@ export class Environment {
             // Update environmental hazards
             if (this.hazardManager) {
                 this.hazardManager.update(deltaTime);
+            }
+
+            // Update loot drops
+            if (this.lootDropManager) {
+                this.lootDropManager.update(deltaTime);
             }
 
             // Update vibe verse portals
