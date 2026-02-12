@@ -35,6 +35,10 @@
             height: 100%;
             touch-action: none;
         }
+
+        #save-indicator.visible {
+            opacity: 1 !important;
+        }
         
         /* UI Styles */
         .ui-item {
@@ -162,5 +166,7 @@
             });
         });
     </script>
+    <!-- Save indicator -->
+    <div id="save-indicator" style="position:fixed;top:12px;right:12px;background:rgba(0,200,100,0.85);color:#fff;padding:6px 14px;border-radius:6px;font-size:13px;font-family:'Courier New',monospace;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:9000;">💾 Saved</div>
   </body>
 </html>
