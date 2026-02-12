@@ -901,6 +901,74 @@ export class UI {
     }
 
     /**
+     * Show autopilot indicator
+     */
+    showAutopilotIndicator(): void {
+        let indicator = document.getElementById('autopilot-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'autopilot-indicator';
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 10px 20px;
+                background: rgba(120, 220, 232, 0.2);
+                border: 2px solid rgba(120, 220, 232, 0.8);
+                border-radius: 8px;
+                color: rgba(120, 220, 232, 1);
+                font-family: "Rajdhani", "Electrolize", sans-serif;
+                font-size: 18px;
+                font-weight: bold;
+                text-align: center;
+                z-index: 1000;
+                animation: autopilot-blink 1s infinite;
+            `;
+            
+            // Add CSS animation
+            if (!document.getElementById('autopilot-style')) {
+                const style = document.createElement('style');
+                style.id = 'autopilot-style';
+                style.textContent = `
+                    @keyframes autopilot-blink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.5; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            indicator.innerHTML = `
+                <div>AUTOPILOT</div>
+                <div id="autopilot-distance" style="font-size: 14px; margin-top: 5px;">--</div>
+            `;
+            document.body.appendChild(indicator);
+        }
+        indicator.style.display = 'block';
+    }
+
+    /**
+     * Hide autopilot indicator
+     */
+    hideAutopilotIndicator(): void {
+        const indicator = document.getElementById('autopilot-indicator');
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
+    }
+
+    /**
+     * Update autopilot distance display
+     */
+    updateAutopilotDistance(distance: number): void {
+        const distanceEl = document.getElementById('autopilot-distance');
+        if (distanceEl) {
+            distanceEl.textContent = `${Math.round(distance).toLocaleString()} u`;
+        }
+    }
+
+    /**
      * Clean up all UI resources
      */
     dispose(): void {
