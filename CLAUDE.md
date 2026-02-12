@@ -26,7 +26,7 @@ npm run test:smoke   # Headless browser runtime test (Playwright)
 
 ## Architecture
 
-258 TypeScript files, 0 JavaScript. Pure TS codebase.
+256 TypeScript files, 0 JavaScript. Pure TS codebase.
 
 ```
 src/
@@ -80,8 +80,9 @@ css/                     # 18 CSS files
 
 ## Active Issues
 
-- 267 `console.log` across 85 files (30 files use debugLog, rest ungated)
-- 27 `window.game` files (55 occurrences, includes comments)
-- 625 `any` type escapes (297 `as any` + 328 `: any`, excluding tests)
+- 225 `console.log` across 82 files (26 files use debugLog, rest ungated)
+- 24 `window.game` files (43 occurrences, includes comments)
+- 626 `any` type escapes (299 `as any` + 327 `: any`, excluding tests)
 - 80 files use `import * as THREE` - Three.js bundle 1,370 kB, tree-shaking blocked
-- Test coverage gaps: environment, ui, renderer, spaceship, audio modules have zero tests on master
+- No save/load system - player progress resets on refresh
+- Test coverage gaps: environment, ui, renderer, spaceship, audio modules have zero tests
