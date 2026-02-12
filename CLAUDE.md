@@ -13,15 +13,11 @@ npm run test         # 68 tests (all passing)
 npm run test:smoke   # Headless browser runtime test (Playwright)
 ```
 
-## Unmerged Branches (1 - needs conflict resolution)
+## Branches
 
-| Branch | Task | Files | Status |
-|--------|------|-------|--------|
-| `mycel/task-6ba2d876` | Remove window.game from 5 more UI files | 8 | Clean, ready to merge |
+**Abandoned:** `mycel/task-74b9b8b8` (console.log gating) - Agent went rogue, deleted postTSL.ts and ecsRunner tests. Do not merge.
 
-**Abandoned:** `mycel/task-74b9b8b8` (console.log gating) - Agent went rogue, deleted postTSL.ts and ecsRunner tests. Redo from scratch.
-
-**Merged (2025-02-11):** .js imports, physics pooling, ecsRunner tests, messageBus types, window.game (3 files), TSL post-processing.
+**Merged (2026-02-11):** .js imports, physics pooling, ecsRunner tests, messageBus types, window.game (8 UI files), TSL post-processing.
 
 ## Stack
 
@@ -37,7 +33,7 @@ npm run test:smoke   # Headless browser runtime test (Playwright)
 
 ## Architecture
 
-249 TypeScript files, 0 JavaScript. Pure TS codebase.
+241 TypeScript files, 0 JavaScript. Pure TS codebase.
 
 ```
 src/
@@ -56,7 +52,7 @@ js/
 ├── modules/
 │   ├── renderer.ts      # WebGPU/WebGL2 renderer
 │   ├── controls.ts      # Input handling (keyboard + gamepad)
-│   ├── physics.ts       # Newtonian physics (752 lines)
+│   ├── physics.ts       # Newtonian physics (977 lines)
 │   ├── combat.ts        # Combat orchestrator + 10 submodules
 │   ├── ui.ts            # UI module
 │   ├── environment.ts   # Environment (39 submodules)
@@ -83,19 +79,17 @@ css/                     # 18 CSS files
 ### Recently Merged
 - 155 stale `.js` import extensions fixed
 - TSL post-processing for WebGPU
-- window.game removed from 3 UI files (starMap, mobileHUD, statusIndicators)
+- window.game removed from 8 UI files (starMap, mobileHUD, statusIndicators, missions, tradingView, gameOverScreen, ui, betting)
 - Physics Vector3/Quaternion pooling (-20 per-frame allocs)
 - Type-safe messageBus (40+ typed events)
 - ecsRunner integration tests (+7 tests)
 
-### Ready to Merge
-- `mycel/task-6ba2d876`: Remove window.game from 5 more UI files (missions, tradingView, gameOverScreen, ui, betting)
-
 ### Active Issues
 - 502 unguarded `console.log` statements across 105 files (previous opencode task failed - needs redo)
-- 67 `window.game` global usages remaining across 29 files
-- 664 `as any`/`: any` type casts across 89 files
+- 47 `window.game` global usages remaining across 25 files (down from 67 after branch merges)
+- 676 `as any`/`: any` type casts across 92 files (worst: combat/eventHandlers 38, postTSL 34, controls 33, environment 32)
 - 183 addEventListener vs 31 removeEventListener - memory leak risk (worst: customSystem/eventHandlers 26/8, combat/eventHandlers 14/3, stargate/eventHandlers 13/0)
+- Three.js bundle 1,370 kB - unused OrbitControls import, 101 files use `import * as THREE` preventing tree-shaking
 - Zero test coverage on all major modules: controls, physics, combat, environment, ui, renderer, game, messageBus, spaceship
 
 ### Planned
