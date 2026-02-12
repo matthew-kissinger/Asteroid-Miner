@@ -1,0 +1,71 @@
+/* Tutorial Tooltip Styles */
+
+.tutorial-tip {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 255, 255, 0.1);
+    z-index: 10000;
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-width: 80%;
+    width: auto;
+    text-align: center;
+    font-family: 'Courier New', Courier, monospace;
+    cursor: pointer;
+    user-select: none;
+}
+
+.tutorial-tip.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.tutorial-tip-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.tutorial-tip-text {
+    font-size: 16px;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.tutorial-tip-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.tutorial-tip-close:hover {
+    color: white;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .tutorial-tip {
+        bottom: 180px; /* Higher up on mobile to avoid touch controls */
+        padding: 12px 20px;
+        width: 90%;
+    }
+    
+    .tutorial-tip-text {
+        font-size: 14px;
+    }
+}

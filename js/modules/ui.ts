@@ -18,6 +18,7 @@ import { MobileDetector } from '../utils/mobileDetector.ts';
 import { DEBUG_MODE } from '../globals/debug.ts';
 import { mainMessageBus } from '../globals/messageBus.ts';
 import { initScreenFlash } from './ui/screenFlash.ts';
+import { TutorialSystem } from './ui/tutorialSystem.ts';
 import { initDamageNumbers, updateDamageNumbers } from './ui/damageNumbers.ts';
 import { initThreatIndicators, setThreatIndicatorsCamera, updateThreatIndicators } from './ui/threatIndicators.ts';
 import { initLockOnDisplay, setLockOnDisplayCamera, updateLockOnDisplay, setLockedEnemy, getLockedEnemy } from './ui/lockOnDisplay.ts';
@@ -140,6 +141,7 @@ export class UI {
     gameOverScreen!: GameOverScreenComponent;
     controlsMenu!: ControlsMenuComponent;
     starMap!: StarMapComponent;
+    tutorialSystem: TutorialSystem | null = null;
     blackjackGame: BlackjackGameComponent | null = null;
     settings: SettingsComponent | null = null;
     startScreen: StartScreenComponent | null = null;
@@ -241,6 +243,9 @@ export class UI {
         const { StarMap } = await import('./ui/starMap.ts');
         // Initialize star map (requires environment, docking system, stargate interface, and audio)
         this.starMap = new StarMap(this.environment.starSystemGenerator ?? null, null, this.stargateInterface, this.audio ?? null);
+        
+        // Initialize tutorial system
+        this.tutorialSystem = new TutorialSystem(this.spaceship);
         
         // Initialize Blackjack game (will be fully initialized after audio is set)
         this.blackjackGame = null;
@@ -801,5 +806,17 @@ export class UI {
             clearInterval(this.statsInterval);
             this.statsInterval = undefined;
         }
+    }
+
+    /**
+     * Clean up all UI resources
+     */
+    dispose(): void {
+        this.onDisabled();
+        if (this.tutorialSystem) {
+            this.tutorialSystem.destroy();
+            this.tutorialSystem = null;
+        }
+        debugLog("UI disposed");
     }
 }
