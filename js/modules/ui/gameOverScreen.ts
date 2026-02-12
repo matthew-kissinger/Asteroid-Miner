@@ -103,6 +103,13 @@ export class GameOverScreen {
         resourcesSummary.id = 'resources-summary';
         resourcesSummary.classList.add('game-over-resources-summary');
         gameOverContainer.appendChild(resourcesSummary);
+        
+        // Session stats container
+        const statsContainer = document.createElement('div');
+        statsContainer.id = 'game-over-stats';
+        statsContainer.classList.add('game-over-stats-container');
+        statsContainer.style.display = 'none'; // Hidden until populated
+        gameOverContainer.appendChild(statsContainer);
     }
     
     setupRespawnButton(container: HTMLElement): void {
@@ -171,7 +178,7 @@ export class GameOverScreen {
         container.appendChild(restartButton);
     }
     
-    show(resources: unknown, message: unknown): void {
+    show(resources: unknown, message: unknown, stats?: any): void {
         console.log("GameOverScreen: Showing game over screen");
         
         // Update respawn button state
@@ -337,6 +344,9 @@ export class GameOverScreen {
             }
         }
         
+        // Display session stats
+        this.displaySessionStats(stats);
+        
         // Simpler approach to play explosion sound as a backup
         try {
             console.log("GameOverScreen: Attempting simple audio playback");
@@ -360,6 +370,66 @@ export class GameOverScreen {
         if (document.exitPointerLock) {
             document.exitPointerLock();
         }
+    }
+
+    private displaySessionStats(stats: any): void {
+        const statsContainer = document.getElementById('game-over-stats');
+        if (!statsContainer || !stats) return;
+
+        statsContainer.style.display = 'block';
+        
+        // Format duration
+        const durationSeconds = Math.floor(stats.sessionDuration / 1000);
+        const mins = Math.floor(durationSeconds / 60);
+        const secs = durationSeconds % 60;
+        const durationStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+        
+        // Format distance
+        const distanceStr = stats.distanceTraveled > 1000 ? 
+            `${(stats.distanceTraveled / 1000).toFixed(1)}km` : 
+            `${Math.floor(stats.distanceTraveled)}m`;
+
+        statsContainer.innerHTML = `
+            <h3 class="game-over-stats-title">MISSION STATISTICS</h3>
+            <div class="game-over-stats-grid">
+                <div class="game-over-stat-item" style="animation-delay: 0.1s">
+                    <span class="game-over-stat-label">Duration</span>
+                    <span class="game-over-stat-value">${durationStr}</span>
+                </div>
+                <div class="game-over-stat-item" style="animation-delay: 0.2s">
+                    <span class="game-over-stat-label">Enemies Destroyed</span>
+                    <span class="game-over-stat-value highlight">${stats.enemiesDestroyed}</span>
+                </div>
+                <div class="game-over-stat-item" style="animation-delay: 0.3s">
+                    <span class="game-over-stat-label">Distance Traveled</span>
+                    <span class="game-over-stat-value">${distanceStr}</span>
+                </div>
+                <div class="game-over-stat-item" style="animation-delay: 0.4s">
+                    <span class="game-over-stat-label">Credits Earned</span>
+                    <span class="game-over-stat-value gold">${stats.creditsEarned}</span>
+                </div>
+                <div class="game-over-stat-item" style="animation-delay: 0.5s">
+                    <span class="game-over-stat-label">Systems Visited</span>
+                    <span class="game-over-stat-value">${stats.systemsVisited}</span>
+                </div>
+                <div class="game-over-stat-item" style="animation-delay: 0.6s">
+                    <span class="game-over-stat-label">Min Hull HP</span>
+                    <span class="game-over-stat-value ${stats.lowestHullHP < 20 ? 'critical' : ''}">${stats.lowestHullHP}%</span>
+                </div>
+                <div class="game-over-stat-item" style="animation-delay: 0.7s">
+                    <span class="game-over-stat-label">Damage Dealt</span>
+                    <span class="game-over-stat-value">${stats.damageDealt}</span>
+                </div>
+                <div class="game-over-stat-item" style="animation-delay: 0.8s">
+                    <span class="game-over-stat-label">Damage Taken</span>
+                    <span class="game-over-stat-value">${stats.damageTaken}</span>
+                </div>
+                <div class="game-over-stat-item" style="animation-delay: 0.9s">
+                    <span class="game-over-stat-label">Resources Mined</span>
+                    <span class="game-over-stat-value">${stats.ironMined + stats.goldMined + stats.platinumMined}</span>
+                </div>
+            </div>
+        `;
     }
 
     private updateRespawnButton(): void {

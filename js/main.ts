@@ -7,12 +7,8 @@ import { GameLoop } from './main/gameLoop.ts';
 import { Diagnostics } from './main/diagnostics.ts';
 import { GameInitializer } from './main/gameInitializer.ts';
 import { mainMessageBus } from './globals/messageBus.ts';
+import { SessionStats } from './modules/game/sessionStats.ts';
 // Removed direct imports for ObjectPools, DifficultyManager, HordeMode, AudioUpdater, GameLifecycle
-// import { ObjectPools } from './main/objectPools.ts';
-// import { DifficultyManager } from './main/difficultyManager.ts';
-// import { HordeMode } from './main/hordeMode.ts';
-// import { AudioUpdater } from './main/audioUpdater.ts';
-// import { GameLifecycle } from './main/gameLifecycle.ts';
 
 // Import bitECS systems
 import { createGameEntity } from './ecs/world';
@@ -31,6 +27,7 @@ export class Game {
     boundAnimate: any;
     startupSequence: any;
     diagnostics: any;
+    sessionStats: SessionStats;
     isGameOver: boolean = false;
     introSequenceActive: boolean = false;
     gameTime: number = 0;
@@ -55,6 +52,9 @@ export class Game {
         // Make game instance globally accessible for emergency access
         window.game = this;
         
+        // Initialize session stats
+        this.sessionStats = new SessionStats();
+        
         // Subscribe to global events
         mainMessageBus.subscribe('game.over', (data: any) => {
             if (this.lifecycle) {
@@ -74,6 +74,11 @@ export class Game {
             this.isGameOver = false;
             this.introSequenceActive = false;
             this.gameTime = 0;
+
+            // Initialize session stats with spaceship
+            if (this.spaceship) {
+                this.sessionStats.setSpaceship(this.spaceship);
+            }
 
             // Detect mobile device
             this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -195,6 +200,11 @@ export class Game {
     // Main update loop
     update(deltaTime: number) {
         if (this.isGameOver) return;
+        
+        // Update session stats
+        if (this.sessionStats) {
+            this.sessionStats.update();
+        }
         
         // Update horde mode
         this.hordeMode.update();
