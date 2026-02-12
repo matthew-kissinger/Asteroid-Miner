@@ -15,6 +15,7 @@
 @import "./intro.css";
 @import "./controls-ui.css";
 @import "./gameplay-ui.css";
+@import "./pause-menu.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

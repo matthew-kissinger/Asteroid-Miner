@@ -1,0 +1,77 @@
+/* Pause menu overlay - consistent with stargate/controls UI */
+
+.pause-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  font-family: 'Courier New', monospace;
+}
+
+.pause-menu-overlay.pause-menu-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.pause-menu-panel {
+  background-color: rgba(10, 10, 26, 0.95);
+  border: 2px solid #33aaff;
+  border-radius: 10px;
+  padding: 2rem;
+  min-width: 280px;
+  max-width: 90vw;
+  box-shadow: 0 0 24px rgba(51, 170, 255, 0.3);
+  color: #fff;
+}
+
+.pause-menu-title {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: #33aaff;
+  letter-spacing: 0.1em;
+}
+
+.pause-menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pause-menu-btn {
+  background-color: rgba(51, 170, 255, 0.15);
+  border: 1px solid #33aaff;
+  border-radius: 6px;
+  color: #e0e0e0;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.pause-menu-btn:hover {
+  background-color: rgba(51, 170, 255, 0.3);
+  color: #fff;
+}
+
+.pause-menu-btn:focus {
+  outline: 2px solid #33aaff;
+  outline-offset: 2px;
+}
+
+.pause-menu-btn-primary {
+  background-color: rgba(51, 170, 255, 0.25);
+  font-weight: 600;
+}
+
+.pause-menu-btn-primary:hover {
+  background-color: rgba(51, 170, 255, 0.4);
+}

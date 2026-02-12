@@ -44,10 +44,7 @@ export class GameEventHandlers {
      */
     setupKeyboardEvents(): void {
         document.addEventListener('keydown', (e) => {
-            // Handle ESC key to exit pointer lock
-            if (e.key === 'Escape' && document.pointerLockElement) {
-                document.exitPointerLock();
-            }
+            // ESC is handled by Game.handleKeyDown (pause menu + exit pointer lock)
 
             // Add audio mute toggle (M key)
             if (e.key.toLowerCase() === 'm' && this.game.audio) {

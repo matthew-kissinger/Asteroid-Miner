@@ -34,6 +34,8 @@ type UiLike = {
     stargateInterface?: StargateInterfaceLike;
     hideUI: () => void;
     showUI: () => void;
+    togglePauseMenu?: () => void;
+    openPauseMenu?: () => void;
 };
 
 type EnemySystemLike = {

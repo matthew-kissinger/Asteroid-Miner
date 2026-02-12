@@ -120,7 +120,7 @@ This project uses Vite for an optimized development experience:
     *   `G`: Pick Up Nearby Space Laser Turret
     *   `V`: Toggle Asteroid Scanner Overlay
     *   `M`: Toggle Mute
-    *   `Escape`: Exit Pointer Lock / Show Menu (TBD)
+    *   `Escape`: Pause menu (exit pointer lock when opening)
 *   **Controls (Mobile):**
     *   **Left Joystick:** Ship Thrust (Forward/Backward/Strafe)
     *   **Right Joystick:** Ship Rotation

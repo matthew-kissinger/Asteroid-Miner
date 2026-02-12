@@ -30,6 +30,7 @@ import {
 import type { AsteroidScannerContext } from './ui/asteroidScanner.ts';
 import { getEnemies, getPlayerEntity } from '../ecs/systems/ecsRunner';
 import { Position } from '../ecs/components';
+import { PauseMenu, type PauseMenuGame, type PauseMenuSettings, type PauseMenuControls } from './ui/pauseMenu.ts';
 
 // Type definitions for UI-related objects
 type SpaceshipForUI = any;
@@ -153,6 +154,7 @@ export class UI {
     blackjackGame: BlackjackGameComponent | null = null;
     settings: SettingsComponent | null = null;
     startScreen: StartScreenComponent | null = null;
+    pauseMenu: PauseMenu | null = null;
     statsInterval?: number;
     camera: any = null;
     renderer: any = null;
@@ -204,7 +206,7 @@ export class UI {
     }
     
     // Method to set game state reference
-    setGameStateReference(gameState: { introSequenceActive?: boolean; currentFPS?: number; difficultyManager?: any; gameTime?: number; ecsWorld?: any; activateHordeMode?: () => void; audio?: any }): void {
+    setGameStateReference(gameState: { introSequenceActive?: boolean; currentFPS?: number; difficultyManager?: any; gameTime?: number; ecsWorld?: any; activateHordeMode?: () => void; audio?: any; pauseGame?: () => void; resumeGame?: () => void }): void {
         this.gameStateRef = gameState;
         if (this.gameOverScreen) {
             (this.gameOverScreen as any).setGameReference?.(gameState);
@@ -212,6 +214,24 @@ export class UI {
         if (this.stargateInterface) {
             (this.stargateInterface as any).setGameReference?.(gameState);
         }
+    }
+
+    /** Toggle pause menu (ESC / Start). No-op during intro or when docked. */
+    togglePauseMenu(): void {
+        if (!this.pauseMenu) return;
+        if (this.pauseMenu.isVisible()) {
+            this.pauseMenu.hide();
+            return;
+        }
+        if (this.gameStateRef?.introSequenceActive) return;
+        if (this.spaceship?.isDocked) return;
+        this.pauseMenu.show();
+    }
+
+    /** Open pause menu without toggling (e.g. when tab becomes hidden). Caller must pause game first. */
+    openPauseMenu(): void {
+        if (!this.pauseMenu) return;
+        this.pauseMenu.show({ skipPauseGame: true });
     }
     
     // Add an async initialization method
@@ -371,6 +391,15 @@ export class UI {
         // Initialize start screen now that we have game instance
         const { StartScreen } = await import('./ui/startScreen.ts');
         this.startScreen = new StartScreen(game, this);
+
+        // Create pause menu (needs game, settings, controlsMenu with show())
+        if (!this.pauseMenu && typeof game.pauseGame === 'function' && typeof game.resumeGame === 'function') {
+            this.pauseMenu = new PauseMenu({
+                game: game as PauseMenuGame,
+                settings: this.settings && typeof (this.settings as PauseMenuSettings).show === 'function' ? (this.settings as PauseMenuSettings) : null,
+                controlsMenu: this.controlsMenu && typeof (this.controlsMenu as PauseMenuControls).show === 'function' ? (this.controlsMenu as PauseMenuControls) : null,
+            });
+        }
 
         debugLog("Settings and StartScreen initialized with game instance");
     }

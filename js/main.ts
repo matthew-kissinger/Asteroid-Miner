@@ -35,7 +35,10 @@ export class Game {
     isGameOver: boolean = false;
     introSequenceActive: boolean = false;
     gameTime: number = 0;
+    lastUpdateTime: number = performance.now();
     isMobile: boolean = false;
+    /** User or tab-visibility pause: when true, game loop skips updates but keeps rendering. */
+    isPaused: boolean = false;
     ui: any;
     physics: any;
     spaceship: any;
@@ -353,25 +356,39 @@ export class Game {
     
     handleVisibilityChange = () => {
         if (document.hidden) {
-            // Pause game when tab is not visible
-            if (this.audio) {
-                this.audio.pauseAllSounds();
+            if (this.audio) this.audio.pauseAllSounds();
+            if (!this.isGameOver && this.spaceship && !this.spaceship.isDocked && this.ui?.openPauseMenu) {
+                this.pauseGame();
+                this.ui.openPauseMenu();
             }
         } else {
-            // Resume game when tab becomes visible
-            if (this.audio) {
-                this.audio.resumeAllSounds();
-            }
+            if (this.audio) this.audio.resumeAllSounds();
         }
     }
     
     handleKeyDown = (event: KeyboardEvent) => {
-        // Global key handlers
-        if (event.key === 'Escape') {
-            if (this.ui && this.ui.togglePauseMenu) {
-                this.ui.togglePauseMenu();
-            }
+        if (event.key === 'Escape' && this.ui?.togglePauseMenu) {
+            this.ui.togglePauseMenu();
         }
+    }
+
+    /** Called by UI pause menu and gamepad Start button. */
+    togglePause(): void {
+        if (this.ui?.togglePauseMenu) {
+            this.ui.togglePauseMenu();
+        }
+    }
+
+    /** Pause game loop updates (physics, combat, etc.); keeps rendering. Do not use when docked. */
+    pauseGame(): void {
+        if (this.isGameOver) return;
+        this.isPaused = true;
+    }
+
+    /** Resume game loop updates. */
+    resumeGame(): void {
+        this.isPaused = false;
+        this.lastUpdateTime = performance.now();
     }
 }
 

@@ -18,6 +18,7 @@ type GameLoopGame = {
     renderer?: GameLoopRenderer;
     ui?: GameLoopUi;
     gameTime: number;
+    isPaused?: boolean;
 };
 
 export class GameLoop {
@@ -149,19 +150,17 @@ export class GameLoop {
         // Update accumulator for fixed timestep
         this.accumulator += rawDelta;
         
-        // Perform fixed timestep updates
-        // This keeps physics and gameplay consistent regardless of frame rate
-        while (this.accumulator >= this.fixedDeltaTime) {
-            // Use fixed delta for deterministic updates
-            this.deltaTime = this.fixedDeltaTime;
-            
-            // Store game time before update
-            this.game.gameTime += this.deltaTime;
-            
-            // Update all game systems
-            this.game.update(this.deltaTime);
-            
-            this.accumulator -= this.fixedDeltaTime;
+        // When paused, skip game updates but keep rendering the frozen frame
+        if (!this.game.isPaused) {
+            // Perform fixed timestep updates
+            while (this.accumulator >= this.fixedDeltaTime) {
+                this.deltaTime = this.fixedDeltaTime;
+                this.game.gameTime += this.deltaTime;
+                this.game.update(this.deltaTime);
+                this.accumulator -= this.fixedDeltaTime;
+            }
+        } else {
+            this.accumulator = 0;
         }
         
         // Interpolation factor for rendering (unused for now, but useful for smooth rendering)
