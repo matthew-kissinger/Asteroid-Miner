@@ -103,7 +103,7 @@ export const ACHIEVEMENT_DEFINITIONS: ReadonlyArray<AchievementDefinition> = [
     {
         id: 'millionaire',
         title: 'Millionaire',
-        description: 'Accumulate 1,000,000 credits total',
+        description: 'Accumulate 1,000,000 XP total',
         icon: '🤑',
         category: 'trading',
         threshold: 1000000,

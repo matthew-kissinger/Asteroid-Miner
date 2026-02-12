@@ -262,6 +262,11 @@ export class SaveSystem {
                 );
             }
 
+            // Include achievement states if available
+            if (game.achievementManager?.exportStates) {
+                data.achievements = game.achievementManager.exportStates();
+            }
+
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             this.resetSessionTimer();
             this.showSaveIndicator();

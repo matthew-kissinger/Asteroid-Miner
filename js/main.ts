@@ -8,6 +8,8 @@ import { Diagnostics } from './main/diagnostics.ts';
 import { GameInitializer } from './main/gameInitializer.ts';
 import { mainMessageBus } from './globals/messageBus.ts';
 import { SaveSystem } from './modules/game/saveSystem.ts';
+import { AchievementManager } from './modules/game/achievements.ts';
+import { AchievementPopup } from './modules/ui/components/hud/achievementPopup.ts';
 // Removed direct imports for ObjectPools, DifficultyManager, HordeMode, AudioUpdater, GameLifecycle
 // import { ObjectPools } from './main/objectPools.ts';
 // import { DifficultyManager } from './main/difficultyManager.ts';
@@ -49,6 +51,8 @@ export class Game {
     private _controls: any;
     private _updateECS: ((deltaTime: number) => void) | undefined; // New property
     saveSystem: SaveSystem;
+    achievementManager: AchievementManager;
+    private achievementPopup: AchievementPopup;
 
     constructor() {
         // Initialize globals first
@@ -56,6 +60,10 @@ export class Game {
         
         // Initialize save system
         this.saveSystem = new SaveSystem();
+        
+        // Initialize achievement system
+        this.achievementManager = new AchievementManager();
+        this.achievementPopup = new AchievementPopup();
         
         // Make game instance globally accessible for emergency access
         window.game = this;
@@ -136,6 +144,10 @@ export class Game {
             const savedState = this.saveSystem.load();
             if (savedState && this.spaceship) {
                 this.saveSystem.applyToGame(this, savedState);
+                // Restore achievement states from save
+                if (savedState.achievements) {
+                    this.achievementManager.importStates(savedState.achievements);
+                }
                 // Apply settings separately
                 if (savedState.settings) {
                     this.saveSystem.applySettings(this, savedState.settings);
@@ -157,6 +169,10 @@ export class Game {
             // Subscribe to events and start auto-save
             this.saveSystem.subscribeToEvents(this);
             this.saveSystem.startAutoSave(this);
+            
+            // Wire achievement system: subscribe to events and init popup
+            this.achievementManager.subscribeToEvents();
+            this.achievementPopup.init();
         } catch (error) {
             throw error;
         }
