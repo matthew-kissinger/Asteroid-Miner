@@ -72,6 +72,9 @@ export interface GameEventMap extends Record<string, unknown> {
     'system.discovered': { systemId: string };
     'orb.collected': { rarity: string };
 
+    // Achievements
+    'achievement.unlocked': { id: string; title: string; description: string; icon: string; category: string };
+
     // Environmental hazards
     'hazard.entered': { hazardType: string; hazardId: string };
     'hazard.exited': { hazardType: string; hazardId: string };

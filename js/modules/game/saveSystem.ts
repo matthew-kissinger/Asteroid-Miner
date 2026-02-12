@@ -48,6 +48,12 @@ export interface SaveSchema {
         bestHordeSurvivalTime: number; // seconds
         totalKills: number;
     };
+    achievements?: Array<{
+        id: string;
+        unlocked: boolean;
+        unlockedAt: number | null;
+        progress: number;
+    }>;
     settings?: {
         audio: {
             masterVolume: number;
