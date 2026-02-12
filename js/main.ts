@@ -143,11 +143,14 @@ export class Game {
             } else if ((this as any)._pendingAudioSettings) {
                 // Apply pending audio settings if no full save exists
                 const defaults = this.saveSystem.captureSettings(this);
-                const pendingSettings = {
-                    ...defaults,
-                    audio: (this as any)._pendingAudioSettings,
-                };
-                this.saveSystem.applySettings(this, pendingSettings);
+                if (defaults) {
+                    const pendingSettings = {
+                        audio: (this as any)._pendingAudioSettings,
+                        controls: defaults.controls,
+                        graphics: defaults.graphics,
+                    };
+                    this.saveSystem.applySettings(this, pendingSettings);
+                }
                 delete (this as any)._pendingAudioSettings;
             }
             

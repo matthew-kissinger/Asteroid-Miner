@@ -420,15 +420,18 @@ describe('SaveSystem', () => {
 
             const captured = saveSystem.captureSettings(game);
 
-            expect(captured.audio.sfxVolume).toBe(0.8);
-            expect(captured.audio.musicVolume).toBe(0.7);
-            expect(captured.audio.isMuted).toBe(true);
-            expect(captured.controls.mouseSensitivity).toBe(0.002);
-            expect(captured.controls.gamepadSensitivity).toBe(1.5);
+            expect(captured).toBeDefined();
+            if (captured) {
+                expect(captured.audio.sfxVolume).toBe(0.8);
+                expect(captured.audio.musicVolume).toBe(0.7);
+                expect(captured.audio.isMuted).toBe(true);
+                expect(captured.controls.mouseSensitivity).toBe(0.002);
+                expect(captured.controls.gamepadSensitivity).toBe(1.5);
+            }
         });
 
         it('should persist settings across save/load cycles', () => {
-            const game = makeGameStub();
+            const game = makeGameStub() as any;
             game.audio = {
                 sfxVolume: 0.5,
                 musicVolume: 0.6,
