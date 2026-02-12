@@ -112,12 +112,7 @@ export class TouchControls {
     }
     
     async initializeAsync(): Promise<void> {
-        try {
-            await this.joystickHandler.loadNippleJS();
-            this.setupTouchControls();
-        } catch (err) {
-            console.error('Failed to load nipple.js:', err);
-        }
+        this.setupTouchControls();
     }
     
     // Method to set the systems we need to interact with

@@ -1,4 +1,7 @@
-// joystickHandler.js - Nipple.js integration and joystick input handling
+// joystickHandler.ts - Nipple.js integration and joystick input handling
+
+import nipplejs from 'nipplejs';
+import type { JoystickManager, JoystickOutputData } from 'nipplejs';
 
 type TouchSpaceship = {
     isDocked: boolean;
@@ -15,43 +18,12 @@ type TouchPhysics = {
     updateRotation: (deltaX: number, deltaY: number) => void;
 };
 
-type NippleOptions = {
-    zone: HTMLElement | null;
-    mode: string;
-    position: { left: string; top: string };
-    color: string;
-    size: number;
-    threshold: number;
-    dynamicPage: boolean;
-    fadeTime: number;
-    lockX: boolean;
-    lockY: boolean;
-};
-
-type NippleData = {
-    force: number;
-    angle: { radian: number };
-    vector: { x: number; y: number };
-};
-
-type NippleManager = {
-    on: (event: string, handler: (evt: unknown, data: NippleData) => void) => NippleManager;
-    destroy: () => void;
-};
-
-type NippleWindow = Window & {
-    nipplejs?: {
-        create: (options: NippleOptions) => NippleManager;
-    };
-};
-
 export class JoystickHandler {
     spaceship: TouchSpaceship;
     physics: TouchPhysics;
-    leftJoystick: NippleManager | null;
-    rightJoystick: NippleManager | null;
+    leftJoystick: JoystickManager | null;
+    rightJoystick: JoystickManager | null;
     threshold: number;
-    isNippleLoaded: boolean;
 
     constructor(spaceship: TouchSpaceship, physics: TouchPhysics) {
         this.spaceship = spaceship;
@@ -59,69 +31,36 @@ export class JoystickHandler {
         this.leftJoystick = null;
         this.rightJoystick = null;
         this.threshold = 0.1;
-        this.isNippleLoaded = false;
-    }
-
-    async loadNippleJS(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            // Check if nipple.js is already loaded
-            const windowWithNipple = window as NippleWindow;
-            if (windowWithNipple.nipplejs) {
-                this.isNippleLoaded = true;
-                resolve();
-                return;
-            }
-            
-            // Create script element
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js';
-            script.async = true;
-            
-            // Set up event handlers
-            script.onload = () => {
-                this.isNippleLoaded = true;
-                resolve();
-            };
-            script.onerror = () => reject(new Error('Failed to load nipple.js'));
-            
-            // Add script to document
-            document.head.appendChild(script);
-        });
     }
 
     initializeJoysticks(leftZone: HTMLElement | null, rightZone: HTMLElement | null): boolean {
-        const windowWithNipple = window as NippleWindow;
-        if (!windowWithNipple.nipplejs || !this.isNippleLoaded) {
-            console.error('nipplejs is not loaded');
+        if (!leftZone || !rightZone) {
+            console.error('Joystick zones not provided');
             return false;
         }
         
         // Initialize left joystick (thrust control)
-        this.leftJoystick = windowWithNipple.nipplejs.create({
+        this.leftJoystick = nipplejs.create({
             zone: leftZone,
             mode: 'static',
             position: { left: '50%', top: '50%' },
             color: 'rgba(120, 220, 232, 0.8)',
             size: 100,
             threshold: this.threshold,
-            dynamicPage: true, // Better performance for scrolling
-            fadeTime: 100, // Faster fade for better performance
-            lockX: false, // Allow X-axis movement
-            lockY: false  // Allow Y-axis movement
+            dynamicPage: true,
+            fadeTime: 100
         });
         
         // Initialize right joystick (rotation control)
-        this.rightJoystick = windowWithNipple.nipplejs.create({
+        this.rightJoystick = nipplejs.create({
             zone: rightZone,
             mode: 'static',
             position: { left: '50%', top: '50%' },
             color: 'rgba(120, 220, 232, 0.8)',
             size: 100,
             threshold: this.threshold,
-            dynamicPage: true, // Better performance for scrolling
-            fadeTime: 100, // Faster fade for better performance
-            lockX: false, // Allow X-axis movement
-            lockY: false  // Allow Y-axis movement
+            dynamicPage: true,
+            fadeTime: 100
         });
         
         // Set up event handlers for joysticks
@@ -139,7 +78,9 @@ export class JoystickHandler {
         this.leftJoystick.on('move', (evt, data) => {
             void evt;
             this.handleThrustJoystick(data);
-        }).on('end', () => {
+        });
+        
+        this.leftJoystick.on('end', () => {
             this.resetThrust();
         });
         
@@ -147,12 +88,10 @@ export class JoystickHandler {
         this.rightJoystick.on('move', (evt, data) => {
             void evt;
             this.handleRotationJoystick(data);
-        }).on('end', () => {
-            // Do nothing on end - rotation is not continuous
         });
     }
 
-    handleThrustJoystick(data: NippleData): void {
+    handleThrustJoystick(data: JoystickOutputData): void {
         if (this.spaceship.isDocked) return;
         
         // Reset thrust directions
@@ -186,7 +125,7 @@ export class JoystickHandler {
         this.spaceship.thrust.boost = force > 1.5;
     }
 
-    handleRotationJoystick(data: NippleData): void {
+    handleRotationJoystick(data: JoystickOutputData): void {
         if (this.spaceship.isDocked) return;
         
         // Extract the X and Y components of the joystick vector
