@@ -218,7 +218,7 @@ export class HUDHelpers {
     /**
      * Safe access to nested object properties
      */
-    static safeGet(obj: Record<string, any>, path: string, defaultValue: any = null): any {
+    static safeGet(obj: any, path: string, defaultValue: any = null): any {
         try {
             return path.split('.').reduce((current, key) => current[key], obj) ?? defaultValue;
         } catch {
