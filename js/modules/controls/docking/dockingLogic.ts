@@ -1,4 +1,5 @@
 // dockingLogic.js - Core docking and undocking logic
+import { debugLog } from '../../../globals/debug.ts';
 
 import type { DockingSpaceship, DockingUI, MessageBus } from './types.ts';
 
@@ -38,7 +39,7 @@ export class DockingLogic {
     }
 
     dockWithStargate(spaceship: DockingSpaceship, stargate: unknown, ui: DockingUI): void {
-        console.log("Docking with stargate");
+        debugLog("Docking with stargate");
         
         // Only update ship state if it's not already docked
         if (!spaceship.isDocked) {
@@ -52,22 +53,22 @@ export class DockingLogic {
                     playerPosition: spaceship.mesh.position.clone(),
                     stargate: stargate
                 });
-                console.log("Published player.docked event");
+                debugLog("Published player.docked event");
             }
         } else {
-            console.log("Ship is already docked, just showing UI");
+            debugLog("Ship is already docked, just showing UI");
         }
         
         // Mobile-specific preparation - ensure all classes that might block UI visibility are removed
         if (this.isMobileDevice()) {
-            console.log("Mobile device detected - preparing for stargate UI");
+            debugLog("Mobile device detected - preparing for stargate UI");
             document.body.classList.remove('undocking', 'modal-open');
             document.body.classList.add('undocked-body');
         }
         
         // Show the stargate UI
         if (ui && ui.stargateInterface) {
-            console.log("Showing stargate UI...");
+            debugLog("Showing stargate UI...");
             ui.stargateInterface.showStargateUI?.();
             
             // Double-check visibility on mobile with a small delay
@@ -75,7 +76,7 @@ export class DockingLogic {
                 setTimeout(() => {
                     const stargateUI = document.getElementById('stargate-ui');
                     if (stargateUI && stargateUI.style.display !== 'block') {
-                        console.log("Forcing stargate UI display");
+                        debugLog("Forcing stargate UI display");
                         stargateUI.style.display = 'block';
                     }
                 }, 100);
@@ -90,7 +91,7 @@ export class DockingLogic {
         // Exit pointer lock so cursor is visible for UI interactions
         if (document.pointerLockElement) {
             document.exitPointerLock();
-            console.log("Exited pointer lock for UI interaction");
+            debugLog("Exited pointer lock for UI interaction");
         }
     }
 
@@ -100,7 +101,7 @@ export class DockingLogic {
             requestAnimationFrame(() => {
                 try {
                     stepFunction();
-                    console.log(`Completed step: ${stepName}`);
+                    debugLog(`Completed step: ${stepName}`);
                 } catch (err) {
                     console.error(`Error during step ${stepName}:`, err);
                 }
@@ -150,7 +151,7 @@ export class DockingLogic {
             // Request pointer lock with a slight delay to ensure UI transitions are complete
             setTimeout(() => {
                 canvas.requestPointerLock();
-                console.log("Requested pointer lock for ship control");
+                debugLog("Requested pointer lock for ship control");
             }, 200);
         }
     }
@@ -164,7 +165,7 @@ export class DockingLogic {
     ): Promise<void> {
         void ui;
         if (!spaceship.isDocked) {
-            console.log("Not docked, can't undock");
+            debugLog("Not docked, can't undock");
             return;
         }
 
@@ -181,11 +182,11 @@ export class DockingLogic {
         document.body.appendChild(loadingIndicator);
 
         try {
-            console.log("Starting undock sequence...");
+            debugLog("Starting undock sequence...");
             
             // Store shield value before any changes
             this.preUndockShieldValue = spaceship.shield;
-            console.log(`Storing pre-undock shield value: ${this.preUndockShieldValue}`);
+            debugLog(`Storing pre-undock shield value: ${this.preUndockShieldValue}`);
 
             // Step 1: Close all modals
             await this.performStep(() => closeAllModalsCallback(), "Closing modals");
@@ -205,15 +206,15 @@ export class DockingLogic {
             await this.yieldToBrowser();
 
             // Step 4: Perform core undock logic
-            console.log("Performing core undock...");
+            debugLog("Performing core undock...");
             spaceship.undock();
             
             // Step 5: Sync health values immediately
-            console.log("Syncing health values...");
+            debugLog("Syncing health values...");
             
             // Check for shield reset issue
             if (spaceship.shield === 0 && this.preUndockShieldValue > 0) {
-                console.log(`Fixing shield reset: Restoring to ${this.preUndockShieldValue}`);
+                debugLog(`Fixing shield reset: Restoring to ${this.preUndockShieldValue}`);
                 spaceship.shield = this.preUndockShieldValue;
             }
 
@@ -233,7 +234,7 @@ export class DockingLogic {
             const messageBus = windowWithGame.game?.messageBus || windowWithGame.mainMessageBus;
             if (messageBus) {
                 messageBus.publish('player.undocked', healthData);
-                console.log("Published player.undocked event with health values:", healthData);
+                debugLog("Published player.undocked event with health values:", healthData);
             }
 
             // Reset docking status
@@ -244,7 +245,7 @@ export class DockingLogic {
                 await this.performStep(() => this.requestPointerLock(), "Requesting pointer lock");
             }
 
-            console.log("Undock sequence complete");
+            debugLog("Undock sequence complete");
             
         } catch (error) {
             console.error("Error during undocking:", error);

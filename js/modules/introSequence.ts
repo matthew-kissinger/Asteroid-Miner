@@ -1,6 +1,7 @@
 // introSequence.ts - Manages the cinematic Star Dreadnought intro sequence
 
 import * as THREE from 'three';
+import { debugLog } from '../globals/debug.ts';
 import { StarDreadnought } from './environment/starDreadnought.ts';
 import { createIntroSoundEffects } from './intro/audio/soundEffects.ts';
 import { loadDialogueWavs } from './intro/audio/dialogueManager.ts';
@@ -168,7 +169,7 @@ export class IntroSequence {
         this.lastTime = 0;
         this.animationFrameId = null;
         
-        console.log("Intro sequence initialized");
+        debugLog("Intro sequence initialized");
         
         // Load dialogue WAV files
         this.dialogueWavs = loadDialogueWavs() as HTMLAudioElement[];
@@ -193,7 +194,7 @@ export class IntroSequence {
     startSequence(onComplete?: () => void): void {
         if (this.isPlaying) return;
         
-        console.log("Starting intro sequence...");
+        debugLog("Starting intro sequence...");
         this.isPlaying = true;
         this.sequenceTime = 0;
         this.onComplete = onComplete || null;
@@ -336,7 +337,7 @@ export class IntroSequence {
     }
     
     skipSequence(): void {
-        console.log("Skipping intro sequence");
+        debugLog("Skipping intro sequence");
         
         // Position ship exactly where the intro would have positioned it
         if (this.spaceship && this.spaceship.mesh) {
@@ -351,15 +352,15 @@ export class IntroSequence {
             
             // Ensure ship has proper health and fuel values
             if (this.spaceship.hull !== undefined && this.spaceship.hull <= 0) {
-                console.log("Fixing spaceship hull from", this.spaceship.hull, "to 100");
+                debugLog("Fixing spaceship hull from", this.spaceship.hull, "to 100");
                 this.spaceship.hull = 100;
             }
             if (this.spaceship.shield !== undefined && this.spaceship.shield <= 0) {
-                console.log("Fixing spaceship shield from", this.spaceship.shield, "to 50");
+                debugLog("Fixing spaceship shield from", this.spaceship.shield, "to 50");
                 this.spaceship.shield = 50;
             }
             if (this.spaceship.fuel !== undefined && this.spaceship.fuel <= 0) {
-                console.log("Fixing spaceship fuel from", this.spaceship.fuel, "to 100");
+                debugLog("Fixing spaceship fuel from", this.spaceship.fuel, "to 100");
                 this.spaceship.fuel = 100;
             }
         }
@@ -372,22 +373,22 @@ export class IntroSequence {
         const gameWindow = window as GameWindowWithInstance;
         if (gameWindow.gameInstance && gameWindow.gameInstance.spaceship) {
             gameWindow.gameInstance.spaceship.isDocked = false;
-            console.log("Ship set to undocked state after skip");
+            debugLog("Ship set to undocked state after skip");
             
             // Double-check health values on the global instance too
             if (gameWindow.gameInstance.spaceship.hull !== undefined && gameWindow.gameInstance.spaceship.hull <= 0) {
-                console.log("Fixing global spaceship hull to 100");
+                debugLog("Fixing global spaceship hull to 100");
                 gameWindow.gameInstance.spaceship.hull = 100;
             }
             if (gameWindow.gameInstance.spaceship.fuel !== undefined && gameWindow.gameInstance.spaceship.fuel <= 0) {
-                console.log("Fixing global spaceship fuel to 100");
+                debugLog("Fixing global spaceship fuel to 100");
                 gameWindow.gameInstance.spaceship.fuel = 100;
             }
         }
     }
     
     completeSequence(): void {
-        console.log("Intro sequence complete");
+        debugLog("Intro sequence complete");
         this.isPlaying = false;
 
         const scene = this.scene as THREE.Scene;
@@ -430,12 +431,12 @@ export class IntroSequence {
             
             // IMPORTANT: Make sure ship is properly undocked
             if (this.spaceship.isDocked) {
-                console.log("Forcing ship to undocked state after intro sequence");
+                debugLog("Forcing ship to undocked state after intro sequence");
                 this.spaceship.isDocked = false;
             }
             
             // Log the final player position for debugging
-            console.log("Player final position:", 
+            debugLog("Player final position:", 
                 this.spaceship.mesh.position.x, 
                 this.spaceship.mesh.position.y, 
                 this.spaceship.mesh.position.z
@@ -446,7 +447,7 @@ export class IntroSequence {
         if (this.onComplete && typeof this.onComplete === 'function') {
             // Use setTimeout to make sure this executes after the animation frame
             setTimeout(() => {
-                console.log("Executing intro sequence completion callback");
+                debugLog("Executing intro sequence completion callback");
                 this.onComplete?.();
             }, 100);
         }

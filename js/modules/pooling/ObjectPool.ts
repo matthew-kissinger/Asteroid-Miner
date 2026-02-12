@@ -1,3 +1,4 @@
+import { debugLog } from '../../globals/debug.ts';
 /**
  * Generic object pool for managing reusable objects
  *
@@ -47,7 +48,7 @@ export class ObjectPool<T> {
         // Pre-populate the pool with initial objects
         this.expand(initialSize);
 
-        console.log(`ObjectPool created with ${initialSize} objects`);
+        debugLog(`ObjectPool created with ${initialSize} objects`);
     }
 
     /**
@@ -56,7 +57,7 @@ export class ObjectPool<T> {
      */
     get(): T {
         if (this.pool.length === 0) {
-            console.log(`Pool empty, expanding by ${this.expandSize} objects`);
+            debugLog(`Pool empty, expanding by ${this.expandSize} objects`);
             this.expand(this.expandSize);
         }
 

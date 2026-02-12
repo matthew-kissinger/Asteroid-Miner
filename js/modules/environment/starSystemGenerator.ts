@@ -1,3 +1,4 @@
+import { debugLog } from '../../globals/debug.ts';
 // starSystemGenerator.ts - Procedural generation of star systems
 
 import * as THREE from 'three';
@@ -78,14 +79,14 @@ export class StarSystemGenerator {
 
     // Initialize star systems with Solar System as default
     initializeSystems(): void {
-        console.log("Initializing star systems...");
+        debugLog("Initializing star systems...");
 
         this.systems['Solar System'] = SystemFactory.createSolarSystem();
         this.generateRandomSystems(5);
         this.createSystemConnections();
         this.setCurrentSystem('Solar System');
 
-        console.log("Star systems initialized");
+        debugLog("Star systems initialized");
     }
 
     // Generate random star systems
@@ -142,7 +143,7 @@ export class StarSystemGenerator {
         this.warpGates[sourceId].push(targetId);
         this.warpGates[targetId].push(sourceId);
 
-        console.log(`Created connection between ${sourceId} and ${targetId}`);
+        debugLog(`Created connection between ${sourceId} and ${targetId}`);
     }
 
     // Get list of connections for current system
@@ -163,7 +164,7 @@ export class StarSystemGenerator {
     setCurrentSystem(systemId: string): boolean {
         if (this.systems[systemId]) {
             this.currentSystem = systemId;
-            console.log(`Traveled to system: ${systemId}`);
+            debugLog(`Traveled to system: ${systemId}`);
             return true;
         }
         return false;
@@ -187,13 +188,13 @@ export class StarSystemGenerator {
         // Check if the ship is docked
         const game = (window as any).game as GameGlobal | undefined;
         if (game?.spaceship && game.spaceship.isDocked) {
-            console.log("Player is docked during interstellar travel");
+            debugLog("Player is docked during interstellar travel");
         }
 
         // Log current system params
         if (this.currentSystem && this.systems[this.currentSystem]) {
             const currentParams = this.systems[this.currentSystem].skyboxParams;
-            console.log(`${this.currentSystem} skybox params before travel: 
+            debugLog(`${this.currentSystem} skybox params before travel: 
                          color=${currentParams.color.toString(16)}, 
                          starDensity=${currentParams.starDensity}, 
                          nebulaDensity=${currentParams.nebulaDensity}, 
@@ -203,7 +204,7 @@ export class StarSystemGenerator {
         // Log target system params
         if (this.systems[targetSystemId]) {
             const targetParams = this.systems[targetSystemId].skyboxParams;
-            console.log(`Traveling to ${targetSystemId} with skybox params: 
+            debugLog(`Traveling to ${targetSystemId} with skybox params: 
                          color=${targetParams.color.toString(16)}, 
                          starDensity=${targetParams.starDensity}, 
                          nebulaDensity=${targetParams.nebulaDensity}, 
@@ -258,7 +259,7 @@ export class StarSystemGenerator {
             console.warn(`System with ID ${systemData.id} already exists, overwriting`);
         }
 
-        console.log(`Adding custom system: ${systemData.name} (${systemData.id})`);
+        debugLog(`Adding custom system: ${systemData.name} (${systemData.id})`);
 
         // Store custom planet data if provided
         if (systemData.planetData && Array.isArray(systemData.planetData)) {
@@ -275,7 +276,7 @@ export class StarSystemGenerator {
             this.createConnection(systemData.id, randomSystem);
         }
 
-        console.log(`Custom system ${systemData.name} added successfully with connections to Solar System and ${randomSystem || 'no other system'}`);
+        debugLog(`Custom system ${systemData.name} added successfully with connections to Solar System and ${randomSystem || 'no other system'}`);
 
         return true;
     }
@@ -310,7 +311,7 @@ export class StarSystemGenerator {
         }
 
         this.customPlanetData[systemId] = standardizedPlanets;
-        console.log(`Stored ${standardizedPlanets.length} planets for system ${systemId}`);
+        debugLog(`Stored ${standardizedPlanets.length} planets for system ${systemId}`);
     }
 
     /**
@@ -318,7 +319,7 @@ export class StarSystemGenerator {
      * Should be called after travel to ensure proper docking state
      */
     returnFromTravel(): boolean {
-        console.log("StarSystemGenerator: Handling return from interstellar travel");
+        debugLog("StarSystemGenerator: Handling return from interstellar travel");
 
         // Check if game and spaceship are available
         const game = (window as any).game as GameGlobal | undefined;
@@ -329,19 +330,19 @@ export class StarSystemGenerator {
 
         // Ensure the player is docked after travel
         if (!game.spaceship.isDocked) {
-            console.log("StarSystemGenerator: Setting ship to docked state after travel");
+            debugLog("StarSystemGenerator: Setting ship to docked state after travel");
             game.spaceship.dock && game.spaceship.dock();
         }
 
         // Reposition ship near stargate
         const dockingSystem = game.controls?.dockingSystem;
         if (dockingSystem) {
-            console.log("StarSystemGenerator: Repositioning ship near stargate");
+            debugLog("StarSystemGenerator: Repositioning ship near stargate");
             dockingSystem.positionNearStargate && dockingSystem.positionNearStargate();
 
             // Show stargate UI
             if (typeof dockingSystem.showStargateUI === 'function') {
-                console.log("StarSystemGenerator: Showing stargate UI via docking system");
+                debugLog("StarSystemGenerator: Showing stargate UI via docking system");
                 dockingSystem.showStargateUI();
                 return true;
             }
@@ -349,7 +350,7 @@ export class StarSystemGenerator {
 
         // Fallback - try to find UI or stargate interface directly
         if (game.ui?.stargateInterface?.showStargateUI) {
-            console.log("StarSystemGenerator: Showing stargate UI via game.ui.stargateInterface");
+            debugLog("StarSystemGenerator: Showing stargate UI via game.ui.stargateInterface");
             game.ui.stargateInterface.showStargateUI();
             return true;
         }

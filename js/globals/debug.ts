@@ -19,3 +19,17 @@ export function toggleDebugMode(): boolean {
 export function isDebugMode(): boolean {
     return DEBUG_MODE.enabled;
 }
+
+export function debugLog(...args: unknown[]): void {
+    if (DEBUG_MODE.enabled) {
+        console.log(...args);
+    }
+}
+
+export function debugWarn(...args: unknown[]): void {
+    console.warn(...args);
+}
+
+export function debugError(...args: unknown[]): void {
+    console.error(...args);
+}

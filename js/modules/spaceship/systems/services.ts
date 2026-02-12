@@ -1,3 +1,4 @@
+import { debugLog } from '../../../globals/debug.ts';
 // services.ts - Ship service operations (refuel, repair)
 // Extracted from spaceship.js to improve maintainability
 
@@ -29,7 +30,7 @@ export class ShipServices {
    * @returns {number} Cost of refueling
    */
   refuel(spaceshipState: SpaceshipState): number {
-    console.log("Refueling spaceship");
+    debugLog("Refueling spaceship");
     spaceshipState.fuel = spaceshipState.maxFuel;
     return 100; // Cost of refueling
   }
@@ -42,15 +43,15 @@ export class ShipServices {
    */
   repairShield(spaceshipState: SpaceshipState, syncCallback: () => void): number {
     const oldShield = spaceshipState.shield;
-    console.log(`===== SHIELD REPAIR INITIATED =====`);
-    console.log(`Repairing shield: ${oldShield} → ${spaceshipState.maxShield}`);
+    debugLog(`===== SHIELD REPAIR INITIATED =====`);
+    debugLog(`Repairing shield: ${oldShield} → ${spaceshipState.maxShield}`);
 
     // CRITICAL FIX: Set and verify shield repair
     spaceshipState.shield = spaceshipState.maxShield;
-    console.log(`Shield value is now: ${spaceshipState.shield} (Expected: ${spaceshipState.maxShield})`);
+    debugLog(`Shield value is now: ${spaceshipState.shield} (Expected: ${spaceshipState.maxShield})`);
 
     // Log full spaceship state for debugging
-    console.log("Full spaceship state after shield repair:", {
+    debugLog("Full spaceship state after shield repair:", {
       shield: spaceshipState.shield,
       maxShield: spaceshipState.maxShield,
       hull: spaceshipState.hull,
@@ -58,7 +59,7 @@ export class ShipServices {
       fuel: spaceshipState.fuel,
       maxFuel: spaceshipState.maxFuel
     });
-    console.log(`===== SHIELD REPAIR COMPLETED =====`);
+    debugLog(`===== SHIELD REPAIR COMPLETED =====`);
 
     // Sync the updated shield value to the player entity's HealthComponent
     // Use direct entity access for more reliable syncing
@@ -71,7 +72,7 @@ export class ShipServices {
             // Update shield directly on the component
             const oldHealthShield = health.shield;
             health.shield = spaceshipState.shield;
-            console.log(`Direct shield update on HealthComponent: ${oldHealthShield} → ${health.shield}`);
+            debugLog(`Direct shield update on HealthComponent: ${oldHealthShield} → ${health.shield}`);
           }
         }
       } catch (e) {
@@ -95,15 +96,15 @@ export class ShipServices {
    */
   repairHull(spaceshipState: SpaceshipState, syncCallback: () => void): number {
     const oldHull = spaceshipState.hull;
-    console.log(`===== HULL REPAIR INITIATED =====`);
-    console.log(`Repairing hull: ${oldHull} → ${spaceshipState.maxHull}`);
+    debugLog(`===== HULL REPAIR INITIATED =====`);
+    debugLog(`Repairing hull: ${oldHull} → ${spaceshipState.maxHull}`);
 
     // CRITICAL FIX: Set and verify hull repair
     spaceshipState.hull = spaceshipState.maxHull;
-    console.log(`Hull value is now: ${spaceshipState.hull} (Expected: ${spaceshipState.maxHull})`);
+    debugLog(`Hull value is now: ${spaceshipState.hull} (Expected: ${spaceshipState.maxHull})`);
 
     // Log full spaceship state for debugging
-    console.log("Full spaceship state after hull repair:", {
+    debugLog("Full spaceship state after hull repair:", {
       shield: spaceshipState.shield,
       maxShield: spaceshipState.maxShield,
       hull: spaceshipState.hull,
@@ -111,7 +112,7 @@ export class ShipServices {
       fuel: spaceshipState.fuel,
       maxFuel: spaceshipState.maxFuel
     });
-    console.log(`===== HULL REPAIR COMPLETED =====`);
+    debugLog(`===== HULL REPAIR COMPLETED =====`);
 
     // Sync the updated hull value to the player entity's HealthComponent
     // Use direct entity access for more reliable syncing
@@ -124,7 +125,7 @@ export class ShipServices {
             // Update hull directly on the component
             const oldHealthHull = health.health;
             health.health = spaceshipState.hull;
-            console.log(`Direct hull update on HealthComponent: ${oldHealthHull} → ${health.health}`);
+            debugLog(`Direct hull update on HealthComponent: ${oldHealthHull} → ${health.health}`);
           }
         }
       } catch (e) {
