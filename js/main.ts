@@ -7,6 +7,7 @@ import { GameLoop } from './main/gameLoop.ts';
 import { Diagnostics } from './main/diagnostics.ts';
 import { GameInitializer } from './main/gameInitializer.ts';
 import { mainMessageBus } from './globals/messageBus.ts';
+import { SaveSystem } from './modules/game/saveSystem.ts';
 // Removed direct imports for ObjectPools, DifficultyManager, HordeMode, AudioUpdater, GameLifecycle
 // import { ObjectPools } from './main/objectPools.ts';
 // import { DifficultyManager } from './main/difficultyManager.ts';
@@ -47,10 +48,14 @@ export class Game {
     private _environment: any;
     private _controls: any;
     private _updateECS: ((deltaTime: number) => void) | undefined; // New property
+    saveSystem: SaveSystem;
 
     constructor() {
         // Initialize globals first
         initializeGlobals();
+        
+        // Initialize save system
+        this.saveSystem = new SaveSystem();
         
         // Make game instance globally accessible for emergency access
         window.game = this;
@@ -126,6 +131,16 @@ export class Game {
 
             // Start the initialization sequence
             this.startupSequence.initializeGameSequence();
+            
+            // Load saved game state if available
+            const savedState = this.saveSystem.load();
+            if (savedState && this.spaceship) {
+                this.saveSystem.applyToGame(this, savedState);
+            }
+            
+            // Subscribe to events and start auto-save
+            this.saveSystem.subscribeToEvents(this);
+            this.saveSystem.startAutoSave(this);
         } catch (error) {
             throw error;
         }
