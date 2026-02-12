@@ -1,4 +1,4 @@
-# Asteroid Miner v0.6.1
+# Asteroid Miner v0.7.0
 
 ![Gameplay Screenshot](placeholder.png)  <!-- Add a screenshot later -->
 
@@ -24,18 +24,21 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 *   **Cross-Platform:** Playable on both desktop (keyboard/mouse) and mobile (touch controls).
 *   **Advanced Controller Support:** Full gamepad/controller support with optimized controls, sensitivity adjustment, and responsive aiming.
 *   **Optimized UI Experience:** Clean, unobtrusive targeting system that only appears when activated (press T), with minimal visual clutter and performance-optimized updates.
+*   **Save & Load Progress:** Automatic and manual saves via localStorage - credits, cargo, upgrades, and high scores persist between sessions.
+*   **XP & Pilot Ranks:** Earn experience through mining, combat, and trading. Advance through pilot ranks with a persistent XP bar in the HUD.
+*   **Respawn at Stargate:** Choose to respawn at the stargate on game over instead of restarting, preserving your session progress.
 *   **Mini-Game:** Try your luck at Stellar Blackjack aboard the stargate.
 *   **Adaptive Performance:** Optimizes frame rate limits based on your monitor's refresh rate.
 *   **Realistic Volumetric Lighting:** Experience god rays from the sun with options for standard or stylized "Claude Rays" effects.
 
 ## Technologies Used
 
-*   **Language:** TypeScript 5.7 strict (256 pure TS files, 0 JavaScript)
+*   **Language:** TypeScript 5.7 strict (261 pure TS files, 0 JavaScript)
 *   **3D Engine:** Three.js r180 WebGPU (WebGL2 fallback)
 *   **ECS:** bitECS v0.4.0 (29 components, 5 active systems)
-*   **Build System:** Vite 6 (code-split: game-core 186 kB, combat 27 kB, env 62 kB, ui 64 kB)
+*   **Build System:** Vite 6 (code-split: game-core 189 kB, combat 27 kB, env 62 kB, ui 73 kB)
 *   **Styles:** Tailwind CSS 3.4 + 18 CSS files
-*   **Tests:** Vitest (14 files, 283 tests) + Playwright smoke test
+*   **Tests:** Vitest (15 files, 304 tests) + Playwright smoke test
 *   **Architecture:** Hybrid ECS/Module. Combat (enemies/projectiles) runs under bitECS with fixed-step and instanced rendering; player ship physics and economy/UI run via modules. See `architecture.md`.
 *   **Mobile Controls:** NippleJS
 *   **Audio:** Web Audio API, Tone.js (for intro sequence)
@@ -183,7 +186,15 @@ See `CLAUDE.md` for detailed technical discussion.
 
 ## Changelog
 
-### v0.6.1 (Latest)
+### v0.7.0 (Latest)
+- **Save/Load System:** localStorage persistence for player progress, credits, cargo, upgrades, and high scores with auto-save every 30 seconds
+- **XP & Pilot Ranks:** Experience point system with rank progression from Cadet to Admiral, XP bar in HUD
+- **Respawn at Stargate:** Game over screen now offers respawn-at-stargate option
+- **Horde Mode:** Wave-based survival combat with escalating difficulty and survival time high scores
+- **Tutorial System:** First-time player tooltip system guiding new players
+- **Shield Recharge FX:** Visual pulse effect when shield regenerates
+
+### v0.6.1
 - **Fixed:** Targeting HUD now properly starts hidden and only appears when targeting is activated (press T)
 - **Improved:** Mining system respects targeting state for UI display
 

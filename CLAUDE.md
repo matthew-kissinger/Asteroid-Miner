@@ -26,7 +26,7 @@ npm run test:smoke   # Headless browser runtime test (Playwright)
 
 ## Architecture
 
-264 TypeScript files, 0 JavaScript. Pure TS codebase.
+261 TypeScript files, 0 JavaScript. Pure TS codebase.
 
 ```
 src/
