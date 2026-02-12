@@ -22,11 +22,11 @@ npm run test:smoke   # Headless browser runtime test (Playwright)
 | Physics | Custom Newtonian (thrust, drag, collision, 977 lines) |
 | Shaders | TSL laser material + TSL post-processing + 2 GLSL fallback |
 | Build | Vite 6, TypeScript 5.7 strict |
-| Styles | Tailwind CSS 3.4 + 18 CSS files |
+| Styles | Tailwind CSS 3.4 + 26 CSS files |
 
 ## Architecture
 
-265 TypeScript files, 0 JavaScript. Pure TS codebase.
+265 TypeScript files, 0 JavaScript. Pure TS codebase. 26 CSS files.
 
 ```
 src/
@@ -50,11 +50,11 @@ js/
 │   ├── ui.ts            # UI module
 │   ├── environment.ts   # Environment (39 submodules)
 │   ├── audio/           # 8 files (Web Audio synthesis + music player)
-│   ├── pooling/         # 14 files (object pools)
-│   ├── game/            # 8 files (saveSystem, lifecycle, state, tests)
+│   ├── pooling/         # 15 files (object pools)
+│   ├── game/            # 7 files (saveSystem, lifecycle, state)
 │   ├── spaceship/       # 9 files (includes xp/ranks systems)
 │   ├── intro/           # 6 files
-│   └── ui/              # 97 files (hud, settings, stargate, starmap, combat, blackjack)
+│   └── ui/              # 75 files (hud, settings, stargate, starmap, combat, blackjack)
 ├── globals/             # Module singletons (debug, messageBus, objectPool)
 └── core/                # 3 active files (messageBus, world, events)
 
@@ -81,9 +81,9 @@ css/                     # 18 CSS files
 
 ## Active Issues
 
-- 263 `console.log` across 83 files (30 files use debugLog, rest ungated)
-- 27 `window.game` files (55 occurrences, includes comments)
-- 643 `any` type escapes (307 `as any` + 336 `: any`, excluding tests)
+- 224 `console.log` across 81 files (31 files use debugLog, rest ungated)
+- 27 `window.game` files
+- 637 `any` type escapes (305 `as any` + 332 `: any`, excluding tests)
 - 80 files use `import * as THREE` - Three.js bundle 1,370 kB, tree-shaking blocked
 - `js/main/startupSequence.ts` local type aliases (`UiLike`, `CombatLike`) must be updated when adding properties to ui/combat modules - recurring source of type errors
 - Test coverage gaps: environment, ui, renderer, spaceship, audio modules have zero tests
