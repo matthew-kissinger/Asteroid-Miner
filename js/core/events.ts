@@ -55,6 +55,14 @@ export interface GameEventMap extends Record<string, unknown> {
 
     // Horde mode
     'horde.activated': { wave?: number; startTime?: number };
+    'horde.waveStart': { wave: number; enemyCount: number; healthMultiplier: number; speedMultiplier: number };
+    'horde.bossSpawn': { wave: number; bossType: number; bossName: string; healthMultiplier: number; damageMultiplier: number };
+
+    // Boss events
+    'boss.destroyed': { bossEid: number; bossType: number; bossName: string };
+    'boss.beamAttack': { bossEid: number; targetEid: number; damage: number };
+    'boss.spawnMinion': { bossEid: number; spawnX: number; spawnY: number; spawnZ: number };
+    'boss.phaseShift': { bossEid: number; active: boolean };
 
     // XP and progression
     'xp.gained': { amount: number; newTotal: number; rank: number };

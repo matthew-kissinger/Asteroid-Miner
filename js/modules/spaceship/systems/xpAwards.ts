@@ -4,6 +4,7 @@ import type { MessageBus } from '../../../core/messageBus.ts';
 import type { GameEventMap } from '../../../core/events.ts';
 
 const XP_PER_KILL = 20;
+const XP_PER_BOSS_KILL = 200; // 10x normal enemy XP
 const XP_PER_MINED_UNIT = 5;
 const XP_PER_RESOURCE_SOLD = 2;
 const XP_SYSTEM_DISCOVERED = 50;
@@ -19,6 +20,7 @@ type SpaceshipWithXP = { addXP: (amount: number) => void };
 
 let spaceshipRef: SpaceshipWithXP | null = null;
 let unsubEnemy: (() => void) | null = null;
+let unsubBoss: (() => void) | null = null;
 let unsubMining: (() => void) | null = null;
 let unsubTrading: (() => void) | null = null;
 let unsubSystem: (() => void) | null = null;
@@ -39,6 +41,10 @@ export function initXpAwards(messageBus: MessageBus<GameEventMap>, spaceship: Sp
 
   unsubEnemy = messageBus.subscribe('enemy.destroyed', () => {
     addXP(XP_PER_KILL);
+  });
+
+  unsubBoss = messageBus.subscribe('boss.destroyed', () => {
+    addXP(XP_PER_BOSS_KILL);
   });
 
   unsubMining = messageBus.subscribe('mining.resourceCollected', (msg: { data: GameEventMap['mining.resourceCollected'] }) => {
@@ -62,9 +68,10 @@ export function initXpAwards(messageBus: MessageBus<GameEventMap>, spaceship: Sp
 export function cleanupXpAwards(): void {
   spaceshipRef = null;
   unsubEnemy?.();
+  unsubBoss?.();
   unsubMining?.();
   unsubTrading?.();
   unsubSystem?.();
   unsubOrb?.();
-  unsubEnemy = unsubMining = unsubTrading = unsubSystem = unsubOrb = null;
+  unsubEnemy = unsubBoss = unsubMining = unsubTrading = unsubSystem = unsubOrb = null;
 }

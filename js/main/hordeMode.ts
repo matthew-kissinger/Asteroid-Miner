@@ -152,6 +152,51 @@ export class HordeMode {
         if (this.game.ui && this.game.ui.showNotification) {
             this.game.ui.showNotification(`WAVE ${this.currentWave} - ${this.enemiesInWave} ENEMIES`, 3000);
         }
+        
+        // Spawn boss on milestone waves
+        this.checkBossSpawn();
+    }
+    
+    /**
+     * Check if a boss should spawn on this wave
+     */
+    checkBossSpawn(): void {
+        let bossType = -1
+        let bossName = ''
+        
+        // Dreadnought every 5th wave
+        if (this.currentWave % 5 === 0 && this.currentWave % 10 !== 0) {
+            bossType = 0
+            bossName = 'DREADNOUGHT'
+        }
+        // Swarm Queen every 7th wave (but not on 10th)
+        else if (this.currentWave % 7 === 0 && this.currentWave % 10 !== 0) {
+            bossType = 2
+            bossName = 'SWARM QUEEN'
+        }
+        // Phase Shifter every 10th wave
+        else if (this.currentWave % 10 === 0) {
+            bossType = 1
+            bossName = 'PHASE SHIFTER'
+        }
+        
+        if (bossType >= 0) {
+            debugLog(`Spawning boss: ${bossName} on wave ${this.currentWave}`)
+            
+            // Publish boss spawn event
+            mainMessageBus.publish('horde.bossSpawn', {
+                wave: this.currentWave,
+                bossType,
+                bossName,
+                healthMultiplier: 1 + (this.currentWave - 1) * 0.2,
+                damageMultiplier: 1 + (this.currentWave - 1) * 0.1
+            })
+            
+            // Show boss notification
+            if (this.game.ui && this.game.ui.showNotification) {
+                this.game.ui.showNotification(`⚠️ BOSS INCOMING: ${bossName} ⚠️`, 5000);
+            }
+        }
     }
     
     /**
