@@ -72,6 +72,30 @@ export class GameHelpers {
      * @returns Game statistics object
      */
     getGameStatistics(): any {
+        // Get horde mode data if active
+        let hordeModeData: any = {
+            active: this.game.isHordeActive,
+            survivalTime: this.game.stateManager.getFormattedHordeSurvivalTime(),
+            rawSurvivalTime: this.game.hordeSurvivalTime
+        };
+        
+        // If horde mode is active and we have a hordeMode instance, get additional data
+        if (this.game.isHordeActive && (this.game as any).hordeMode) {
+            const hordeMode = (this.game as any).hordeMode;
+            hordeModeData = {
+                ...hordeModeData,
+                wave: hordeMode.currentWave || 1,
+                score: hordeMode.score || 0,
+                isNewHighScore: hordeMode.isNewHighScore ? hordeMode.isNewHighScore() : false,
+                topScores: hordeMode.getHighScores ? hordeMode.getHighScores() : []
+            };
+            
+            // Save high score if game is over
+            if (this.game.isGameOver && hordeMode.saveHighScore) {
+                hordeMode.saveHighScore();
+            }
+        }
+        
         return {
             enemiesDestroyed: this.game.enemiesDestroyed,
             damageDealt: this.game.damageDealt,
@@ -82,11 +106,7 @@ export class GameHelpers {
                 damageDealt: this.game.damageDealt || 0,
                 damageReceived: this.game.damageReceived || 0
             },
-            hordeMode: {
-                active: this.game.isHordeActive,
-                survivalTime: this.game.stateManager.getFormattedHordeSurvivalTime(),
-                rawSurvivalTime: this.game.hordeSurvivalTime
-            }
+            hordeMode: hordeModeData
         };
     }
 
