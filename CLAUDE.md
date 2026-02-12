@@ -80,9 +80,9 @@ css/                     # 18 CSS files
 
 ## Active Issues
 
-- 502 unguarded `console.log` across 105 files (create `debugLog` in `js/globals/debug.ts`, then replace all calls)
-- 49 `window.game` global usages across 25 files
-- 684 `as any`/`: any` type casts across 93 files (worst: combat/eventHandlers 38, postTSL 34, controls 33, environment 32)
-- 142 addEventListener vs 36 removeEventListener - remaining memory leak risk (5 worst files cleaned up)
-- Three.js bundle 1,370 kB - 101 files use `import * as THREE` preventing tree-shaking
-- Test coverage gaps: controls, combat, environment, ui, renderer, game, spaceship modules have zero tests
+- 502 unguarded `console.log` across 105 files (debugLog gating in progress by copilot)
+- 43 `window.game` global usages (removal in progress by kiro)
+- 674 `as any`/`: any` type casts across 87 files (worst: combat/eventHandlers 38, postTSL 34, controls 33, environment 32)
+- 141 addEventListener vs 36 removeEventListener - remaining memory leak risk (5 worst files cleaned up)
+- Three.js bundle 1,370 kB - 97 files use `import * as THREE` preventing tree-shaking
+- Test coverage gaps: combat, environment, ui, renderer, game, spaceship modules have zero tests

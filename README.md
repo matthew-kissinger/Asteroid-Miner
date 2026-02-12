@@ -2,7 +2,7 @@
 
 ![Gameplay Screenshot](placeholder.png)  <!-- Add a screenshot later -->
 
-*For detailed technical information, please see `architecture.md`.*
+*For detailed technical information, see `CLAUDE.md`.*
 
 A 3D space mining simulation game playable directly in your web browser. Navigate the cosmos, mine valuable resources, upgrade your ship, and defend yourself against spectral drone attacks in this immersive space adventure.
 
@@ -29,12 +29,12 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 ## Technologies Used
 
-*   **Language:** TypeScript 5.7 strict (248 pure TS files, 0 JavaScript)
+*   **Language:** TypeScript 5.7 strict (251 pure TS files, 0 JavaScript)
 *   **3D Engine:** Three.js r180 WebGPU (WebGL2 fallback)
 *   **ECS:** bitECS v0.4.0 (29 components, 5 active systems)
-*   **Build System:** Vite 6 (code-split: game-core 180 kB, combat 27 kB, env 62 kB, ui 63 kB)
+*   **Build System:** Vite 6 (code-split: game-core 186 kB, combat 27 kB, env 62 kB, ui 64 kB)
 *   **Styles:** Tailwind CSS 3.4 + 18 CSS files
-*   **Tests:** Vitest (7 files, 61 tests) + Playwright smoke test
+*   **Tests:** Vitest (10 files, 119 tests) + Playwright smoke test
 *   **Architecture:** Hybrid ECS/Module. Combat (enemies/projectiles) runs under bitECS with fixed-step and instanced rendering; player ship physics and economy/UI run via modules. See `architecture.md`.
 *   **Mobile Controls:** NippleJS
 *   **Audio:** Web Audio API, Tone.js (for intro sequence)
@@ -178,7 +178,7 @@ The game uses a **hybrid ECS/Module** pattern:
 *   **Object Pooling:** `PoolRegistry` + `ProjectilePoolManager` reuse hot-path allocations.
 *   **Fixed-Step Simulation:** 60 Hz physics with render interpolation for smooth visuals.
 
-See `architecture.md` for detailed technical discussion.
+See `CLAUDE.md` for detailed technical discussion.
 
 ## Changelog
 
