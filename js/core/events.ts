@@ -63,6 +63,11 @@ export interface GameEventMap extends Record<string, unknown> {
     'trading.resourceSold': { amount: number; resourceType: string };
     'system.discovered': { systemId: string };
     'orb.collected': { rarity: string };
+
+    // Environmental hazards
+    'hazard.entered': { hazardType: string; hazardId: string };
+    'hazard.exited': { hazardType: string; hazardId: string };
+    'hazard.damage': { hazardType: string; amount: number; damageType: string };
 }
 
 export const EVENT = Object.freeze({

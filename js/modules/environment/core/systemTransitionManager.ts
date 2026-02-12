@@ -66,6 +66,10 @@ interface SpaceAnomaliesLike {
     updateForSystem?: (systemData: StarSystemData) => void;
 }
 
+interface HazardManagerLike {
+    updateForSystem?: (systemData: unknown) => void;
+}
+
 interface RegionManagerLike {
     planetRegions: Record<string, unknown>;
 }
@@ -148,7 +152,8 @@ export class SystemTransitionManager {
         planets: PlanetsLike,
         asteroidBelt: AsteroidBeltLike,
         spaceAnomalies: SpaceAnomaliesLike,
-        regionManager: RegionManagerLike
+        regionManager: RegionManagerLike,
+        hazardManager?: HazardManagerLike
     ): void {
         const systemData = starSystemGenerator.getAllSystems()[systemId];
         if (!systemData) {
@@ -260,6 +265,12 @@ export class SystemTransitionManager {
             spaceAnomalies.updateForSystem(systemData);
         } else {
             console.warn("SpaceAnomalies or updateForSystem method not available");
+        }
+
+        // Update environmental hazards for this system
+        if (hazardManager && hazardManager.updateForSystem) {
+            debugLog(`Updating environmental hazards for ${systemId}`);
+            hazardManager.updateForSystem(systemData);
         }
 
         debugLog(`Environment updated for ${systemId}`);

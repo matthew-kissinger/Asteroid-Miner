@@ -9,6 +9,7 @@ import type { AsteroidBelt } from '../asteroidBelt.ts';
 import type { SpaceAnomalies } from '../spaceAnomalies.ts';
 import type { SystemTransition } from '../systemTransition.ts';
 import type { VibeVersePortals } from '../vibeVersePortals.ts';
+import type { HazardManager } from '../hazards/hazardManager.ts';
 
 interface EnvironmentComponents {
     skybox: Skybox;
@@ -23,6 +24,7 @@ interface RemainingComponents {
     spaceAnomalies: SpaceAnomalies;
     systemTransition: SystemTransition;
     customSystemCreator: unknown;
+    hazardManager: HazardManager;
 }
 
 export class SceneInitializer {
@@ -38,6 +40,7 @@ export class SceneInitializer {
     systemTransition?: SystemTransition;
     customSystemCreator?: unknown;
     vibeVersePortals?: VibeVersePortals;
+    hazardManager?: HazardManager;
 
     constructor(scene: any) {
         this.scene = scene;
@@ -93,6 +96,18 @@ export class SceneInitializer {
         this.customSystemCreator = new CustomSystemCreator(this.starSystemGenerator ?? null, this as any);
         console.log("Custom system creator initialized:", this.customSystemCreator);
 
+        // Initialize environmental hazard manager
+        const { HazardManager: HazardManagerClass } = await import('../hazards/hazardManager.ts');
+        this.hazardManager = new HazardManagerClass(this.scene);
+        if (this.spaceAnomalies) {
+            const anomalies = this.spaceAnomalies;
+            this.hazardManager.setSpaceAnomalies({
+                createEnergyOrb: (rarity: string) => anomalies.createEnergyOrb(rarity as 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'),
+                getRandomOrbRarity: () => anomalies.getRandomOrbRarity(),
+            });
+        }
+        this.hazardManager.generateHazards();
+
         this.componentsLoaded = true;
         console.log("All environment components initialized");
 
@@ -100,7 +115,8 @@ export class SceneInitializer {
             asteroidBelt: this.asteroidBelt,
             spaceAnomalies: this.spaceAnomalies,
             systemTransition: this.systemTransition,
-            customSystemCreator: this.customSystemCreator
+            customSystemCreator: this.customSystemCreator,
+            hazardManager: this.hazardManager,
         };
     }
 
@@ -120,6 +136,7 @@ export class SceneInitializer {
         if (this.asteroidBelt) this.asteroidBelt.dispose();
         if (this.stargate) this.stargate.dispose();
         if (this.spaceAnomalies) this.spaceAnomalies.clearAllAnomalies();
+        if (this.hazardManager) this.hazardManager.dispose();
         if (this.vibeVersePortals) this.vibeVersePortals.dispose();
     }
 }
