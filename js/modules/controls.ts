@@ -10,6 +10,7 @@ import { MobileDetector } from '../utils/mobileDetector.ts';
 import type { Scene, Camera, Object3D, Vector3 } from 'three';
 import { debugLog } from '../globals/debug.ts';
 import { mainMessageBus } from '../globals/messageBus.ts';
+import { toggleScanner } from './ui/asteroidScanner.ts';
 import type { DockingSpaceship, DockingUI, ResourceInventory } from './controls/docking/types.ts';
 
 // Type definitions for dependencies
@@ -287,6 +288,10 @@ export class Controls {
                     if ((window as any).mainMessageBus) {
                         (window as any).mainMessageBus.publish('input.pickupInteract', {});
                     }
+                    break;
+                case 'v':
+                    // Toggle asteroid scanner overlay
+                    toggleScanner();
                     break;
             }
         });
