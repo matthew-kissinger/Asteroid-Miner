@@ -2,6 +2,7 @@
 // Extracted from spaceship.js to improve maintainability
 
 import * as THREE from 'three';
+import { debugLog } from '../../../globals/debug.ts';
 
 interface SpaceshipState {
   isDocked: boolean;
@@ -29,8 +30,8 @@ export class ShipDocking {
    * @param {function} syncCallback Callback to sync values to health component
    */
   dock(spaceshipState: SpaceshipState, _syncCallback: () => void): void {
-    console.log("Docking spaceship");
-    console.log("Spaceship values before docking:", {
+    debugLog("Docking spaceship");
+    debugLog("Spaceship values before docking:", {
       shield: spaceshipState.shield,
       maxShield: spaceshipState.maxShield,
       hull: spaceshipState.hull,
@@ -42,7 +43,7 @@ export class ShipDocking {
     spaceshipState.velocity.set(0, 0, 0);
     this.mesh.visible = false;
 
-    console.log("Spaceship values after docking:", {
+    debugLog("Spaceship values after docking:", {
       shield: spaceshipState.shield,
       maxShield: spaceshipState.maxShield,
       hull: spaceshipState.hull,
@@ -58,8 +59,8 @@ export class ShipDocking {
    * @returns {THREE.Vector3} New position of the ship
    */
   undock(spaceshipState: SpaceshipState, syncCallback: () => void): THREE.Vector3 {
-    console.log("Undocking spaceship");
-    console.log("Spaceship values before undocking:", {
+    debugLog("Undocking spaceship");
+    debugLog("Spaceship values before undocking:", {
       shield: spaceshipState.shield,
       maxShield: spaceshipState.maxShield,
       hull: spaceshipState.hull,
@@ -75,12 +76,12 @@ export class ShipDocking {
 
     // Check if shield was reset and restore it
     if (spaceshipState.shield !== shieldBeforeUndock) {
-      console.log(`SHIELD RESET DETECTED during undock! Value changed from ${shieldBeforeUndock} to ${spaceshipState.shield}`);
-      console.log("Restoring shield value to:", shieldBeforeUndock);
+      debugLog(`SHIELD RESET DETECTED during undock! Value changed from ${shieldBeforeUndock} to ${spaceshipState.shield}`);
+      debugLog("Restoring shield value to:", shieldBeforeUndock);
       spaceshipState.shield = shieldBeforeUndock;
     }
 
-    console.log("Spaceship values after undocking:", {
+    debugLog("Spaceship values after undocking:", {
       shield: spaceshipState.shield,
       maxShield: spaceshipState.maxShield,
       hull: spaceshipState.hull,

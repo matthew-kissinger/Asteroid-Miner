@@ -1,3 +1,4 @@
+import { debugLog } from '../../globals/debug.ts';
 /**
  * Projectile Pool Manager
  *
@@ -117,7 +118,7 @@ export class ProjectilePoolManager {
         // Create specialized pools
         this.initializePools();
 
-        console.log("ProjectilePoolManager initialized using pre-warmed shared assets and specialized pools");
+        debugLog("ProjectilePoolManager initialized using pre-warmed shared assets and specialized pools");
     }
 
     populateWindowGameWithSharedAssets(): void {
@@ -350,7 +351,7 @@ export class ProjectilePoolManager {
             });
         }
 
-        console.log("ProjectilePoolManager disposed all pools and shared assets");
+        debugLog("ProjectilePoolManager disposed all pools and shared assets");
     }
 
     // Renderer facade helpers
