@@ -16,25 +16,36 @@ import { TrailEffectsPool } from './projectiles/effects/trails.ts';
 import { ImpactEffectsPool } from './projectiles/effects/impacts.ts';
 import { MuzzleFlashPool } from './projectiles/effects/muzzleFlash.ts';
 import { ObjectPool } from './ObjectPool.ts';
-import * as THREE from 'three';
+import {
+  BufferGeometry,
+  MeshStandardMaterial,
+  MeshBasicMaterial,
+  LineBasicMaterial,
+  PointsMaterial,
+  Object3D,
+  Scene,
+  Line,
+  Mesh,
+  Vector3,
+} from 'three';
 
 type SharedAssets = {
-    projectileGeometry: THREE.BufferGeometry;
-    projectileGlowGeometry: THREE.BufferGeometry;
-    muzzleFlashGeometry: THREE.BufferGeometry;
-    tracerGeometry: THREE.BufferGeometry;
-    trailParticleGeometries: THREE.BufferGeometry[];
-    projectileMaterial: THREE.MeshStandardMaterial;
-    projectileGlowMaterial: THREE.MeshBasicMaterial;
-    trailParticleMaterial: THREE.MeshBasicMaterial;
-    muzzleFlashMaterial: THREE.MeshBasicMaterial;
-    tracerLineMaterial: THREE.LineBasicMaterial;
-    explosionParticleMaterial: THREE.PointsMaterial;
+    projectileGeometry: BufferGeometry;
+    projectileGlowGeometry: BufferGeometry;
+    muzzleFlashGeometry: BufferGeometry;
+    tracerGeometry: BufferGeometry;
+    trailParticleGeometries: BufferGeometry[];
+    projectileMaterial: MeshStandardMaterial;
+    projectileGlowMaterial: MeshBasicMaterial;
+    trailParticleMaterial: MeshBasicMaterial;
+    muzzleFlashMaterial: MeshBasicMaterial;
+    tracerLineMaterial: LineBasicMaterial;
+    explosionParticleMaterial: PointsMaterial;
 };
 
 type RendererFacade = {
     _withGuard?: (fn: () => void) => void;
-    add?: (object: THREE.Object3D) => void;
+    add?: (object: Object3D) => void;
 };
 
 type ProjectileType = 'laser' | 'missile' | 'plasma' | 'bullet';
@@ -52,7 +63,7 @@ type TracerUserData = {
     startTime: number;
 };
 
-type TracerLine = THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial> & {
+type TracerLine = Line<BufferGeometry, LineBasicMaterial> & {
     userData: TracerUserData;
 };
 
@@ -70,20 +81,20 @@ type LegacyProjectilePool = {
 };
 
 export class ProjectilePoolManager {
-    scene: THREE.Scene;
+    scene: Scene;
     sharedAssets: SharedAssets;
 
-    projectileGeometry: THREE.BufferGeometry;
-    projectileGlowGeometry: THREE.BufferGeometry;
-    muzzleFlashGeometry: THREE.BufferGeometry;
-    tracerGeometry: THREE.BufferGeometry;
-    trailParticleGeometries: THREE.BufferGeometry[];
-    projectileMaterial: THREE.MeshStandardMaterial;
-    projectileGlowMaterial: THREE.MeshBasicMaterial;
-    trailParticleMaterial: THREE.MeshBasicMaterial;
-    muzzleFlashMaterial: THREE.MeshBasicMaterial;
-    tracerLineMaterial: THREE.LineBasicMaterial;
-    explosionParticleMaterial: THREE.PointsMaterial;
+    projectileGeometry: BufferGeometry;
+    projectileGlowGeometry: BufferGeometry;
+    muzzleFlashGeometry: BufferGeometry;
+    tracerGeometry: BufferGeometry;
+    trailParticleGeometries: BufferGeometry[];
+    projectileMaterial: MeshStandardMaterial;
+    projectileGlowMaterial: MeshBasicMaterial;
+    trailParticleMaterial: MeshBasicMaterial;
+    muzzleFlashMaterial: MeshBasicMaterial;
+    tracerLineMaterial: LineBasicMaterial;
+    explosionParticleMaterial: PointsMaterial;
 
     laserPool!: LaserProjectilePool;
     missilePool!: MissileProjectilePool;
@@ -95,7 +106,7 @@ export class ProjectilePoolManager {
     tracerPool!: ObjectPool<TracerLine>;
     projectilePool!: LegacyProjectilePool;
 
-    constructor(scene: THREE.Scene, sharedAssets: SharedAssets) {
+    constructor(scene: Scene, sharedAssets: SharedAssets) {
         this.scene = scene;
         this.sharedAssets = sharedAssets;
 
@@ -128,8 +139,8 @@ export class ProjectilePoolManager {
 
     initializePools(): void {
         // Create renderer facade functions for delegation
-        const addToScene = (object: THREE.Object3D) => this._addToScene(object);
-        const removeFromParent = (object: THREE.Object3D) => this._removeFromParent(object);
+        const addToScene = (object: Object3D) => this._addToScene(object);
+        const removeFromParent = (object: Object3D) => this._removeFromParent(object);
 
         // Initialize projectile type pools
         this.laserPool = new LaserProjectilePool(this.sharedAssets, addToScene, removeFromParent);
@@ -152,7 +163,7 @@ export class ProjectilePoolManager {
     initializeTracerPool(): void {
         this.tracerPool = new ObjectPool<TracerLine>(
             () => {
-                const tracer = new THREE.Line(this.tracerGeometry.clone(), this.tracerLineMaterial.clone()) as TracerLine;
+                const tracer = new Line(this.tracerGeometry.clone(), this.tracerLineMaterial.clone()) as TracerLine;
                 tracer.userData = { isTracer: true, active: false, pooled: true, startTime: 0 };
                 return tracer;
             },
@@ -197,7 +208,7 @@ export class ProjectilePoolManager {
     }
 
     // Effect factory methods
-    getMuzzleFlash(weaponType = 'generic', position: THREE.Vector3 | null = null, direction: THREE.Vector3 | null = null): THREE.Mesh {
+    getMuzzleFlash(weaponType = 'generic', position: Vector3 | null = null, direction: Vector3 | null = null): Mesh {
         return this.muzzleFlashEffects.getMuzzleFlash(weaponType, position, direction);
     }
 
@@ -218,15 +229,15 @@ export class ProjectilePoolManager {
         return tracer;
     }
 
-    getExplosion(position: THREE.Vector3, duration = 1000): ExplosionPoints {
+    getExplosion(position: Vector3, duration = 1000): ExplosionPoints {
         return this.impactEffects.getExplosion(position, duration);
     }
 
-    createImpactEffect(position: THREE.Vector3, projectileType: ProjectileType | string = 'bullet', options: Record<string, unknown> = {}): Record<string, THREE.Object3D> {
+    createImpactEffect(position: Vector3, projectileType: ProjectileType | string = 'bullet', options: Record<string, unknown> = {}): Record<string, Object3D> {
         return this.impactEffects.createImpactEffect(position, projectileType, options);
     }
 
-    createTrailForProjectile(projectile: ProjectileMesh, options: Record<string, unknown> = {}): THREE.Object3D {
+    createTrailForProjectile(projectile: ProjectileMesh, options: Record<string, unknown> = {}): Object3D {
         return this.trailEffects.createTrailForProjectile(projectile, options);
     }
 
@@ -359,7 +370,7 @@ export class ProjectilePoolManager {
         return (window.game && window.game.renderer) || null;
     }
 
-    private _addToScene(object: THREE.Object3D): void {
+    private _addToScene(object: Object3D): void {
         const renderer = this._getRenderer();
         if (renderer && renderer._withGuard) {
             renderer._withGuard(() => renderer.add?.(object));
@@ -368,7 +379,7 @@ export class ProjectilePoolManager {
         }
     }
 
-    private _removeFromScene(object: THREE.Object3D): void {
+    private _removeFromScene(object: Object3D): void {
         const renderer = this._getRenderer();
         if (renderer && renderer._withGuard) {
             renderer._withGuard(() => this.scene.remove(object));
@@ -377,7 +388,7 @@ export class ProjectilePoolManager {
         }
     }
 
-    private _removeFromParent(object: THREE.Object3D): void {
+    private _removeFromParent(object: Object3D): void {
         if (!object || !object.parent) return;
         if (object.parent === this.scene) {
             this._removeFromScene(object);

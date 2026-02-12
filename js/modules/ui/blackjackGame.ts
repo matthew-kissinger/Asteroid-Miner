@@ -252,7 +252,7 @@ export class BlackjackGame {
      * Deal a card to the player
      */
     dealCardToPlayer(): void {
-        const card = this.deck.drawCard();
+        const card = this.deck.deal();
         this.gameLogic.addCardToPlayer(card);
         
         const cardEl = this.view.addCard(card, false, true);
@@ -272,7 +272,7 @@ export class BlackjackGame {
      * Deal a card to the dealer
      */
     dealCardToDealer(faceDown = false): void {
-        const card = this.deck.drawCard();
+        const card = this.deck.deal();
         this.gameLogic.addCardToDealer(card);
         
         const cardEl = this.view.addCard(card, faceDown, false);
@@ -362,7 +362,7 @@ export class BlackjackGame {
                     dealerPlayNextCard();
                 }, 800);
             } else {
-                const result = this.gameLogic.determineOutcome() as BlackjackGameResult;
+                const result = this.gameLogic.determineWinner() as BlackjackGameResult;
                 this.handleGameEnd(result);
             }
         };

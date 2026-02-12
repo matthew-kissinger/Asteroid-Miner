@@ -1,6 +1,6 @@
 // graphicsSettings.js - Graphics settings controls and logic
 
-import * as THREE from 'three';
+import { PCFShadowMap, PCFSoftShadowMap } from 'three';
 import { SettingsStyles } from './styles.ts';
 
 export class GraphicsSettings {
@@ -146,7 +146,7 @@ export class GraphicsSettings {
                 // Set medium shadow map size
                 if (renderer.renderer && renderer.renderer.shadowMap) {
                     renderer.renderer.shadowMap.enabled = true;
-                    renderer.renderer.shadowMap.type = THREE.PCFShadowMap;
+                    renderer.renderer.shadowMap.type = PCFShadowMap;
                 }
                 break;
                 
@@ -159,7 +159,7 @@ export class GraphicsSettings {
                 // Set high shadow map size
                 if (renderer.renderer && renderer.renderer.shadowMap) {
                     renderer.renderer.shadowMap.enabled = true;
-                    renderer.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                    renderer.renderer.shadowMap.type = PCFSoftShadowMap;
                 }
                 break;
         }

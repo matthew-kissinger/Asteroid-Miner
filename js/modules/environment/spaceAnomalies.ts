@@ -1,44 +1,55 @@
 // spaceAnomalies.ts - Creates and manages space anomalies with collectible energy orbs
 
-import * as THREE from 'three';
+import {
+  Mesh,
+  Color,
+  Object3D,
+  Vector3,
+  Scene,
+  SphereGeometry,
+  MeshStandardMaterial,
+  MeshBasicMaterial,
+  BackSide,
+  AdditiveBlending,
+} from 'three';
 import { AnomalyRegistry } from './anomalies/anomalyRegistry';
 
 type OrbRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 interface OrbData {
-    mesh: THREE.Mesh;
+    mesh: Mesh;
     rarity: OrbRarity;
     value: number;
     size: number;
-    color: THREE.Color;
+    color: Color;
     pulsePhase: number;
     pulseSpeed: number;
-    glow: THREE.Mesh;
+    glow: Mesh;
 }
 
 interface AnomalyData {
     type: string;
-    mesh: THREE.Object3D;
-    position: THREE.Vector3;
+    mesh: Object3D;
+    position: Vector3;
     orb: OrbData;
     orbCollected: boolean;
     rotationSpeed?: { x: number; y: number; z: number };
-    rings?: Array<{ mesh: THREE.Mesh; rotationSpeed: { x: number; y: number; z: number } }>;
+    rings?: Array<{ mesh: Mesh; rotationSpeed: { x: number; y: number; z: number } }>;
     [key: string]: unknown;
 }
 
 interface GameRenderer {
     _withGuard?: (fn: () => void) => void;
-    add?: (obj: THREE.Object3D) => void;
+    add?: (obj: Object3D) => void;
 }
 
 interface GameGlobal {
     renderer?: GameRenderer;
-    spaceship?: { mesh?: THREE.Object3D };
+    spaceship?: { mesh?: Object3D };
 }
 
 export class SpaceAnomalies {
-    scene: THREE.Scene;
+    scene: Scene;
     anomalies: AnomalyData[];
     minRadius: number;
     maxRadius: number;
@@ -54,7 +65,7 @@ export class SpaceAnomalies {
     anomalyTypes: string[];
     maxAnomalies: number;
 
-    constructor(scene: THREE.Scene) {
+    constructor(scene: Scene) {
         this.scene = scene;
         this.anomalies = [];
 
@@ -99,7 +110,7 @@ export class SpaceAnomalies {
         return game?.renderer ?? null;
     }
 
-    _addToScene(object: THREE.Object3D): void {
+    _addToScene(object: Object3D): void {
         const renderer = this._getRenderer();
         if (renderer && typeof renderer._withGuard === 'function') {
             renderer._withGuard(() => renderer.add && renderer.add(object));
@@ -108,7 +119,7 @@ export class SpaceAnomalies {
         }
     }
 
-    _removeFromScene(object: THREE.Object3D | null): void {
+    _removeFromScene(object: Object3D | null): void {
         const renderer = this._getRenderer();
         if (!object) return;
         if (renderer && typeof renderer._withGuard === 'function') {
@@ -179,7 +190,7 @@ export class SpaceAnomalies {
             position,
             (rarity: string) => this.createEnergyOrb(rarity as OrbRarity),
             () => this.getRandomOrbRarity(),
-            (object: THREE.Object3D) => this._addToScene(object)
+            (object: Object3D) => this._addToScene(object)
         ) as AnomalyData;
 
         this.anomalies.push(anomaly);
@@ -234,10 +245,10 @@ export class SpaceAnomalies {
         this.checkAnomalySpawning(deltaTime);
 
         // Get player position if available (from global reference)
-        let playerPosition: THREE.Vector3 | null = null;
+        let playerPosition: Vector3 | null = null;
         const game = (window as any).game as GameGlobal | undefined;
         if (game?.spaceship && game.spaceship.mesh) {
-            playerPosition = (game.spaceship.mesh as THREE.Object3D).position;
+            playerPosition = (game.spaceship.mesh as Object3D).position;
         }
 
         // Update existing anomalies
@@ -281,35 +292,35 @@ export class SpaceAnomalies {
         // Create an energy orb with glow effects based on rarity
 
         // Determine orb color and properties based on rarity
-        let color: THREE.Color, size: number, intensity: number, pulseSpeed: number;
+        let color: Color, size: number, intensity: number, pulseSpeed: number;
 
         switch (rarity) {
             case 'legendary':
-                color = new THREE.Color(0xff0000); // Red
+                color = new Color(0xff0000); // Red
                 size = 30 * this.orbScale;  // 4x bigger
                 intensity = 0.9;
                 pulseSpeed = 2.0;
                 break;
             case 'epic':
-                color = new THREE.Color(0xff6600); // Orange
+                color = new Color(0xff6600); // Orange
                 size = 25 * this.orbScale;  // 4x bigger
                 intensity = 0.8;
                 pulseSpeed = 1.8;
                 break;
             case 'rare':
-                color = new THREE.Color(0x9900ff); // Purple
+                color = new Color(0x9900ff); // Purple
                 size = 22 * this.orbScale;  // 4x bigger
                 intensity = 0.7;
                 pulseSpeed = 1.5;
                 break;
             case 'uncommon':
-                color = new THREE.Color(0x0066ff); // Blue
+                color = new Color(0x0066ff); // Blue
                 size = 20 * this.orbScale;  // 4x bigger
                 intensity = 0.6;
                 pulseSpeed = 1.2;
                 break;
             default: // common
-                color = new THREE.Color(0x00ff66); // Green
+                color = new Color(0x00ff66); // Green
                 size = 18 * this.orbScale;  // 4x bigger
                 intensity = 0.5;
                 pulseSpeed = 1.0;
@@ -317,8 +328,8 @@ export class SpaceAnomalies {
         }
 
         // Create the core orb
-        const orbGeometry = new THREE.SphereGeometry(size, 32, 32);
-        const orbMaterial = new THREE.MeshStandardMaterial({
+        const orbGeometry = new SphereGeometry(size, 32, 32);
+        const orbMaterial = new MeshStandardMaterial({
             color: color,
             emissive: color,
             emissiveIntensity: intensity,
@@ -328,20 +339,20 @@ export class SpaceAnomalies {
             opacity: 0.9
         });
 
-        const orb = new THREE.Mesh(orbGeometry, orbMaterial);
+        const orb = new Mesh(orbGeometry, orbMaterial);
 
         // Create outer glow
         const glowSize = size * 1.5;
-        const glowGeometry = new THREE.SphereGeometry(glowSize, 32, 32);
-        const glowMaterial = new THREE.MeshBasicMaterial({
+        const glowGeometry = new SphereGeometry(glowSize, 32, 32);
+        const glowMaterial = new MeshBasicMaterial({
             color: color,
             transparent: true,
             opacity: 0.3,
-            side: THREE.BackSide,
-            blending: THREE.AdditiveBlending
+            side: BackSide,
+            blending: AdditiveBlending
         });
 
-        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        const glow = new Mesh(glowGeometry, glowMaterial);
         orb.add(glow);
 
         // Return orb data
@@ -358,13 +369,13 @@ export class SpaceAnomalies {
     }
 
 
-    getRandomAnomalyPosition(): THREE.Vector3 {
+    getRandomAnomalyPosition(): Vector3 {
         // Get random position outside asteroid belt
         const angle = Math.random() * Math.PI * 2;
         const radius = this.minRadius + Math.random() * (this.maxRadius - this.minRadius);
         const heightVariation = (Math.random() - 0.5) * this.width;
 
-        return new THREE.Vector3(
+        return new Vector3(
             Math.cos(angle) * radius,
             heightVariation,
             Math.sin(angle) * radius
@@ -388,15 +399,15 @@ export class SpaceAnomalies {
         }
     }
 
-    getRegionInfo(): { center: THREE.Vector3; innerRadius: number; outerRadius: number } {
+    getRegionInfo(): { center: Vector3; innerRadius: number; outerRadius: number } {
         return {
-            center: new THREE.Vector3(0, 0, 0),
+            center: new Vector3(0, 0, 0),
             innerRadius: this.minRadius,
             outerRadius: this.maxRadius
         };
     }
 
-    findClosestAnomaly(position: THREE.Vector3, maxDistance: number = 8000): AnomalyData | null {
+    findClosestAnomaly(position: Vector3, maxDistance: number = 8000): AnomalyData | null {
         let closestAnomaly: AnomalyData | null = null;
         let closestDistance = maxDistance;
 
@@ -440,7 +451,7 @@ export class SpaceAnomalies {
         return orbData; // Return data for player inventory and notification
     }
 
-    checkCollision(position: THREE.Vector3, anomaly: AnomalyData): boolean {
+    checkCollision(position: Vector3, anomaly: AnomalyData): boolean {
         if (!position || !anomaly || !anomaly.position) return false;
 
         // Calculate distance from player to anomaly center
@@ -462,10 +473,10 @@ export class SpaceAnomalies {
             anomaly.orb.mesh.scale.set(scale, scale, scale);
 
             // Increase emission intensity
-            const material = anomaly.orb.mesh.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
+            const material = anomaly.orb.mesh.material as MeshStandardMaterial | MeshStandardMaterial[];
             if (material) {
                 if (Array.isArray(material)) {
-                    material.forEach(mat => { mat.emissiveIntensity = 2.0; });
+                    material.forEach((mat: MeshStandardMaterial) => { mat.emissiveIntensity = 2.0; });
                 } else {
                     material.emissiveIntensity = 2.0;
                 }
@@ -476,10 +487,10 @@ export class SpaceAnomalies {
             anomaly.orb.mesh.scale.set(scale, scale, scale);
 
             // Normal emission intensity
-            const material = anomaly.orb.mesh.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
+            const material = anomaly.orb.mesh.material as MeshStandardMaterial | MeshStandardMaterial[];
             if (material) {
                 if (Array.isArray(material)) {
-                    material.forEach(mat => { mat.emissiveIntensity = 0.8; });
+                    material.forEach((mat: MeshStandardMaterial) => { mat.emissiveIntensity = 0.8; });
                 } else {
                     material.emissiveIntensity = 0.8;
                 }
