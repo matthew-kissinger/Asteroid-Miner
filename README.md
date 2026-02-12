@@ -1,4 +1,4 @@
-# Asteroid Miner v0.7.0
+# Asteroid Miner v0.8.0
 
 ![Gameplay Screenshot](placeholder.png)  <!-- Add a screenshot later -->
 
@@ -13,8 +13,10 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 *   **Explore Procedurally Generated Star Systems:** Navigate diverse 3D environments with dynamic lighting and celestial bodies.
 *   **Mine Resources:** Target and extract Iron, Gold, and Platinum from asteroids using your mining laser.
 *   **Trade & Upgrade:** Dock with the stargate to sell resources, refuel, repair, and purchase upgrades for your ship's engine, hull, shields, mining laser, scanner, and cargo capacity.
-*   **Dynamic Combat:** Battle against spectral drones - remnants of ancient defense systems with varying difficulty levels and visual variants.
+*   **Dynamic Combat:** Battle against spectral drones and boss enemies with unique attack patterns, health bars, and increased rewards.
 *   **Balanced Enemy Encounters:** Enemies begin spawning after 1 minute of gameplay and gradually spawn less frequently over time for a well-paced experience.
+*   **Environmental Hazards:** Navigate asteroid storms and radiation zones that damage ships and affect visibility.
+*   **Asteroid Scanner:** Press V to scan nearby asteroids and see ore composition, value, and mining difficulty in a detailed overlay.
 *   **Deployable Space Laser Turrets:** Purchase and deploy autonomous laser turrets that automatically target and destroy enemy ships within range.
 *   **Interstellar Travel:** Use the Star Map at the stargate to travel between different star systems.
 *   **Space Anomalies & Energy Orbs:** Discover and investigate unique space anomalies to collect valuable energy orbs.
@@ -33,12 +35,12 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 ## Technologies Used
 
-*   **Language:** TypeScript 5.7 strict (265 pure TS files, 0 JavaScript)
+*   **Language:** TypeScript 5.7 strict (269 pure TS files, 0 JavaScript)
 *   **3D Engine:** Three.js r180 WebGPU (WebGL2 fallback)
-*   **ECS:** bitECS v0.4.0 (29 components, 5 active systems)
+*   **ECS:** bitECS v0.4.0 (30 components, 6 active systems)
 *   **Build System:** Vite 6 (code-split: game-core 189 kB, combat 27 kB, env 62 kB, ui 73 kB)
-*   **Styles:** Tailwind CSS 3.4 + 18 CSS files
-*   **Tests:** Vitest (15 files, 304 tests) + Playwright smoke test
+*   **Styles:** Tailwind CSS 3.4 + 22 CSS files
+*   **Tests:** Vitest (15 files, 309 tests) + Playwright smoke test
 *   **Architecture:** Hybrid ECS/Module. Combat (enemies/projectiles) runs under bitECS with fixed-step and instanced rendering; player ship physics and economy/UI run via modules. See `architecture.md`.
 *   **Mobile Controls:** NippleJS
 *   **Audio:** Web Audio API, Tone.js (for intro sequence)
@@ -116,6 +118,7 @@ This project uses Vite for an optimized development experience:
     *   `Q`: Dock with Stargate (when nearby)
     *   `T`: Deploy Space Laser Turret
     *   `G`: Pick Up Nearby Space Laser Turret
+    *   `V`: Toggle Asteroid Scanner Overlay
     *   `M`: Toggle Mute
     *   `Escape`: Exit Pointer Lock / Show Menu (TBD)
 *   **Controls (Mobile):**
@@ -176,7 +179,7 @@ When you run `npm run build`, Vite creates an optimized production build:
 
 The game uses a **hybrid ECS/Module** pattern:
 
-*   **bitECS** manages entities with many similar instances (enemies, projectiles, deployable turrets) using 29 SoA TypedArray components and 5 active systems.
+*   **bitECS** manages entities with many similar instances (enemies, projectiles, deployable turrets) using 30 SoA TypedArray components and 6 active systems.
 *   **Modules** manage unique objects (player ship, UI, environment) via traditional OOP patterns.
 *   **Instanced Rendering:** Enemies render as `InstancedMesh` to minimize draw calls.
 *   **Object Pooling:** `PoolRegistry` + `ProjectilePoolManager` reuse hot-path allocations.
@@ -186,7 +189,14 @@ See `CLAUDE.md` for detailed technical discussion.
 
 ## Changelog
 
-### v0.7.0 (Latest)
+### v0.8.0 (Latest)
+- **Boss Enemy Encounters:** Unique boss enemies with special attack patterns, health bars, and increased rewards
+- **Environmental Hazards:** Asteroid storms and radiation zones that damage ships and affect gameplay
+- **Asteroid Scanner Overlay:** Press V to scan asteroids and see ore composition, value, and mining difficulty
+- **Weapon & Shield Upgrade Categories:** Expanded stargate upgrade terminal with weapon and shield specialization trees
+- **Persistent Settings:** Audio, graphics, and control settings saved across sessions via localStorage
+
+### v0.7.0
 - **Combat Sound Effects:** Synthesized weapon, explosion, shield, and mining sounds via Web Audio API - zero external audio assets
 - **Save/Load System:** localStorage persistence for player progress, credits, cargo, upgrades, and high scores with auto-save every 30 seconds
 - **XP & Pilot Ranks:** Experience point system with rank progression from Cadet to Admiral, XP bar in HUD

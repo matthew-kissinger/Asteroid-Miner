@@ -1,7 +1,7 @@
 {
   "name": "aminer",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "module",
   "description": "A 3D space mining simulation game playable directly in your web browser",
   "author": "@0xAntimatter",
