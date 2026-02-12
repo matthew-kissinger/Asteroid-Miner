@@ -1,6 +1,7 @@
 // loader.ts - Audio file loading, decoding, and caching
 import { getAbsolutePath } from '../../../utils/pathUtils.ts';
 import { AudioContextManager } from './context.ts';
+import { debugLog } from '../../../globals/debug.js';
 
 export interface SoundMap {
     [key: string]: AudioBuffer | null;
@@ -22,7 +23,7 @@ export class AudioLoader {
     // Load and decode a sound file using Web Audio API
     async loadAndDecodeSound(name: string, url: string): Promise<AudioBuffer> {
         try {
-            console.log(`Loading and decoding sound: ${name} from ${url}`);
+            debugLog(`Loading and decoding sound: ${name} from ${url}`);
             
             const audioContext = this.audioContextManager.getContext();
             if (!audioContext) {
@@ -44,7 +45,7 @@ export class AudioLoader {
             // Store the decoded buffer
             this.sounds[name] = audioBuffer;
             
-            console.log(`Sound ${name} loaded and decoded successfully`);
+            debugLog(`Sound ${name} loaded and decoded successfully`);
             return audioBuffer;
         } catch (error) {
             console.error(`Error loading and decoding sound ${name}:`, error);
@@ -58,7 +59,7 @@ export class AudioLoader {
     // Pre-decode only essential UI sounds for quick startup
     async preDecodeEssentialSounds(): Promise<void> {
         try {
-            console.log("Pre-decoding essential UI sounds...");
+            debugLog("Pre-decoding essential UI sounds...");
             
             // List of essential sounds needed for UI interaction
             const essentialSounds = [
@@ -75,7 +76,7 @@ export class AudioLoader {
             // Wait for all essential sounds to be loaded and decoded
             await Promise.all(loadPromises);
             
-            console.log("Essential UI sounds pre-decoded successfully");
+            debugLog("Essential UI sounds pre-decoded successfully");
             
         } catch (error) {
             console.error("Error pre-decoding essential sounds:", error);
@@ -86,7 +87,7 @@ export class AudioLoader {
     // Load remaining gameplay sounds in the background
     async loadGameplaySounds(): Promise<void> {
         try {
-            console.log("Loading gameplay sounds in background...");
+            debugLog("Loading gameplay sounds in background...");
             
             // List of gameplay sounds to load
             const gameplaySounds = [
@@ -108,11 +109,11 @@ export class AudioLoader {
             // Explicitly set up projectile sound using the laser sound
             // This is needed for weapon firing
             if (this.sounds.laser && !this.sounds.projectile) {
-                console.log("Setting up projectile sound using laser sound buffer");
+                debugLog("Setting up projectile sound using laser sound buffer");
                 this.sounds.projectile = this.sounds.laser;
             }
             
-            console.log("All gameplay sounds loaded successfully");
+            debugLog("All gameplay sounds loaded successfully");
         } catch (error) {
             console.error("Error loading gameplay sounds:", error);
         }
@@ -147,7 +148,7 @@ export class AudioLoader {
     
     // Helper method to check if a file exists
     async checkFileExists(path: string): Promise<{ path: string; exists: boolean }> {
-        console.log(`Checking if file/directory exists: ${path}`);
+        debugLog(`Checking if file/directory exists: ${path}`);
         try {
             // Try to fetch the resource
             const response = await fetch(path, { 
@@ -155,7 +156,7 @@ export class AudioLoader {
                 cache: 'no-cache' // Avoid caching issues
             });
             
-            console.log(`Fetch response for ${path}: status=${response.status}, ok=${response.ok}`);
+            debugLog(`Fetch response for ${path}: status=${response.status}, ok=${response.ok}`);
             
             return { 
                 path, 

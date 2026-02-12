@@ -1,5 +1,6 @@
 // playlist.ts - Music queue management and shuffling
 import { getAbsolutePath } from '../../../utils/pathUtils.ts';
+import { debugLog } from '../../../globals/debug.js';
 
 export class MusicPlaylist {
     private music: HTMLAudioElement[] = []; // Store all background music tracks
@@ -31,7 +32,7 @@ export class MusicPlaylist {
     
     // Helper method to check if a file exists
     async checkFileExists(path: string): Promise<{ path: string; exists: boolean }> {
-        console.log(`Checking if file/directory exists: ${path}`);
+        debugLog(`Checking if file/directory exists: ${path}`);
         try {
             // Try to fetch the resource
             const response = await fetch(path, { 
@@ -39,7 +40,7 @@ export class MusicPlaylist {
                 cache: 'no-cache' // Avoid caching issues
             });
             
-            console.log(`Fetch response for ${path}: status=${response.status}, ok=${response.ok}`);
+            debugLog(`Fetch response for ${path}: status=${response.status}, ok=${response.ok}`);
             
             return { 
                 path, 
@@ -54,7 +55,7 @@ export class MusicPlaylist {
     // Load all music files from the soundtrack folder
     async loadBackgroundMusic(): Promise<void> {
         try {
-            console.log("Loading soundtrack files...");
+            debugLog("Loading soundtrack files...");
             
             // Directly use the exact soundtrack files from the user's folder
             const soundtrackFiles = [
@@ -67,7 +68,7 @@ export class MusicPlaylist {
                 this.getPath('sounds/soundtrack/Orbit Bloom.wav')
             ];
             
-            console.log(`Loading ${soundtrackFiles.length} soundtrack files...`);
+            debugLog(`Loading ${soundtrackFiles.length} soundtrack files...`);
             
             // Load the music files
             await this.loadMusicFiles(soundtrackFiles);
@@ -85,13 +86,13 @@ export class MusicPlaylist {
     async loadMusicFiles(files: string[]): Promise<void> {
         // Note: Currently keeping music as HTML5 Audio for compatibility
         // Could be updated to Web Audio API in the future
-        console.log(`Found ${files.length} music files:`, files);
+        debugLog(`Found ${files.length} music files:`, files);
         
         // Create a copy of the files array and shuffle it to randomize the order
         const shuffledFiles = [...files];
         this.shuffleArray(shuffledFiles);
         
-        console.log(`Randomized playlist order:`, shuffledFiles.map(file => file.split('/').pop()));
+        debugLog(`Randomized playlist order:`, shuffledFiles.map(file => file.split('/').pop()));
         
         // Check if any files exist before trying to load them
         let anyFilesExist = false;
@@ -112,7 +113,7 @@ export class MusicPlaylist {
         // Load each music track in the randomized order
         for (const file of shuffledFiles) {
             try {
-                console.log(`Attempting to load audio file: ${file}`);
+                debugLog(`Attempting to load audio file: ${file}`);
                 const audio = new Audio(file);
                 audio.loop = false; // We'll handle looping manually for playlist functionality
                 audio.volume = this.musicVolume;
@@ -124,17 +125,17 @@ export class MusicPlaylist {
                 
                 // Add a load event to confirm successful loading
                 audio.addEventListener('canplaythrough', () => {
-                    console.log(`Successfully loaded music file: ${file}`);
+                    debugLog(`Successfully loaded music file: ${file}`);
                 });
                 
                 this.music.push(audio);
-                console.log(`Added music track to playlist: ${file}`);
+                debugLog(`Added music track to playlist: ${file}`);
             } catch (err) {
                 console.error(`Failed to load music file ${file}:`, err);
             }
         }
         
-        console.log(`Loaded ${this.music.length} music tracks in randomized order`);
+        debugLog(`Loaded ${this.music.length} music tracks in randomized order`);
         
         // If we haven't found any music, create a dummy audio element
         // so that the music system doesn't break

@@ -8,6 +8,7 @@ import { DockingSystem } from './controls/dockingSystem.ts';
 import { TouchControls } from './controls/touchControls.ts';
 import { MobileDetector } from '../utils/mobileDetector.ts';
 import * as THREE from 'three';
+import { debugLog } from '../globals/debug.js';
 import type { DockingSpaceship, DockingUI, ResourceInventory } from './controls/docking/types.ts';
 
 // Type definitions for dependencies
@@ -110,7 +111,7 @@ export class Controls {
     deploymentSystem?: any;
 
     constructor(spaceship: SpaceshipType, physics: PhysicsType, environment: EnvironmentType, ui: UIType) {
-        console.log("Initializing controls systems...");
+        debugLog("Initializing controls systems...");
         
         this.spaceship = spaceship;
         this.physics = physics;
@@ -125,14 +126,14 @@ export class Controls {
         
         // Initialize controls components
         if (!this.isMobile) {
-            console.log("Initializing keyboard/mouse controls");
+            debugLog("Initializing keyboard/mouse controls");
             this.inputHandler = new InputHandler(spaceship, physics);
             
             // Initialize gamepad support for desktop
-            console.log("Initializing gamepad support");
+            debugLog("Initializing gamepad support");
             this.gamepadHandler = new GamepadHandler(spaceship, physics, this as GamepadControlsInput);
         } else {
-            console.log("Initializing touch controls for mobile");
+            debugLog("Initializing touch controls for mobile");
             this.touchControls = new TouchControls(spaceship, physics);
             // Create a placeholder input handler with minimal functionality
             // This prevents errors where other systems expect inputHandler to exist
@@ -169,7 +170,7 @@ export class Controls {
         this.currentAnomaly = null;
         this.showingAnomalyNotification = false;
         
-        console.log("Control systems initialized");
+        debugLog("Control systems initialized");
     }
     
     // New method to connect upgrade effects between systems
@@ -192,7 +193,7 @@ export class Controls {
                     (this.miningSystem.miningSpeedByType as any)[resourceType] = originalSpeed * efficiency;
                 });
                 
-                console.log("Mining speeds updated with efficiency:", efficiency);
+                debugLog("Mining speeds updated with efficiency:", efficiency);
                 
                 // Update current mining speed if mining is in progress
                 if (this.miningSystem.targetAsteroid) {
@@ -205,7 +206,7 @@ export class Controls {
     setupEventHandlers(): void {
         // Skip adding keyboard controls if on mobile
         if (this.isMobile) {
-            console.log("Mobile device detected, touch handlers are set in TouchControls class");
+            debugLog("Mobile device detected, touch handlers are set in TouchControls class");
             return;
         }
         
@@ -226,7 +227,7 @@ export class Controls {
                     // Decrease gamepad sensitivity
                     if (this.gamepadHandler) {
                         this.gamepadHandler.lookSensitivity = Math.max(0.2, this.gamepadHandler.lookSensitivity - 0.2);
-                        console.log(`Gamepad sensitivity: ${this.gamepadHandler.lookSensitivity.toFixed(1)}`);
+                        debugLog(`Gamepad sensitivity: ${this.gamepadHandler.lookSensitivity.toFixed(1)}`);
                         this.showSensitivityNotification(this.gamepadHandler.lookSensitivity);
                     }
                     e.preventDefault();
@@ -235,7 +236,7 @@ export class Controls {
                     // Increase gamepad sensitivity
                     if (this.gamepadHandler) {
                         this.gamepadHandler.lookSensitivity = Math.min(3.0, this.gamepadHandler.lookSensitivity + 0.2);
-                        console.log(`Gamepad sensitivity: ${this.gamepadHandler.lookSensitivity.toFixed(1)}`);
+                        debugLog(`Gamepad sensitivity: ${this.gamepadHandler.lookSensitivity.toFixed(1)}`);
                         this.showSensitivityNotification(this.gamepadHandler.lookSensitivity);
                     }
                     e.preventDefault();
@@ -244,7 +245,7 @@ export class Controls {
                     // Toggle gamepad debug display
                     if (this.gamepadHandler) {
                         this.gamepadHandler.toggleDebug();
-                        console.log('Gamepad debug display toggled');
+                        debugLog('Gamepad debug display toggled');
                     }
                     e.preventDefault();
                     break;
@@ -274,14 +275,14 @@ export class Controls {
                     break;
                 case 't': 
                     // Deploy a laser turret
-                    console.log("Deploying laser turret");
+                    debugLog("Deploying laser turret");
                     if ((window as any).mainMessageBus) {
                         (window as any).mainMessageBus.publish('input.deployLaser', {});
                     }
                     break;
                 case 'g': 
                     // Pick up an item
-                    console.log("Attempting to pick up an item");
+                    debugLog("Attempting to pick up an item");
                     if ((window as any).mainMessageBus) {
                         (window as any).mainMessageBus.publish('input.pickupInteract', {});
                     }

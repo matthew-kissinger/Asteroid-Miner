@@ -5,7 +5,7 @@ import { Renderer } from '../modules/renderer.ts';
 import { Spaceship } from '../modules/spaceship';
 import { Physics } from '../modules/physics';
 import { Controls } from '../modules/controls.ts';
-import { DEBUG_MODE } from '../globals/debug.ts';
+import { DEBUG_MODE, debugLog } from '../globals/debug.ts';
 import type { DockingSpaceship } from '../modules/controls/docking/types.ts';
 // import { Environment } from '../modules/environment';
 // import { UI } from '../modules/ui';
@@ -68,14 +68,14 @@ export class GameInitializer {
     
     async initializeCore(): Promise<void> {
         // Create audio manager first but don't initialize yet
-        if (DEBUG_MODE.enabled) console.log("Creating audio manager...");
+        if (DEBUG_MODE.enabled) debugLog("Creating audio manager...");
         const { AudioManager } = await import('../modules/audio/audio.ts');
         this.game.audio = new AudioManager();
         
         // Initialize renderer first
-        if (DEBUG_MODE.enabled) console.log("Creating renderer...");
+        if (DEBUG_MODE.enabled) debugLog("Creating renderer...");
         this.game.renderer = await Renderer.create();
-        if (DEBUG_MODE.enabled) console.log("Renderer created, getting scene...");
+        if (DEBUG_MODE.enabled) debugLog("Renderer created, getting scene...");
 
         const renderer = this.game.renderer;
         
@@ -83,14 +83,14 @@ export class GameInitializer {
         this.game.scene = renderer.scene;
         this.game.camera = renderer.camera;
         
-        if (DEBUG_MODE.enabled) console.log("Scene and camera references obtained");
+        if (DEBUG_MODE.enabled) debugLog("Scene and camera references obtained");
         
         // Share camera reference with scene for easy access by other components
         const sceneWithCamera = this.game.scene as THREE.Scene & { camera?: THREE.Camera };
         sceneWithCamera.camera = this.game.camera;
         
         // Initialize essential components needed for the start screen
-        if (DEBUG_MODE.enabled) console.log("Initializing essential components...");
+        if (DEBUG_MODE.enabled) debugLog("Initializing essential components...");
 
         // Initialize physics with dependency injection
         const physics = new Physics(this.game.scene, {
@@ -126,7 +126,7 @@ export class GameInitializer {
         this.game.environment = environment;
         
         // Initialize spaceship
-        if (DEBUG_MODE.enabled) console.log("Creating spaceship...");
+        if (DEBUG_MODE.enabled) debugLog("Creating spaceship...");
         const spaceship = new Spaceship(this.game.scene) as GameSpaceship;
         this.game.spaceship = spaceship;
         
@@ -164,7 +164,7 @@ export class GameInitializer {
         this.game.ui.setControls(this.game.controls);
         
         // Initialize settings
-        if (DEBUG_MODE.enabled) console.log("Initializing settings...");
+        if (DEBUG_MODE.enabled) debugLog("Initializing settings...");
         await this.game.ui.initializeSettings(this.game);
     }
     
@@ -181,15 +181,15 @@ export class GameInitializer {
     
     startDocked(): void {
         // Start the game with the spaceship docked at the stargate
-        console.log("Starting game in docked state");
+        debugLog("Starting game in docked state");
         
         if (this.game.spaceship) {
             // Start docked at the stargate - position is handled by spaceship.dock()
             if (!this.game.spaceship.isDocked) {
-                console.log("Docking spaceship...");
+                debugLog("Docking spaceship...");
                 this.game.spaceship.dock();
             } else {
-                console.log("Spaceship already docked");
+                debugLog("Spaceship already docked");
             }
         } else {
             console.error("No spaceship found!");
@@ -198,19 +198,19 @@ export class GameInitializer {
         // Set initial camera position for docked state
         if (this.game.camera) {
             this.game.camera.position.set(0, 1500, 0);
-            console.log("Camera position set for docked state");
+            debugLog("Camera position set for docked state");
         }
         
         // Update docking system to reflect docked state
         if (this.game.controls && this.game.controls.dockingSystem) {
             // The docking system tracks the spaceship's docked state automatically
             this.game.controls.dockingSystem.isDocked = true;
-            console.log("Docking system updated");
+            debugLog("Docking system updated");
         }
         
         // Start the game UI
         if (this.game.ui && this.game.ui.stargateInterface) {
-            console.log("Showing stargate UI...");
+            debugLog("Showing stargate UI...");
             this.game.ui.stargateInterface.showStargateUI?.();
         } else {
             console.error("No stargate interface found!", this.game.ui);

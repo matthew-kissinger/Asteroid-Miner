@@ -8,6 +8,7 @@ import { PostProcessingManager } from './renderer/post';
 import { TSLPostProcessingManager } from './renderer/postTSL';
 import { SceneApiManager } from './renderer/sceneApi';
 import { RenderHelpers } from './renderer/helpers';
+import { debugLog } from '../globals/debug.js';
 import { VolumetricLightingManager } from './renderer/volumetricLighting';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 
@@ -33,7 +34,7 @@ export class Renderer {
     useClaudeRays?: boolean;
 
     constructor() {
-        console.log("Initializing enhanced renderer...");
+        debugLog("Initializing enhanced renderer...");
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 400000);
@@ -72,10 +73,10 @@ export class Renderer {
         // Check if it's a WebGPURenderer (using helper or class check)
         // Note: isWebGPURenderer property is common check
         if ('isWebGPURenderer' in this.renderer && this.renderer.isWebGPURenderer) {
-            console.log("Using TSL Post-Processing for WebGPU");
+            debugLog("Using TSL Post-Processing for WebGPU");
             this.postProcessingManager = new TSLPostProcessingManager(this.renderer, this.scene, this.camera);
         } else {
-            console.log("Using GLSL Post-Processing for WebGL");
+            debugLog("Using GLSL Post-Processing for WebGL");
             this.postProcessingManager = new PostProcessingManager(this.renderer as THREE.WebGLRenderer, this.scene, this.camera);
         }
 
@@ -98,7 +99,7 @@ export class Renderer {
         this.volumetricLightEnabled = this.postProcessingManager.volumetricLightEnabled;
         this.useClaudeRays = this.postProcessingManager.useClaudeRays;
 
-        console.log("Enhanced renderer initialized successfully");
+        debugLog("Enhanced renderer initialized successfully");
     }
 
     async createRenderer(): Promise<RendererType> {
@@ -109,10 +110,10 @@ export class Renderer {
                 powerPreference: "high-performance",
             });
             await renderer.init();
-            console.log("WebGPU renderer initialized");
+            debugLog("WebGPU renderer initialized");
             return renderer;
         } catch (error) {
-            console.log("WebGPU not available, falling back to WebGL2");
+            debugLog("WebGPU not available, falling back to WebGL2");
         }
 
         if (!WebGL.isWebGL2Available()) {
@@ -122,7 +123,7 @@ export class Renderer {
             throw new Error("WebGL 2 not available");
         }
 
-        console.log("WebGL 2 is available.");
+        debugLog("WebGL 2 is available.");
         return new THREE.WebGLRenderer({
             antialias: true,
             powerPreference: "high-performance",
@@ -361,7 +362,7 @@ export class Renderer {
      * Properly dispose of Three.js resources to prevent memory leaks
      */
     dispose(): void {
-        console.log("Disposing renderer resources...");
+        debugLog("Disposing renderer resources...");
         
         // Remove event listener
         window.removeEventListener('resize', this.handleResize);
@@ -403,7 +404,7 @@ export class Renderer {
             this.renderer.dispose();
         }
         
-        console.log("Renderer resources disposed");
+        debugLog("Renderer resources disposed");
     }
     // Material disposal is now handled by RenderHelpers
     // Shader creation is now handled by shaders.js module

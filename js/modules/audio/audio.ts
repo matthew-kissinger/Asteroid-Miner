@@ -5,6 +5,7 @@ import { MusicPlaylist } from './music/playlist.ts';
 import { MusicPlayer } from './music/player.ts';
 import { SoundPlayer } from './effects/soundPlayer.ts';
 import { MobileAudioEnabler } from './mobile/enabler.ts';
+import { debugLog } from '../../globals/debug.js';
 
 export class AudioManager {
     private audioContextManager: AudioContextManager;
@@ -45,7 +46,7 @@ export class AudioManager {
         // Set up compatibility layer for intro sequence
         this.masterEQ = this.audioContextManager.initializeToneCompatibility();
         
-        console.log("Initializing audio manager with Web Audio API...");
+        debugLog("Initializing audio manager with Web Audio API...");
     }
     
     // Getter/setter for volume properties
@@ -95,7 +96,7 @@ export class AudioManager {
     // Initialize audio - load all sounds and music
     async initialize(): Promise<boolean> {
         try {
-            console.log("Loading audio files...");
+            debugLog("Loading audio files...");
             
             // Ensure audio context is resumed on first user interaction
             const context = this.audioContext;
@@ -114,14 +115,14 @@ export class AudioManager {
                 console.error("Error loading background music:", error);
             });
             
-            console.log("Essential audio initialization complete");
+            debugLog("Essential audio initialization complete");
             
             // Music will play automatically once the user interacts with the page
             // If the user has already interacted, we can play immediately
             if (this.userHasInteracted) {
                 this.musicPlayer.playBackgroundMusic(true);
             } else {
-                console.log("Music playback waiting for user interaction.");
+                debugLog("Music playback waiting for user interaction.");
             }
             
             // Schedule loading of remaining gameplay sounds in the background 
@@ -139,7 +140,7 @@ export class AudioManager {
     
     // Legacy method for compatibility
     async preDecodeAllSoundEffects(): Promise<void> {
-        console.log("Using optimized sound loading path instead of preDecodeAllSoundEffects");
+        debugLog("Using optimized sound loading path instead of preDecodeAllSoundEffects");
         await this.audioLoader.preDecodeEssentialSounds();
         await this.audioLoader.loadGameplaySounds();
     }
@@ -185,7 +186,7 @@ export class AudioManager {
         const musicMuted = this.musicPlayer.toggleMute();
         
         const overallMuted = soundMuted || musicMuted;
-        console.log(`Audio ${overallMuted ? 'muted' : 'unmuted'}`);
+        debugLog(`Audio ${overallMuted ? 'muted' : 'unmuted'}`);
         return overallMuted;
     }
     
@@ -202,13 +203,13 @@ export class AudioManager {
     // Setup garbage collection (legacy compatibility)
     setupGarbageCollection(): void {
         // Already handled in audioContextManager constructor
-        console.log("Garbage collection already set up in context manager");
+        debugLog("Garbage collection already set up in context manager");
     }
     
     // Setup user interaction listener (legacy compatibility)
     setupUserInteractionListener(): void {
         // Already handled in mobileEnabler constructor
-        console.log("User interaction listener already set up in mobile enabler");
+        debugLog("User interaction listener already set up in mobile enabler");
     }
     
     // Initialize tone compatibility (legacy compatibility)
@@ -218,7 +219,7 @@ export class AudioManager {
     
     // Clean up resources when destroying the audio manager
     cleanup(): void {
-        console.log("Cleaning up AudioManager resources...");
+        debugLog("Cleaning up AudioManager resources...");
         
         // Stop all active sounds
         this.soundPlayer.stopAllSounds();
@@ -232,6 +233,6 @@ export class AudioManager {
         // Clean up audio context
         this.audioContextManager.cleanup();
         
-        console.log("AudioManager cleanup complete");
+        debugLog("AudioManager cleanup complete");
     }
 }
