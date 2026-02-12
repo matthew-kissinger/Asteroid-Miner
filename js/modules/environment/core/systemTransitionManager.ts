@@ -1,4 +1,5 @@
 import { debugLog } from '../../../globals/debug.ts';
+import { mainMessageBus } from '../../../globals/messageBus.ts';
 // systemTransitionManager.ts - Handles system transitions and travel logic
 
 interface ResourceMultipliers {
@@ -114,6 +115,8 @@ export class SystemTransitionManager {
 
             // Update the environment based on the new system
             updateEnvironmentCallback(systemId);
+
+            mainMessageBus.publish('system.discovered', { systemId });
 
             // Display welcome notification
             this.showSystemWelcomeNotification(systemId, starSystemGenerator);

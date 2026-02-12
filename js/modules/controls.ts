@@ -9,6 +9,7 @@ import { TouchControls } from './controls/touchControls.ts';
 import { MobileDetector } from '../utils/mobileDetector.ts';
 import type { Scene, Camera, Object3D, Vector3 } from 'three';
 import { debugLog } from '../globals/debug.ts';
+import { mainMessageBus } from '../globals/messageBus.ts';
 import type { DockingSpaceship, DockingUI, ResourceInventory } from './controls/docking/types.ts';
 
 // Type definitions for dependencies
@@ -359,7 +360,9 @@ export class Controls {
             };
         }
         this.resources.orbs[orbData.rarity] = (this.resources.orbs[orbData.rarity] || 0) + 1;
-        
+
+        mainMessageBus.publish('orb.collected', { rarity: orbData.rarity });
+
         // Show notification with value and rarity
         let rarityColor: string;
         switch(orbData.rarity) {

@@ -9,6 +9,8 @@ import { ShipDocking } from './systems/docking';
 import { ShipServices } from './systems/services';
 import { ShipVisualEffects } from './effects/visualEffects';
 import { HealthSync } from './sync/healthSync';
+import { getRankInfo, rankFromXP, xpToNextRank as getXpToNextRank } from './systems/ranks';
+import { mainMessageBus } from '../../globals/messageBus.ts';
 
 interface ThrustState {
   forward: boolean;
@@ -57,6 +59,10 @@ export class Spaceship {
 
   // Cargo
   cargo: CargoState;
+
+  // XP and pilot rank
+  xp: number;
+  rank: number;
 
   // Ship capabilities
   maxVelocity: number;
@@ -116,6 +122,10 @@ export class Spaceship {
       gold: 0,
       platinum: 0
     };
+
+    // XP and pilot rank (start at 0 XP, Rank 1 Cadet)
+    this.xp = 0;
+    this.rank = 1;
 
     // Ship capabilities
     this.maxVelocity = 25.0;
@@ -286,6 +296,36 @@ export class Spaceship {
 
   get scannerUpgradeCost(): number {
     return this.shipUpgrades?.scannerUpgradeCost || 600;
+  }
+
+  /** XP required from start of current rank to reach next rank. */
+  get xpToNextRank(): number {
+    return getXpToNextRank(this.rank);
+  }
+
+  /** Current rank name (e.g. "Cadet"). */
+  get rankName(): string {
+    return getRankInfo(this.rank).name;
+  }
+
+  /**
+   * Add experience points. Updates rank if thresholds are met and publishes
+   * xp.gained and rank.up via messageBus.
+   */
+  addXP(amount: number): void {
+    if (amount <= 0) return;
+    const previousRank = this.rank;
+    this.xp += amount;
+    this.rank = rankFromXP(this.xp);
+    mainMessageBus.publish('xp.gained', {
+      amount,
+      newTotal: this.xp,
+      rank: this.rank
+    });
+    if (this.rank > previousRank) {
+      const info = getRankInfo(this.rank);
+      mainMessageBus.publish('rank.up', { rank: this.rank, rankName: info.name });
+    }
   }
 
   // HEALTH SYNCHRONIZATION - Delegate to health sync module

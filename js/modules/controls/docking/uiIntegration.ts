@@ -2,6 +2,7 @@
 
 import type { DockingSpaceship, DockingUI, ResourceInventory } from './types.ts';
 import { debugLog } from '../../../globals/debug.js';
+import { mainMessageBus } from '../../../globals/messageBus.ts';
 
 type GameWindow = Window & {
     game?: {
@@ -122,8 +123,10 @@ export class UIIntegration {
         if (sellIronBtn) {
             const handler = (): void => {
                 if (this.resources && this.resources.iron > 0) {
-                    spaceship.credits += this.resources.iron * 10;
+                    const amount = this.resources.iron;
+                    spaceship.credits += amount * 10;
                     this.resources.iron = 0;
+                    mainMessageBus.publish('trading.resourceSold', { amount, resourceType: 'iron' });
                     this.updateStargateUI(spaceship, ui);
                 }
             };
@@ -134,8 +137,10 @@ export class UIIntegration {
         if (sellGoldBtn) {
             const handler = (): void => {
                 if (this.resources && this.resources.gold > 0) {
-                    spaceship.credits += this.resources.gold * 50;
+                    const amount = this.resources.gold;
+                    spaceship.credits += amount * 50;
                     this.resources.gold = 0;
+                    mainMessageBus.publish('trading.resourceSold', { amount, resourceType: 'gold' });
                     this.updateStargateUI(spaceship, ui);
                 }
             };
@@ -146,8 +151,10 @@ export class UIIntegration {
         if (sellPlatinumBtn) {
             const handler = (): void => {
                 if (this.resources && this.resources.platinum > 0) {
-                    spaceship.credits += this.resources.platinum * 200;
+                    const amount = this.resources.platinum;
+                    spaceship.credits += amount * 200;
                     this.resources.platinum = 0;
+                    mainMessageBus.publish('trading.resourceSold', { amount, resourceType: 'platinum' });
                     this.updateStargateUI(spaceship, ui);
                 }
             };
