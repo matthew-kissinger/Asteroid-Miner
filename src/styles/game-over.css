@@ -223,6 +223,92 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Session Stats
+   --------------------------------------------------------------------------- */
+
+.game-over-stats-container {
+  margin-top: 25px;
+  padding: 15px 20px;
+  background-color: rgba(20, 20, 25, 0.6);
+  border: 1px solid rgba(120, 220, 232, 0.3);
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.game-over-stats-title {
+  font-size: 16px;
+  color: #ffaa00;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 170, 0, 0.2);
+  padding-bottom: 6px;
+}
+
+.game-over-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.game-over-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: stat-appear 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes stat-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.game-over-stat-label {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  letter-spacing: 1px;
+}
+
+.game-over-stat-value {
+  font-size: 16px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.game-over-stat-value.highlight {
+  color: #78dce8;
+}
+
+.game-over-stat-value.gold {
+  color: #ffaa00;
+}
+
+.game-over-stat-value.critical {
+  color: #ff3030;
+  text-shadow: 0 0 5px rgba(255, 48, 48, 0.5);
+}
+
+@media (max-width: 550px) {
+  .game-over-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Loading Status
    --------------------------------------------------------------------------- */
 

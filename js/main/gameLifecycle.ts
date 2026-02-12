@@ -51,12 +51,15 @@ export class GameLifecycle {
 
         // Show game over UI
         if (this.game.ui) {
+            // Collect session stats if available
+            const stats = (this.game as any).sessionStats ? (this.game as any).sessionStats.getStats() : null;
+            
             // Check if it's a horde mode game over
             if (this.game.hordeMode && this.game.hordeMode.isActive) {
                 const survivalTime = this.game.hordeMode.getFormattedSurvivalTime();
-                this.game.ui.showGameOver(`HORDE MODE - Survived: ${survivalTime}\n${reason}`);
+                this.game.ui.showGameOver(`HORDE MODE - Survived: ${survivalTime}\n${reason}`, null, stats);
             } else {
-                this.game.ui.showGameOver(reason);
+                this.game.ui.showGameOver(reason, null, stats);
             }
         }
 

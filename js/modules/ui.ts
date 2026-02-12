@@ -571,7 +571,7 @@ export class UI {
         }, duration);
     }
     
-    showGameOver(resources: unknown, message: unknown): void {
+    showGameOver(resources: unknown, message: unknown, stats?: any): void {
         debugLog("Showing game over screen");
         debugLog("Resources data:", resources); // Add logging to see structure
         
@@ -605,7 +605,7 @@ export class UI {
             }
             
             // Pass the message object through directly - gameOverScreen will handle the parsing
-            this.gameOverScreen.show(resources, message);
+            (this.gameOverScreen as any).show(resources, message, stats);
             
             // Remove all direct sound playback from here
             // The GameOverScreen will handle playing the sound
