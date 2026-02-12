@@ -33,6 +33,7 @@ interface AnomalyData {
     position: Vector3;
     orb: OrbData;
     orbCollected: boolean;
+    playerEntered?: boolean;
     rotationSpeed?: { x: number; y: number; z: number };
     rings?: Array<{ mesh: Mesh; rotationSpeed: { x: number; y: number; z: number } }>;
     [key: string]: unknown;
@@ -271,6 +272,19 @@ export class SpaceAnomalies {
             if (playerPosition) {
                 const distance = playerPosition.distanceTo(anomaly.position);
                 playerNearby = distance < (anomaly.orb.size * 3) * this.orbScale; // Only enhance effects based on orb distance
+                
+                // Publish hazard.entered event when player first enters anomaly zone
+                if (playerNearby && !anomaly.playerEntered) {
+                    anomaly.playerEntered = true;
+                    if ((globalThis as any).mainMessageBus) {
+                        (globalThis as any).mainMessageBus.publish('hazard.entered', { 
+                            hazardType: 'anomaly' 
+                        });
+                    }
+                } else if (!playerNearby && anomaly.playerEntered) {
+                    // Reset flag when player leaves
+                    anomaly.playerEntered = false;
+                }
             }
 
             // Rotate the entire anomaly slowly

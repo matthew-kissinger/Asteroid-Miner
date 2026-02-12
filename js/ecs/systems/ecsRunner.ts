@@ -35,6 +35,9 @@ import {
   Scale,
   MeshRef,
   Renderable,
+  Health,
+  Boss,
+  Enemy,
 } from '../components'
 import { createGameEntity } from '../world'
 
@@ -184,6 +187,36 @@ export function updateECS(deltaTime: number): void {
   // Shield regeneration for all entities with health
   if (entitiesWithHealth.length > 0) {
     shieldRegenSystem(entitiesWithHealth, deltaTime)
+  }
+
+  // Death system - check for entities with health <= 0
+  const deadEntities: number[] = []
+  for (const eid of entitiesWithHealth) {
+    if (Health.current[eid] <= 0) {
+      deadEntities.push(eid)
+      
+      // Publish events for achievements
+      if ((globalThis as any).mainMessageBus) {
+        // Check if this is a boss
+        if (Boss.bossType[eid] !== undefined && Boss.bossType[eid] !== 0) {
+          (globalThis as any).mainMessageBus.publish('boss.destroyed', { 
+            bossType: Boss.bossType[eid] 
+          })
+        }
+        
+        // Check if this is an enemy
+        if (Enemy.tag[eid] !== 0) {
+          (globalThis as any).mainMessageBus.publish('enemy.destroyed', { 
+            entityId: eid 
+          })
+        }
+      }
+    }
+  }
+
+  // Remove dead entities
+  for (const eid of deadEntities) {
+    removeTrackedEntity(eid)
   }
 
   // Lifetime system for all entities (returns expired IDs)
