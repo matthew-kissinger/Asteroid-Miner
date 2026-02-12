@@ -4,6 +4,7 @@ import { AudioLoader, SoundMap } from './core/loader.ts';
 import { MusicPlaylist } from './music/playlist.ts';
 import { MusicPlayer } from './music/player.ts';
 import { SoundPlayer } from './effects/soundPlayer.ts';
+import { CombatSounds } from './effects/combatSounds.ts';
 import { MobileAudioEnabler } from './mobile/enabler.ts';
 import { debugLog } from '../../globals/debug.js';
 
@@ -13,6 +14,7 @@ export class AudioManager {
     private musicPlaylist: MusicPlaylist;
     private musicPlayer: MusicPlayer;
     private soundPlayer: SoundPlayer;
+    private combatSounds: CombatSounds;
     private mobileEnabler: MobileAudioEnabler;
     
     // Exposed properties for compatibility
@@ -35,6 +37,12 @@ export class AudioManager {
         this.musicPlaylist = new MusicPlaylist();
         this.musicPlayer = new MusicPlayer(this.musicPlaylist);
         this.soundPlayer = new SoundPlayer(this.audioContextManager, this.audioLoader);
+        this.combatSounds = new CombatSounds(
+            this.audioContextManager,
+            () => this.soundPlayer.getVolume(),
+            () => this.soundPlayer.isMuted(),
+        );
+        this.combatSounds.subscribeToEvents();
         this.mobileEnabler = new MobileAudioEnabler(this.audioContextManager, this.musicPlayer);
         
         // Exposed properties for compatibility
@@ -223,6 +231,9 @@ export class AudioManager {
         
         // Stop all active sounds
         this.soundPlayer.stopAllSounds();
+        
+        // Clean up combat sounds
+        this.combatSounds.cleanup();
         
         // Pause all music
         this.musicPlayer.pauseAll();
