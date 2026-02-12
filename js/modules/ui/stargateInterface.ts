@@ -127,6 +127,9 @@ export class StargateInterface {
         if (gameData) {
             this.updateStargateUI(gameData.spaceship, gameData.resources);
         }
+        
+        // Refresh missions display
+        this.missionsView.refreshMissionsDisplay();
     }
     
     hideStargateUI(): void {

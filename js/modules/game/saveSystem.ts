@@ -48,6 +48,10 @@ export interface SaveSchema {
         bestHordeSurvivalTime: number; // seconds
         totalKills: number;
     };
+    missions?: {
+        activeMission: any | null;
+        completedMissionCount: number;
+    };
     settings?: {
         audio: {
             masterVolume: number;
@@ -116,6 +120,10 @@ export function getDefaultSave(): SaveSchema {
             bestCredits: 0,
             bestHordeSurvivalTime: 0,
             totalKills: 0,
+        },
+        missions: {
+            activeMission: null,
+            completedMissionCount: 0,
         },
         settings: {
             audio: {
@@ -246,6 +254,10 @@ export class SaveSystem {
                     bestHordeSurvivalTime: existing?.highScores?.bestHordeSurvivalTime ?? 0,
                     totalKills: existing?.highScores?.totalKills ?? 0,
                 },
+                missions: game.missionSystem ? game.missionSystem.getSaveData() : {
+                    activeMission: null,
+                    completedMissionCount: 0,
+                },
             };
 
             // Update horde scores if active
@@ -330,6 +342,11 @@ export class SaveSystem {
 
         // Increment play sessions
         this.incrementPlaySessions();
+
+        // Restore mission data
+        if (save.missions && game.missionSystem) {
+            game.missionSystem.loadSaveData(save.missions);
+        }
 
         debugLog('SaveSystem: Save applied to game');
     }

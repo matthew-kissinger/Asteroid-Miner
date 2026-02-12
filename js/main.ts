@@ -8,6 +8,8 @@ import { Diagnostics } from './main/diagnostics.ts';
 import { GameInitializer } from './main/gameInitializer.ts';
 import { mainMessageBus } from './globals/messageBus.ts';
 import { SaveSystem } from './modules/game/saveSystem.ts';
+import { MissionSystem } from './modules/game/missionSystem.ts';
+import { MissionTracker } from './modules/game/missionTracker.ts';
 // Removed direct imports for ObjectPools, DifficultyManager, HordeMode, AudioUpdater, GameLifecycle
 // import { ObjectPools } from './main/objectPools.ts';
 // import { DifficultyManager } from './main/difficultyManager.ts';
@@ -49,6 +51,8 @@ export class Game {
     private _controls: any;
     private _updateECS: ((deltaTime: number) => void) | undefined; // New property
     saveSystem: SaveSystem;
+    missionSystem: MissionSystem;
+    missionTracker: MissionTracker | null = null;
 
     constructor() {
         // Initialize globals first
@@ -56,6 +60,9 @@ export class Game {
         
         // Initialize save system
         this.saveSystem = new SaveSystem();
+        
+        // Initialize mission system
+        this.missionSystem = new MissionSystem();
         
         // Make game instance globally accessible for emergency access
         window.game = this;
@@ -128,6 +135,9 @@ export class Game {
             Player.tag[playerEid] = 1;
             setPlayerEntity(playerEid);
             this.playerEid = playerEid;
+
+            // Initialize mission tracker
+            this.missionTracker = new MissionTracker(this.missionSystem);
 
             // Start the initialization sequence
             this.startupSequence.initializeGameSequence();

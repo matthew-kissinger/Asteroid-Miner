@@ -1,5 +1,9 @@
 // missions.ts - Mission selection and display (including challenge systems)
 
+import type { MissionSystem, Mission } from '../../../game/missionSystem.ts';
+import { mainMessageBus } from '../../../../globals/messageBus.ts';
+import { debugLog } from '../../../../globals/debug.ts';
+
 type GameReference = {
     ecsWorld?: {
         enemySystem?: {
@@ -7,6 +11,11 @@ type GameReference = {
         };
     };
     activateHordeMode?: () => void;
+    missionSystem?: MissionSystem;
+    spaceship?: {
+        credits: number;
+        addXP?: (amount: number) => void;
+    };
 };
 
 export class MissionsView {
@@ -24,6 +33,193 @@ export class MissionsView {
     
     setHideCallback(callback: () => void): void {
         this.hideStargateUICallback = callback;
+    }
+    
+    refreshMissionsDisplay(): void {
+        const container = document.getElementById('missions-list');
+        if (!container || !this.gameRef?.missionSystem) return;
+
+        const missionSystem = this.gameRef.missionSystem;
+        const activeMission = missionSystem.getActiveMission();
+        const availableMissions = missionSystem.getAvailableMissions();
+
+        container.innerHTML = '';
+
+        // Show active mission if exists
+        if (activeMission) {
+            const activeCard = this.createActiveMissionCard(activeMission);
+            container.appendChild(activeCard);
+        }
+
+        // Show available missions
+        if (availableMissions.length > 0) {
+            const header = document.createElement('div');
+            header.style.cssText = 'color: #00ff88; font-size: 18px; margin: 20px 0 10px 0; font-weight: bold;';
+            header.textContent = 'AVAILABLE CONTRACTS';
+            container.appendChild(header);
+
+            availableMissions.forEach(mission => {
+                const card = this.createMissionCard(mission);
+                container.appendChild(card);
+            });
+        }
+    }
+
+    private createMissionCard(mission: Mission): HTMLElement {
+        const card = document.createElement('div');
+        card.style.cssText = `
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid #00aaff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        `;
+
+        card.innerHTML = `
+            <div style="color: #00ffff; font-size: 16px; font-weight: bold; margin-bottom: 8px;">
+                ${mission.title}
+            </div>
+            <div style="color: #aaaaaa; font-size: 14px; margin-bottom: 10px;">
+                ${mission.description}
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="color: #ffaa00; font-size: 14px;">
+                    Reward: ${mission.rewards.credits} CR + ${mission.rewards.xp} XP
+                </div>
+                <button class="mission-accept-btn" style="
+                    background: #00aa00;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: bold;
+                ">ACCEPT</button>
+            </div>
+        `;
+
+        const acceptBtn = card.querySelector('.mission-accept-btn') as HTMLButtonElement;
+        acceptBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.acceptMission(mission.id);
+        });
+
+        card.addEventListener('mouseenter', () => {
+            card.style.borderColor = '#00ffff';
+            card.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.borderColor = '#00aaff';
+            card.style.boxShadow = 'none';
+        });
+
+        return card;
+    }
+
+    private createActiveMissionCard(mission: Mission): HTMLElement {
+        const card = document.createElement('div');
+        card.style.cssText = `
+            background: rgba(0, 40, 20, 0.9);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0 20px 0;
+        `;
+
+        const objective = mission.objectives[0];
+        const progress = objective ? (objective.current / objective.target) * 100 : 0;
+
+        card.innerHTML = `
+            <div style="color: #00ff88; font-size: 14px; font-weight: bold; margin-bottom: 5px;">
+                ACTIVE MISSION
+            </div>
+            <div style="color: #00ffff; font-size: 16px; font-weight: bold; margin-bottom: 8px;">
+                ${mission.title}
+            </div>
+            <div style="color: #aaaaaa; font-size: 14px; margin-bottom: 10px;">
+                ${objective?.description ?? 'No objectives'}
+            </div>
+            <div style="background: rgba(0, 0, 0, 0.5); border-radius: 4px; height: 20px; margin-bottom: 10px; overflow: hidden;">
+                <div style="
+                    background: linear-gradient(90deg, #00ff88, #00aa55);
+                    height: 100%;
+                    width: ${progress}%;
+                    transition: width 0.3s;
+                "></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="color: #ffffff; font-size: 14px;">
+                    Progress: ${objective?.current ?? 0}/${objective?.target ?? 0}
+                </div>
+                <button class="mission-abandon-btn" style="
+                    background: #aa0000;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 12px;
+                ">ABANDON</button>
+            </div>
+        `;
+
+        const abandonBtn = card.querySelector('.mission-abandon-btn') as HTMLButtonElement;
+        abandonBtn.addEventListener('click', () => {
+            this.abandonMission();
+        });
+
+        return card;
+    }
+
+    private acceptMission(missionId: string): void {
+        if (!this.gameRef?.missionSystem) return;
+
+        const success = this.gameRef.missionSystem.acceptMission(missionId);
+        if (success) {
+            debugLog(`Accepted mission: ${missionId}`);
+            mainMessageBus.publish('mission.accepted', { missionId });
+            this.showNotification('Mission accepted!', 0x00ff88);
+            this.refreshMissionsDisplay();
+        } else {
+            this.showNotification('Cannot accept mission', 0xff3030);
+        }
+    }
+
+    private abandonMission(): void {
+        if (!this.gameRef?.missionSystem) return;
+
+        const success = this.gameRef.missionSystem.abandonMission();
+        if (success) {
+            debugLog('Abandoned mission');
+            mainMessageBus.publish('mission.abandoned', {});
+            this.showNotification('Mission abandoned', 0xffaa00);
+            this.refreshMissionsDisplay();
+        }
+    }
+
+    claimMissionReward(): void {
+        if (!this.gameRef?.missionSystem || !this.gameRef?.spaceship) return;
+
+        const mission = this.gameRef.missionSystem.getActiveMission();
+        if (!mission || mission.status !== 'completed') return;
+
+        const { credits, xp } = mission.rewards;
+        this.gameRef.spaceship.credits += credits;
+        
+        if (this.gameRef.spaceship.addXP) {
+            this.gameRef.spaceship.addXP(xp);
+        }
+
+        debugLog(`Claimed mission reward: ${credits} CR, ${xp} XP`);
+        mainMessageBus.publish('mission.completed', { mission });
+        this.showNotification(`Reward claimed: ${credits} CR + ${xp} XP`, 0x00ff88);
+        
+        this.gameRef.missionSystem.completeMission();
+        this.refreshMissionsDisplay();
     }
     
     setupHordeButton(): void {

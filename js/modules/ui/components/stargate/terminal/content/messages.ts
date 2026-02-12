@@ -321,6 +321,9 @@ export class TerminalMessages {
     
     getChallengeContent(): string {
         return `
+            <div id="missions-list" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+                <!-- Mission contracts will be dynamically inserted here -->
+            </div>
             <button id="unleash-horde" class="action-btn btn-horde">
                 UNLEASH THE HORDE
             </button>
