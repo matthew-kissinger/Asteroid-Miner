@@ -15,16 +15,41 @@ type GameWindow = Window & {
     };
 };
 
+interface ListenerBinding {
+    element: EventTarget;
+    event: string;
+    handler: EventListenerOrEventListenerObject;
+    options?: AddEventListenerOptions;
+}
+
 export class UIIntegration {
     resources: ResourceInventory | null;
+    private bindings: ListenerBinding[] = [];
 
     constructor() {
         this.resources = null;
     }
 
+    private addBinding(
+        element: EventTarget,
+        event: string,
+        handler: EventListenerOrEventListenerObject,
+        options?: AddEventListenerOptions
+    ): void {
+        element.addEventListener(event, handler, options);
+        this.bindings.push({ element, event, handler, options });
+    }
+
+    /** Removes all event listeners. Call when tearing down the docking UI. */
+    cleanup(): void {
+        for (const { element, event, handler, options } of this.bindings) {
+            element.removeEventListener(event, handler, options);
+        }
+        this.bindings.length = 0;
+    }
+
     setupDockingControls(proximityDetector: { isNearStargate: () => boolean }, dockingLogic: { dockWithStargate: (spaceship: DockingSpaceship, stargate: unknown, ui: DockingUI) => void }, spaceship: DockingSpaceship, ui: DockingUI): void {
-        // Add docking key handler (Q key)
-        document.addEventListener('keydown', (e: KeyboardEvent) => {
+        const onKeydown = (e: KeyboardEvent): void => {
             if (e.key.toLowerCase() === 'q') {
                 if (proximityDetector.isNearStargate() && !spaceship.isDocked) {
                     console.log("Q key pressed: Docking with stargate");
@@ -35,136 +60,123 @@ export class UIIntegration {
                     console.log("Q key pressed but not near stargate");
                 }
             }
-        });
-        
-        // Set up stargate UI button handlers
+        };
+        this.addBinding(document, 'keydown', onKeydown as EventListener);
+
         this.setupStargateUIControls(spaceship, ui);
     }
 
     setupStargateUIControls(spaceship: DockingSpaceship, ui: DockingUI): void {
-        // Set up refuel button
         const refuelBtn = document.getElementById('refuel-btn');
         if (refuelBtn) {
-            refuelBtn.addEventListener('click', () => {
+            const handler = (): void => {
                 if (spaceship.credits >= 100) {
                     spaceship.credits -= spaceship.refuel();
                     this.updateStargateUI(spaceship, ui);
                 }
-            });
+            };
+            this.addBinding(refuelBtn, 'click', handler);
         }
-        
-        // Set up shield repair button
+
         const repairShieldBtn = document.getElementById('repair-shield-btn');
         if (repairShieldBtn) {
-            repairShieldBtn.addEventListener('click', () => {
+            const handler = (): void => {
                 if (spaceship.credits >= 150) {
                     spaceship.credits -= spaceship.repairShield();
                     this.updateStargateUI(spaceship, ui);
                 }
-            });
+            };
+            this.addBinding(repairShieldBtn, 'click', handler);
         }
-        
-        // Set up hull repair button
+
         const repairHullBtn = document.getElementById('repair-hull-btn');
         if (repairHullBtn) {
-            repairHullBtn.addEventListener('click', () => {
+            const handler = (): void => {
                 if (spaceship.credits >= 200) {
                     spaceship.credits -= spaceship.repairHull();
                     this.updateStargateUI(spaceship, ui);
                 }
-            });
+            };
+            this.addBinding(repairHullBtn, 'click', handler);
         }
-        
-        // Set up undock button - this will be handled by the main docking system
+
         this.setupUndockButton();
-        
-        // Set up resource selling buttons
         this.setupSellingButtons(spaceship, ui);
-        
-        // Set up upgrade buttons
         this.setupUpgradeButtons(spaceship, ui);
     }
 
     setupUndockButton(): void {
         const undockBtn = document.getElementById('undock-btn');
         if (undockBtn) {
-            // The undock handler will be set up by the main docking system
-            // This is just for mobile-specific touch handling
-            undockBtn.addEventListener('touchstart', (e: TouchEvent) => {
+            const handler = (e: TouchEvent): void => {
                 console.log("Touch started on undock button");
                 e.stopPropagation();
-            }, { passive: false });
+            };
+            this.addBinding(undockBtn, 'touchstart', handler as EventListener, { passive: false });
         }
     }
 
     setupSellingButtons(spaceship: DockingSpaceship, ui: DockingUI): void {
         const sellIronBtn = document.getElementById('sell-iron');
         if (sellIronBtn) {
-            sellIronBtn.addEventListener('click', () => {
+            const handler = (): void => {
                 if (this.resources && this.resources.iron > 0) {
                     spaceship.credits += this.resources.iron * 10;
                     this.resources.iron = 0;
                     this.updateStargateUI(spaceship, ui);
                 }
-            });
+            };
+            this.addBinding(sellIronBtn, 'click', handler);
         }
-        
+
         const sellGoldBtn = document.getElementById('sell-gold');
         if (sellGoldBtn) {
-            sellGoldBtn.addEventListener('click', () => {
+            const handler = (): void => {
                 if (this.resources && this.resources.gold > 0) {
                     spaceship.credits += this.resources.gold * 50;
                     this.resources.gold = 0;
                     this.updateStargateUI(spaceship, ui);
                 }
-            });
+            };
+            this.addBinding(sellGoldBtn, 'click', handler);
         }
-        
+
         const sellPlatinumBtn = document.getElementById('sell-platinum');
         if (sellPlatinumBtn) {
-            sellPlatinumBtn.addEventListener('click', () => {
+            const handler = (): void => {
                 if (this.resources && this.resources.platinum > 0) {
                     spaceship.credits += this.resources.platinum * 200;
                     this.resources.platinum = 0;
                     this.updateStargateUI(spaceship, ui);
                 }
-            });
+            };
+            this.addBinding(sellPlatinumBtn, 'click', handler);
         }
     }
 
     setupUpgradeButtons(spaceship: DockingSpaceship, ui: DockingUI): void {
-        // Fuel tank upgrade button handler
-        this.setupUpgradeButton('upgrade-fuel-tank', 
+        this.setupUpgradeButton('upgrade-fuel-tank',
             () => spaceship.fuelUpgradeCost,
             () => spaceship.upgradeFuelTank(),
             spaceship, ui);
-        
-        // Engine upgrade button handler
-        this.setupUpgradeButton('upgrade-engine', 
+        this.setupUpgradeButton('upgrade-engine',
             () => spaceship.engineUpgradeCost,
             () => spaceship.upgradeEngine(),
             spaceship, ui);
-        
-        // Mining laser upgrade button handler
-        this.setupUpgradeButton('upgrade-mining', 
+        this.setupUpgradeButton('upgrade-mining',
             () => spaceship.miningUpgradeCost,
             () => spaceship.upgradeMiningLaser(),
             spaceship, ui);
-        
-        // Hull upgrade button handler
-        this.setupUpgradeButton('upgrade-hull', 
+        this.setupUpgradeButton('upgrade-hull',
             () => spaceship.hullUpgradeCost,
             () => spaceship.upgradeHull(),
             spaceship, ui);
-        
-        // Scanner upgrade button handler
-        this.setupUpgradeButton('upgrade-scanner', 
+        this.setupUpgradeButton('upgrade-scanner',
             () => spaceship.scannerUpgradeCost,
             () => spaceship.upgradeScanner(),
             spaceship, ui);
     }
 
-    // Helper method to set up an upgrade button with a given cost getter and upgrade function
     setupUpgradeButton(
         buttonId: string,
         costGetter: () => number,
@@ -174,21 +186,18 @@ export class UIIntegration {
     ): void {
         const button = document.getElementById(buttonId);
         if (button) {
-            button.addEventListener('click', () => {
+            const handler = (): void => {
                 const cost = costGetter();
                 if (spaceship.credits >= cost) {
                     spaceship.credits -= cost;
                     upgradeFunction();
-                    
-                    // Update the mining system's efficiency if we upgraded the mining laser
                     if (buttonId === 'upgrade-mining' && this.updateMiningSystem) {
                         this.updateMiningSystem(spaceship, ui);
                     }
-                    
-                    // Update UI
                     this.updateStargateUI(spaceship, ui);
                 }
-            });
+            };
+            this.addBinding(button, 'click', handler);
         }
     }
 

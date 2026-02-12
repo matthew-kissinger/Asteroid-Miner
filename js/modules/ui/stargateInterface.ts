@@ -130,6 +130,7 @@ export class StargateInterface {
     }
     
     hideStargateUI(): void {
+        this.eventHandlers.destroyTouchEvents();
         const stargateUI = document.getElementById('stargate-ui') as HTMLDivElement | null;
         if (stargateUI) {
             stargateUI.style.display = 'none';
