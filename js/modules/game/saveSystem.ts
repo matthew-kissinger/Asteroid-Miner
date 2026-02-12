@@ -262,6 +262,11 @@ export class SaveSystem {
                 );
             }
 
+            // Save achievement states
+            if (game.achievementManager?.exportStates) {
+                data.achievements = game.achievementManager.exportStates();
+            }
+
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             this.resetSessionTimer();
             this.showSaveIndicator();
@@ -336,6 +341,11 @@ export class SaveSystem {
 
         // Increment play sessions
         this.incrementPlaySessions();
+
+        // Restore achievement states
+        if (save.achievements && game.achievementManager?.importStates) {
+            game.achievementManager.importStates(save.achievements);
+        }
 
         debugLog('SaveSystem: Save applied to game');
     }
