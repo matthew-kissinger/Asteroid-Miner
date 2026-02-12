@@ -35,12 +35,12 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 ## Technologies Used
 
-*   **Language:** TypeScript 5.7 strict (269 pure TS files, 0 JavaScript)
+*   **Language:** TypeScript 5.7 strict (273 pure TS files, 0 JavaScript)
 *   **3D Engine:** Three.js r180 WebGPU (WebGL2 fallback)
 *   **ECS:** bitECS v0.4.0 (30 components, 6 active systems)
-*   **Build System:** Vite 6 (code-split: game-core 189 kB, combat 27 kB, env 62 kB, ui 73 kB)
-*   **Styles:** Tailwind CSS 3.4 + 22 CSS files
-*   **Tests:** Vitest (15 files, 309 tests) + Playwright smoke test
+*   **Build System:** Vite 6 (code-split: game-core 198 kB, combat 27 kB, env 63 kB, ui 74 kB)
+*   **Styles:** Tailwind CSS 3.4 + 23 CSS files
+*   **Tests:** Vitest (16 files, 331 tests) + Playwright smoke test
 *   **Architecture:** Hybrid ECS/Module. Combat (enemies/projectiles) runs under bitECS with fixed-step and instanced rendering; player ship physics and economy/UI run via modules. See `architecture.md`.
 *   **Mobile Controls:** NippleJS
 *   **Audio:** Web Audio API, Tone.js (for intro sequence)
@@ -195,6 +195,8 @@ See `CLAUDE.md` for detailed technical discussion.
 - **Asteroid Scanner Overlay:** Press V to scan asteroids and see ore composition, value, and mining difficulty
 - **Weapon & Shield Upgrade Categories:** Expanded stargate upgrade terminal with weapon and shield specialization trees
 - **Persistent Settings:** Audio, graphics, and control settings saved across sessions via localStorage
+- **Achievement System:** 14 achievements across 6 categories with HUD popup notifications and persistence
+- **Mission Contracts:** Procedural mission contracts available at stargate missions panel
 
 ### v0.7.0
 - **Combat Sound Effects:** Synthesized weapon, explosion, shield, and mining sounds via Web Audio API - zero external audio assets
