@@ -23,15 +23,21 @@ interface Spaceship {
 export class TradingView {
     private spaceship: Spaceship | null;
     private resources: Resources | null;
+    private audio: { playSound?: (sound: string) => void; playSoundEffect?: (sound: string, volume: number) => void } | null;
     
     constructor() {
         this.spaceship = null;
         this.resources = null;
+        this.audio = null;
     }
     
     setGameReferences(spaceship: Spaceship, resources: Resources): void {
         this.spaceship = spaceship;
         this.resources = resources;
+    }
+    
+    setAudio(audio: { playSound?: (sound: string) => void; playSoundEffect?: (sound: string, volume: number) => void }): void {
+        this.audio = audio;
     }
     
     // Sell an energy orb of the specified rarity
@@ -93,8 +99,8 @@ export class TradingView {
         this.showNotification(`Sold ${capitalizedRarity} Energy Orb for ${value} credits`, 0x33aaff);
         
         // Play sound if audio manager is available
-        if (window.game && (window.game as any).audio) {
-            (window.game as any).audio.playSoundEffect('sell', 0.5);
+        if (this.audio?.playSoundEffect) {
+            this.audio.playSoundEffect('sell', 0.5);
         }
         
         return true;
@@ -138,8 +144,8 @@ export class TradingView {
         this.spaceship.deployableLaserCount++;
         
         // Play purchase sound
-        if (window.game && (window.game as any).audio && (window.game as any).audio.playSound) {
-            (window.game as any).audio.playSound('purchase');
+        if (this.audio?.playSound) {
+            this.audio.playSound('purchase');
         }
         
         // Show notification to the player

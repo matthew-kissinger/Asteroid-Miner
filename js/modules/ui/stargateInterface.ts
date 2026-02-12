@@ -75,6 +75,11 @@ export class StargateInterface {
         }
     }
     
+    setGameReference(gameRef: any): void {
+        this.missionsView.setGameReference(gameRef);
+        this.tradingView.setAudio(gameRef.audio);
+    }
+    
     setupStargateUI(): void {
         // Create and inject styles
         this.terminalView.createStyles();

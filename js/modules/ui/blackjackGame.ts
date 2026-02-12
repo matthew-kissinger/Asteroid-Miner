@@ -72,6 +72,13 @@ export class BlackjackGame {
     }
     
     /**
+     * Set game resources reference for betting system
+     */
+    setGameResourcesRef(gameRef: any): void {
+        this.betting.setGameResourcesRef(gameRef);
+    }
+    
+    /**
      * Initialize the game UI
      */
     init(): void {

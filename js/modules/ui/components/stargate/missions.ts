@@ -1,10 +1,25 @@
 // missions.ts - Mission selection and display (including challenge systems)
 
+type GameReference = {
+    ecsWorld?: {
+        enemySystem?: {
+            initialSpawnComplete?: boolean;
+        };
+    };
+    activateHordeMode?: () => void;
+};
+
 export class MissionsView {
     private hideStargateUICallback: (() => void) | null;
+    private gameRef: GameReference | null;
     
     constructor() {
         this.hideStargateUICallback = null;
+        this.gameRef = null;
+    }
+    
+    setGameReference(gameRef: GameReference): void {
+        this.gameRef = gameRef;
     }
     
     setHideCallback(callback: () => void): void {
@@ -16,10 +31,7 @@ export class MissionsView {
         if (hordeButton) {
             hordeButton.addEventListener('click', () => {
                 // Check if spectral drones have started spawning
-                const dronesHaveSpawned = window.game && 
-                                         (window.game as any).ecsWorld && 
-                                         (window.game as any).ecsWorld.enemySystem && 
-                                         (window.game as any).ecsWorld.enemySystem.initialSpawnComplete;
+                const dronesHaveSpawned = this.gameRef?.ecsWorld?.enemySystem?.initialSpawnComplete;
                 
                 if (dronesHaveSpawned) {
                     console.log("HORDE MODE: Button clicked, showing confirmation");
@@ -86,8 +98,8 @@ export class MissionsView {
             }
             
             // Activate horde mode in the game
-            if (window.game && typeof (window.game as any).activateHordeMode === 'function') {
-                (window.game as any).activateHordeMode();
+            if (this.gameRef?.activateHordeMode) {
+                this.gameRef.activateHordeMode();
                 console.log("HORDE MODE: Activated via stargateInterface");
             } else {
                 console.error("HORDE MODE: Failed to activate - game.activateHordeMode not available");

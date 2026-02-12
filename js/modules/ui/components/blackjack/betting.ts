@@ -17,9 +17,16 @@ type BlackjackBet = {
 
 type GameResources = Partial<Record<ResourceType, number>>;
 
+type GameResourcesRef = {
+    controls?: {
+        resources?: GameResources;
+    };
+};
+
 export class BlackjackBetting {
     spaceship: BlackjackSpaceship | null;
     currentBet: BlackjackBet;
+    private gameResourcesRef: GameResourcesRef | null;
 
     constructor(spaceship: BlackjackSpaceship | null = null) {
         this.spaceship = spaceship;
@@ -27,6 +34,7 @@ export class BlackjackBetting {
             resource: null,
             amount: 0
         };
+        this.gameResourcesRef = null;
     }
 
     /**
@@ -35,6 +43,13 @@ export class BlackjackBetting {
      */
     setSpaceship(spaceship: BlackjackSpaceship | null): void {
         this.spaceship = spaceship;
+    }
+    
+    /**
+     * Set the game resources reference
+     */
+    setGameResourcesRef(gameRef: GameResourcesRef): void {
+        this.gameResourcesRef = gameRef;
     }
 
     /**
@@ -146,9 +161,8 @@ export class BlackjackBetting {
         this.spaceship.cargo[resource] = (this.spaceship.cargo[resource] || 0) - this.currentBet.amount;
         
         // Sync with the game's resource system if available
-        const game = window.game as { controls?: { resources?: GameResources } } | undefined;
-        if (game && game.controls && game.controls.resources) {
-            game.controls.resources[resource] = this.spaceship.cargo[resource] || 0;
+        if (this.gameResourcesRef?.controls?.resources) {
+            this.gameResourcesRef.controls.resources[resource] = this.spaceship.cargo[resource] || 0;
         }
         
         return true;
@@ -174,9 +188,8 @@ export class BlackjackBetting {
         this.currentBet.amount *= 2;
         
         // Sync with the game's resource system if available
-        const game = window.game as { controls?: { resources?: GameResources } } | undefined;
-        if (game && game.controls && game.controls.resources) {
-            game.controls.resources[resource] = this.spaceship.cargo[resource] || 0;
+        if (this.gameResourcesRef?.controls?.resources) {
+            this.gameResourcesRef.controls.resources[resource] = this.spaceship.cargo[resource] || 0;
         }
         
         return true;
@@ -220,9 +233,8 @@ export class BlackjackBetting {
         this.spaceship.cargo[resource] = (this.spaceship.cargo[resource] || 0) + amount;
         
         // Sync with the game's resource system if available
-        const game = window.game as { controls?: { resources?: GameResources } } | undefined;
-        if (game && game.controls && game.controls.resources) {
-            game.controls.resources[resource] = this.spaceship.cargo[resource] || 0;
+        if (this.gameResourcesRef?.controls?.resources) {
+            this.gameResourcesRef.controls.resources[resource] = this.spaceship.cargo[resource] || 0;
         }
     }
 
@@ -305,13 +317,12 @@ export class BlackjackBetting {
      * Sync with game resources
      */
     syncWithGameResources(): void {
-        const game = window.game as { controls?: { resources?: GameResources } } | undefined;
-        if (game && game.controls && game.controls.resources) {
+        if (this.gameResourcesRef?.controls?.resources) {
             if (!this.spaceship) {
                 return;
             }
             // Sync with the real game resources
-            const gameResources = game.controls.resources;
+            const gameResources = this.gameResourcesRef.controls.resources;
             
             if (!this.spaceship.cargo) {
                 this.spaceship.cargo = {};
