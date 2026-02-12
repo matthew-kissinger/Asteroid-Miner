@@ -57,7 +57,7 @@ export class BlackjackGameLogic {
      * @param {Array} hand - Array of card objects
      * @returns {number} The total score of the hand
      */
-    calculateScore(hand: BlackjackCard[]): number {
+    calculateHandValue(hand: BlackjackCard[]): number {
         let score = 0;
         let aces = 0;
         
@@ -82,6 +82,34 @@ export class BlackjackGameLogic {
     }
 
     /**
+     * Check if a hand is "soft" (contains an Ace valued at 11)
+     * @param {Array} hand - Array of card objects
+     * @returns {boolean} True if hand is soft
+     */
+    isSoftHand(hand: BlackjackCard[]): boolean {
+        let score = 0;
+        let aces = 0;
+        
+        for (let card of hand) {
+            if (card.value === 'A') {
+                aces++;
+                score += 11;
+            } else if (['J', 'Q', 'K'].includes(card.value)) {
+                score += 10;
+            } else {
+                score += parseInt(card.value);
+            }
+        }
+        
+        while (score > 21 && aces > 0) {
+            score -= 10;
+            aces--;
+        }
+        
+        return aces > 0;
+    }
+
+    /**
      * Calculate the dealer's visible score (excluding face-down card)
      * @returns {number} The visible score
      */
@@ -91,7 +119,7 @@ export class BlackjackGameLogic {
         }
         
         // Calculate score excluding the last card (which is face down)
-        return this.calculateScore(this.dealerHand.slice(0, -1));
+        return this.calculateHandValue(this.dealerHand.slice(0, -1));
     }
 
     /**
@@ -115,7 +143,7 @@ export class BlackjackGameLogic {
      * @returns {boolean} True if hand is blackjack
      */
     isBlackjack(hand: BlackjackCard[]): boolean {
-        return hand.length === 2 && this.calculateScore(hand) === 21;
+        return hand.length === 2 && this.calculateHandValue(hand) === 21;
     }
 
     /**
@@ -124,7 +152,7 @@ export class BlackjackGameLogic {
      * @returns {boolean} True if hand is bust
      */
     isBust(hand: BlackjackCard[]): boolean {
-        return this.calculateScore(hand) > 21;
+        return this.calculateHandValue(hand) > 21;
     }
 
     /**
@@ -132,8 +160,8 @@ export class BlackjackGameLogic {
      * @returns {string|null} Game result or null if game continues
      */
     checkForNaturalBlackjack(): GameResult | null {
-        const playerScore = this.calculateScore(this.playerHand);
-        const dealerScore = this.calculateScore(this.dealerHand);
+        const playerScore = this.calculateHandValue(this.playerHand);
+        const dealerScore = this.calculateHandValue(this.dealerHand);
         
         if (playerScore === 21 || dealerScore === 21) {
             if (playerScore === 21 && dealerScore === 21) {
@@ -156,19 +184,40 @@ export class BlackjackGameLogic {
      * @returns {boolean} True if dealer should hit
      */
     shouldDealerHit(): boolean {
-        const dealerScore = this.calculateScore(this.dealerHand);
-        return dealerScore < 17;
+        const dealerScore = this.calculateHandValue(this.dealerHand);
+        
+        // Hits on anything less than 17
+        if (dealerScore < 17) return true;
+        
+        // Hits on soft 17
+        if (dealerScore === 17 && this.isSoftHand(this.dealerHand)) return true;
+        
+        return false;
+    }
+
+    /**
+     * Automated dealer turn logic
+     * @param {Object} deck - The card deck
+     */
+    dealerPlay(deck: any): void {
+        while (this.shouldDealerHit()) {
+            this.addCardToDealer(deck.deal());
+        }
+        this.endGame(this.determineWinner());
     }
 
     /**
      * Determine the outcome of the game
      * @returns {string} Game result
      */
-    determineOutcome(): GameResult {
-        const playerScore = this.calculateScore(this.playerHand);
-        const dealerScore = this.calculateScore(this.dealerHand);
+    determineWinner(): GameResult {
+        const playerScore = this.calculateHandValue(this.playerHand);
+        const dealerScore = this.calculateHandValue(this.dealerHand);
         
-        if (dealerScore > 21) {
+        if (playerScore > 21) {
+            // Player busts - player loses
+            return 'lose';
+        } else if (dealerScore > 21) {
             // Dealer busts - player wins
             return 'win';
         } else if (playerScore > dealerScore) {
@@ -256,7 +305,7 @@ export class BlackjackGameLogic {
      * @returns {number} Player's current score
      */
     getPlayerScore(): number {
-        return this.calculateScore(this.playerHand);
+        return this.calculateHandValue(this.playerHand);
     }
 
     /**
@@ -264,7 +313,7 @@ export class BlackjackGameLogic {
      * @returns {number} Dealer's current score
      */
     getDealerScore(): number {
-        return this.calculateScore(this.dealerHand);
+        return this.calculateHandValue(this.dealerHand);
     }
 
     /**

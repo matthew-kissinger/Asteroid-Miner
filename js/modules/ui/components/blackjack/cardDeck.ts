@@ -52,7 +52,7 @@ export class BlackjackCardDeck {
      * Draw a card from the deck
      * @returns {Object} A card object
      */
-    drawCard(): BlackjackCard {
+    deal(): BlackjackCard {
         if (this.deck.length === 0) {
             this.createDeck();
         }
