@@ -26,7 +26,7 @@ npm run test:smoke   # Headless browser runtime test (Playwright)
 
 ## Architecture
 
-252 TypeScript files, 0 JavaScript. Pure TS codebase.
+255 TypeScript files, 0 JavaScript. Pure TS codebase.
 
 ```
 src/
@@ -80,9 +80,9 @@ css/                     # 18 CSS files
 
 ## Active Issues
 
-- 228 `console.log` across 83 files (debugLog merged, 24 worst files gated)
-- 24 `window.game` files (non-test, includes comments)
-- 726 `any` type escapes (368 `as any` + 358 `: any`)
+- 246 `console.log` across 84 files (30 files use debugLog, rest ungated)
+- 26 `window.game` files (53 occurrences, includes comments)
+- 654 `any` type escapes (297 `as any` + 357 `: any`)
 - 99 files use `import * as THREE` - Three.js bundle 1,370 kB, tree-shaking blocked
 - 7 unmerged task branches need merge review (type cleanup, tests, tree-shaking)
 - Test coverage gaps: environment, ui, renderer, spaceship, audio modules have zero tests on master
