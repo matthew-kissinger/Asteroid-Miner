@@ -173,6 +173,7 @@ export class Spaceship {
       this.shipDocking = new ShipDocking(this.mesh, this.scene);
     }
     this.shipVisualEffects = new ShipVisualEffects(components);
+    this.shipVisualEffects.setScene(this.scene);
   }
 
   // Methods for updating spaceship state in game loop
@@ -180,6 +181,11 @@ export class Spaceship {
     // Update any continuous effects or animations
     if (this.updateParticles && !this.isDocked) {
       this.updateParticles();
+    }
+
+    // Update shield recharge effect if active
+    if (this.shipVisualEffects && this.mesh) {
+      this.shipVisualEffects.updateShieldEffect(this.mesh.position);
     }
   }
 
@@ -198,6 +204,12 @@ export class Spaceship {
 
   updateTrailVisibility(isMoving: boolean): void {
     this.shipVisualEffects?.updateTrailVisibility(isMoving, this.thrust, this.velocity, this.trailEffects);
+  }
+
+  showShieldRechargeEffect(): void {
+    if (this.shipVisualEffects && this.mesh) {
+      this.shipVisualEffects.showShieldRechargeEffect(this.mesh as THREE.Group);
+    }
   }
 
   // DOCKING OPERATIONS - Delegate to docking module

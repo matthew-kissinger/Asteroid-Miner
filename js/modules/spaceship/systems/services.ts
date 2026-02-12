@@ -37,11 +37,11 @@ export class ShipServices {
 
   /**
    * Repair the ship's shield system
-   * @param {object} spaceshipState Reference to spaceship state
-   * @param {function} syncCallback Callback to sync values to health component
-   * @returns {number} Cost of shield repair
+   * @param spaceshipState Reference to spaceship state with showShieldRechargeEffect method
+   * @param syncCallback Callback to sync values to health component
+   * @returns Cost of shield repair
    */
-  repairShield(spaceshipState: SpaceshipState, syncCallback: () => void): number {
+  repairShield(spaceshipState: SpaceshipState & { showShieldRechargeEffect?: () => void }, syncCallback: () => void): number {
     const oldShield = spaceshipState.shield;
     debugLog(`===== SHIELD REPAIR INITIATED =====`);
     debugLog(`Repairing shield: ${oldShield} → ${spaceshipState.maxShield}`);
@@ -60,6 +60,11 @@ export class ShipServices {
       maxFuel: spaceshipState.maxFuel
     });
     debugLog(`===== SHIELD REPAIR COMPLETED =====`);
+
+    // Trigger shield recharge visual effect
+    if (spaceshipState.showShieldRechargeEffect) {
+      spaceshipState.showShieldRechargeEffect();
+    }
 
     // Sync the updated shield value to the player entity's HealthComponent
     // Use direct entity access for more reliable syncing
