@@ -17,14 +17,14 @@ import { EventManager } from './combat/events.ts';
 import { EffectsManager } from './combat/effects.ts';
 import { AISpawnerManager } from './combat/aiAndSpawners.ts';
 import { CombatLogic } from './combat/combatLogic.ts';
-import * as THREE from 'three';
+import type { Scene, Vector3 } from 'three';
 
 // Define interfaces for submodules until they are converted
 interface IWorldSetup {
-    initializeECSWorld(scene: THREE.Scene, spaceship: any): Promise<any>;
+    initializeECSWorld(scene: Scene, spaceship: any): Promise<any>;
     isWorldInitialized(): boolean;
     getPlayerEntity(): any;
-    setSceneReference(scene: THREE.Scene): void;
+    setSceneReference(scene: Scene): void;
     initializeWorld(): void;
     createPlayerReferenceEntity(spaceship: any): Promise<any>;
     updatePlayerReference(spaceship: any): void;
@@ -34,9 +34,9 @@ interface IWorldSetup {
 }
 
 interface ISystemRegistrar {
-    registerAllSystems(world: any, scene: THREE.Scene): Promise<any>;
+    registerAllSystems(world: any, scene: Scene): Promise<any>;
     setSystemsEnabled(enabled: boolean): void;
-    importAndRegisterSystem(path: string, className: string, world: any, scene: THREE.Scene): Promise<any>;
+    importAndRegisterSystem(path: string, className: string, world: any, scene: Scene): Promise<any>;
 }
 
 interface IEventManager {
@@ -46,9 +46,9 @@ interface IEventManager {
 
 interface IEffectsManager {
     updateTracers(deltaTime: number): void;
-    createExplosionEffect(position: THREE.Vector3, duration: number, isVisible: boolean, arg3: null): any;
-    createAimingTracer(startPosition: THREE.Vector3, direction: THREE.Vector3, distance: number, arg3: null): any;
-    createMuzzleFlash(position: THREE.Vector3, direction: THREE.Vector3, arg3: null): any;
+    createExplosionEffect(position: Vector3, duration: number, isVisible: boolean, arg3: null): any;
+    createAimingTracer(startPosition: Vector3, direction: Vector3, distance: number, arg3: null): any;
+    createMuzzleFlash(position: Vector3, direction: Vector3, arg3: null): any;
     dispose(): void;
 }
 
@@ -61,7 +61,7 @@ interface IAISpawnerManager {
 
 interface ICombatLogic {
     fireParticleCannon(
-        scene: THREE.Scene,
+        scene: Scene,
         spaceship: any,
         world: any,
         playerEntity: any,
@@ -72,7 +72,7 @@ interface ICombatLogic {
 }
 
 export class Combat {
-    scene: THREE.Scene;
+    scene: Scene;
     spaceship: any;
     fireRate: number;
     lastFireTime: number;
@@ -93,7 +93,7 @@ export class Combat {
     enemySystem: any;
     disposed: boolean = false;
 
-    constructor(scene: THREE.Scene, spaceship: any) {
+    constructor(scene: Scene, spaceship: any) {
         this.scene = scene;
         this.spaceship = spaceship;
         
@@ -264,11 +264,11 @@ export class Combat {
     
     /**
      * Create an explosion effect at the given position
-     * @param {THREE.Vector3} position Position for the explosion
+     * @param {Vector3} position Position for the explosion
      * @param {number} duration Duration of the explosion in milliseconds
      * @param {boolean} isVisible Whether the explosion should be visible
      */
-    createExplosionEffect(position: THREE.Vector3, duration: number = 1000, isVisible: boolean = true) {
+    createExplosionEffect(position: Vector3, duration: number = 1000, isVisible: boolean = true) {
         return this.effectsManager.createExplosionEffect(position, duration, isVisible, null);
     }
     
@@ -323,16 +323,16 @@ export class Combat {
     
     
     // Aiming tracer creation moved to EffectsManager
-    createAimingTracer(startPosition: THREE.Vector3, direction: THREE.Vector3, distance: number = 3000) {
+    createAimingTracer(startPosition: Vector3, direction: Vector3, distance: number = 3000) {
         return this.effectsManager.createAimingTracer(startPosition, direction, distance, null);
     }
     
     /**
      * Create a laser burst effect that travels forward with the projectile
-     * @param {THREE.Vector3} position Position for the effect
-     * @param {THREE.Vector3} direction Direction the effect should travel
+     * @param {Vector3} position Position for the effect
+     * @param {Vector3} direction Direction the effect should travel
      */
-    createMuzzleFlash(position: THREE.Vector3, direction: THREE.Vector3) {
+    createMuzzleFlash(position: Vector3, direction: Vector3) {
         return this.effectsManager.createMuzzleFlash(position, direction, null);
     }
     

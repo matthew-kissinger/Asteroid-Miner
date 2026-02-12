@@ -1,18 +1,32 @@
 // physics.ts - Handles physics calculations and movement
 
-import * as THREE from 'three';
+import {
+  Vector3,
+  Quaternion,
+  Euler,
+  Scene,
+  Camera,
+  Raycaster,
+  Mesh,
+  Object3D,
+  SphereGeometry,
+  MeshBasicMaterial,
+  DoubleSide,
+  PerspectiveCamera,
+  OrthographicCamera,
+} from 'three';
 import { DEBUG_MODE } from '../globals/debug.ts';
 import { mainMessageBus } from '../globals/messageBus.ts';
 
 // Reusable temp objects - never allocate in update loop
-const _tempVec3A = new THREE.Vector3();
-const _tempVec3B = new THREE.Vector3();
-const _tempVec3C = new THREE.Vector3();
-const _tempVec3D = new THREE.Vector3();
-const _tempVec3E = new THREE.Vector3();
-const _tempVec3F = new THREE.Vector3();
-const _tempQuat = new THREE.Quaternion();
-const _tempEuler = new THREE.Euler();
+const _tempVec3A = new Vector3();
+const _tempVec3B = new Vector3();
+const _tempVec3C = new Vector3();
+const _tempVec3D = new Vector3();
+const _tempVec3E = new Vector3();
+const _tempVec3F = new Vector3();
+const _tempQuat = new Quaternion();
+const _tempEuler = new Euler();
 
 // Type definitions for physics-related objects
 interface RotationState {
@@ -29,13 +43,13 @@ interface ThrustState {
 }
 
 interface TrailEffects {
-    updateTrailVisibility(isMoving: boolean, thrust: ThrustState, velocity: THREE.Vector3): void;
-    updateParticles(thrust: ThrustState, velocity: THREE.Vector3): void;
+    updateTrailVisibility(isMoving: boolean, thrust: ThrustState, velocity: Vector3): void;
+    updateParticles(thrust: ThrustState, velocity: Vector3): void;
 }
 
 interface Spaceship {
-    mesh: THREE.Object3D;
-    velocity: THREE.Vector3;
+    mesh: Object3D;
+    velocity: Vector3;
     thrust: ThrustState;
     isDestroyed: boolean;
     isDocked: boolean;
@@ -48,7 +62,7 @@ interface Spaceship {
 type CollisionType = "asteroid" | "planet" | "sun";
 
 interface AsteroidData {
-    mesh: THREE.Mesh;
+    mesh: Mesh;
 }
 
 interface AsteroidBeltUserData {
@@ -79,7 +93,7 @@ export class Physics {
 
     // Camera constants for smooth following
     static CAMERA_LAG = 0.1;        // Smoothing factor (0.08-0.15, lower = smoother/slower)
-    static CAMERA_BASE_OFFSET = new THREE.Vector3(0, 5, 25); // Base camera offset
+    static CAMERA_BASE_OFFSET = new Vector3(0, 5, 25); // Base camera offset
     static CAMERA_VELOCITY_SCALE = 0.3; // How much velocity affects camera distance (0.3 = +30% at max speed)
     static CAMERA_LOOKAHEAD_SCALE = 20; // Max look-ahead distance based on velocity
 
@@ -99,13 +113,13 @@ export class Physics {
     static ZOOM_BOOST_MULTIPLIER = 1.3;  // Zoom out when boosting (1.3x = 30% zoom out)
     static ZOOM_LERP_SPEED = 0.05;       // Smooth transition speed for zoom (0.05 = moderate smoothness)
 
-    scene: THREE.Scene;
+    scene: Scene;
     spaceship: Spaceship | null;
-    camera: THREE.Camera | null;
+    camera: Camera | null;
     rotationState: RotationState;
     collided: boolean;
-    raycaster: THREE.Raycaster;
-    direction: THREE.Vector3;
+    raycaster: Raycaster;
+    direction: Vector3;
     collisionDistance: number;
     normalizedDeltaTime: number = 0;
 
@@ -116,7 +130,7 @@ export class Physics {
     // Camera recoil state
     recoilIntensity: number = 0;    // Current recoil strength (0-1)
     recoilTime: number = 0;         // Time accumulator for recoil oscillation
-    recoilDirection: THREE.Vector3 = new THREE.Vector3(); // Direction of recoil (opposite to firing)
+    recoilDirection: Vector3 = new Vector3(); // Direction of recoil (opposite to firing)
 
     // Camera zoom state
     currentZoom: number = 1.0;      // Current zoom multiplier (1.0 = normal, 1.3 = zoomed out)
@@ -128,7 +142,7 @@ export class Physics {
     private audioSystem?: AudioSystem;
 
     constructor(
-        scene: THREE.Scene,
+        scene: Scene,
         options?: {
             gameState?: GameStateAccessor;
             inputAccessor?: InputAccessor;
@@ -154,8 +168,8 @@ export class Physics {
         this.collided = false;
 
         // For collision detection
-        this.raycaster = new THREE.Raycaster();
-        this.direction = new THREE.Vector3(0, 0, -1);
+        this.raycaster = new Raycaster();
+        this.direction = new Vector3(0, 0, -1);
         this.collisionDistance = Physics.COLLISION_DISTANCE; // Use the class constant for consistency
 
         // Subscribe to combat events for camera shake
@@ -220,7 +234,7 @@ export class Physics {
      * @param intensity Recoil strength (0-1)
      * @param direction Direction of the recoil (e.g., opposite to firing)
      */
-    triggerRecoil(intensity: number, direction: THREE.Vector3): void {
+    triggerRecoil(intensity: number, direction: Vector3): void {
         this.recoilIntensity = Math.max(this.recoilIntensity, intensity);
         this.recoilTime = 0; // Reset time to start recoil animation from beginning
         this.recoilDirection.copy(direction).negate(); // Store opposite of firing direction
@@ -232,7 +246,7 @@ export class Physics {
     }
     
     // Set camera reference
-    setCamera(camera: THREE.Camera): void {
+    setCamera(camera: Camera): void {
         this.camera = camera;
     }
     
@@ -490,7 +504,7 @@ export class Physics {
         this.camera.lookAt(lookAtPoint);
 
         // Force visible frustum (debugging purposes)
-        if (this.camera instanceof THREE.PerspectiveCamera || this.camera instanceof THREE.OrthographicCamera) {
+        if (this.camera instanceof PerspectiveCamera || this.camera instanceof OrthographicCamera) {
             this.camera.far = 400000; // Ensure far clip plane is beyond skybox
             this.camera.updateProjectionMatrix();
         }
@@ -595,7 +609,7 @@ export class Physics {
         const shipPosition = shipMesh.position.clone();
         
         // First check if we're colliding with our own projectiles and skip those
-        this.scene.traverse((object: THREE.Object3D) => {
+        this.scene.traverse((object: Object3D) => {
             if (object.type === 'Mesh' && 
                 'geometry' in object && 
                 object.geometry && 
@@ -617,10 +631,10 @@ export class Physics {
         });
         
         // 1. Check collisions with asteroids
-        const asteroidMeshes: THREE.Mesh[] = [];
+        const asteroidMeshes: Mesh[] = [];
         
         // Direct access to the asteroid belt if possible
-        const asteroidBelt = this.scene.children.find((child: THREE.Object3D) => child.name === 'asteroidBelt');
+        const asteroidBelt = this.scene.children.find((child: Object3D) => child.name === 'asteroidBelt');
         let asteroids: AsteroidData[] = [];
         
         // If we can get direct access to asteroid belt object, use that for better performance
@@ -634,7 +648,7 @@ export class Physics {
             asteroidMeshes.push(...asteroids.map(a => a.mesh));
         } else {
             // Otherwise do the more expensive scene traversal
-            this.scene.traverse((object: THREE.Object3D) => {
+            this.scene.traverse((object: Object3D) => {
                 // Check for asteroids using geometry type
                 if (object.type === 'Mesh' && 
                     'geometry' in object && 
@@ -655,7 +669,7 @@ export class Physics {
                     // Only include objects in the appropriate distance range from the center
                     // This helps avoid mistaking other geometric objects for asteroids
                     if (distFromCenter > 16000 && distFromCenter < 32000) {
-                        asteroidMeshes.push(object as THREE.Mesh);
+                        asteroidMeshes.push(object as Mesh);
                     }
                 }
             });
@@ -701,7 +715,7 @@ export class Physics {
         }
         
         // 2. Check collisions with planets
-        this.scene.traverse((object: THREE.Object3D) => {
+        this.scene.traverse((object: Object3D) => {
             // Check if this is a planet - they typically have larger scale
             if (object.type === 'Mesh' && 
                 'geometry' in object &&
@@ -745,13 +759,13 @@ export class Physics {
                         object.material.emissive.g > 0.5) {
                         // Sun collision: if we're within the exact combined radius
                         if (distance < planetRadius + shipRadius) {
-                            this.handleCollision(object as THREE.Mesh, "sun");
+                            this.handleCollision(object as Mesh, "sun");
                             return;
                         }
                     } 
                     // Regular planet collision
                     else if (distance < planetRadius + shipRadius) {
-                        this.handleCollision(object as THREE.Mesh, "planet");
+                        this.handleCollision(object as Mesh, "planet");
                         return;
                     }
                 }
@@ -759,7 +773,7 @@ export class Physics {
         });
     }
     
-    handleCollision(object: THREE.Mesh, type: CollisionType): void {
+    handleCollision(object: Mesh, type: CollisionType): void {
         if (this.collided || !this.scene || !this.spaceship) return; // Only handle the first collision
         
         this.collided = true;
@@ -834,13 +848,13 @@ export class Physics {
         }
         
         // Create visual effect for the collision
-        const explosionGeometry = new THREE.SphereGeometry(explosionSize, 32, 32);
-        const explosionMaterial = new THREE.MeshBasicMaterial({
+        const explosionGeometry = new SphereGeometry(explosionSize, 32, 32);
+        const explosionMaterial = new MeshBasicMaterial({
             color: explosionColor,
             transparent: true,
             opacity: 0.8
         });
-        const explosion = new THREE.Mesh(explosionGeometry, explosionMaterial);
+        const explosion = new Mesh(explosionGeometry, explosionMaterial);
         explosion.position.copy(this.spaceship.mesh.position);
         this.scene.add(explosion);
         
@@ -912,15 +926,15 @@ export class Physics {
         if (!this.spaceship || !this.scene) return;
         
         // Create a shield-like effect around the ship
-        const shieldGeometry = new THREE.SphereGeometry(60, 32, 32); // 4x original size (was 15)
-        const shieldMaterial = new THREE.MeshBasicMaterial({
+        const shieldGeometry = new SphereGeometry(60, 32, 32); // 4x original size (was 15)
+        const shieldMaterial = new MeshBasicMaterial({
             color: 0x30cfd0,
             transparent: true,
             opacity: 0.6,
-            side: THREE.DoubleSide
+            side: DoubleSide
         });
         
-        const shield = new THREE.Mesh(shieldGeometry, shieldMaterial);
+        const shield = new Mesh(shieldGeometry, shieldMaterial);
         shield.position.copy(this.spaceship.mesh.position);
         this.scene.add(shield);
         
@@ -937,7 +951,7 @@ export class Physics {
             
             scale += expandSpeed;
             shield.scale.set(scale, scale, scale);
-            if (shield.material instanceof THREE.MeshBasicMaterial) {
+            if (shield.material instanceof MeshBasicMaterial) {
                 shield.material.opacity -= fadeSpeed;
             }
             
@@ -952,20 +966,20 @@ export class Physics {
         animateShield();
     }
     
-    animateExplosion(explosion: THREE.Mesh): void {
+    animateExplosion(explosion: Mesh): void {
         let scale = 1;
         const expandSpeed = 0.5;
         const fadeSpeed = 0.02;
         
         const animate = (): void => {
-            if (scale > 20 || (explosion.material instanceof THREE.MeshBasicMaterial && explosion.material.opacity <= 0)) {
+            if (scale > 20 || (explosion.material instanceof MeshBasicMaterial && explosion.material.opacity <= 0)) {
                 this.scene.remove(explosion);
                 return;
             }
             
             scale += expandSpeed;
             explosion.scale.set(scale, scale, scale);
-            if (explosion.material instanceof THREE.MeshBasicMaterial) {
+            if (explosion.material instanceof MeshBasicMaterial) {
                 explosion.material.opacity -= fadeSpeed;
             }
             

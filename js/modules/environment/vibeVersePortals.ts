@@ -1,10 +1,29 @@
 // vibeVersePortals.ts - Implements VibeVerse portal entrance and exit
 
-import * as THREE from 'three';
+import {
+  Object3D,
+  Vector3,
+  Scene,
+  Group,
+  Box3,
+  Points,
+  TorusGeometry,
+  MeshStandardMaterial,
+  Mesh,
+  CircleGeometry,
+  MeshBasicMaterial,
+  DoubleSide,
+  BufferGeometry,
+  BufferAttribute,
+  PointsMaterial,
+  AdditiveBlending,
+  CanvasTexture,
+  PlaneGeometry,
+} from 'three';
 
 interface SpaceshipLike {
-    mesh?: THREE.Object3D;
-    velocity?: THREE.Vector3;
+    mesh?: Object3D;
+    velocity?: Vector3;
 }
 
 interface GameGlobal {
@@ -13,19 +32,19 @@ interface GameGlobal {
 }
 
 export class VibeVersePortals {
-    scene: THREE.Scene;
+    scene: Scene;
     spaceship: SpaceshipLike;
-    startPortalGroup: THREE.Group | null;
-    exitPortalGroup: THREE.Group | null;
-    startPortalBox: THREE.Box3 | null;
-    exitPortalBox: THREE.Box3 | null;
-    startPortalParticleSystem: THREE.Points | null;
-    exitPortalParticleSystem: THREE.Points | null;
+    startPortalGroup: Group | null;
+    exitPortalGroup: Group | null;
+    startPortalBox: Box3 | null;
+    exitPortalBox: Box3 | null;
+    startPortalParticleSystem: Points | null;
+    exitPortalParticleSystem: Points | null;
     shouldCreateStartPortal: boolean;
     refUrl: string;
     _isRedirecting?: boolean;
 
-    constructor(scene: THREE.Scene, spaceship: SpaceshipLike) {
+    constructor(scene: Scene, spaceship: SpaceshipLike) {
         this.scene = scene;
         this.spaceship = spaceship;
         this.startPortalGroup = null;
@@ -57,36 +76,36 @@ export class VibeVersePortals {
 
     createStartPortal(): void {
         // Create a portal group
-        this.startPortalGroup = new THREE.Group();
+        this.startPortalGroup = new Group();
         this.startPortalGroup.name = 'startPortal';
 
         // Create portal ring - INCREASED SIZE
-        const ringGeometry = new THREE.TorusGeometry(150, 15, 32, 100);
-        const ringMaterial = new THREE.MeshStandardMaterial({
+        const ringGeometry = new TorusGeometry(150, 15, 32, 100);
+        const ringMaterial = new MeshStandardMaterial({
             color: 0xff0000,
             emissive: 0xff0000,
             emissiveIntensity: 0.5,
             roughness: 0.3,
             metalness: 0.7
         });
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+        const ring = new Mesh(ringGeometry, ringMaterial);
         this.startPortalGroup.add(ring);
 
         // Create portal surface (semi-transparent) - INCREASED SIZE
-        const surfaceGeometry = new THREE.CircleGeometry(135, 32);
-        const surfaceMaterial = new THREE.MeshBasicMaterial({
+        const surfaceGeometry = new CircleGeometry(135, 32);
+        const surfaceMaterial = new MeshBasicMaterial({
             color: 0xff0000,
             transparent: true,
             opacity: 0.3,
-            side: THREE.DoubleSide
+            side: DoubleSide
         });
-        const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+        const surface = new Mesh(surfaceGeometry, surfaceMaterial);
         surface.position.z = 0.1; // Slight offset to avoid z-fighting
         this.startPortalGroup.add(surface);
 
         // Create particle system
         const particleCount = 500;
-        const particleGeometry = new THREE.BufferGeometry();
+        const particleGeometry = new BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
 
         // Position particles in a ring pattern - ADJUSTED FOR LARGER SIZE
@@ -99,16 +118,16 @@ export class VibeVersePortals {
             positions[i * 3 + 2] = (Math.random() - 0.5) * 15; // Small variation in z
         }
 
-        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particleGeometry.setAttribute('position', new BufferAttribute(positions, 3));
 
-        const particleMaterial = new THREE.PointsMaterial({
+        const particleMaterial = new PointsMaterial({
             color: 0xff5555,
             size: 3.5, // Increased particle size
-            blending: THREE.AdditiveBlending,
+            blending: AdditiveBlending,
             transparent: true
         });
 
-        this.startPortalParticleSystem = new THREE.Points(particleGeometry, particleMaterial);
+        this.startPortalParticleSystem = new Points(particleGeometry, particleMaterial);
         this.startPortalGroup.add(this.startPortalParticleSystem);
 
         // Position the portal higher above the stargate and centered on y-axis
@@ -119,43 +138,43 @@ export class VibeVersePortals {
         this.scene.add(this.startPortalGroup);
 
         // Create collision box
-        this.startPortalBox = new THREE.Box3().setFromObject(this.startPortalGroup);
+        this.startPortalBox = new Box3().setFromObject(this.startPortalGroup);
 
         console.log("Start portal created at position:", this.startPortalGroup.position);
     }
 
     createExitPortal(): void {
         // Create a portal group
-        this.exitPortalGroup = new THREE.Group();
+        this.exitPortalGroup = new Group();
         this.exitPortalGroup.name = 'exitPortal';
 
         // Create portal ring - INCREASED SIZE
-        const ringGeometry = new THREE.TorusGeometry(150, 15, 32, 100);
-        const ringMaterial = new THREE.MeshStandardMaterial({
+        const ringGeometry = new TorusGeometry(150, 15, 32, 100);
+        const ringMaterial = new MeshStandardMaterial({
             color: 0x00ff00,
             emissive: 0x00ff00,
             emissiveIntensity: 0.5,
             roughness: 0.3,
             metalness: 0.7
         });
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+        const ring = new Mesh(ringGeometry, ringMaterial);
         this.exitPortalGroup.add(ring);
 
         // Create portal surface (semi-transparent) - INCREASED SIZE
-        const surfaceGeometry = new THREE.CircleGeometry(135, 32);
-        const surfaceMaterial = new THREE.MeshBasicMaterial({
+        const surfaceGeometry = new CircleGeometry(135, 32);
+        const surfaceMaterial = new MeshBasicMaterial({
             color: 0x00ff00,
             transparent: true,
             opacity: 0.3,
-            side: THREE.DoubleSide
+            side: DoubleSide
         });
-        const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+        const surface = new Mesh(surfaceGeometry, surfaceMaterial);
         surface.position.z = 0.1; // Slight offset to avoid z-fighting
         this.exitPortalGroup.add(surface);
 
         // Create particle system
         const particleCount = 500;
-        const particleGeometry = new THREE.BufferGeometry();
+        const particleGeometry = new BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
 
         // Position particles in a ring pattern - ADJUSTED FOR LARGER SIZE
@@ -168,16 +187,16 @@ export class VibeVersePortals {
             positions[i * 3 + 2] = (Math.random() - 0.5) * 15; // Small variation in z
         }
 
-        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particleGeometry.setAttribute('position', new BufferAttribute(positions, 3));
 
-        const particleMaterial = new THREE.PointsMaterial({
+        const particleMaterial = new PointsMaterial({
             color: 0x55ff55,
             size: 3.5, // Increased particle size
-            blending: THREE.AdditiveBlending,
+            blending: AdditiveBlending,
             transparent: true
         });
 
-        this.exitPortalParticleSystem = new THREE.Points(particleGeometry, particleMaterial);
+        this.exitPortalParticleSystem = new Points(particleGeometry, particleMaterial);
         this.exitPortalGroup.add(this.exitPortalParticleSystem);
 
         // Create text label for the portal - INCREASED SIZE
@@ -195,15 +214,15 @@ export class VibeVersePortals {
             ctx.fillText('VIBEVERSE PORTAL', canvas.width / 2, canvas.height / 2);
         }
 
-        const texture = new THREE.CanvasTexture(canvas);
-        const labelGeometry = new THREE.PlaneGeometry(200, 50); // Increased size
-        const labelMaterial = new THREE.MeshBasicMaterial({
+        const texture = new CanvasTexture(canvas);
+        const labelGeometry = new PlaneGeometry(200, 50); // Increased size
+        const labelMaterial = new MeshBasicMaterial({
             map: texture,
             transparent: true,
-            side: THREE.DoubleSide
+            side: DoubleSide
         });
 
-        const label = new THREE.Mesh(labelGeometry, labelMaterial);
+        const label = new Mesh(labelGeometry, labelMaterial);
         label.position.set(0, 200, 0); // Position above the portal (increased)
         this.exitPortalGroup.add(label);
 
@@ -215,7 +234,7 @@ export class VibeVersePortals {
         this.scene.add(this.exitPortalGroup);
 
         // Create collision box
-        this.exitPortalBox = new THREE.Box3().setFromObject(this.exitPortalGroup);
+        this.exitPortalBox = new Box3().setFromObject(this.exitPortalGroup);
 
         console.log("Exit portal created at position:", this.exitPortalGroup.position);
     }
@@ -249,7 +268,7 @@ export class VibeVersePortals {
         if (!this.spaceship || !this.spaceship.mesh) return;
 
         // Create a box for the spaceship (used for collision detection)
-        const shipBox = new THREE.Box3().setFromObject(this.spaceship.mesh);
+        const shipBox = new Box3().setFromObject(this.spaceship.mesh);
 
         // Check start portal interaction (if it exists)
         if (this.startPortalGroup && this.startPortalBox) {

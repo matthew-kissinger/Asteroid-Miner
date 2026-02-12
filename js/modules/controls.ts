@@ -7,12 +7,12 @@ import { TargetingSystem } from './controls/targetingSystem.ts';
 import { DockingSystem } from './controls/dockingSystem.ts';
 import { TouchControls } from './controls/touchControls.ts';
 import { MobileDetector } from '../utils/mobileDetector.ts';
-import * as THREE from 'three';
+import type { Scene, Camera, Object3D, Vector3 } from 'three';
 import type { DockingSpaceship, DockingUI, ResourceInventory } from './controls/docking/types.ts';
 
 // Type definitions for dependencies
-type SceneWithCamera = THREE.Scene & {
-    camera: THREE.Camera;
+type SceneWithCamera = Scene & {
+    camera: Camera;
 };
 
 type SpaceshipType = DockingSpaceship & {
@@ -25,7 +25,7 @@ type SpaceshipType = DockingSpaceship & {
     };
     thrustPower: number;
     strafePower: number;
-    mesh: THREE.Object3D;
+    mesh: Object3D;
     scanRange?: number;
 };
 
@@ -40,8 +40,8 @@ type EnvironmentType = {
         removeAsteroid: (asteroid: any) => void;
     };
     asteroids: any[];
-    checkAnomalyCollision: (position: THREE.Vector3) => any;
-    collectAnomalyOrb: (anomaly: any) => any;
+    checkAnomalyCollision: (position: Vector3) => any;
+    collectAnomalyOrb: (anomaly: any) => void;
 };
 
 type UIType = DockingUI & {
@@ -51,7 +51,7 @@ type UIType = DockingUI & {
 type ResourcesType = ResourceInventory;
 
 type AnomalyType = {
-    position: THREE.Vector3;
+    position: Vector3;
     orb?: {
         color: any;
         size: number;
@@ -341,7 +341,7 @@ export class Controls {
         }
         
         // Try to collect the orb
-        const orbData = this.environment.collectAnomalyOrb(anomaly) as OrbData | null;
+        const orbData = this.environment.collectAnomalyOrb(anomaly) as unknown as OrbData | null;
         if (!orbData) {
             // Orb already collected, notification handled in checkForAnomalyOrbs
             return;

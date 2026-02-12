@@ -6,7 +6,7 @@
  */
 
 import { World } from '../../core/world.ts';
-import * as THREE from 'three';
+import { Scene, Vector3, Euler, Quaternion } from 'three';
 
 export class WorldSetup {
     world: any = null;
@@ -20,7 +20,7 @@ export class WorldSetup {
      * Initialize the ECS world asynchronously
      * This is called from the constructor and runs in the background
      */
-    async initializeECSWorld(scene: THREE.Scene, spaceship: any): Promise<any> {
+    async initializeECSWorld(scene: Scene, spaceship: any): Promise<any> {
         try {
             console.log("[COMBAT] Starting ECS world initialization...");
             
@@ -118,13 +118,13 @@ export class WorldSetup {
             
             // Legacy components removed; use minimal local shims.
             const TransformComponent = class FallbackTransform {
-                position: THREE.Vector3;
-                rotation: THREE.Euler;
-                quaternion: THREE.Quaternion;
-                constructor(position?: THREE.Vector3) {
-                    this.position = position || new THREE.Vector3();
-                    this.rotation = new THREE.Euler();
-                    this.quaternion = new THREE.Quaternion();
+                position: Vector3;
+                rotation: Euler;
+                quaternion: Quaternion;
+                constructor(position?: Vector3) {
+                    this.position = position || new Vector3();
+                    this.rotation = new Euler();
+                    this.quaternion = new Quaternion();
                 }
             };
 
@@ -143,7 +143,7 @@ export class WorldSetup {
             
             // Add transform component linked to spaceship position
             try {
-                const position = spaceship.mesh ? spaceship.mesh.position.clone() : new THREE.Vector3();
+                const position = spaceship.mesh ? spaceship.mesh.position.clone() : new Vector3();
                 const transform = new TransformComponent(position);
                 playerEntity.addComponent(transform);
                 console.log(`[COMBAT] Added TransformComponent to player entity with position: ${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}`);
@@ -326,7 +326,7 @@ export class WorldSetup {
     /**
      * Set reference to this world in the scene for cross-component access
      */
-    setSceneReference(scene: THREE.Scene): void {
+    setSceneReference(scene: Scene): void {
         if (scene) {
             (scene as any).ecsWorld = this.world;
             console.log("[COMBAT] Set ECS world reference in scene for cross-system access");

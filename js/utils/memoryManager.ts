@@ -3,7 +3,7 @@
  * Provides tools for optimizing memory usage and reducing garbage collection
  */
 
-import * as THREE from 'three';
+import { BufferAttribute } from 'three';
 import { DEBUG_MODE } from '../globals/debug.ts';
 import { objectPool } from '../globals/objectPool.ts';
 
@@ -181,16 +181,16 @@ export function releaseUint8Array(array: Uint8Array): void {
  * @param itemSize - Number of values per vertex (e.g. 3 for position, 2 for UV) 
  * @returns - A buffer attribute backed by a pooled typed array
  */
-export function createPooledBufferAttribute(size: number, itemSize: number): THREE.BufferAttribute {
+export function createPooledBufferAttribute(size: number, itemSize: number): BufferAttribute {
     const array = getFloat32Array(size * itemSize);
-    return new THREE.BufferAttribute(array, itemSize);
+    return new BufferAttribute(array, itemSize);
 }
 
 /**
  * Releases a pooled buffer attribute back to the pool
  * @param attribute - The buffer attribute to release
  */
-export function releasePooledBufferAttribute(attribute: THREE.BufferAttribute | null): void {
+export function releasePooledBufferAttribute(attribute: BufferAttribute | null): void {
     if (attribute && attribute.array instanceof Float32Array) {
         releaseFloat32Array(attribute.array);
         // Ensure that the reference to the array is cleared from the attribute

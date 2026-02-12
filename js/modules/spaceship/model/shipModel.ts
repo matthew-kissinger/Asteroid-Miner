@@ -1,35 +1,44 @@
 // shipModel.ts - 3D model creation for spaceship
 // Extracted from spaceship.js to improve maintainability
 
-import * as THREE from 'three';
+import {
+  Mesh,
+  Group,
+  Scene,
+  CylinderGeometry,
+  MeshPhongMaterial,
+  ConeGeometry,
+  SphereGeometry,
+  BoxGeometry,
+} from 'three';
 
 interface ThrusterComponent {
-  mesh: THREE.Mesh;
+  mesh: Mesh;
   type: string;
 }
 
 interface ShipComponents {
-  mesh: THREE.Group;
+  mesh: Group;
   thrusters: ThrusterComponent[];
-  leftCannon?: THREE.Mesh | null;
-  rightCannon?: THREE.Mesh | null;
-  leftEmitter?: THREE.Mesh | null;
-  rightEmitter?: THREE.Mesh | null;
-  miningLaser?: THREE.Mesh | null;
+  leftCannon?: Mesh | null;
+  rightCannon?: Mesh | null;
+  leftEmitter?: Mesh | null;
+  rightEmitter?: Mesh | null;
+  miningLaser?: Mesh | null;
 }
 
 export class ShipModel {
-  scene: THREE.Scene;
+  scene: Scene;
   shipScale: number;
-  mesh: THREE.Group | null;
+  mesh: Group | null;
   thrusters: ThrusterComponent[];
-  leftCannon: THREE.Mesh | null;
-  rightCannon: THREE.Mesh | null;
-  leftEmitter: THREE.Mesh | null;
-  rightEmitter: THREE.Mesh | null;
-  miningLaser: THREE.Mesh | null;
+  leftCannon: Mesh | null;
+  rightCannon: Mesh | null;
+  leftEmitter: Mesh | null;
+  rightEmitter: Mesh | null;
+  miningLaser: Mesh | null;
 
-  constructor(scene: THREE.Scene, shipScale: number = 2.0) {
+  constructor(scene: Scene, shipScale: number = 2.0) {
     this.scene = scene;
     this.shipScale = shipScale;
     this.mesh = null;
@@ -43,11 +52,11 @@ export class ShipModel {
 
   /**
    * Create the complete spaceship 3D model
-   * @returns {THREE.Group} The spaceship mesh group
+   * @returns {Group} The spaceship mesh group
    */
-  createSpaceship(): THREE.Group {
+  createSpaceship(): Group {
     // Create spaceship group
-    this.mesh = new THREE.Group();
+    this.mesh = new Group();
 
     // Scale the entire ship
     this.mesh.scale.set(this.shipScale, this.shipScale, this.shipScale);
@@ -57,11 +66,11 @@ export class ShipModel {
 
     // Create the main body of the ship - sleek aerodynamic design using basic geometries
     // Use a cylinder with a cone at the front instead of CapsuleGeometry
-    const bodyGroup = new THREE.Group();
+    const bodyGroup = new Group();
 
     // Main hull cylinder
-    const cylinderGeometry = new THREE.CylinderGeometry(0.4, 0.5, 1.8, 12);
-    const bodyMaterial = new THREE.MeshPhongMaterial({
+    const cylinderGeometry = new CylinderGeometry(0.4, 0.5, 1.8, 12);
+    const bodyMaterial = new MeshPhongMaterial({
       color: 0xffffff, // White base
       specular: 0xffd700, // Gold specular highlights
       shininess: 100,
@@ -69,13 +78,13 @@ export class ShipModel {
       emissiveIntensity: 0.1
     });
 
-    const bodyCylinder = new THREE.Mesh(cylinderGeometry, bodyMaterial);
+    const bodyCylinder = new Mesh(cylinderGeometry, bodyMaterial);
     bodyCylinder.rotation.x = Math.PI / 2; // Rotate to point forward
     bodyGroup.add(bodyCylinder);
 
     // Front nose cone
-    const noseGeometry = new THREE.ConeGeometry(0.4, 0.8, 12);
-    const noseCone = new THREE.Mesh(noseGeometry, bodyMaterial);
+    const noseGeometry = new ConeGeometry(0.4, 0.8, 12);
+    const noseCone = new Mesh(noseGeometry, bodyMaterial);
     noseCone.position.set(0, 0, -1.2);
     noseCone.rotation.x = -Math.PI / 2; // Point forward
     bodyGroup.add(noseCone);
@@ -114,8 +123,8 @@ export class ShipModel {
    * Create the cockpit glass dome
    */
   private _createCockpit(): void {
-    const cockpitGeometry = new THREE.SphereGeometry(0.35, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-    const cockpitMaterial = new THREE.MeshPhongMaterial({
+    const cockpitGeometry = new SphereGeometry(0.35, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    const cockpitMaterial = new MeshPhongMaterial({
       color: 0x88ccff,
       specular: 0xffffff,
       shininess: 100,
@@ -124,7 +133,7 @@ export class ShipModel {
       emissive: 0x0066ff,
       emissiveIntensity: 0.1
     });
-    const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
+    const cockpit = new Mesh(cockpitGeometry, cockpitMaterial);
     cockpit.position.set(0, 0.25, -0.2);
     cockpit.rotation.x = -Math.PI / 2;
     if (this.mesh) {
@@ -136,8 +145,8 @@ export class ShipModel {
    * Create the dual front cannons
    */
   private _createCannons(): void {
-    const cannonGeometry = new THREE.CylinderGeometry(0.08, 0.06, 2.0, 8);
-    const cannonMaterial = new THREE.MeshPhongMaterial({
+    const cannonGeometry = new CylinderGeometry(0.08, 0.06, 2.0, 8);
+    const cannonMaterial = new MeshPhongMaterial({
       color: 0xffd700, // Gold
       specular: 0xffffff,
       shininess: 80,
@@ -146,7 +155,7 @@ export class ShipModel {
     });
 
     // Left cannon
-    this.leftCannon = new THREE.Mesh(cannonGeometry, cannonMaterial);
+    this.leftCannon = new Mesh(cannonGeometry, cannonMaterial);
     this.leftCannon.position.set(0.2, 0, -1.5); // Left side of cockpit
     this.leftCannon.rotation.x = Math.PI / 2; // Point forward
     if (this.mesh) {
@@ -154,7 +163,7 @@ export class ShipModel {
     }
 
     // Right cannon
-    this.rightCannon = new THREE.Mesh(cannonGeometry, cannonMaterial);
+    this.rightCannon = new Mesh(cannonGeometry, cannonMaterial);
     this.rightCannon.position.set(-0.2, 0, -1.5); // Right side of cockpit
     this.rightCannon.rotation.x = Math.PI / 2; // Point forward
     if (this.mesh) {
@@ -166,22 +175,22 @@ export class ShipModel {
    * Create the cannon emitters (glowing tips)
    */
   private _createEmitters(): void {
-    const emitterGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-    const emitterMaterial = new THREE.MeshPhongMaterial({
+    const emitterGeometry = new SphereGeometry(0.08, 16, 16);
+    const emitterMaterial = new MeshPhongMaterial({
       color: 0xff6600,
       emissive: 0xff3300,
       emissiveIntensity: 1
     });
 
     // Left emitter
-    this.leftEmitter = new THREE.Mesh(emitterGeometry, emitterMaterial);
+    this.leftEmitter = new Mesh(emitterGeometry, emitterMaterial);
     this.leftEmitter.position.set(0.2, 0, -2.5); // Front of left cannon
     if (this.mesh) {
       this.mesh.add(this.leftEmitter);
     }
 
     // Right emitter
-    this.rightEmitter = new THREE.Mesh(emitterGeometry, emitterMaterial);
+    this.rightEmitter = new Mesh(emitterGeometry, emitterMaterial);
     this.rightEmitter.position.set(-0.2, 0, -2.5); // Front of right cannon
     if (this.mesh) {
       this.mesh.add(this.rightEmitter);
@@ -192,11 +201,11 @@ export class ShipModel {
    * Create curved wings using custom geometry
    */
   private _createWings(): void {
-    const createCurvedWing = (isLeft: boolean): THREE.Group => {
-      const wingGroup = new THREE.Group();
+    const createCurvedWing = (isLeft: boolean): Group => {
+      const wingGroup = new Group();
 
       // Create curved wing shape using multiple segments
-      const wingMaterial = new THREE.MeshPhongMaterial({
+      const wingMaterial = new MeshPhongMaterial({
         color: 0xffffff, // White
         specular: 0xffd700, // Gold specular
         shininess: 80,
@@ -205,14 +214,14 @@ export class ShipModel {
       });
 
       // Wing base connecting to ship body
-      const wingBaseGeom = new THREE.BoxGeometry(0.1, 0.2, 0.6);
-      const wingBase = new THREE.Mesh(wingBaseGeom, wingMaterial);
+      const wingBaseGeom = new BoxGeometry(0.1, 0.2, 0.6);
+      const wingBase = new Mesh(wingBaseGeom, wingMaterial);
       wingBase.position.set(isLeft ? 0.55 : -0.55, 0, 0.2);
       wingGroup.add(wingBase);
 
       // Curved part of wing - using custom curved mesh
-      const wingCurveGeom = new THREE.BoxGeometry(0.8, 0.1, 0.5);
-      const wingCurve = new THREE.Mesh(wingCurveGeom, wingMaterial);
+      const wingCurveGeom = new BoxGeometry(0.8, 0.1, 0.5);
+      const wingCurve = new Mesh(wingCurveGeom, wingMaterial);
 
       // Rotate and position to create curved wing effect
       wingCurve.position.set(isLeft ? 1 : -1, 0, 0.2);
@@ -220,8 +229,8 @@ export class ShipModel {
       wingGroup.add(wingCurve);
 
       // Wing tip with gold accent
-      const wingTipGeom = new THREE.BoxGeometry(0.3, 0.08, 0.3);
-      const goldMaterial = new THREE.MeshPhongMaterial({
+      const wingTipGeom = new BoxGeometry(0.3, 0.08, 0.3);
+      const goldMaterial = new MeshPhongMaterial({
         color: 0xffd700, // Gold
         specular: 0xffffff,
         shininess: 100,
@@ -229,7 +238,7 @@ export class ShipModel {
         emissiveIntensity: 0.3
       });
 
-      const wingTip = new THREE.Mesh(wingTipGeom, goldMaterial);
+      const wingTip = new Mesh(wingTipGeom, goldMaterial);
       wingTip.position.set(isLeft ? 1.4 : -1.4, 0, 0.2);
       wingTip.rotation.z = isLeft ? Math.PI / 6 : -Math.PI / 6;
       wingGroup.add(wingTip);
@@ -263,9 +272,9 @@ export class ShipModel {
       rotX: number = 0,
       rotY: number = 0,
       rotZ: number = 0
-    ): THREE.Mesh => {
-      const accentGeom = new THREE.BoxGeometry(width, height, depth);
-      const goldMaterial = new THREE.MeshPhongMaterial({
+    ): Mesh => {
+      const accentGeom = new BoxGeometry(width, height, depth);
+      const goldMaterial = new MeshPhongMaterial({
         color: 0xffd700, // Gold
         specular: 0xffffff,
         shininess: 100,
@@ -273,7 +282,7 @@ export class ShipModel {
         emissiveIntensity: 0.3
       });
 
-      const accent = new THREE.Mesh(accentGeom, goldMaterial);
+      const accent = new Mesh(accentGeom, goldMaterial);
       accent.position.set(x, y, z);
       accent.rotation.set(rotX, rotY, rotZ);
       if (this.mesh) {
@@ -293,15 +302,15 @@ export class ShipModel {
    * Create thrusters for the spaceship
    */
   private _createThrusters(): void {
-    const thrusterGeometry = new THREE.CylinderGeometry(0.2, 0.15, 0.5, 8);
-    const thrusterMaterial = new THREE.MeshPhongMaterial({
+    const thrusterGeometry = new CylinderGeometry(0.2, 0.15, 0.5, 8);
+    const thrusterMaterial = new MeshPhongMaterial({
       color: 0xffd700, // Gold
       emissive: 0xff5500,
       emissiveIntensity: 0.5
     });
 
     // Main thrusters (back)
-    const mainThruster = new THREE.Mesh(thrusterGeometry, thrusterMaterial);
+    const mainThruster = new Mesh(thrusterGeometry, thrusterMaterial);
     mainThruster.position.z = 1.2; // Position at the back of the ship
     mainThruster.rotation.x = Math.PI; // Point backward
     if (this.mesh) {
@@ -310,7 +319,7 @@ export class ShipModel {
     this.thrusters.push({ mesh: mainThruster, type: 'main' });
 
     // Front/Reverse thruster (new)
-    const reverseThruster = new THREE.Mesh(thrusterGeometry.clone(), thrusterMaterial.clone());
+    const reverseThruster = new Mesh(thrusterGeometry.clone(), thrusterMaterial.clone());
     reverseThruster.position.z = -1.0; // Position at the front of the ship
     reverseThruster.rotation.x = 0; // Point forward
     reverseThruster.scale.set(0.6, 0.6, 0.6); // Make it slightly smaller than main thruster
@@ -320,7 +329,7 @@ export class ShipModel {
     this.thrusters.push({ mesh: reverseThruster, type: 'reverse' });
 
     // Side thrusters for lateral movement
-    const leftThruster = new THREE.Mesh(thrusterGeometry.clone(), thrusterMaterial.clone());
+    const leftThruster = new Mesh(thrusterGeometry.clone(), thrusterMaterial.clone());
     leftThruster.position.set(0.5, 0, 0.5);
     leftThruster.rotation.z = Math.PI / 2; // Point to the right (for leftward thrust)
     leftThruster.scale.set(0.5, 0.5, 0.5); // Make side thrusters smaller
@@ -329,7 +338,7 @@ export class ShipModel {
     }
     this.thrusters.push({ mesh: leftThruster, type: 'left' });
 
-    const rightThruster = new THREE.Mesh(thrusterGeometry.clone(), thrusterMaterial.clone());
+    const rightThruster = new Mesh(thrusterGeometry.clone(), thrusterMaterial.clone());
     rightThruster.position.set(-0.5, 0, 0.5);
     rightThruster.rotation.z = -Math.PI / 2; // Point to the left (for rightward thrust)
     rightThruster.scale.set(0.5, 0.5, 0.5); // Make side thrusters smaller

@@ -1,5 +1,5 @@
 // postTSL.ts - TSL Post-processing manager for WebGPU
-import * as THREE from 'three';
+import { Scene, Camera, Vector2, Color, Vector3 } from 'three';
 // @ts-ignore
 import { PostProcessing } from 'three/webgpu';
 import { pass, uniform, float, vec3, uv, mix, dot, pow, vec4 } from 'three/tsl';
@@ -16,8 +16,8 @@ import { volumetricLight, claudeRays } from './shadersTSL';
 
 export class TSLPostProcessingManager {
     renderer: any; // WebGPURenderer
-    scene: THREE.Scene;
-    camera: THREE.Camera;
+    scene: Scene;
+    camera: Camera;
     postProcessing: any; // PostProcessing instance
     
     // Uniforms for controlling effects
@@ -69,7 +69,7 @@ export class TSLPostProcessingManager {
     volumetricLightEnabled: boolean = true;
     useClaudeRays: boolean = false;
     
-    constructor(renderer: any, scene: THREE.Scene, camera: THREE.Camera) {
+    constructor(renderer: any, scene: Scene, camera: Camera) {
         this.renderer = renderer;
         this.scene = scene;
         this.camera = camera;
@@ -78,13 +78,13 @@ export class TSLPostProcessingManager {
         // Initialize uniforms
         this.uniforms = {
             godRays: {
-                lightPosition: uniform(new THREE.Vector2(0.5, 0.5)),
+                lightPosition: uniform(new Vector2(0.5, 0.5)),
                 intensity: uniform(0.45),
                 decay: uniform(0.94),
                 density: uniform(0.6),
                 weight: uniform(0.5),
                 samples: uniform(100),
-                sunColor: uniform(new THREE.Color(0xFFFAF0)),
+                sunColor: uniform(new Color(0xFFFAF0)),
                 sunDistance: uniform(0.5),
                 sunVisibility: uniform(1.0),
                 scattering: uniform(0.4),
@@ -92,12 +92,12 @@ export class TSLPostProcessingManager {
                 enabled: uniform(1.0) 
             },
             claudeRays: {
-                lightPosition: uniform(new THREE.Vector2(0.5, 0.5)),
+                lightPosition: uniform(new Vector2(0.5, 0.5)),
                 exposure: uniform(0.4),
                 decay: uniform(0.93),
                 density: uniform(0.8),
                 weight: uniform(0.25),
-                lightColor: uniform(new THREE.Color(0xFFFAF0)),
+                lightColor: uniform(new Color(0xFFFAF0)),
                 enabled: uniform(0.0)
             },
             bloom: {
@@ -116,8 +116,8 @@ export class TSLPostProcessingManager {
                 darkness: uniform(1.6)
             },
             colorCorrection: {
-                powRGB: uniform(new THREE.Vector3(1.1, 1.1, 1.2)),
-                mulRGB: uniform(new THREE.Vector3(1.2, 1.1, 1.0))
+                powRGB: uniform(new Vector3(1.1, 1.1, 1.2)),
+                mulRGB: uniform(new Vector3(1.2, 1.1, 1.0))
             }
         };
     }

@@ -1,22 +1,36 @@
 // stargate.ts - Creates and manages the stargate
 
-import * as THREE from 'three';
+import {
+  PointLight,
+  Mesh,
+  Scene,
+  Group,
+  ShaderMaterial,
+  TorusGeometry,
+  MeshStandardMaterial,
+  Vector2,
+  Color,
+  DoubleSide,
+  CircleGeometry,
+  CylinderGeometry,
+  Vector3,
+} from 'three';
 
 interface NavLightEntry {
-    light: THREE.PointLight;
-    lightMesh: THREE.Mesh;
+    light: PointLight;
+    lightMesh: Mesh;
 }
 
 export class Stargate {
-    scene: THREE.Scene;
-    stargate: THREE.Group | null;
+    scene: Scene;
+    stargate: Group | null;
     navLights: NavLightEntry[];
-    portalParticles: THREE.Mesh[];
-    portalShaderMaterial?: THREE.ShaderMaterial;
-    portalLight?: THREE.PointLight;
-    counterRotatingRing?: THREE.Group;
+    portalParticles: Mesh[];
+    portalShaderMaterial?: ShaderMaterial;
+    portalLight?: PointLight;
+    counterRotatingRing?: Group;
 
-    constructor(scene: THREE.Scene) {
+    constructor(scene: Scene) {
         this.scene = scene;
         this.stargate = null;
         this.navLights = [];
@@ -26,18 +40,18 @@ export class Stargate {
 
     createStargate(): void {
         // Create a stargate group
-        const stargateGroup = new THREE.Group();
+        const stargateGroup = new Group();
         stargateGroup.name = 'stargate';
 
         // Main ring - matte black
-        const ringGeometry = new THREE.TorusGeometry(1000, 200, 32, 100);
-        const ringMaterial = new THREE.MeshStandardMaterial({
+        const ringGeometry = new TorusGeometry(1000, 200, 32, 100);
+        const ringMaterial = new MeshStandardMaterial({
             color: 0x111111,
             roughness: 0.9,
             metalness: 0.1,
             emissive: 0x000000
         });
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+        const ring = new Mesh(ringGeometry, ringMaterial);
         stargateGroup.add(ring);
 
         // Neon turquoise accent rings
@@ -46,16 +60,16 @@ export class Stargate {
             tubeRadius: number,
             position: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
             rotation: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 }
-        ): THREE.Mesh => {
-            const geometry = new THREE.TorusGeometry(radius, tubeRadius, 16, 100);
-            const material = new THREE.MeshStandardMaterial({
+        ): Mesh => {
+            const geometry = new TorusGeometry(radius, tubeRadius, 16, 100);
+            const material = new MeshStandardMaterial({
                 color: 0x00ffff,
                 emissive: 0x00ffff,
                 emissiveIntensity: 1.5,
                 roughness: 0.2,
                 metalness: 0.8
             });
-            const accentRing = new THREE.Mesh(geometry, material);
+            const accentRing = new Mesh(geometry, material);
             accentRing.position.set(position.x, position.y, position.z);
             accentRing.rotation.set(rotation.x, rotation.y, rotation.z);
             return accentRing;
@@ -89,13 +103,13 @@ export class Stargate {
         this.createCounterRotatingRing(stargateGroup);
     }
 
-    createCounterRotatingRing(parentGroup: THREE.Group): void {
+    createCounterRotatingRing(parentGroup: Group): void {
         // Create a separate rotating group for the inner portal structure
-        const innerStructure = new THREE.Group();
+        const innerStructure = new Group();
 
         // Add a thin ring that rotates opposite to the main stargate
-        const thinRingGeometry = new THREE.TorusGeometry(820, 3, 16, 100);
-        const thinRingMaterial = new THREE.MeshStandardMaterial({
+        const thinRingGeometry = new TorusGeometry(820, 3, 16, 100);
+        const thinRingMaterial = new MeshStandardMaterial({
             color: 0x00ffff,
             emissive: 0x00ffff,
             emissiveIntensity: 2,
@@ -107,7 +121,7 @@ export class Stargate {
 
         // Create 3 counter-rotating rings
         for (let i = 0; i < 3; i++) {
-            const ring = new THREE.Mesh(thinRingGeometry, thinRingMaterial.clone());
+            const ring = new Mesh(thinRingGeometry, thinRingMaterial.clone());
             ring.rotation.x = Math.PI * i / 3;
             ring.rotation.y = Math.PI * i / 3;
             innerStructure.add(ring);
@@ -117,13 +131,13 @@ export class Stargate {
         this.counterRotatingRing = innerStructure;
     }
 
-    createPortalEffect(parentGroup: THREE.Group): void {
+    createPortalEffect(parentGroup: Group): void {
         // Enhanced custom shader material for the portal
-        const portalShaderMaterial = new THREE.ShaderMaterial({
+        const portalShaderMaterial = new ShaderMaterial({
             uniforms: {
                 time: { value: 0 },
-                resolution: { value: new THREE.Vector2(1024, 1024) },
-                baseColor: { value: new THREE.Color(0x00ffff) }
+                resolution: { value: new Vector2(1024, 1024) },
+                baseColor: { value: new Color(0x00ffff) }
             },
             vertexShader: `
             varying vec2 vUv;
@@ -221,32 +235,32 @@ export class Stargate {
             }
           `,
             transparent: true,
-            side: THREE.DoubleSide
+            side: DoubleSide
         });
 
         // Create portal disc using the shader material
-        const portalGeometry = new THREE.CircleGeometry(800, 128);
-        const portal = new THREE.Mesh(portalGeometry, portalShaderMaterial);
+        const portalGeometry = new CircleGeometry(800, 128);
+        const portal = new Mesh(portalGeometry, portalShaderMaterial);
         parentGroup.add(portal);
 
         // Enhanced portal glow light
-        const portalLight = new THREE.PointLight(0x00ffff, 400, 2000, 2);
+        const portalLight = new PointLight(0x00ffff, 400, 2000, 2);
         portalLight.position.set(0, 0, 0);
         parentGroup.add(portalLight);
 
         // Add some more volumetric effects around the portal
-        const createPortalWisps = (): THREE.Mesh => {
-            const wispGeometry = new THREE.TorusGeometry(650, 10, 8, 100);
-            const wispMaterial = new THREE.MeshStandardMaterial({
+        const createPortalWisps = (): Mesh => {
+            const wispGeometry = new TorusGeometry(650, 10, 8, 100);
+            const wispMaterial = new MeshStandardMaterial({
                 color: 0x00ffff,
                 emissive: 0x00ffff,
                 emissiveIntensity: 2,
                 transparent: true,
                 opacity: 0.3,
-                side: THREE.DoubleSide
+                side: DoubleSide
             });
 
-            const wisp = new THREE.Mesh(wispGeometry, wispMaterial);
+            const wisp = new Mesh(wispGeometry, wispMaterial);
             wisp.rotation.x = Math.random() * Math.PI;
             wisp.rotation.y = Math.random() * Math.PI;
 
@@ -274,27 +288,27 @@ export class Stargate {
         this.portalLight = portalLight;
     }
 
-    createNeonDetails(): THREE.Group {
-        const detailsGroup = new THREE.Group();
+    createNeonDetails(): Group {
+        const detailsGroup = new Group();
 
         // Create evenly spaced neon accents around the ring
-        const createNeonAccent = (angle: number): THREE.Group => {
-            const accentGroup = new THREE.Group();
+        const createNeonAccent = (angle: number): Group => {
+            const accentGroup = new Group();
 
             // Neon light beam
-            const beamGeometry = new THREE.CylinderGeometry(10, 10, 300, 8);
-            const beamMaterial = new THREE.MeshStandardMaterial({
+            const beamGeometry = new CylinderGeometry(10, 10, 300, 8);
+            const beamMaterial = new MeshStandardMaterial({
                 color: 0x00ffff,
                 emissive: 0x00ffff,
                 emissiveIntensity: 1,
                 transparent: true,
                 opacity: 0.8
             });
-            const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+            const beam = new Mesh(beamGeometry, beamMaterial);
             beam.rotation.x = Math.PI / 2; // Align with ring
 
             // Light source for glow
-            const light = new THREE.PointLight(0x00ffff, 100, 400, 2);
+            const light = new PointLight(0x00ffff, 100, 400, 2);
             light.position.set(0, 0, 0);
 
             accentGroup.add(beam);
@@ -325,15 +339,15 @@ export class Stargate {
         return detailsGroup;
     }
 
-    getPosition(): THREE.Vector3 {
+    getPosition(): Vector3 {
         // Updated to 2x height from the sun
-        return new THREE.Vector3(0, 10000, 0);
+        return new Vector3(0, 10000, 0);
     }
 
-    getRegionInfo(): { center: THREE.Vector3; radius: number } {
+    getRegionInfo(): { center: Vector3; radius: number } {
         // Updated center position to match new height
         return {
-            center: new THREE.Vector3(0, 10000, 0),
+            center: new Vector3(0, 10000, 0),
             radius: 2000
         };
     }
@@ -349,7 +363,7 @@ export class Stargate {
 
                 // Also update the light beam material
                 if (lightMesh.material) {
-                    const material = lightMesh.material as THREE.MeshStandardMaterial;
+                    const material = lightMesh.material as MeshStandardMaterial;
                     material.emissiveIntensity = flicker;
                     material.opacity = 0.5 + (flicker * 0.5);
                 }

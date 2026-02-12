@@ -1,7 +1,7 @@
 import { debugLog } from '../../globals/debug.ts';
 // starSystemGenerator.ts - Procedural generation of star systems
 
-import * as THREE from 'three';
+import type { Vector3, Scene } from 'three';
 import { SystemFactory } from './generator/systemFactory';
 import { SystemUtils } from './generator/systemUtils';
 import type { PlanetData } from './planets/planetFactory';
@@ -32,7 +32,7 @@ interface StarSystemData {
     specialFeatures: string[];
     description: string;
     connections: string[];
-    position: THREE.Vector3;
+    position: Vector3;
     skyboxParams: SkyboxParams;
     resourceMultipliers: ResourceMultipliers;
     lightIntensityMultiplier?: number;
@@ -49,7 +49,7 @@ interface CustomSystemData {
     asteroidDensity?: number;
     specialFeatures?: string[];
     description?: string;
-    position?: THREE.Vector3;
+    position?: Vector3;
     skyboxParams?: Partial<SkyboxParams>;
     skyboxUrl?: string;
     resourceMultipliers?: ResourceMultipliers;
@@ -63,13 +63,13 @@ interface GameGlobal {
 }
 
 export class StarSystemGenerator {
-    scene: THREE.Scene;
+    scene: Scene;
     systems: Record<string, StarSystemData>;
     currentSystem: string | null;
     warpGates: Record<string, string[]>;
     customPlanetData?: Record<string, PlanetData[]>;
 
-    constructor(scene: THREE.Scene) {
+    constructor(scene: Scene) {
         this.scene = scene;
         this.systems = {};
         this.currentSystem = null;
