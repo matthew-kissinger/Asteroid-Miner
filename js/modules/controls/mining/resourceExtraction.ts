@@ -1,5 +1,8 @@
 // resourceExtraction.js - Handles resource extraction and notification
 
+import { mainMessageBus } from '../../../globals/messageBus.ts';
+import { debugLog } from '../../../globals/debug.ts';
+
 interface OrbResources {
     common: number;
     uncommon: number;
@@ -87,11 +90,13 @@ export class ResourceExtraction {
                 this.resources.iron += amount;
         }
         
-        console.log(`ResourceExtraction: Added ${amount} ${resourceType} from asteroid`);
-        
+        debugLog(`ResourceExtraction: Added ${amount} ${resourceType} from asteroid`);
+
+        mainMessageBus.publish('mining.resourceCollected', { amount, resourceType: resourceType.toLowerCase() });
+
         // Show resource gain notification
         this.showResourceGainNotification(amount, resourceType);
-        
+
         return true;
     }
 

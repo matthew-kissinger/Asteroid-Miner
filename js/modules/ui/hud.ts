@@ -6,6 +6,7 @@ import { HUDNotifications } from './components/hud/notifications.ts';
 import { HUDStatusIndicators } from './components/hud/statusIndicators.ts';
 import { HUDEventHandlers } from './components/hud/eventHandlers.ts';
 import { HUDHelpers } from './components/hud/helpers.ts';
+import { HUDXpBar } from './components/hud/xpBar.ts';
 
 type HUDSpaceship = {
     [key: string]: unknown;
@@ -16,12 +17,14 @@ type HUDNotificationType = 'info' | 'warning' | 'error' | 'success';
 export class HUD {
     spaceship: HUDSpaceship | null;
     eventHandlers: HUDEventHandlers | null;
+    xpBar: HUDXpBar | null = null;
     world: any = null;
     settings: any = null;
 
     constructor(spaceship: HUDSpaceship) {
         this.spaceship = spaceship;
         this.eventHandlers = new HUDEventHandlers();
+        this.xpBar = new HUDXpBar();
         this.setupHUD();
         this.eventHandlers?.animateHudIn();
     }
@@ -46,6 +49,7 @@ export class HUD {
         HUDDisplays.createLocationPanel(hudContainer);
         HUDDisplays.createResourcePanel(hudContainer);
         HUDNotifications.createNotificationsArea(hudContainer);
+        this.xpBar?.create(hudContainer);
     }
     
     createMainContainer(): HTMLDivElement {
@@ -64,6 +68,9 @@ export class HUD {
         HUDStatusIndicators.updateHullDisplay(this.spaceship, this.world);
         HUDStatusIndicators.updateFuelDisplay(this.spaceship);
         HUDStatusIndicators.updateCreditsDisplay(this.spaceship);
+
+        // Update XP bar
+        this.xpBar?.update(this.spaceship);
 
         // Update horde mode display
         HUDNotifications.updateHordeModeDisplay();
@@ -93,7 +100,9 @@ export class HUD {
     
     destroy(): void {
         this.eventHandlers?.destroy();
-        
+        this.xpBar?.destroy();
+        this.xpBar = null;
+
         // Remove DOM elements
         const hudContainer = document.getElementById('hud-container') as HTMLDivElement | null;
         if (hudContainer && hudContainer.parentNode) {

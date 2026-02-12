@@ -55,6 +55,14 @@ export interface GameEventMap extends Record<string, unknown> {
 
     // Horde mode
     'horde.activated': { wave?: number; startTime?: number };
+
+    // XP and progression
+    'xp.gained': { amount: number; newTotal: number; rank: number };
+    'rank.up': { rank: number; rankName: string };
+    'mining.resourceCollected': { amount: number; resourceType: string };
+    'trading.resourceSold': { amount: number; resourceType: string };
+    'system.discovered': { systemId: string };
+    'orb.collected': { rarity: string };
 }
 
 export const EVENT = Object.freeze({
@@ -67,6 +75,8 @@ export const EVENT = Object.freeze({
     ENEMY_DESTROYED: 'enemy.destroyed',
     WEAPON_FIRED: 'weapon.fired',
     INPUT_VIBRATE: 'input.vibrate',
+    XP_GAINED: 'xp.gained',
+    RANK_UP: 'rank.up',
 } as const);
 
 const SCHEMA: Record<string, Record<string, string>> = {
@@ -79,6 +89,8 @@ const SCHEMA: Record<string, Record<string, string>> = {
     [EVENT.ENEMY_DESTROYED]: { entityId: 'string' },
     [EVENT.WEAPON_FIRED]: { entity: 'object' },
     [EVENT.INPUT_VIBRATE]: { intensity: 'number', duration: 'number' },
+    [EVENT.XP_GAINED]: { amount: 'number', newTotal: 'number', rank: 'number' },
+    [EVENT.RANK_UP]: { rank: 'number', rankName: 'string' },
 };
 
 export function validateEventPayload(type: string, data: unknown): boolean {

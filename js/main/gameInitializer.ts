@@ -6,7 +6,9 @@ import { Spaceship } from '../modules/spaceship';
 import { Physics } from '../modules/physics';
 import { Controls } from '../modules/controls.ts';
 import { DEBUG_MODE, debugLog } from '../globals/debug.ts';
+import { mainMessageBus } from '../globals/messageBus.ts';
 import type { DockingSpaceship } from '../modules/controls/docking/types.ts';
+import { initXpAwards } from '../modules/spaceship/systems/xpAwards.ts';
 // import { Environment } from '../modules/environment';
 // import { UI } from '../modules/ui';
 // import { AudioManager } from '../modules/audio/audio.ts';
@@ -25,6 +27,7 @@ type GameEnvironment = {
 type GameSpaceship = PhysicsSpaceship & DockingSpaceship & {
     thrustPower: number;
     strafePower: number;
+    addXP: (amount: number) => void;
 };
 
 type GameUi = {
@@ -159,10 +162,13 @@ export class GameInitializer {
         
         // Initialize controls last, as it depends on other components
         this.game.controls = new Controls(spaceship, physics as any, environment as any, this.game.ui);
-        
+
         // Share controls reference with UI for bidirectional communication
         this.game.ui.setControls(this.game.controls);
-        
+
+        // Wire XP awards to activity events
+        initXpAwards(mainMessageBus, spaceship);
+
         // Initialize settings
         if (DEBUG_MODE.enabled) debugLog("Initializing settings...");
         await this.game.ui.initializeSettings(this.game);
