@@ -1,6 +1,7 @@
 // soundPlayer.ts - Sound effects playback with 3D audio and volume control
 import { AudioContextManager, TrackableNode } from '../core/context.ts';
 import { AudioLoader } from '../core/loader.ts';
+import { debugLog } from '../../../globals/debug.js';
 
 interface ActiveSoundNodes {
     source: AudioBufferSourceNode & TrackableNode;
@@ -33,15 +34,15 @@ export class SoundPlayer {
     
     // Play a sound effect using Web Audio API
     playSound(name: string, userHasInteracted: boolean): void {
-        console.log(`Attempting to play sound: ${name}`);
+        debugLog(`Attempting to play sound: ${name}`);
         
         if (this.muted) {
-            console.log(`Sound ${name} not played: audio is muted`);
+            debugLog(`Sound ${name} not played: audio is muted`);
             return;
         }
         
         if (!userHasInteracted) {
-            console.log(`Sound ${name} not played: waiting for user interaction`);
+            debugLog(`Sound ${name} not played: waiting for user interaction`);
             return;
         }
         
@@ -58,12 +59,12 @@ export class SoundPlayer {
         
         // Handle the case where the name is 'weapon' or similar, map to projectile sound
         if (name === 'weapon' || name === 'fire' || name === 'shoot') {
-            console.log(`Mapping ${name} sound to projectile sound`);
+            debugLog(`Mapping ${name} sound to projectile sound`);
             name = 'projectile';
             // Use 'laser' sound for projectile if projectile sound is not available
             const sounds = this.audioLoader.getAllSounds();
             if (!sounds.projectile && sounds.laser) {
-                console.log("Using laser sound for projectile");
+                debugLog("Using laser sound for projectile");
                 sounds.projectile = sounds.laser;
             }
         }
@@ -135,7 +136,7 @@ export class SoundPlayer {
                 this.audioContextManager.trackNode(gainNode);
                 
                 // Log successful playback
-                console.log(`Started playback of one-shot sound: ${name}`);
+                debugLog(`Started playback of one-shot sound: ${name}`);
             }
         } catch (err) {
             console.error(`Error playing sound ${name}:`, err);
@@ -193,7 +194,7 @@ export class SoundPlayer {
     
     // Play weapon firing sound - dedicated method for weapon sounds
     playWeaponSound(userHasInteracted: boolean): void {
-        console.log("Playing weapon firing sound");
+        debugLog("Playing weapon firing sound");
         
         // Check usual conditions
         if (this.muted || !userHasInteracted) {
@@ -214,7 +215,7 @@ export class SoundPlayer {
         // Make sure we have a projectile sound (use laser as fallback)
         const sounds = this.audioLoader.getAllSounds();
         if (!sounds.projectile && sounds.laser) {
-            console.log("Using laser sound for projectile in playWeaponSound");
+            debugLog("Using laser sound for projectile in playWeaponSound");
             sounds.projectile = sounds.laser;
         }
         
@@ -260,7 +261,7 @@ export class SoundPlayer {
             this.audioContextManager.trackNode(sourceNode);
             this.audioContextManager.trackNode(gainNode);
             
-            console.log("Weapon sound started playing");
+            debugLog("Weapon sound started playing");
         } catch (err) {
             console.error("Error playing weapon sound:", err);
         }
@@ -277,7 +278,7 @@ export class SoundPlayer {
             this.stopSound('mining-laser');
         }
         
-        console.log(`Sound effects ${this.muted ? 'muted' : 'unmuted'}`);
+        debugLog(`Sound effects ${this.muted ? 'muted' : 'unmuted'}`);
         return this.muted;
     }
     

@@ -1,5 +1,7 @@
 // context.ts - Web Audio API context management and compatibility
 
+import { debugLog } from '../../../globals/debug.js';
+
 export interface TrackableNode {
     _inactive?: boolean;
     disposed?: boolean;
@@ -22,7 +24,7 @@ export class AudioContextManager {
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             if (AudioContextClass) {
                 this.audioContext = new AudioContextClass();
-                console.log("Web Audio API context created successfully");
+                debugLog("Web Audio API context created successfully");
             } else {
                 console.error("Web Audio API not supported in this browser");
             }
@@ -35,7 +37,7 @@ export class AudioContextManager {
     resumeAudioContext(): Promise<void> {
         if (this.audioContext && this.audioContext.state === 'suspended') {
             return this.audioContext.resume().then(() => {
-                console.log("AudioContext resumed successfully");
+                debugLog("AudioContext resumed successfully");
             }).catch(error => {
                 console.error("Failed to resume AudioContext:", error);
             });
@@ -57,7 +59,7 @@ export class AudioContextManager {
     setupGarbageCollection(): void {
         // Clean up inactive nodes every 30 seconds
         this.gcInterval = setInterval(() => this.cleanupInactiveNodes(), 30000);
-        console.log("Audio garbage collection scheduled");
+        debugLog("Audio garbage collection scheduled");
     }
     
     // Clean up inactive audio nodes to prevent memory leaks
@@ -72,7 +74,7 @@ export class AudioContextManager {
         });
         
         if (count > 0) {
-            console.log(`Audio context: cleaned up ${count} inactive audio objects`);
+            debugLog(`Audio context: cleaned up ${count} inactive audio objects`);
         }
     }
     
@@ -95,13 +97,13 @@ export class AudioContextManager {
             }
         };
         
-        console.log("Audio compatibility layer initialized for intro sequence");
+        debugLog("Audio compatibility layer initialized for intro sequence");
         return this.masterEQ;
     }
     
     // Clean up context and resources
     cleanup(): Promise<void> {
-        console.log("Cleaning up AudioContext resources...");
+        debugLog("Cleaning up AudioContext resources...");
         
         // Clear intervals
         if (this.gcInterval) {
@@ -112,7 +114,7 @@ export class AudioContextManager {
         // Close audio context
         if (this.audioContext) {
             return this.audioContext.close().then(() => {
-                console.log("AudioContext closed successfully");
+                debugLog("AudioContext closed successfully");
                 this.audioContext = null;
             }).catch(error => {
                 console.error("Error closing AudioContext:", error);

@@ -1,7 +1,7 @@
 // physics.ts - Handles physics calculations and movement
 
 import * as THREE from 'three';
-import { DEBUG_MODE } from '../globals/debug.ts';
+import { DEBUG_MODE, debugLog } from '../globals/debug.ts';
 import { mainMessageBus } from '../globals/messageBus.ts';
 
 // Reusable temp objects - never allocate in update loop
@@ -434,7 +434,7 @@ export class Physics {
 
         // Skip camera updates if intro sequence is active
         if (this.gameState?.isIntroSequenceActive()) {
-            console.log("Skipping camera update - intro sequence active");
+            debugLog("Skipping camera update - intro sequence active");
             return;
         }
 
@@ -688,7 +688,7 @@ export class Physics {
             if (distance < (shipRadius + asteroidRadius)) {
                 // Only log collision in debug mode
                 if (DEBUG_MODE.enabled) {
-                    console.log("Asteroid collision detected!", 
+                    debugLog("Asteroid collision detected!", 
                         "Ship position:", shipPosition,
                         "Asteroid position:", asteroid.position,
                         "Distance:", distance, 
@@ -766,17 +766,17 @@ export class Physics {
         
         // Enhanced logging for collision diagnostics (only in debug mode)
         if (DEBUG_MODE.enabled) {
-            console.log("=== COLLISION DETECTED ===");
-            console.log(`Collision type: ${type}`);
-            console.log(`Ship velocity at impact: ${this.spaceship.velocity.length().toFixed(2)} units/frame`);
-            console.log(`Ship position: x=${this.spaceship.mesh.position.x.toFixed(0)}, y=${this.spaceship.mesh.position.y.toFixed(0)}, z=${this.spaceship.mesh.position.z.toFixed(0)}`);
-            console.log(`${type} position: x=${object.position.x.toFixed(0)}, y=${object.position.y.toFixed(0)}, z=${object.position.z.toFixed(0)}`);
-            console.log(`Hull resistance: ${this.spaceship.collisionResistance}`);
+            debugLog("=== COLLISION DETECTED ===");
+            debugLog(`Collision type: ${type}`);
+            debugLog(`Ship velocity at impact: ${this.spaceship.velocity.length().toFixed(2)} units/frame`);
+            debugLog(`Ship position: x=${this.spaceship.mesh.position.x.toFixed(0)}, y=${this.spaceship.mesh.position.y.toFixed(0)}, z=${this.spaceship.mesh.position.z.toFixed(0)}`);
+            debugLog(`${type} position: x=${object.position.x.toFixed(0)}, y=${object.position.y.toFixed(0)}, z=${object.position.z.toFixed(0)}`);
+            debugLog(`Hull resistance: ${this.spaceship.collisionResistance}`);
         }
         
         // Apply hull resistance to see if we survive the collision
         if (this.attemptCollisionRecovery(type)) {
-            if (DEBUG_MODE.enabled) console.log("Hull absorbed collision damage!");
+            if (DEBUG_MODE.enabled) debugLog("Hull absorbed collision damage!");
             this.createRecoveryEffect();
             
             // Bounce away from the collision point
@@ -797,7 +797,7 @@ export class Physics {
             // Reset collision state after a short delay
             setTimeout(() => {
                 this.collided = false;
-                if (DEBUG_MODE.enabled) console.log("Collision state reset - ship ready for new collisions");
+                if (DEBUG_MODE.enabled) debugLog("Collision state reset - ship ready for new collisions");
             }, 1000);
             
             return;
@@ -853,10 +853,10 @@ export class Physics {
         }
         
         
-        console.log("Physics: Initiating game over sequence for collision with", type);
+        debugLog("Physics: Initiating game over sequence for collision with", type);
         
         // Use main message bus (always available via import)
-        console.log("Physics: Publishing game over event");
+        debugLog("Physics: Publishing game over event");
         mainMessageBus.publish('game.over', {
             reason: explosionMessage,
             source: "physics",
@@ -881,28 +881,28 @@ export class Physics {
             case "asteroid":
                 // 50% base chance + 8% per hull level as requested
                 recoveryChance = 0.50 + (resistance - 1) * 0.08;
-                if (DEBUG_MODE.enabled) console.log(`Asteroid collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
+                if (DEBUG_MODE.enabled) debugLog(`Asteroid collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
                 break;
             case "planet":
                 // Start with 10% chance, increased by hull resistance
                 recoveryChance = 0.1 + (resistance - 1) * 0.2;
-                if (DEBUG_MODE.enabled) console.log(`Planet collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
+                if (DEBUG_MODE.enabled) debugLog(`Planet collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
                 break;
             case "sun":
                 // Almost no chance to survive sun collision
                 recoveryChance = (resistance - 1) * 0.05;
-                if (DEBUG_MODE.enabled) console.log(`Sun collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
+                if (DEBUG_MODE.enabled) debugLog(`Sun collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
                 break;
             default:
                 recoveryChance = 0.2 + (resistance - 1) * 0.3;
-                if (DEBUG_MODE.enabled) console.log(`Generic collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
+                if (DEBUG_MODE.enabled) debugLog(`Generic collision recovery chance: ${(recoveryChance * 100).toFixed(1)}%`);
         }
         
         // Random chance based on recovery probability
         const recoveryRoll = Math.random();
         const survived = recoveryRoll < recoveryChance;
         
-        if (DEBUG_MODE.enabled) console.log(`Recovery roll: ${recoveryRoll.toFixed(3)}, needed ${recoveryChance.toFixed(3)} or lower to survive`);
+        if (DEBUG_MODE.enabled) debugLog(`Recovery roll: ${recoveryRoll.toFixed(3)}, needed ${recoveryChance.toFixed(3)} or lower to survive`);
         
         return survived;
     }

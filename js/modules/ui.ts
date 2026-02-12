@@ -13,6 +13,7 @@ import { MobileHUD } from './ui/mobileHUD.ts';
 // import { Settings } from './ui/settings.ts';
 // import { StartScreen } from './ui/startScreen.ts';
 import { MemoryStats } from '../utils/memoryManager.ts';
+import { debugLog } from '../globals/debug.js';
 import { MobileDetector } from '../utils/mobileDetector.ts';
 import { DEBUG_MODE } from '../globals/debug.ts';
 import { mainMessageBus } from '../globals/messageBus.ts';
@@ -154,7 +155,7 @@ export class UI {
         this.audio = null; // Will be set via setAudio
         this.isMobile = MobileDetector.isMobile();
         
-        console.log(`Initializing UI components for ${this.isMobile ? 'mobile' : 'desktop'} device...`);
+        debugLog(`Initializing UI components for ${this.isMobile ? 'mobile' : 'desktop'} device...`);
         
         // Load mobile CSS if on mobile device
         if (this.isMobile) {
@@ -258,7 +259,7 @@ export class UI {
             this.initializePerformanceMonitor();
         }
         
-        console.log("UI components initialized");
+        debugLog("UI components initialized");
     }
     
     loadMobileCSS(): void {
@@ -271,11 +272,11 @@ export class UI {
         // Add to document head
         document.head.appendChild(mobileCSS);
         
-        console.log("Mobile CSS loaded");
+        debugLog("Mobile CSS loaded");
     }
     
     async setAudio(audio: AudioForUI): Promise<void> {
-        console.log("Setting audio reference in UI");
+        debugLog("Setting audio reference in UI");
         this.audio = audio;
         
         // Now that we have audio, initialize BlackjackGame
@@ -288,7 +289,7 @@ export class UI {
             
             const { BlackjackGame } = await import('./ui/blackjackGame.ts');
             this.blackjackGame = new BlackjackGame(null, this.spaceship, this.audio);
-            console.log("UI: Created BlackjackGame with spaceship:", this.spaceship);
+            debugLog("UI: Created BlackjackGame with spaceship:", this.spaceship);
             
             // Set game resources reference if available
             if (this.gameStateRef) {
@@ -301,7 +302,7 @@ export class UI {
     }
     
     setControls(controls: ControlsForUI): void {
-        console.log("Setting controls reference in UI");
+        debugLog("Setting controls reference in UI");
         this.controls = controls;
         
         // Now that we have controls, we can set it in components that need it
@@ -355,14 +356,14 @@ export class UI {
         const { StartScreen } = await import('./ui/startScreen.ts');
         this.startScreen = new StartScreen(game, this);
 
-        console.log("Settings and StartScreen initialized with game instance");
+        debugLog("Settings and StartScreen initialized with game instance");
     }
     
     /**
      * Set up event handlers
      */
     setupEventHandlers(): void {
-        console.log("Setting up UI event handlers");
+        debugLog("Setting up UI event handlers");
         
         // Set up controls menu button handler
         if (this.controlsMenu && this.controlsMenu.setupButtonHandler) {
@@ -387,7 +388,7 @@ export class UI {
             
             // If device type changed, reload the page to apply correct UI
             if (wasMobile !== this.isMobile) {
-                console.log(`Device type changed from ${wasMobile ? 'mobile' : 'desktop'} to ${this.isMobile ? 'mobile' : 'desktop'}`);
+                debugLog(`Device type changed from ${wasMobile ? 'mobile' : 'desktop'} to ${this.isMobile ? 'mobile' : 'desktop'}`);
                 location.reload();
             }
         });
@@ -417,7 +418,7 @@ export class UI {
         if (currentLocked !== -1) {
             // Already locked, unlock
             setLockedEnemy(-1);
-            console.log('[LockOn] Unlocked');
+            debugLog('[LockOn] Unlocked');
         } else if (enemies.length > 0 && playerEid !== -1) {
             // Find nearest enemy
             const playerX = Position.x[playerEid];
@@ -441,7 +442,7 @@ export class UI {
 
             if (nearestEid !== -1) {
                 setLockedEnemy(nearestEid);
-                console.log('[LockOn] Locked enemy', nearestEid);
+                debugLog('[LockOn] Locked enemy', nearestEid);
             }
         }
     }
@@ -558,8 +559,8 @@ export class UI {
     }
     
     showGameOver(resources: unknown, message: unknown): void {
-        console.log("Showing game over screen");
-        console.log("Resources data:", resources); // Add logging to see structure
+        debugLog("Showing game over screen");
+        debugLog("Resources data:", resources); // Add logging to see structure
         
         // Show game over screen
         if (this.gameOverScreen && this.gameOverScreen.show) {
@@ -615,11 +616,11 @@ export class UI {
     }
     
     hideUI(): void {
-        console.log("Hiding UI elements");
+        debugLog("Hiding UI elements");
         
         // Force hide ALL UI elements during intro sequence
         if (this.gameStateRef?.introSequenceActive) {
-            console.log("Intro sequence active - forcing ALL UI elements to be hidden");
+            debugLog("Intro sequence active - forcing ALL UI elements to be hidden");
             
             // Get references to each UI element we need to hide
             const elements: (HTMLElement | null)[] = [
@@ -678,7 +679,7 @@ export class UI {
     }
     
     showUI(): void {
-        console.log("Showing UI elements");
+        debugLog("Showing UI elements");
         
         // Don't show UI if intro sequence is active
         if (this.gameStateRef?.introSequenceActive) {
@@ -694,7 +695,7 @@ export class UI {
         
         // First, show UI components through their interfaces
         if (this.hud && this.hud.show) {
-            console.log("Calling hud.show()");
+            debugLog("Calling hud.show()");
             this.hud.show();
         }
         
@@ -713,12 +714,12 @@ export class UI {
             return; // Double-check intro is not active before forcing visibility
         }
         
-        console.log("Forcing all UI elements to be displayed");
+        debugLog("Forcing all UI elements to be displayed");
         
         // Ensure HUD container is visible
         const hudContainer = document.getElementById('hud-container');
         if (hudContainer) {
-            console.log("Setting hudContainer to visible");
+            debugLog("Setting hudContainer to visible");
             hudContainer.classList.remove('hud-hidden');
             hudContainer.classList.add('hud-visible');
         } else {

@@ -1,6 +1,7 @@
 // uiIntegration.js - Handles UI integration for docking system
 
 import type { DockingSpaceship, DockingUI, ResourceInventory } from './types.ts';
+import { debugLog } from '../../../globals/debug.js';
 
 type GameWindow = Window & {
     game?: {
@@ -52,12 +53,12 @@ export class UIIntegration {
         const onKeydown = (e: KeyboardEvent): void => {
             if (e.key.toLowerCase() === 'q') {
                 if (proximityDetector.isNearStargate() && !spaceship.isDocked) {
-                    console.log("Q key pressed: Docking with stargate");
+                    debugLog("Q key pressed: Docking with stargate");
                     dockingLogic.dockWithStargate(spaceship, ui.stargate, ui);
                 } else if (spaceship.isDocked) {
-                    console.log("Q key pressed while docked: No action (use Undock button)");
+                    debugLog("Q key pressed while docked: No action (use Undock button)");
                 } else if (!proximityDetector.isNearStargate()) {
-                    console.log("Q key pressed but not near stargate");
+                    debugLog("Q key pressed but not near stargate");
                 }
             }
         };
@@ -109,7 +110,7 @@ export class UIIntegration {
         const undockBtn = document.getElementById('undock-btn');
         if (undockBtn) {
             const handler = (e: TouchEvent): void => {
-                console.log("Touch started on undock button");
+                debugLog("Touch started on undock button");
                 e.stopPropagation();
             };
             this.addBinding(undockBtn, 'touchstart', handler as EventListener, { passive: false });
@@ -215,7 +216,7 @@ export class UIIntegration {
                     baseSpeed * spaceship.miningEfficiency;
             });
             
-            console.log("Mining system updated with new efficiency:", spaceship.miningEfficiency);
+            debugLog("Mining system updated with new efficiency:", spaceship.miningEfficiency);
         }
     }
 
@@ -231,7 +232,7 @@ export class UIIntegration {
             // Use CSS class for better performance
             document.body.classList.add('undocking');
             ui.stargateInterface.hideStargateUI?.();
-            console.log("Hiding stargate interface");
+            debugLog("Hiding stargate interface");
         }
     }
 
@@ -241,7 +242,7 @@ export class UIIntegration {
             // Use CSS class for better performance
             document.body.classList.remove('undocking');
             ui.showUI?.();
-            console.log("Showing game UI");
+            debugLog("Showing game UI");
         }
     }
 
@@ -251,7 +252,7 @@ export class UIIntegration {
             // Close custom system creator if it's open
             const customSystemCreator = document.getElementById('custom-system-creator');
             if (customSystemCreator && window.getComputedStyle(customSystemCreator).display !== 'none') {
-                console.log("Closing custom system creator before undocking");
+                debugLog("Closing custom system creator before undocking");
                 // See if we can find the close button and simulate a click
                 const closeBtn = customSystemCreator.querySelector('#close-system-creator') as HTMLElement | null;
                 if (closeBtn) {
@@ -282,7 +283,7 @@ export class UIIntegration {
             // Close star map if open
             const starMap = document.getElementById('star-map');
             if (starMap && window.getComputedStyle(starMap).display !== 'none') {
-                console.log("Closing star map before undocking");
+                debugLog("Closing star map before undocking");
                 const closeStarMapBtn = starMap.querySelector('#close-star-map') as HTMLElement | null;
                 if (closeStarMapBtn) {
                     closeStarMapBtn.click();
@@ -296,7 +297,7 @@ export class UIIntegration {
             allModals.forEach(modal => {
                 const modalElement = modal as HTMLElement;
                 if (window.getComputedStyle(modalElement).display !== 'none') {
-                    console.log("Closing modal before undocking:", modalElement.id || 'unnamed modal');
+                    debugLog("Closing modal before undocking:", modalElement.id || 'unnamed modal');
                     modalElement.style.display = 'none';
                 }
             });

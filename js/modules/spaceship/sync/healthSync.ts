@@ -1,6 +1,8 @@
 // healthSync.ts - ECS health component synchronization
 // Extracted from spaceship.js to improve maintainability
 
+import { debugLog } from '../../../globals/debug.js';
+
 interface SpaceshipState {
   shield: number;
   maxShield: number;
@@ -32,7 +34,7 @@ export class HealthSync {
 
       // Check if this is the player entity
       if (entity && entity.hasTag && entity.hasTag('player')) {
-        console.log("Player entity destroyed - updating spaceship state");
+        debugLog("Player entity destroyed - updating spaceship state");
 
         // Get health component data
         const healthComponent = entity.getComponent('HealthComponent');
@@ -53,7 +55,7 @@ export class HealthSync {
       }
     });
 
-    console.log("Spaceship subscribed to destruction events");
+    debugLog("Spaceship subscribed to destruction events");
   }
 
   /**
@@ -61,9 +63,9 @@ export class HealthSync {
    * @param {object} spaceshipState Current spaceship state
    */
   syncValuesToHealthComponent(spaceshipState: SpaceshipState): void {
-    console.log("Beginning shield and hull sync to HealthComponent");
+    debugLog("Beginning shield and hull sync to HealthComponent");
 
-    console.log("Current spaceship values:", {
+    debugLog("Current spaceship values:", {
       shield: spaceshipState.shield,
       maxShield: spaceshipState.maxShield,
       hull: spaceshipState.hull,
@@ -78,18 +80,18 @@ export class HealthSync {
       maxHull: spaceshipState.maxHull
     };
 
-    console.log(`Preparing to sync values to player HealthComponent: Shield=${spaceshipState.shield}, Hull=${spaceshipState.hull}`);
+    debugLog(`Preparing to sync values to player HealthComponent: Shield=${spaceshipState.shield}, Hull=${spaceshipState.hull}`);
 
     // Try using the MessageBus to broadcast the sync event
     try {
       if ((window as any).game && (window as any).game.messageBus) {
         // Use the message bus to publish a sync event for any interested components
         (window as any).game.messageBus.publish('player.syncHealth', valuesForSync);
-        console.log("Published player.syncHealth event to game.messageBus with values:", valuesForSync);
+        debugLog("Published player.syncHealth event to game.messageBus with values:", valuesForSync);
       } else if ((window as any).mainMessageBus) {
         // Try using the global message bus
         (window as any).mainMessageBus.publish('player.syncHealth', valuesForSync);
-        console.log("Published player.syncHealth event to mainMessageBus with values:", valuesForSync);
+        debugLog("Published player.syncHealth event to mainMessageBus with values:", valuesForSync);
       } else {
         console.warn("No message bus available to sync health values");
       }
@@ -101,7 +103,7 @@ export class HealthSync {
     try {
       if ((window as any).game && (window as any).game.world) {
         const players = (window as any).game.world.getEntitiesByTag('player');
-        console.log(`Found ${players ? players.length : 0} player entities for direct sync`);
+        debugLog(`Found ${players ? players.length : 0} player entities for direct sync`);
 
         if (players && players.length > 0) {
           const player = players[0];
@@ -109,14 +111,14 @@ export class HealthSync {
 
           if (health) {
             // Log pre-sync state
-            console.log("DIRECT SYNC - HealthComponent before sync:", {
+            debugLog("DIRECT SYNC - HealthComponent before sync:", {
               shield: health.shield,
               maxShield: health.maxShield,
               health: health.health,
               maxHealth: health.maxHealth
             });
 
-            console.log("DIRECT SYNC - Spaceship values to sync:", {
+            debugLog("DIRECT SYNC - Spaceship values to sync:", {
               shield: spaceshipState.shield,
               maxShield: spaceshipState.maxShield,
               hull: spaceshipState.hull,
@@ -133,10 +135,10 @@ export class HealthSync {
             health.health = spaceshipState.hull;
             health.maxHealth = spaceshipState.maxHull;
 
-            console.log(`Directly synced values to HealthComponent: Shield ${oldShield} → ${health.shield}, Hull ${oldHealth} → ${health.health}`);
+            debugLog(`Directly synced values to HealthComponent: Shield ${oldShield} → ${health.shield}, Hull ${oldHealth} → ${health.health}`);
 
             // Verify sync was successful
-            console.log("DIRECT SYNC - HealthComponent after sync:", {
+            debugLog("DIRECT SYNC - HealthComponent after sync:", {
               shield: health.shield,
               maxShield: health.maxShield,
               health: health.health,
