@@ -9,7 +9,7 @@ npm install
 npm run dev          # Dev server (port 3000)
 npm run build        # Production build
 npm run typecheck    # TypeScript strict check (0 errors)
-npm run test         # Vitest - 10 files, 119 tests (all passing)
+npm run test         # Vitest - 11 files, 143 tests (all passing)
 npm run test:smoke   # Headless browser runtime test (Playwright)
 ```
 
@@ -26,7 +26,7 @@ npm run test:smoke   # Headless browser runtime test (Playwright)
 
 ## Architecture
 
-251 TypeScript files, 0 JavaScript. Pure TS codebase.
+252 TypeScript files, 0 JavaScript. Pure TS codebase.
 
 ```
 src/
@@ -76,12 +76,12 @@ css/                     # 18 CSS files
 - Three.js mock pattern: position/quaternion/scale need .set() methods
 - bitECS uses Float32Array - use `toBeCloseTo()` not `toBe()` for fractional test values
 - TSL PostProcessing replaces EffectComposer for WebGPU, uses `pass()` + `BloomNode`
-- `js/globals/debug.ts` exports `DEBUG_MODE.enabled` boolean + `setDebugMode()`/`isDebugMode()` - no `debugLog()` wrapper yet, needs to be created
+- `js/globals/debug.ts` exports `debugLog()`, `DEBUG_MODE.enabled`, `setDebugMode()`, `isDebugMode()`
 
 ## Active Issues
 
-- 502 `console.log` across 105 files - debugLog branch ready but unmerged (4 unmerged task branches total)
-- 49 `window.game` across 25 files (includes comments) - partial removal branch unmerged
-- 640 `any` type escapes (295 `as any` + 345 `: any`) - worst: combat/eventHandlers 30, controls 26, postTSL 34, environment 32
-- 97 files use `import * as THREE` - Three.js bundle 1,370 kB, tree-shaking blocked
+- 405 `console.log` across 97 files (debugLog merged, 10 worst files gated - ~97 calls removed)
+- 49 `window.game` across 25 files (includes comments)
+- 651 `any` type escapes (296 `as any` + 355 `: any`) - worst: controls 26, postTSL 34
+- 99 files use `import * as THREE` - Three.js bundle 1,370 kB, tree-shaking blocked
 - Test coverage gaps: environment, ui, renderer, spaceship, audio modules have zero tests on master
