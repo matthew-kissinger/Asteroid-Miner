@@ -108,8 +108,11 @@ export class SystemTransitionManager {
 
         debugLog(`Starting transition to system: ${systemId}`);
 
+        mainMessageBus.publish('stargate.warpStart', { systemId });
+
         // Start the transition effect
         systemTransition.startTransition(() => {
+            mainMessageBus.publish('stargate.warpComplete', { systemId });
             // This callback is called when transition is complete
             debugLog(`Transition complete, updating environment for: ${systemId}`);
 

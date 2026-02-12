@@ -17,15 +17,22 @@ type ThrustState = {
 type SpaceshipState = {
     isDocked: boolean;
     thrust: ThrustState;
+    fuel?: number;
+    maxFuel?: number;
+    hull?: number;
+    maxHull?: number;
+    shield?: number;
+    maxShield?: number;
 };
 
 type GameAudioContext = {
-    audio?: AudioSystem;
+    audio?: AudioSystem & { updateAmbientAlarms?: (fuel: number, hull: number) => void };
     spaceship?: SpaceshipState;
 };
 
 export class AudioUpdater {
     game: GameAudioContext;
+    private lastShieldPercent: number = 100;
 
     constructor(game: GameAudioContext) {
         this.game = game;
@@ -67,7 +74,28 @@ export class AudioUpdater {
                 this.game.audio.stopSound('thrust');
             }
         }
-        
+
+        // Ambient warning alarms (low fuel / low hull)
+        if (this.game.audio?.updateAmbientAlarms && this.game.spaceship) {
+            const ship = this.game.spaceship;
+            const fuelPercent = (ship.maxFuel != null && ship.maxFuel > 0 && ship.fuel != null)
+                ? (ship.fuel / ship.maxFuel) * 100 : 100;
+            const hullPercent = (ship.maxHull != null && ship.maxHull > 0 && ship.hull != null)
+                ? (ship.hull / ship.maxHull) * 100 : 100;
+            this.game.audio.updateAmbientAlarms(fuelPercent, hullPercent);
+        }
+
+        // Shield recharge complete: play sound when shields reach max from below
+        if (this.game.audio && this.game.spaceship && this.game.spaceship.maxShield != null && this.game.spaceship.maxShield > 0) {
+            const shield = this.game.spaceship.shield ?? 0;
+            const maxShield = this.game.spaceship.maxShield;
+            const shieldPercent = (shield / maxShield) * 100;
+            if (this.lastShieldPercent < 99.5 && shieldPercent >= 99.5) {
+                this.game.audio.playSound('shield-recharge');
+            }
+            this.lastShieldPercent = shieldPercent;
+        }
+
         // Mining sound is handled by the mining system integration
     }
 }

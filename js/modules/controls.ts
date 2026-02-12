@@ -540,6 +540,7 @@ export class Controls {
             // Check if mining has destroyed an asteroid
             const destroyedAsteroid = this.miningSystem.getLastDestroyedAsteroid();
             if (destroyedAsteroid && this.environment && this.environment.asteroidBelt) {
+                mainMessageBus.publish('mining.asteroidDepleted', {});
                 // Remove the asteroid from the environment
                 this.environment.asteroidBelt.removeAsteroid(destroyedAsteroid);
             }

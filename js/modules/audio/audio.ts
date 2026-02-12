@@ -4,7 +4,10 @@ import { AudioLoader, SoundMap } from './core/loader.ts';
 import { MusicPlaylist } from './music/playlist.ts';
 import { MusicPlayer } from './music/player.ts';
 import { SoundPlayer } from './effects/soundPlayer.ts';
+import { UISoundGenerator } from './effects/uiSounds.ts';
+import { AmbientAlarms } from './effects/ambientSounds.ts';
 import { MobileAudioEnabler } from './mobile/enabler.ts';
+import { mainMessageBus } from '../../globals/messageBus.ts';
 import { debugLog } from '../../globals/debug.js';
 
 export class AudioManager {
@@ -14,7 +17,10 @@ export class AudioManager {
     private musicPlayer: MusicPlayer;
     private soundPlayer: SoundPlayer;
     private mobileEnabler: MobileAudioEnabler;
-    
+    private ambientAlarms: AmbientAlarms | null = null;
+    private uiSoundUnsubs: (() => void)[] = [];
+    private buttonClickHandler: ((e: Event) => void) | null = null;
+
     // Exposed properties for compatibility
     public sounds: SoundMap;
     public soundSources: Record<string, any> = {}; // Legacy compatibility
@@ -35,6 +41,12 @@ export class AudioManager {
         this.musicPlaylist = new MusicPlaylist();
         this.musicPlayer = new MusicPlayer(this.musicPlaylist);
         this.soundPlayer = new SoundPlayer(this.audioContextManager, this.audioLoader);
+        const ctx = this.audioContextManager.getContext();
+        if (ctx) {
+            const uiSoundGenerator = new UISoundGenerator(ctx, () => this.soundPlayer.getVolume());
+            this.soundPlayer.setUISoundGenerator(uiSoundGenerator);
+            this.ambientAlarms = new AmbientAlarms(uiSoundGenerator, () => this.soundPlayer.isMuted());
+        }
         this.mobileEnabler = new MobileAudioEnabler(this.audioContextManager, this.musicPlayer);
         
         // Exposed properties for compatibility
@@ -130,7 +142,24 @@ export class AudioManager {
             setTimeout(() => {
                 this.audioLoader.loadGameplaySounds();
             }, 1000);
-            
+
+            // Wire synthesized UI/stargate/trading sounds to MessageBus events
+            this.uiSoundUnsubs.push(
+                mainMessageBus.subscribe('player.docked', () => { this.playSound('stargate-dock'); }),
+                mainMessageBus.subscribe('player.undocked', () => { this.playSound('stargate-undock'); }),
+                mainMessageBus.subscribe('stargate.warpStart', () => { this.playSound('stargate-warp'); }),
+                mainMessageBus.subscribe('trading.resourceSold', () => { this.playSound('sell'); }),
+                mainMessageBus.subscribe('mining.asteroidDepleted', () => { this.playSound('mining-complete'); }),
+                mainMessageBus.subscribe('player.shieldRecharged', () => { this.playSound('shield-recharge'); })
+            );
+
+            // UI button click sound (delegated)
+            this.buttonClickHandler = (e: Event) => {
+                const target = (e.target as Element)?.closest?.('button');
+                if (target) this.playSound('ui-click');
+            };
+            document.addEventListener('click', this.buttonClickHandler, true);
+
             return true;
         } catch (error) {
             console.error("Error initializing audio:", error);
@@ -163,6 +192,16 @@ export class AudioManager {
     // Play a sound effect
     playSound(name: string): void {
         this.soundPlayer.playSound(name, this.userHasInteracted);
+    }
+
+    /** Legacy: play sound by name with optional volume (used by trading UI). */
+    playSoundEffect(name: string, _volume?: number): void {
+        this.playSound(name);
+    }
+
+    /** Update ambient warning alarms (low fuel / low hull). Call from game loop with 0–100 percentages. */
+    updateAmbientAlarms(fuelPercent: number, hullPercent: number): void {
+        this.ambientAlarms?.update(fuelPercent, hullPercent);
     }
     
     // Stop a continuous sound effect
@@ -220,7 +259,14 @@ export class AudioManager {
     // Clean up resources when destroying the audio manager
     cleanup(): void {
         debugLog("Cleaning up AudioManager resources...");
-        
+
+        for (const unsub of this.uiSoundUnsubs) unsub();
+        this.uiSoundUnsubs.length = 0;
+        if (this.buttonClickHandler) {
+            document.removeEventListener('click', this.buttonClickHandler, true);
+            this.buttonClickHandler = null;
+        }
+
         // Stop all active sounds
         this.soundPlayer.stopAllSounds();
         

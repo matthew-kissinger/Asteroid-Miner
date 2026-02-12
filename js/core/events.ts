@@ -60,9 +60,14 @@ export interface GameEventMap extends Record<string, unknown> {
     'xp.gained': { amount: number; newTotal: number; rank: number };
     'rank.up': { rank: number; rankName: string };
     'mining.resourceCollected': { amount: number; resourceType: string };
+    'mining.asteroidDepleted': { entityId?: number };
     'trading.resourceSold': { amount: number; resourceType: string };
+    'trading.purchase': Record<string, never>;
     'system.discovered': { systemId: string };
     'orb.collected': { rarity: string };
+    'stargate.warpStart': { systemId: string };
+    'stargate.warpComplete': { systemId: string };
+    'player.shieldRecharged': Record<string, never>;
 }
 
 export const EVENT = Object.freeze({

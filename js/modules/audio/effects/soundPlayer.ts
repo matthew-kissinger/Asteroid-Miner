@@ -1,6 +1,7 @@
 // soundPlayer.ts - Sound effects playback with 3D audio and volume control
 import { AudioContextManager, TrackableNode } from '../core/context.ts';
 import { AudioLoader } from '../core/loader.ts';
+import type { UISoundGenerator } from './uiSounds.ts';
 import { debugLog } from '../../../globals/debug.js';
 
 interface ActiveSoundNodes {
@@ -8,16 +9,21 @@ interface ActiveSoundNodes {
     gain: GainNode & TrackableNode;
 }
 
+const SYNTHESIZED_SOUND_NAMES = new Set([
+    'stargate-dock', 'stargate-undock', 'stargate-warp',
+    'purchase', 'sell', 'mining-complete', 'ui-click', 'shield-recharge'
+]);
+
 export class SoundPlayer {
     private audioContextManager: AudioContextManager;
     private audioLoader: AudioLoader;
+    private uiSoundGenerator: UISoundGenerator | null = null;
     private sfxVolume: number = 0.5; // Default sound effects volume
     private muted: boolean = false;
-    
+
     private lastWeaponSoundPlayTime: number = 0;
     private weaponSoundCooldown: number = 70; // milliseconds
-    
-    
+
     // Track active continuous sounds
     public activeSounds: {
         [key: string]: ActiveSoundNodes | null;
@@ -26,12 +32,33 @@ export class SoundPlayer {
         thrust: null,
         "mining-laser": null
     };
-    
-    constructor(audioContextManager: AudioContextManager, audioLoader: AudioLoader) {
+
+    constructor(audioContextManager: AudioContextManager, audioLoader: AudioLoader, uiSoundGenerator?: UISoundGenerator | null) {
         this.audioContextManager = audioContextManager;
         this.audioLoader = audioLoader;
+        this.uiSoundGenerator = uiSoundGenerator ?? null;
     }
-    
+
+    setUISoundGenerator(gen: UISoundGenerator | null): void {
+        this.uiSoundGenerator = gen;
+    }
+
+    private playSynthesized(name: string): void {
+        const g = this.uiSoundGenerator;
+        if (!g) return;
+        switch (name) {
+            case 'stargate-dock': g.playStargateDock(); break;
+            case 'stargate-undock': g.playStargateUndock(); break;
+            case 'stargate-warp': g.playStargateWarp(); break;
+            case 'purchase': g.playPurchase(); break;
+            case 'sell': g.playSell(); break;
+            case 'mining-complete': g.playMiningComplete(); break;
+            case 'ui-click': g.playButtonClick(); break;
+            case 'shield-recharge': g.playShieldRechargeComplete(); break;
+            default: break;
+        }
+    }
+
     // Play a sound effect using Web Audio API
     playSound(name: string, userHasInteracted: boolean): void {
         debugLog(`Attempting to play sound: ${name}`);
@@ -56,7 +83,13 @@ export class SoundPlayer {
         if (audioContext.state === 'suspended') {
             this.audioContextManager.resumeAudioContext();
         }
-        
+
+        // Synthesized UI/stargate/trading sounds (no external files)
+        if (this.uiSoundGenerator && SYNTHESIZED_SOUND_NAMES.has(name)) {
+            this.playSynthesized(name);
+            return;
+        }
+
         // Handle the case where the name is 'weapon' or similar, map to projectile sound
         if (name === 'weapon' || name === 'fire' || name === 'shoot') {
             debugLog(`Mapping ${name} sound to projectile sound`);
