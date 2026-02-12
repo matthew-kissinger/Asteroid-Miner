@@ -19,7 +19,8 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 *   **Interstellar Travel:** Use the Star Map at the stargate to travel between different star systems.
 *   **Space Anomalies & Energy Orbs:** Discover and investigate unique space anomalies to collect valuable energy orbs.
 *   **Custom System Creation (Optional AI Feature):** Use an AI-powered tool to generate unique star systems with custom skyboxes and planets.
-*   **VibeVerse Portals (Experimental):** Discover and explore experimental VibeVerse portals. (Confirm if this is a prominent feature to keep).
+*   **Horde Mode:** Wave-based survival combat with escalating difficulty and survival time tracking.
+*   **VibeVerse Portals (Experimental):** Discover and explore experimental VibeVerse portals.
 *   **Cross-Platform:** Playable on both desktop (keyboard/mouse) and mobile (touch controls).
 *   **Advanced Controller Support:** Full gamepad/controller support with optimized controls, sensitivity adjustment, and responsive aiming.
 *   **Optimized UI Experience:** Clean, unobtrusive targeting system that only appears when activated (press T), with minimal visual clutter and performance-optimized updates.
@@ -29,7 +30,7 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 ## Technologies Used
 
-*   **Language:** TypeScript 5.7 strict (252 pure TS files, 0 JavaScript)
+*   **Language:** TypeScript 5.7 strict (255 pure TS files, 0 JavaScript)
 *   **3D Engine:** Three.js r180 WebGPU (WebGL2 fallback)
 *   **ECS:** bitECS v0.4.0 (29 components, 5 active systems)
 *   **Build System:** Vite 6 (code-split: game-core 186 kB, combat 27 kB, env 62 kB, ui 64 kB)
@@ -45,8 +46,8 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 1.  **Clone or Download:** Get the code from the repository.
     ```bash
-    git clone https://github.com/yourusername/aminer.git
-    cd aminer
+    git clone https://github.com/matthew-kissinger/Asteroid-Miner.git
+    cd Asteroid-Miner
     ```
 
 2.  **Install Dependencies:** Use npm to install all dependencies.
