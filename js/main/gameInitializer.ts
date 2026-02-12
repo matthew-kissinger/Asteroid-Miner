@@ -157,6 +157,20 @@ export class GameInitializer {
         // Share game state reference with UI for intro sequence and FPS display
         this.game.ui.setGameStateReference(this.game);
         
+        // Set game references for dependency injection in UI components
+        const { setGameReference: setStargateHelpersRef } = await import('../modules/ui/components/stargate/helpers.ts');
+        const { setGameReference: setSystemsViewRef } = await import('../modules/ui/components/stargate/systemsView.ts');
+        const { setGameReference: setHudDisplaysRef } = await import('../modules/ui/components/hud/displays.ts');
+        const { setGameReference: setHudHelpersRef } = await import('../modules/ui/components/hud/helpers.ts');
+        const { setGameReference: setCustomSystemHelpersRef } = await import('../modules/ui/components/customSystem/helpers.ts');
+        
+        // Cast to any to avoid type mismatch - these modules only need specific properties
+        setStargateHelpersRef(this.game as any);
+        setSystemsViewRef(this.game as any);
+        setHudDisplaysRef(this.game as any);
+        setHudHelpersRef(this.game as any);
+        setCustomSystemHelpersRef(this.game as any);
+        
         // Initialize controls last, as it depends on other components
         this.game.controls = new Controls(spaceship, physics as any, environment as any, this.game.ui);
         

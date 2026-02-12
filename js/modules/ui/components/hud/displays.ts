@@ -2,6 +2,19 @@
 
 import { HUDStyles } from './styles.ts';
 
+// Game reference for dependency injection
+type GameType = {
+    audio?: {
+        toggleMute(): boolean;
+    };
+};
+
+let gameRef: GameType | null = null;
+
+export function setGameReference(game: GameType): void {
+    gameRef = game;
+}
+
 export class HUDDisplays {
     /**
      * Creates the flight panel displaying core ship information
@@ -494,8 +507,8 @@ export class HUDDisplays {
         
         // Add click handler for sound toggle
         soundToggleBtn.addEventListener('click', () => {
-            if (window.game && window.game.audio) {
-                const isMuted = window.game.audio.toggleMute();
+            if (gameRef && gameRef.audio) {
+                const isMuted = gameRef.audio.toggleMute();
                 soundToggleBtn.textContent = isMuted ? 'SOUND: OFF' : 'SOUND: ON';
             }
         });

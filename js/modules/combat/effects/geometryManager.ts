@@ -6,6 +6,15 @@
 
 import * as THREE from 'three';
 
+// Game reference for dependency injection (legacy window.game population)
+type GameType = Record<string, any>;
+
+let gameRef: GameType | null = null;
+
+export function setGameReference(game: GameType): void {
+    gameRef = game;
+}
+
 export class GeometryManager {
     constructor() {
         this.precreateGeometries();
@@ -18,8 +27,8 @@ export class GeometryManager {
     precreateGeometries(): void {
         console.log("Pre-creating geometries for combat effects");
         
-        // Create geometries and store them on window.game for global access
-        const game = (window as any).game || ((window as any).game = {});
+        // Create geometries and store them on gameRef for global access
+        const game = gameRef || (gameRef = {});
         
         // Projectile geometries - Changed to a thin cylinder for laser bolt
         game.projectileGeometry = new THREE.CylinderGeometry(0.15, 0.15, 10, 8); // Thin, 10 units long cylinder
@@ -48,13 +57,13 @@ export class GeometryManager {
     }
 
     /**
-     * Store references to template materials on window.game
+     * Store references to template materials on gameRef
      * @param {any} materialManager - The material manager instance
      */
     storeMaterialReferences(materialManager: any): void {
         // Store references to template materials (which should now be pre-warmed)
         // These materials are created and warmed in MaterialManager
-        const game = (window as any).game || ((window as any).game = {});
+        const game = gameRef || (gameRef = {});
         game.projectileMaterial = materialManager.projectileMaterial;
         game.projectileGlowMaterial = materialManager.projectileGlowMaterial;
         game.trailParticleMaterial = materialManager.trailParticleMaterial; // Will be red
@@ -67,7 +76,7 @@ export class GeometryManager {
      * Clean up geometry resources
      */
     dispose(): void {
-        const game = (window as any).game;
+        const game = gameRef;
         if (game) {
             if (game.projectileGeometry) game.projectileGeometry.dispose();
             if (game.projectileGlowGeometry) game.projectileGlowGeometry.dispose();

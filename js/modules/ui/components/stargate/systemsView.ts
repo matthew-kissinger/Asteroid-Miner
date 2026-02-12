@@ -1,5 +1,16 @@
 // systemsView.ts - Systems list and navigation UI
 
+// Game reference for dependency injection
+type GameType = {
+    environment?: Environment;
+};
+
+let gameRef: GameType | null = null;
+
+export function setGameReference(game: GameType): void {
+    gameRef = game;
+}
+
 interface StarMap {
     show(): void;
 }
@@ -10,6 +21,12 @@ interface BlackjackGame {
 
 interface Settings {
     show(): void;
+}
+
+interface Environment {
+    customSystemCreator?: {
+        show(): void;
+    };
 }
 
 export class SystemsView {
@@ -87,12 +104,12 @@ export class SystemsView {
         if (customSystemBtn) {
             customSystemBtn.addEventListener('click', () => {
                 // Check if custom system creator is available on environment
-                if (window.game && (window.game as any).environment && (window.game as any).environment.customSystemCreator) {
+                if (gameRef && gameRef.environment && gameRef.environment.customSystemCreator) {
                     // Close stargate interface
                     this.hideStargateUI();
                     
                     // Show custom system creator
-                    (window.game as any).environment.customSystemCreator.show();
+                    gameRef.environment.customSystemCreator.show();
                 } else {
                     console.error('Custom system creator not available');
                 }
