@@ -75,6 +75,18 @@ export class GameInitializer {
         const { AudioManager } = await import('../modules/audio/audio.ts');
         this.game.audio = new AudioManager();
         
+        // Load settings early if available
+        if ((this.game as any).saveSystem) {
+            const savedSettings = (this.game as any).saveSystem.loadSettings();
+            if (savedSettings) {
+                // Apply audio settings before audio initialization
+                if (savedSettings.audio) {
+                    // Store for later application after audio init
+                    (this.game as any)._pendingAudioSettings = savedSettings.audio;
+                }
+            }
+        }
+        
         // Initialize renderer first
         if (DEBUG_MODE.enabled) debugLog("Creating renderer...");
         this.game.renderer = await Renderer.create();

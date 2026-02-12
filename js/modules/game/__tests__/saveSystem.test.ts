@@ -318,5 +318,138 @@ describe('SaveSystem', () => {
             expect(defaults.upgrades.engineLevel).toBe(1);
             expect(defaults.highScores.bestCredits).toBe(0);
         });
+
+        it('should include default settings', () => {
+            const defaults = getDefaultSave();
+            expect(defaults.settings).toBeDefined();
+            expect(defaults.settings!.audio.sfxVolume).toBe(1.0);
+            expect(defaults.settings!.audio.musicVolume).toBe(1.0);
+            expect(defaults.settings!.controls.mouseSensitivity).toBe(0.001);
+            expect(defaults.settings!.graphics.graphicalQuality).toBe('medium');
+        });
+    });
+
+    // ── Settings persistence ─────────────────────────────────────
+
+    describe('settings persistence', () => {
+        it('should save and load settings', () => {
+            const settings = {
+                audio: {
+                    masterVolume: 0.8,
+                    sfxVolume: 0.7,
+                    musicVolume: 0.6,
+                    isMuted: false,
+                },
+                controls: {
+                    mouseSensitivity: 0.002,
+                    gamepadSensitivity: 1.5,
+                },
+                graphics: {
+                    graphicalQuality: 'high',
+                    postProcessing: true,
+                    asteroidDetail: 'high',
+                    lightingQuality: 'high',
+                    particleEffects: 'high',
+                    resolutionScale: 'high',
+                    frameRateCap: '60',
+                    showFPS: true,
+                    spatialAudio: true,
+                    autoQuality: false,
+                    godRaysEnabled: true,
+                    godRaysType: 'claude',
+                },
+            };
+
+            saveSystem.saveSettings(settings);
+            const loaded = saveSystem.loadSettings();
+
+            expect(loaded).not.toBeNull();
+            expect(loaded!.audio.sfxVolume).toBe(0.7);
+            expect(loaded!.controls.mouseSensitivity).toBe(0.002);
+            expect(loaded!.graphics.graphicalQuality).toBe('high');
+        });
+
+        it('should apply settings to game', () => {
+            const game = {
+                audio: {
+                    sfxVolume: 1.0,
+                    musicVolume: 1.0,
+                    isMuted: false,
+                    toggleMute: vi.fn(),
+                },
+                controls: {
+                    inputHandler: { mouseSensitivity: 0.001 },
+                    gamepadHandler: { lookSensitivity: 1.0 },
+                },
+            };
+
+            const settings = {
+                audio: {
+                    masterVolume: 1.0,
+                    sfxVolume: 0.5,
+                    musicVolume: 0.6,
+                    isMuted: false,
+                },
+                controls: {
+                    mouseSensitivity: 0.003,
+                    gamepadSensitivity: 2.0,
+                },
+                graphics: getDefaultSave().settings!.graphics,
+            };
+
+            saveSystem.applySettings(game, settings);
+
+            expect(game.audio.sfxVolume).toBe(0.5);
+            expect(game.audio.musicVolume).toBe(0.6);
+            expect(game.controls.inputHandler.mouseSensitivity).toBe(0.003);
+            expect(game.controls.gamepadHandler.lookSensitivity).toBe(2.0);
+        });
+
+        it('should capture current settings from game', () => {
+            const game = {
+                audio: {
+                    sfxVolume: 0.8,
+                    musicVolume: 0.7,
+                    isMuted: true,
+                },
+                controls: {
+                    inputHandler: { mouseSensitivity: 0.002 },
+                    gamepadHandler: { lookSensitivity: 1.5 },
+                },
+            };
+
+            const captured = saveSystem.captureSettings(game);
+
+            expect(captured.audio.sfxVolume).toBe(0.8);
+            expect(captured.audio.musicVolume).toBe(0.7);
+            expect(captured.audio.isMuted).toBe(true);
+            expect(captured.controls.mouseSensitivity).toBe(0.002);
+            expect(captured.controls.gamepadSensitivity).toBe(1.5);
+        });
+
+        it('should persist settings across save/load cycles', () => {
+            const game = makeGameStub();
+            game.audio = {
+                sfxVolume: 0.5,
+                musicVolume: 0.6,
+                isMuted: false,
+                toggleMute: vi.fn(),
+            };
+            game.controls = {
+                inputHandler: { mouseSensitivity: 0.002 },
+                gamepadHandler: { lookSensitivity: 1.5 },
+            };
+
+            // Save game with settings
+            saveSystem.save(game);
+            const settings = saveSystem.captureSettings(game);
+            saveSystem.saveSettings(settings);
+
+            // Load and verify
+            const loaded = saveSystem.load();
+            expect(loaded!.settings).toBeDefined();
+            expect(loaded!.settings!.audio.sfxVolume).toBe(0.5);
+            expect(loaded!.settings!.controls.mouseSensitivity).toBe(0.002);
+        });
     });
 });

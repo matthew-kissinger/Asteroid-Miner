@@ -46,6 +46,32 @@ export interface SaveSchema {
         bestHordeSurvivalTime: number; // seconds
         totalKills: number;
     };
+    settings?: {
+        audio: {
+            masterVolume: number;
+            sfxVolume: number;
+            musicVolume: number;
+            isMuted: boolean;
+        };
+        controls: {
+            mouseSensitivity: number;
+            gamepadSensitivity: number;
+        };
+        graphics: {
+            graphicalQuality: string;
+            postProcessing: boolean;
+            asteroidDetail: string;
+            lightingQuality: string;
+            particleEffects: string;
+            resolutionScale: string;
+            frameRateCap: string;
+            showFPS: boolean;
+            spatialAudio: boolean;
+            autoQuality: boolean;
+            godRaysEnabled: boolean;
+            godRaysType: string;
+        };
+    };
 }
 
 // ── Default state ────────────────────────────────────────────────────
@@ -86,6 +112,32 @@ export function getDefaultSave(): SaveSchema {
             bestCredits: 0,
             bestHordeSurvivalTime: 0,
             totalKills: 0,
+        },
+        settings: {
+            audio: {
+                masterVolume: 1.0,
+                sfxVolume: 1.0,
+                musicVolume: 1.0,
+                isMuted: false,
+            },
+            controls: {
+                mouseSensitivity: 0.001,
+                gamepadSensitivity: 1.0,
+            },
+            graphics: {
+                graphicalQuality: 'medium',
+                postProcessing: true,
+                asteroidDetail: 'medium',
+                lightingQuality: 'medium',
+                particleEffects: 'medium',
+                resolutionScale: 'medium',
+                frameRateCap: 'auto',
+                showFPS: false,
+                spatialAudio: true,
+                autoQuality: true,
+                godRaysEnabled: false,
+                godRaysType: 'standard',
+            },
         },
     };
 }
@@ -414,6 +466,81 @@ export class SaveSystem {
         mainMessageBus.subscribe('game.over', () => {
             this.updateHighScores(game);
         });
+    }
+
+    // ── Settings persistence ─────────────────────────────────────────
+
+    /** Save settings immediately (not on auto-save timer) */
+    saveSettings(settings: SaveSchema['settings']): boolean {
+        try {
+            const existing = this.loadRaw() ?? getDefaultSave();
+            existing.settings = settings;
+            existing.timestamp = Date.now();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+            debugLog('SaveSystem: Settings saved');
+            return true;
+        } catch (error) {
+            console.error('SaveSystem: Failed to save settings', error);
+            return false;
+        }
+    }
+
+    /** Load settings from save file */
+    loadSettings(): SaveSchema['settings'] | null {
+        try {
+            const save = this.load();
+            return save?.settings ?? null;
+        } catch (error) {
+            console.error('SaveSystem: Failed to load settings', error);
+            return null;
+        }
+    }
+
+    /** Apply loaded settings to game systems */
+    applySettings(game: any, settings: SaveSchema['settings']): void {
+        if (!settings) return;
+
+        // Apply audio settings
+        if (game.audio && settings.audio) {
+            game.audio.sfxVolume = settings.audio.sfxVolume;
+            game.audio.musicVolume = settings.audio.musicVolume;
+            if (settings.audio.isMuted && !game.audio.isMuted) {
+                game.audio.toggleMute();
+            } else if (!settings.audio.isMuted && game.audio.isMuted) {
+                game.audio.toggleMute();
+            }
+        }
+
+        // Apply control settings
+        if (game.controls && settings.controls) {
+            if (game.controls.inputHandler && typeof settings.controls.mouseSensitivity === 'number') {
+                game.controls.inputHandler.mouseSensitivity = settings.controls.mouseSensitivity;
+            }
+            if (game.controls.gamepadHandler && typeof settings.controls.gamepadSensitivity === 'number') {
+                game.controls.gamepadHandler.lookSensitivity = settings.controls.gamepadSensitivity;
+            }
+        }
+
+        debugLog('SaveSystem: Settings applied to game');
+    }
+
+    /** Capture current settings from game systems */
+    captureSettings(game: any): SaveSchema['settings'] {
+        const defaults = getDefaultSave().settings!;
+        const settings: SaveSchema['settings'] = {
+            audio: {
+                masterVolume: defaults.audio.masterVolume,
+                sfxVolume: game.audio?.sfxVolume ?? defaults.audio.sfxVolume,
+                musicVolume: game.audio?.musicVolume ?? defaults.audio.musicVolume,
+                isMuted: game.audio?.isMuted ?? defaults.audio.isMuted,
+            },
+            controls: {
+                mouseSensitivity: game.controls?.inputHandler?.mouseSensitivity ?? defaults.controls.mouseSensitivity,
+                gamepadSensitivity: game.controls?.gamepadHandler?.lookSensitivity ?? defaults.controls.gamepadSensitivity,
+            },
+            graphics: defaults.graphics,
+        };
+        return settings;
     }
 
     // ── Private helpers ──────────────────────────────────────────────

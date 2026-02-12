@@ -136,6 +136,19 @@ export class Game {
             const savedState = this.saveSystem.load();
             if (savedState && this.spaceship) {
                 this.saveSystem.applyToGame(this, savedState);
+                // Apply settings separately
+                if (savedState.settings) {
+                    this.saveSystem.applySettings(this, savedState.settings);
+                }
+            } else if ((this as any)._pendingAudioSettings) {
+                // Apply pending audio settings if no full save exists
+                const defaults = this.saveSystem.captureSettings(this);
+                const pendingSettings = {
+                    ...defaults,
+                    audio: (this as any)._pendingAudioSettings,
+                };
+                this.saveSystem.applySettings(this, pendingSettings);
+                delete (this as any)._pendingAudioSettings;
             }
             
             // Subscribe to events and start auto-save
