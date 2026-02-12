@@ -257,6 +257,19 @@ export class Spaceship {
     return this.shipUpgrades?.upgradeScanner(this);
   }
 
+  upgradeWeapon(): number | undefined {
+    return this.shipUpgrades?.upgradeWeapon();
+  }
+
+  upgradeShield(): number | undefined {
+    const result = this.shipUpgrades?.upgradeShield(this);
+    if (result !== undefined) {
+      this.shield = this.maxShield;
+      this.syncValuesToHealthComponent();
+    }
+    return result;
+  }
+
   // Upgrade level access methods
   get fuelTankLevel(): number {
     return this.shipUpgrades?.fuelTankLevel || 1;
@@ -296,6 +309,34 @@ export class Spaceship {
 
   get scannerUpgradeCost(): number {
     return this.shipUpgrades?.scannerUpgradeCost || 600;
+  }
+
+  get weaponLevel(): number {
+    return this.shipUpgrades?.weaponLevel || 1;
+  }
+
+  get weaponDamage(): number {
+    return this.shipUpgrades?.getWeaponDamage() ?? 20;
+  }
+
+  get weaponFireRate(): number {
+    return this.shipUpgrades?.getWeaponFireRate() ?? 3;
+  }
+
+  get weaponUpgradeCost(): number {
+    return this.shipUpgrades?.weaponUpgradeCost ?? 800;
+  }
+
+  get shieldLevel(): number {
+    return this.shipUpgrades?.shieldLevel || 1;
+  }
+
+  get shieldRegenRate(): number {
+    return this.shipUpgrades?.getShieldRegenRate() ?? 5;
+  }
+
+  get shieldUpgradeCost(): number {
+    return this.shipUpgrades?.shieldUpgradeCost ?? 600;
   }
 
   /** XP required from start of current rank to reach next rank. */

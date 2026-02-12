@@ -183,6 +183,14 @@ export class UIIntegration {
             () => spaceship.scannerUpgradeCost,
             () => spaceship.upgradeScanner(),
             spaceship, ui);
+        this.setupUpgradeButton('upgrade-weapon',
+            () => spaceship.weaponUpgradeCost,
+            () => spaceship.upgradeWeapon(),
+            spaceship, ui);
+        this.setupUpgradeButton('upgrade-shield',
+            () => spaceship.shieldUpgradeCost,
+            () => spaceship.upgradeShield(),
+            spaceship, ui);
     }
 
     setupUpgradeButton(

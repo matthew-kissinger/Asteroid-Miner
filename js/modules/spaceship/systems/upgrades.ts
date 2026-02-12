@@ -19,6 +19,7 @@ interface SpaceshipState {
   miningEfficiency: number;
   collisionResistance: number;
   scanRange: number;
+  maxShield: number;
 }
 
 interface UpgradeLevels {
@@ -32,6 +33,10 @@ interface UpgradeLevels {
   hullUpgradeCost: number;
   scannerLevel: number;
   scannerUpgradeCost: number;
+  weaponLevel: number;
+  weaponUpgradeCost: number;
+  shieldLevel: number;
+  shieldUpgradeCost: number;
 }
 
 export class ShipUpgrades {
@@ -53,6 +58,18 @@ export class ShipUpgrades {
   scannerLevel: number;
   scannerUpgradeCost: number;
 
+  weaponLevel: number;
+  weaponUpgradeCost: number;
+
+  shieldLevel: number;
+  shieldUpgradeCost: number;
+
+  private static readonly WEAPON_BASE_DAMAGE = 20;
+  private static readonly WEAPON_BASE_FIRE_RATE = 3;
+  private static readonly SHIELD_BASE_MAX = 50;
+  private static readonly SHIELD_BASE_REGEN = 5;
+  private static readonly MAX_UPGRADE_LEVEL = 5;
+
   constructor(shipComponents: ShipComponents) {
     this.components = shipComponents; // { mesh, thrusters, leftCannon, rightCannon, leftEmitter, rightEmitter }
 
@@ -71,6 +88,12 @@ export class ShipUpgrades {
 
     this.scannerLevel = 1;
     this.scannerUpgradeCost = 600;
+
+    this.weaponLevel = 1;
+    this.weaponUpgradeCost = 800;
+
+    this.shieldLevel = 1;
+    this.shieldUpgradeCost = 600;
   }
 
   /**
@@ -269,6 +292,41 @@ export class ShipUpgrades {
   }
 
   /**
+   * Upgrade the particle cannon (weapon). +20% damage, +15% fire rate per level. Max level 5.
+   * Cost starts at 800, scales 3x per level.
+   */
+  upgradeWeapon(): number {
+    if (this.weaponLevel >= ShipUpgrades.MAX_UPGRADE_LEVEL) return this.getWeaponDamage();
+    this.weaponLevel++;
+    this.weaponUpgradeCost = Math.floor(800 * Math.pow(3, this.weaponLevel - 1));
+    return this.getWeaponDamage();
+  }
+
+  getWeaponDamage(): number {
+    return ShipUpgrades.WEAPON_BASE_DAMAGE * Math.pow(1.2, this.weaponLevel - 1);
+  }
+
+  getWeaponFireRate(): number {
+    return ShipUpgrades.WEAPON_BASE_FIRE_RATE * Math.pow(1.15, this.weaponLevel - 1);
+  }
+
+  /**
+   * Upgrade the shield. +30% capacity, +20% regen per level. Max level 5.
+   * Cost starts at 600, scales 3x per level.
+   */
+  upgradeShield(spaceshipState: SpaceshipState): number {
+    if (this.shieldLevel >= ShipUpgrades.MAX_UPGRADE_LEVEL) return spaceshipState.maxShield;
+    this.shieldLevel++;
+    spaceshipState.maxShield = ShipUpgrades.SHIELD_BASE_MAX * Math.pow(1.3, this.shieldLevel - 1);
+    this.shieldUpgradeCost = Math.floor(600 * Math.pow(3, this.shieldLevel - 1));
+    return spaceshipState.maxShield;
+  }
+
+  getShieldRegenRate(): number {
+    return ShipUpgrades.SHIELD_BASE_REGEN * Math.pow(1.2, this.shieldLevel - 1);
+  }
+
+  /**
    * Get all upgrade levels for external access
    * @returns {object} All upgrade levels and costs
    */
@@ -283,7 +341,11 @@ export class ShipUpgrades {
       hullLevel: this.hullLevel,
       hullUpgradeCost: this.hullUpgradeCost,
       scannerLevel: this.scannerLevel,
-      scannerUpgradeCost: this.scannerUpgradeCost
+      scannerUpgradeCost: this.scannerUpgradeCost,
+      weaponLevel: this.weaponLevel,
+      weaponUpgradeCost: this.weaponUpgradeCost,
+      shieldLevel: this.shieldLevel,
+      shieldUpgradeCost: this.shieldUpgradeCost
     };
   }
 
@@ -302,5 +364,9 @@ export class ShipUpgrades {
     this.hullUpgradeCost = upgrades.hullUpgradeCost || 1500;
     this.scannerLevel = upgrades.scannerLevel || 1;
     this.scannerUpgradeCost = upgrades.scannerUpgradeCost || 600;
+    this.weaponLevel = upgrades.weaponLevel || 1;
+    this.weaponUpgradeCost = upgrades.weaponUpgradeCost ?? 800 * Math.pow(3, (upgrades.weaponLevel || 1) - 1);
+    this.shieldLevel = upgrades.shieldLevel || 1;
+    this.shieldUpgradeCost = upgrades.shieldUpgradeCost ?? 600 * Math.pow(3, (upgrades.shieldLevel || 1) - 1);
   }
 }

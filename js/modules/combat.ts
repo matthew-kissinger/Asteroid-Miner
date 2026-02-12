@@ -294,14 +294,17 @@ export class Combat {
      * Fire the particle cannon with instant raycast damage
      */
     fireParticleCannon() {
+        const damage = (this.spaceship?.weaponDamage != null) ? this.spaceship.weaponDamage : this.particleCannonDamage;
+        const fireRate = (this.spaceship?.weaponFireRate != null) ? this.spaceship.weaponFireRate : this.fireRate;
+        const cooldown = 1000 / fireRate;
         const result = this.combatLogic.fireParticleCannon(
-            this.scene, 
-            this.spaceship, 
-            this.world, 
-            this.playerEntity, 
-            this.particleCannonDamage, 
-            this.lastFireTime, 
-            this.cooldown
+            this.scene,
+            this.spaceship,
+            this.world,
+            this.playerEntity,
+            damage,
+            this.lastFireTime,
+            cooldown
         );
         
         // Update last fire time

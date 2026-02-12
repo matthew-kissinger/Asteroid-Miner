@@ -205,7 +205,65 @@ export class TerminalMessages {
             { type: 'scanner', name: 'Scanner', color: '#9933cc', description: 'Extends scanner range for detecting asteroids and other objects at greater distances.' }
         ];
         
-        return upgrades.map(upgrade => this.getUpgradeItemHTML(upgrade)).join('');
+        return upgrades.map(upgrade => this.getUpgradeItemHTML(upgrade)).join('') +
+            this.getWeaponUpgradeHTML() +
+            this.getShieldUpgradeHTML();
+    }
+    
+    getWeaponUpgradeHTML(): string {
+        return `
+            <div class="upgrade-item">
+                <div class="upgrade-header">
+                    <div>
+                        <strong style="color: #ff4444;">Weapon Level:</strong> <span id="current-weapon-level">1</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong>Damage:</strong> <span id="current-weapon-damage">--</span> | <strong>Fire rate:</strong> <span id="current-weapon-firerate">--</span>/s
+                        <br>
+                        <small style="opacity: 0.8;">Next: <span id="next-weapon-damage">--</span> dmg | <span id="next-weapon-firerate">--</span>/s</small>
+                    </div>
+                </div>
+                <div class="upgrade-progress">
+                    <div id="weapon-upgrade-progress" class="upgrade-progress-bar" style="background-color: #ff4444; width: 20%;"></div>
+                </div>
+                <div class="upgrade-footer">
+                    <div class="upgrade-description">
+                        <p style="margin: 0; font-size: 12px;">Increases particle cannon damage and fire rate.</p>
+                    </div>
+                    <button id="upgrade-weapon" style="flex: 1; padding: 10px; background-color: #ff4444; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold;">
+                        UPGRADE (<span id="weapon-upgrade-cost">800</span> CR)
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    getShieldUpgradeHTML(): string {
+        return `
+            <div class="upgrade-item">
+                <div class="upgrade-header">
+                    <div>
+                        <strong style="color: #4488ff;">Shield Level:</strong> <span id="current-shield-level">1</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong>Max:</strong> <span id="current-shield-max">--</span> HP | <strong>Regen:</strong> <span id="current-shield-regen">--</span>/s
+                        <br>
+                        <small style="opacity: 0.8;">Next: <span id="next-shield-max">--</span> HP | <span id="next-shield-regen">--</span>/s</small>
+                    </div>
+                </div>
+                <div class="upgrade-progress">
+                    <div id="shield-upgrade-progress" class="upgrade-progress-bar" style="background-color: #4488ff; width: 20%;"></div>
+                </div>
+                <div class="upgrade-footer">
+                    <div class="upgrade-description">
+                        <p style="margin: 0; font-size: 12px;">Increases shield capacity and regeneration rate.</p>
+                    </div>
+                    <button id="upgrade-shield" style="flex: 1; padding: 10px; background-color: #4488ff; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold;">
+                        UPGRADE (<span id="shield-upgrade-cost">600</span> CR)
+                    </button>
+                </div>
+            </div>
+        `;
     }
     
     getUpgradeItemHTML(upgrade: { type: string; name: string; color: string; description: string }): string {
