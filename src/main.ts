@@ -9,8 +9,6 @@ import * as ThreeImports from './three-imports.ts';
 window.THREE = Object.assign({}, ThreeImports.THREE);
 
 // Set up global THREE addon references that the original code expects
-window.THREE.OrbitControls = ThreeImports.OrbitControls;
-window.THREE.GLTFLoader = ThreeImports.GLTFLoader;
 window.THREE.EffectComposer = ThreeImports.EffectComposer;
 window.THREE.RenderPass = ThreeImports.RenderPass;
 window.THREE.UnrealBloomPass = ThreeImports.UnrealBloomPass;
@@ -158,8 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
   essentialTextures.forEach((tex) => textureLoader.load(tex, () => {}));
 
   // Pre-load enemy model (not strictly visible at start but avoids hitch later)
-  const gltfLoader = new window.THREE.GLTFLoader(loadingManager);
-  gltfLoader.load('assets/enemy.glb', () => {
+  // Use dynamic import to avoid including GLTFLoader in the main bundle
+  import('three/addons/loaders/GLTFLoader.js').then(({ GLTFLoader }) => {
+    window.THREE.GLTFLoader = GLTFLoader;
+    const gltfLoader = new GLTFLoader(loadingManager);
+    gltfLoader.load('assets/enemy.glb', () => {
+    });
   });
 });
 

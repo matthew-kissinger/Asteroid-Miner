@@ -75,8 +75,6 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       'three',
-      'three/addons/controls/OrbitControls.js',
-      'three/addons/loaders/GLTFLoader.js',
       'three/addons/postprocessing/EffectComposer.js',
       'three/addons/postprocessing/RenderPass.js',
       'three/addons/postprocessing/UnrealBloomPass.js',

@@ -1,6 +1,4 @@
 import * as THREE_NAMESPACE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -33,8 +31,6 @@ type PerfMetrics = {
 declare global {
   interface Window {
     THREE: typeof THREE_NAMESPACE & {
-      OrbitControls: typeof OrbitControls;
-      GLTFLoader: typeof GLTFLoader;
       EffectComposer: typeof EffectComposer;
       RenderPass: typeof RenderPass;
       UnrealBloomPass: typeof UnrealBloomPass;
@@ -46,6 +42,7 @@ declare global {
       WebGL: typeof WebGL;
       DefaultLoadingManager: THREE_NAMESPACE.LoadingManager;
       TextureLoader: typeof THREE_NAMESPACE.TextureLoader;
+      GLTFLoader?: any;
     };
     __vite_compat: {
       resolveImport: (path: string) => string;
