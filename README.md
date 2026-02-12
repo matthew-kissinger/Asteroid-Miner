@@ -30,12 +30,12 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 ## Technologies Used
 
-*   **Language:** TypeScript 5.7 strict (255 pure TS files, 0 JavaScript)
+*   **Language:** TypeScript 5.7 strict (258 pure TS files, 0 JavaScript)
 *   **3D Engine:** Three.js r180 WebGPU (WebGL2 fallback)
 *   **ECS:** bitECS v0.4.0 (29 components, 5 active systems)
 *   **Build System:** Vite 6 (code-split: game-core 186 kB, combat 27 kB, env 62 kB, ui 64 kB)
 *   **Styles:** Tailwind CSS 3.4 + 18 CSS files
-*   **Tests:** Vitest (12 files, 225 tests) + Playwright smoke test
+*   **Tests:** Vitest (14 files, 283 tests) + Playwright smoke test
 *   **Architecture:** Hybrid ECS/Module. Combat (enemies/projectiles) runs under bitECS with fixed-step and instanced rendering; player ship physics and economy/UI run via modules. See `architecture.md`.
 *   **Mobile Controls:** NippleJS
 *   **Audio:** Web Audio API, Tone.js (for intro sequence)

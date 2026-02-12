@@ -9,7 +9,7 @@ npm install
 npm run dev          # Dev server (port 3000)
 npm run build        # Production build
 npm run typecheck    # TypeScript strict check (0 errors)
-npm run test         # Vitest - 12 files, 225 tests (all passing)
+npm run test         # Vitest - 14 files, 283 tests (all passing)
 npm run test:smoke   # Headless browser runtime test (Playwright)
 ```
 
@@ -26,7 +26,7 @@ npm run test:smoke   # Headless browser runtime test (Playwright)
 
 ## Architecture
 
-255 TypeScript files, 0 JavaScript. Pure TS codebase.
+258 TypeScript files, 0 JavaScript. Pure TS codebase.
 
 ```
 src/
@@ -80,9 +80,8 @@ css/                     # 18 CSS files
 
 ## Active Issues
 
-- 246 `console.log` across 84 files (30 files use debugLog, rest ungated)
-- 26 `window.game` files (53 occurrences, includes comments)
-- 654 `any` type escapes (297 `as any` + 357 `: any`)
-- 99 files use `import * as THREE` - Three.js bundle 1,370 kB, tree-shaking blocked
-- 7 unmerged task branches need merge review (type cleanup, tests, tree-shaking)
+- 267 `console.log` across 85 files (30 files use debugLog, rest ungated)
+- 27 `window.game` files (55 occurrences, includes comments)
+- 625 `any` type escapes (297 `as any` + 328 `: any`, excluding tests)
+- 80 files use `import * as THREE` - Three.js bundle 1,370 kB, tree-shaking blocked
 - Test coverage gaps: environment, ui, renderer, spaceship, audio modules have zero tests on master
