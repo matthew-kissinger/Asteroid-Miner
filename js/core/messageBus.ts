@@ -133,7 +133,7 @@ export class MessageBus<TEvents extends Record<string, unknown> = GameEventMap> 
         try { validateEventPayload && validateEventPayload(eventName, data); } catch {}
         if (!this.listeners.has(eventName)) return;
 
-        const listeners = this.listeners.get(eventName)!;
+        const listeners = [...this.listeners.get(eventName)!];
         const messageObj: Message<TEvents[K]> = {
             type: eventName,
             data: data,
@@ -195,7 +195,7 @@ export class MessageBus<TEvents extends Record<string, unknown> = GameEventMap> 
             // Set flag to prevent nested dispatch issues
             this.dispatching = true;
 
-            const listeners = this.listeners.get(eventName)!;
+            const listeners = [...this.listeners.get(eventName)!];
             listeners.forEach((listener) => {
                 try {
                     listener.callback.call(listener.context, {
