@@ -96,6 +96,25 @@ export class Settings {
     
     saveSettings(): void {
         this.persistence.saveSettings(this.settings);
+        
+        // Also save to the game's SaveSystem if available
+        if (this.game && (this.game as any).saveSystem) {
+            const saveSystem = (this.game as any).saveSystem;
+            const settingsData = {
+                audio: {
+                    masterVolume: 1.0, // Not currently exposed in UI
+                    sfxVolume: (this.game as any).audio?.sfxVolume ?? 1.0,
+                    musicVolume: (this.game as any).audio?.musicVolume ?? 1.0,
+                    isMuted: (this.game as any).audio?.isMuted ?? false,
+                },
+                controls: {
+                    mouseSensitivity: (this.game as any).controls?.inputHandler?.mouseSensitivity ?? 0.001,
+                    gamepadSensitivity: (this.game as any).controls?.gamepadHandler?.lookSensitivity ?? 1.0,
+                },
+                graphics: this.settings as any,
+            };
+            saveSystem.saveSettings(settingsData);
+        }
     }
     
     setupSettingsUI(): void {
