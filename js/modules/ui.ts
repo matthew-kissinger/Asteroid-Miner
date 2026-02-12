@@ -23,6 +23,11 @@ import { initDamageNumbers, updateDamageNumbers } from './ui/damageNumbers.ts';
 import { initThreatIndicators, setThreatIndicatorsCamera, updateThreatIndicators } from './ui/threatIndicators.ts';
 import { initLockOnDisplay, setLockOnDisplayCamera, updateLockOnDisplay, setLockedEnemy, getLockedEnemy } from './ui/lockOnDisplay.ts';
 import { initRadar, updateRadar } from './ui/radarDisplay.ts';
+import {
+    initAsteroidScanner,
+    updateAsteroidScanner,
+} from './ui/asteroidScanner.ts';
+import type { AsteroidScannerContext } from './ui/asteroidScanner.ts';
 import { getEnemies, getPlayerEntity } from '../ecs/systems/ecsRunner';
 import { Position } from '../ecs/components';
 
@@ -222,6 +227,9 @@ export class UI {
 
         // Initialize radar display
         initRadar();
+
+        // Initialize asteroid scanner overlay
+        initAsteroidScanner();
 
         // Initialize damage numbers if camera and renderer are available
         if (this.camera && this.renderer) {
@@ -486,6 +494,19 @@ export class UI {
 
         // Update radar display
         updateRadar(performance.now());
+
+        // Update asteroid scanner (hide when docked or intro active)
+        const scannerContext: AsteroidScannerContext = {
+            camera: this.camera,
+            scene: ((this.controls as Record<string, unknown> | null)?.scene as AsteroidScannerContext['scene']) ?? null,
+            environment: this.environment && 'asteroids' in this.environment
+                ? (this.environment as AsteroidScannerContext['environment'])
+                : null,
+            spaceship: this.spaceship ?? null,
+            isDocked: Boolean(this.spaceship?.isDocked),
+            introSequenceActive: this.gameStateRef?.introSequenceActive,
+        };
+        updateAsteroidScanner(scannerContext);
 
         // Update touch controls if on mobile
 
