@@ -944,10 +944,11 @@ function updateSwarmQueenBoss(eid: number, playerEid: number, dt: number): void 
     const spawnOffset = 100
     for (let i = 0; i < 2; i++) {
       debugLog(`Swarm Queen ${eid} spawning minion ${Boss.minionsSpawned[eid] + 1}`)
-      
+
+      const minionIndex: number = Boss.minionsSpawned[eid]
+      const spawnAngle: number = (minionIndex / 12) * Math.PI * 2
+
       if (typeof window !== 'undefined' && (window as any).mainMessageBus) {
-        const minionIndex = Boss.minionsSpawned[eid]
-        const spawnAngle = (minionIndex / 12) * Math.PI * 2
         (window as any).mainMessageBus.publish('boss.spawnMinion', {
           bossEid: eid,
           spawnX: Position.x[eid] + Math.cos(spawnAngle) * spawnOffset,
