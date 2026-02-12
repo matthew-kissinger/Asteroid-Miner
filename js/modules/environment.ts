@@ -9,6 +9,7 @@ import type { StarSystemGenerator } from './environment/starSystemGenerator.ts';
 import type { AsteroidBelt } from './environment/asteroidBelt.ts';
 import type { SpaceAnomalies } from './environment/spaceAnomalies.ts';
 import type { SystemTransition } from './environment/systemTransition.ts';
+import type { HazardManager } from './environment/hazards/hazardManager.ts';
 import { SceneInitializer } from './environment/core/sceneInitializer.ts';
 import { RegionManager } from './environment/core/regionManager.ts';
 import { SystemTransitionManager } from './environment/core/systemTransitionManager.ts';
@@ -50,6 +51,7 @@ interface EnvironmentComponents {
     spaceAnomalies?: SpaceAnomalies;
     systemTransition?: SystemTransition;
     customSystemCreator?: CustomSystemCreator;
+    hazardManager?: HazardManager;
 }
 
 export class Environment {
@@ -69,6 +71,7 @@ export class Environment {
     spaceAnomalies?: SpaceAnomalies;
     systemTransition?: SystemTransition;
     customSystemCreator?: CustomSystemCreator;
+    hazardManager?: HazardManager;
 
     asteroids: EnvironmentAsteroidData[];
     currentSystemId: string;
@@ -147,7 +150,8 @@ export class Environment {
             this.planets,
             this.asteroidBelt,
             this.spaceAnomalies,
-            this.regionManager
+            this.regionManager,
+            this.hazardManager
         );
         this.currentSystemId = this.transitionManager.getCurrentSystemId();
     }
@@ -237,6 +241,11 @@ export class Environment {
             // Update space anomalies
             if (this.spaceAnomalies) {
                 this.spaceAnomalies.update(deltaTime);
+            }
+
+            // Update environmental hazards
+            if (this.hazardManager) {
+                this.hazardManager.update(deltaTime);
             }
 
             // Update vibe verse portals
