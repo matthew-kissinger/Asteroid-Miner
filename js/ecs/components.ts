@@ -288,6 +288,20 @@ export const SeparationForce = {
   z: new Float32Array(10000)
 }
 
+/**
+ * Boss-specific state and behavior
+ */
+export const Boss = {
+  bossType: new Uint8Array(10000),           // 0 = Dreadnought, 1 = Phase Shifter, 2 = Swarm Queen
+  phaseTimer: new Float32Array(10000),       // Timer for phase shift ability
+  phaseActive: new Uint8Array(10000),        // 0 = normal, 1 = invulnerable phase
+  spawnCooldown: new Float32Array(10000),    // Cooldown for spawning minions
+  minionsSpawned: new Uint8Array(10000),     // Count of active minions
+  beamChargeTime: new Float32Array(10000),   // Charge time for beam weapon
+  beamActive: new Uint8Array(10000),         // 0 = inactive, 1 = firing beam
+  originalScale: new Float32Array(10000)     // Store original scale for visual effects
+}
+
 // ============================================================================
 // TAG COMPONENTS (minimal data, mainly for queries)
 // ============================================================================

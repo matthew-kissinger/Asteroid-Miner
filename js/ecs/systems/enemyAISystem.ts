@@ -713,3 +713,249 @@ export function enemyCollisionAttackSystem(
     }
   }
 }
+
+// ============================================================================
+// BOSS AI SYSTEMS
+// ============================================================================
+
+import { Boss } from '../components'
+import { debugLog } from '../../globals/debug'
+
+// Boss type constants
+const BOSS_DREADNOUGHT = 0
+const BOSS_PHASE_SHIFTER = 1
+const BOSS_SWARM_QUEEN = 2
+
+/**
+ * Boss AI System - Handles boss-specific behaviors
+ * 
+ * @param bosses - Array of boss entity IDs
+ * @param playerEid - Player entity ID
+ * @param dt - Delta time in seconds
+ */
+export function bossAISystem(
+  bosses: number[],
+  playerEid: number,
+  dt: number
+): void {
+  if (playerEid === -1) return
+
+  for (const eid of bosses) {
+    const bossType = Boss.bossType[eid]
+
+    // Update time alive
+    EnemyAI.timeAlive[eid] += dt
+
+    switch (bossType) {
+      case BOSS_DREADNOUGHT:
+        updateDreadnoughtBoss(eid, playerEid, dt)
+        break
+      case BOSS_PHASE_SHIFTER:
+        updatePhaseShifterBoss(eid, playerEid, dt)
+        break
+      case BOSS_SWARM_QUEEN:
+        updateSwarmQueenBoss(eid, playerEid, dt)
+        break
+    }
+  }
+}
+
+/**
+ * Dreadnought Boss - Large, slow, high HP, frontal beam weapon
+ */
+function updateDreadnoughtBoss(eid: number, playerEid: number, dt: number): void {
+  // Slow direct approach
+  const playerX = Position.x[playerEid]
+  const playerY = Position.y[playerEid]
+  const playerZ = Position.z[playerEid]
+
+  const dx = playerX - Position.x[eid]
+  const dy = playerY - Position.y[eid]
+  const dz = playerZ - Position.z[eid]
+  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+  if (dist === 0) return
+
+  const dirX = dx / dist
+  const dirY = dy / dist
+  const dirZ = dz / dist
+
+  // Slow movement (50% of normal speed)
+  const speed = EnemyAI.speed[eid] * 0.5
+  Velocity.x[eid] = dirX * speed
+  Velocity.y[eid] = dirY * speed
+  Velocity.z[eid] = dirZ * speed
+
+  // Face player
+  updateRotationTowardsPlayer(eid, dirX, dirY, dirZ)
+
+  // Beam weapon logic
+  Boss.beamChargeTime[eid] += dt
+  if (Boss.beamChargeTime[eid] >= 3.0 && dist < 800) {
+    // Fire beam
+    if (Boss.beamActive[eid] === 0) {
+      Boss.beamActive[eid] = 1
+      debugLog(`Dreadnought ${eid} firing beam weapon`)
+      
+      // Publish beam attack event
+      if (typeof window !== 'undefined' && (window as any).mainMessageBus) {
+        (window as any).mainMessageBus.publish('boss.beamAttack', {
+          bossEid: eid,
+          targetEid: playerEid,
+          damage: EnemyAI.damage[eid] * 2
+        })
+      }
+    }
+
+    // Beam lasts 2 seconds
+    if (Boss.beamChargeTime[eid] >= 5.0) {
+      Boss.beamActive[eid] = 0
+      Boss.beamChargeTime[eid] = 0
+    }
+  }
+
+  // Spawn minions every 15 seconds
+  Boss.spawnCooldown[eid] += dt
+  if (Boss.spawnCooldown[eid] >= 15.0 && Boss.minionsSpawned[eid] < 4) {
+    Boss.spawnCooldown[eid] = 0
+    debugLog(`Dreadnought ${eid} spawning minion`)
+    
+    // Publish minion spawn event
+    if (typeof window !== 'undefined' && (window as any).mainMessageBus) {
+      (window as any).mainMessageBus.publish('boss.spawnMinion', {
+        bossEid: eid,
+        spawnX: Position.x[eid],
+        spawnY: Position.y[eid],
+        spawnZ: Position.z[eid]
+      })
+    }
+    Boss.minionsSpawned[eid]++
+  }
+}
+
+/**
+ * Phase Shifter Boss - Periodically becomes invulnerable
+ */
+function updatePhaseShifterBoss(eid: number, playerEid: number, dt: number): void {
+  // Update phase timer
+  Boss.phaseTimer[eid] += dt
+
+  // Phase shift every 8 seconds for 2 seconds
+  if (Boss.phaseTimer[eid] >= 8.0 && Boss.phaseActive[eid] === 0) {
+    Boss.phaseActive[eid] = 1
+    Boss.phaseTimer[eid] = 0
+    debugLog(`Phase Shifter ${eid} entering phase shift`)
+    
+    // Publish phase shift event for visual effect
+    if (typeof window !== 'undefined' && (window as any).mainMessageBus) {
+      (window as any).mainMessageBus.publish('boss.phaseShift', {
+        bossEid: eid,
+        active: true
+      })
+    }
+  }
+
+  // Exit phase shift after 2 seconds
+  if (Boss.phaseActive[eid] === 1 && Boss.phaseTimer[eid] >= 2.0) {
+    Boss.phaseActive[eid] = 0
+    Boss.phaseTimer[eid] = 0
+    debugLog(`Phase Shifter ${eid} exiting phase shift`)
+    
+    if (typeof window !== 'undefined' && (window as any).mainMessageBus) {
+      (window as any).mainMessageBus.publish('boss.phaseShift', {
+        bossEid: eid,
+        active: false
+      })
+    }
+  }
+
+  // Fast zigzag movement (similar to swift drone)
+  const playerX = Position.x[playerEid]
+  const playerY = Position.y[playerEid]
+  const playerZ = Position.z[playerEid]
+
+  const dx = playerX - Position.x[eid]
+  const dy = playerY - Position.y[eid]
+  const dz = playerZ - Position.z[eid]
+  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+  if (dist === 0) return
+
+  const dirX = dx / dist
+  const dirY = dy / dist
+  const dirZ = dz / dist
+
+  // Fast movement with zigzag
+  const speed = EnemyAI.speed[eid] * 1.2
+  const zigzagOffset = Math.sin(EnemyAI.timeAlive[eid] * 4) * 100
+  
+  const perpX = -dirZ
+  const perpZ = dirX
+  
+  Velocity.x[eid] = (dirX * speed) + (perpX * zigzagOffset * 0.01)
+  Velocity.y[eid] = dirY * speed
+  Velocity.z[eid] = (dirZ * speed) + (perpZ * zigzagOffset * 0.01)
+
+  updateRotationTowardsPlayer(eid, dirX, dirY, dirZ)
+}
+
+/**
+ * Swarm Queen Boss - Spawns minions that reform when destroyed
+ */
+function updateSwarmQueenBoss(eid: number, playerEid: number, dt: number): void {
+  // Moderate speed circular movement around player
+  const playerX = Position.x[playerEid]
+  const playerY = Position.y[playerEid]
+  const playerZ = Position.z[playerEid]
+
+  const dx = playerX - Position.x[eid]
+  const dy = playerY - Position.y[eid]
+  const dz = playerZ - Position.z[eid]
+  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+  if (dist === 0) return
+
+  // Maintain distance of 400 units
+  const targetDist = 400
+  const distError = dist - targetDist
+
+  const dirX = dx / dist
+  const dirY = dy / dist
+  const dirZ = dz / dist
+
+  // Circular orbit
+  const speed = EnemyAI.speed[eid]
+  const orbitSpeed = speed * 0.8
+  const tangentX = -dirZ
+  const tangentZ = dirX
+
+  Velocity.x[eid] = (dirX * distError * 0.5) + (tangentX * orbitSpeed)
+  Velocity.y[eid] = dirY * distError * 0.5
+  Velocity.z[eid] = (dirZ * distError * 0.5) + (tangentZ * orbitSpeed)
+
+  updateRotationTowardsPlayer(eid, dirX, dirY, dirZ)
+
+  // Spawn minions every 5 seconds
+  Boss.spawnCooldown[eid] += dt
+  if (Boss.spawnCooldown[eid] >= 5.0 && Boss.minionsSpawned[eid] < 12) {
+    Boss.spawnCooldown[eid] = 0
+    
+    // Spawn 2 minions at a time
+    const spawnOffset = 100
+    for (let i = 0; i < 2; i++) {
+      debugLog(`Swarm Queen ${eid} spawning minion ${Boss.minionsSpawned[eid] + 1}`)
+      
+      if (typeof window !== 'undefined' && (window as any).mainMessageBus) {
+        const minionIndex = Boss.minionsSpawned[eid]
+        const spawnAngle = (minionIndex / 12) * Math.PI * 2
+        (window as any).mainMessageBus.publish('boss.spawnMinion', {
+          bossEid: eid,
+          spawnX: Position.x[eid] + Math.cos(spawnAngle) * spawnOffset,
+          spawnY: Position.y[eid],
+          spawnZ: Position.z[eid] + Math.sin(spawnAngle) * spawnOffset
+        })
+      }
+      Boss.minionsSpawned[eid]++
+    }
+  }
+}
