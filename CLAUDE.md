@@ -9,7 +9,7 @@ npm install
 npm run dev          # Dev server (port 3000)
 npm run build        # Production build
 npm run typecheck    # TypeScript strict check (0 errors)
-npm run test         # Vitest - 11 files, 143 tests (all passing)
+npm run test         # Vitest - 12 files, 225 tests (all passing)
 npm run test:smoke   # Headless browser runtime test (Playwright)
 ```
 
@@ -80,8 +80,9 @@ css/                     # 18 CSS files
 
 ## Active Issues
 
-- 405 `console.log` across 97 files (debugLog merged, 10 worst files gated - ~97 calls removed)
-- 49 `window.game` across 25 files (includes comments)
-- 651 `any` type escapes (296 `as any` + 355 `: any`) - worst: controls 26, postTSL 34
+- 228 `console.log` across 83 files (debugLog merged, 24 worst files gated)
+- 24 `window.game` files (non-test, includes comments)
+- 726 `any` type escapes (368 `as any` + 358 `: any`)
 - 99 files use `import * as THREE` - Three.js bundle 1,370 kB, tree-shaking blocked
+- 7 unmerged task branches need merge review (type cleanup, tests, tree-shaking)
 - Test coverage gaps: environment, ui, renderer, spaceship, audio modules have zero tests on master
