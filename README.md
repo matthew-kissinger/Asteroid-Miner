@@ -33,7 +33,7 @@ A 3D space mining simulation game playable directly in your web browser. Navigat
 
 ## Technologies Used
 
-*   **Language:** TypeScript 5.7 strict (261 pure TS files, 0 JavaScript)
+*   **Language:** TypeScript 5.7 strict (265 pure TS files, 0 JavaScript)
 *   **3D Engine:** Three.js r180 WebGPU (WebGL2 fallback)
 *   **ECS:** bitECS v0.4.0 (29 components, 5 active systems)
 *   **Build System:** Vite 6 (code-split: game-core 189 kB, combat 27 kB, env 62 kB, ui 73 kB)
@@ -187,6 +187,7 @@ See `CLAUDE.md` for detailed technical discussion.
 ## Changelog
 
 ### v0.7.0 (Latest)
+- **Combat Sound Effects:** Synthesized weapon, explosion, shield, and mining sounds via Web Audio API - zero external audio assets
 - **Save/Load System:** localStorage persistence for player progress, credits, cargo, upgrades, and high scores with auto-save every 30 seconds
 - **XP & Pilot Ranks:** Experience point system with rank progression from Cadet to Admiral, XP bar in HUD
 - **Respawn at Stargate:** Game over screen now offers respawn-at-stargate option

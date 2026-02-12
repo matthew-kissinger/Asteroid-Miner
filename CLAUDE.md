@@ -26,7 +26,7 @@ npm run test:smoke   # Headless browser runtime test (Playwright)
 
 ## Architecture
 
-261 TypeScript files, 0 JavaScript. Pure TS codebase.
+265 TypeScript files, 0 JavaScript. Pure TS codebase.
 
 ```
 src/
@@ -49,10 +49,10 @@ js/
 │   ├── combat.ts        # Combat orchestrator + 10 submodules
 │   ├── ui.ts            # UI module
 │   ├── environment.ts   # Environment (39 submodules)
-│   ├── audio/           # 7 files
+│   ├── audio/           # 8 files (Web Audio synthesis + music player)
 │   ├── pooling/         # 14 files (object pools)
-│   ├── game/            # 7 files (saveSystem, lifecycle, state, tests)
-│   ├── spaceship/       # 10 files (includes xp/ranks systems)
+│   ├── game/            # 8 files (saveSystem, lifecycle, state, tests)
+│   ├── spaceship/       # 9 files (includes xp/ranks systems)
 │   ├── intro/           # 6 files
 │   └── ui/              # 97 files (hud, settings, stargate, starmap, combat, blackjack)
 ├── globals/             # Module singletons (debug, messageBus, objectPool)
