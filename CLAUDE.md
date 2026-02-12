@@ -9,22 +9,19 @@ npm install
 npm run dev          # Dev server
 npm run build        # Production build
 npm run typecheck    # TypeScript strict check (0 errors)
-npm run test         # 61 tests (all passing)
+npm run test         # 68 tests (all passing)
 npm run test:smoke   # Headless browser runtime test (Playwright)
 ```
 
-## Unmerged Branches (6 - all conflict-free, ready to merge)
+## Unmerged Branches (1 - needs conflict resolution)
 
-Six completed task branches await merge into master:
-
-| Branch | Task | Files | Impact |
+| Branch | Task | Files | Status |
 |--------|------|-------|--------|
-| `mycel/task-39ffe169` | Fix 155 stale .js imports | 46 | Code hygiene |
-| `mycel/task-d18c7e13` | Pool Vector3/Quaternion in physics | 3 | -20 per-frame allocs |
-| `mycel/task-3933ce70` | ecsRunner integration tests | 3 | +7 tests |
-| `mycel/task-8ae7a791` | Type-safe messageBus events | 2 | 40+ typed events |
-| `mycel/task-ddca8300` | Remove window.game from 3 UI files | 6 | -24 global usages |
-| `mycel/task-cf662b0b` | TSL post-processing for WebGPU | 3 | Phase 6 feature |
+| `mycel/task-6ba2d876` | Remove window.game from 5 more UI files | 8 | Clean, ready to merge |
+
+**Abandoned:** `mycel/task-74b9b8b8` (console.log gating) - Agent went rogue, deleted postTSL.ts and ecsRunner tests. Redo from scratch.
+
+**Merged (2025-02-11):** .js imports, physics pooling, ecsRunner tests, messageBus types, window.game (3 files), TSL post-processing.
 
 ## Stack
 
@@ -32,15 +29,15 @@ Six completed task branches await merge into master:
 |-------|------|
 | Graphics | Three.js r180 WebGPU (WebGL2 fallback) |
 | ECS | bitECS v0.4.0 (29 components, 5 systems) |
-| Physics | Custom Newtonian (thrust, drag, collision) |
-| Shaders | TSL laser material + TSL post-processing (branch) + 2 GLSL fallback |
+| Physics | Custom Newtonian (thrust, drag, collision, 977 lines) |
+| Shaders | TSL laser material + TSL post-processing + 2 GLSL fallback |
 | Build | Vite 6, TypeScript 5.7 strict |
 | Styles | Tailwind CSS 3.4 + 18 CSS files |
-| Tests | Vitest - 7 files, 61 tests, all passing |
+| Tests | Vitest - 8 files, 68 tests, all passing |
 
 ## Architecture
 
-248 TypeScript files, 0 JavaScript. Pure TS codebase.
+249 TypeScript files, 0 JavaScript. Pure TS codebase.
 
 ```
 src/
@@ -83,20 +80,23 @@ css/                     # 18 CSS files
 
 ## Remaining Work
 
-### Completed (awaiting merge)
-- ~~155 stale `.js` import extensions~~ - Fixed in branch `mycel/task-39ffe169`
-- ~~TSL post-processing conversion~~ - Done in branch `mycel/task-cf662b0b`
-- ~~window.game in top 3 UI files (24 usages)~~ - Done in branch `mycel/task-ddca8300`
-- ~~Physics per-frame allocations~~ - Pooled in branch `mycel/task-d18c7e13`
-- ~~Type-safe messageBus~~ - Done in branch `mycel/task-8ae7a791`
-- ~~ecsRunner integration tests~~ - Done in branch `mycel/task-3933ce70`
+### Recently Merged
+- 155 stale `.js` import extensions fixed
+- TSL post-processing for WebGPU
+- window.game removed from 3 UI files (starMap, mobileHUD, statusIndicators)
+- Physics Vector3/Quaternion pooling (-20 per-frame allocs)
+- Type-safe messageBus (40+ typed events)
+- ecsRunner integration tests (+7 tests)
 
-### Active
-- 499 unguarded `console.log` statements (task running - opencode)
-- 67 `window.game` global usages remaining across ~29 files (after branch merge)
-- 649 `as any` type casts (~80 tied to window.game pattern)
-- 183 addEventListener vs 31 removeEventListener - memory leak risk
-- ~525 inline `.style.` manipulations (mostly dynamic values, diminishing returns)
+### Ready to Merge
+- `mycel/task-6ba2d876`: Remove window.game from 5 more UI files (missions, tradingView, gameOverScreen, ui, betting)
+
+### Active Issues
+- 502 unguarded `console.log` statements across 105 files (previous opencode task failed - needs redo)
+- 67 `window.game` global usages remaining across 29 files
+- 664 `as any`/`: any` type casts across 89 files
+- 183 addEventListener vs 31 removeEventListener - memory leak risk (worst: customSystem/eventHandlers 26/8, combat/eventHandlers 14/3, stargate/eventHandlers 13/0)
+- Zero test coverage on all major modules: controls, physics, combat, environment, ui, renderer, game, messageBus, spaceship
 
 ### Planned
 - Phase 6: TSL shaders + WebGPU compute particles
