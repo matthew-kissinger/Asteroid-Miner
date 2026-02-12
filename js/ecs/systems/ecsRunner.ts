@@ -38,6 +38,18 @@ import {
 } from '../components'
 import { createGameEntity } from '../world'
 
+// Game reference for dependency injection
+type GameType = {
+  isHordeActive?: boolean;
+  hordeSurvivalTime?: number;
+};
+
+let gameRef: GameType | null = null;
+
+export function setGameReference(game: GameType): void {
+  gameRef = game;
+}
+
 // Track all bitECS entities
 const entities: number[] = []
 
@@ -350,10 +362,10 @@ export function getPlayerEntity(): number {
 /**
  * Build difficulty configuration from global game state
  *
- * Centralizes window.game access to a single location, making it easier
+ * Centralizes game access to a single location, making it easier
  * to transition away from global state in the future.
  *
- * @returns DifficultyConfig with values from window.game or sensible defaults
+ * @returns DifficultyConfig with values from gameRef or sensible defaults
  */
 function buildDifficultyConfig(): DifficultyConfig {
   // Default config
@@ -365,18 +377,16 @@ function buildDifficultyConfig(): DifficultyConfig {
     hordeSurvivalTime: 0,
   }
 
-  // Attempt to read from window.game (may not exist in all contexts)
-  if (typeof window !== 'undefined' && (window as any).game) {
-    const game = (window as any).game
+  // Attempt to read from gameRef (may not exist in all contexts)
+  if (gameRef) {
+    config.isHordeMode = gameRef.isHordeActive || false
 
-    config.isHordeMode = game.isHordeActive || false
-
-    if (config.isHordeMode && game.hordeSurvivalTime !== undefined) {
-      config.hordeSurvivalTime = game.hordeSurvivalTime / 1000 // Convert ms to seconds
+    if (config.isHordeMode && gameRef.hordeSurvivalTime !== undefined) {
+      config.hordeSurvivalTime = gameRef.hordeSurvivalTime / 1000 // Convert ms to seconds
     }
 
     // If difficulty manager exists, could extract more config here in future
-    // config.difficultyLevel = game.difficultyManager?.level || 1
+    // config.difficultyLevel = gameRef.difficultyManager?.level || 1
   }
 
   return config

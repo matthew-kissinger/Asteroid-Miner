@@ -1,5 +1,18 @@
 // helpers.ts - Utility functions and data formatting
 
+// Game reference for dependency injection
+type GameType = {
+    audio?: {
+        playSound(soundName: string): void;
+    };
+};
+
+let gameRef: GameType | null = null;
+
+export function setGameReference(game: GameType): void {
+    gameRef = game;
+}
+
 export class HelperManager {
     scrollTimeout: ReturnType<typeof setTimeout> | null;
 
@@ -16,8 +29,8 @@ export class HelperManager {
 
     playUISound(): void {
         // Play UI sound if audio is available
-        if (window.game && window.game.audio) {
-            window.game.audio.playSound('boink');
+        if (gameRef && gameRef.audio) {
+            gameRef.audio.playSound('boink');
         }
     }
 

@@ -1,5 +1,19 @@
 // helpers.ts - Utility functions and common operations
 
+// Game reference for dependency injection
+type GameType = {
+    spaceship?: Spaceship;
+    controls?: {
+        resources: Resources;
+    };
+};
+
+let gameRef: GameType | null = null;
+
+export function setGameReference(game: GameType): void {
+    gameRef = game;
+}
+
 interface Resources {
     iron: number;
     gold: number;
@@ -136,10 +150,10 @@ export class StargateHelpers {
     
     static syncWithGameResources(): GameSyncResult | null {
         // Sync resources with game if available (similar to BlackjackGame)
-        if (window.game && (window.game as any).controls) {
+        if (gameRef && gameRef.controls) {
             // Get reference to spaceship and resources
-            const spaceship = (window.game as any).spaceship;
-            const resources = (window.game as any).controls.resources;
+            const spaceship = gameRef.spaceship;
+            const resources = gameRef.controls.resources;
             
             // Return references for use by caller
             if (spaceship && resources) {

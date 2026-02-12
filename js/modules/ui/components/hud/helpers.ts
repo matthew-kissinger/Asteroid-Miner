@@ -1,5 +1,19 @@
 // helpers.js - Utility functions and formatting for HUD components
 
+// Game reference for dependency injection
+type GameType = {
+    state?: string;
+    world?: {
+        getEntitiesByTag(tag: string): any[];
+    };
+};
+
+let gameRef: GameType | null = null;
+
+export function setGameReference(game: GameType): void {
+    gameRef = game;
+}
+
 export class HUDHelpers {
     /**
      * Format a number with appropriate units (K, M, B)
@@ -231,7 +245,7 @@ export class HUDHelpers {
      * Get the current game state safely
      */
     static getGameState(): string {
-        return HUDHelpers.safeGet(window, 'game.state', 'unknown');
+        return HUDHelpers.safeGet(gameRef, 'state', 'unknown');
     }
 
     /**
@@ -239,8 +253,8 @@ export class HUDHelpers {
      */
     static getPlayerData(): any {
         try {
-            if (window.game && window.game.world) {
-                const players: any[] = window.game.world.getEntitiesByTag('player');
+            if (gameRef && gameRef.world) {
+                const players: any[] = gameRef.world.getEntitiesByTag('player');
                 return players && players.length > 0 ? players[0] : null;
             }
         } catch (e: any) {

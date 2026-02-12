@@ -121,11 +121,34 @@ export class Combat {
         this.aiSpawnerManager = new AISpawnerManager();
         this.combatLogic = new CombatLogic(this.effectsManager, this.eventManager, this.aiSpawnerManager);
         
+        // Set game references for dependency injection in combat modules
+        // Note: window.game should be available at this point since Combat is created after Game initialization
+        if (typeof window !== 'undefined' && (window as any).game) {
+            this.setGameReferences((window as any).game);
+        }
+        
         // Pool manager removed - projectile system not in use
         
         // Initialize ECS world for advanced combat systems
         this.initializeECSWorld();
         
+    }
+    
+    /**
+     * Set game references for dependency injection in combat modules
+     */
+    async setGameReferences(game: any): Promise<void> {
+        try {
+            const { setGameReference: setEcsRunnerRef } = await import('../ecs/systems/ecsRunner.ts');
+            const { setGameReference: setProjectilePoolRef } = await import('./pooling/ProjectilePoolManager.ts');
+            const { setGameReference: setGeometryManagerRef } = await import('./combat/effects/geometryManager.ts');
+            
+            setEcsRunnerRef(game);
+            setProjectilePoolRef(game);
+            setGeometryManagerRef(game);
+        } catch (error) {
+            console.error('[COMBAT] Error setting game references:', error);
+        }
     }
     
     // Material and geometry initialization moved to EffectsManager

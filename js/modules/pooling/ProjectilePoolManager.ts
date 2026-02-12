@@ -17,6 +17,17 @@ import { MuzzleFlashPool } from './projectiles/effects/muzzleFlash.ts';
 import { ObjectPool } from './ObjectPool.ts';
 import * as THREE from 'three';
 
+// Game reference for dependency injection
+type GameType = {
+  renderer?: RendererFacade;
+};
+
+let gameRef: GameType | null = null;
+
+export function setGameReference(game: GameType): void {
+  gameRef = game;
+}
+
 type SharedAssets = {
     projectileGeometry: THREE.BufferGeometry;
     projectileGlowGeometry: THREE.BufferGeometry;
@@ -355,7 +366,7 @@ export class ProjectilePoolManager {
 
     // Renderer facade helpers
     private _getRenderer(): RendererFacade | null {
-        return (window.game && window.game.renderer) || null;
+        return (gameRef && gameRef.renderer) || null;
     }
 
     private _addToScene(object: THREE.Object3D): void {
