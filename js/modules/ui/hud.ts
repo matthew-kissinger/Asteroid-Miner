@@ -8,6 +8,8 @@ import { HUDEventHandlers } from './components/hud/eventHandlers.ts';
 import { HUDHelpers } from './components/hud/helpers.ts';
 import { HUDXpBar } from './components/hud/xpBar.ts';
 import { StargateIndicator } from './components/hud/stargateIndicator.ts';
+import { CombatStatsHUD } from './components/hud/combatStats.ts';
+import type { CombatStats } from '../combat/combatStats.ts';
 
 type HUDSpaceship = {
     [key: string]: unknown;
@@ -23,6 +25,7 @@ export class HUD {
     world: any = null;
     settings: any = null;
     camera: any = null;
+    combatStatsHUD: CombatStatsHUD | null = null;
 
     constructor(spaceship: HUDSpaceship) {
         this.spaceship = spaceship;
@@ -115,6 +118,12 @@ export class HUD {
         this.stargateIndicator?.destroy();
         this.stargateIndicator = null;
 
+        // Dispose combat stats HUD
+        if (this.combatStatsHUD) {
+            this.combatStatsHUD.dispose();
+            this.combatStatsHUD = null;
+        }
+
         // Remove DOM elements
         const hudContainer = document.getElementById('hud-container') as HTMLDivElement | null;
         if (hudContainer && hudContainer.parentNode) {
@@ -125,6 +134,21 @@ export class HUD {
         this.spaceship = null;
         this.eventHandlers = null;
         this.camera = null;
+    }
+
+    /**
+     * Initialize combat stats HUD with combat stats tracker
+     */
+    initializeCombatStats(combatStats: CombatStats): void {
+        if (this.combatStatsHUD) {
+            this.combatStatsHUD.dispose();
+        }
+
+        const hudContainer = document.getElementById('hud-container');
+        if (!hudContainer) return;
+
+        this.combatStatsHUD = new CombatStatsHUD();
+        this.combatStatsHUD.create(hudContainer, combatStats);
     }
     
     // Backward compatibility methods

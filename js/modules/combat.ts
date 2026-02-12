@@ -17,6 +17,7 @@ import { EventManager } from './combat/events.ts';
 import { EffectsManager } from './combat/effects.ts';
 import { AISpawnerManager } from './combat/aiAndSpawners.ts';
 import { CombatLogic } from './combat/combatLogic.ts';
+import { CombatStats } from './combat/combatStats.ts';
 import type { Scene, Vector3 } from 'three';
 
 // Define interfaces for submodules until they are converted
@@ -87,7 +88,8 @@ export class Combat {
     effectsManager: IEffectsManager;
     aiSpawnerManager: IAISpawnerManager;
     combatLogic: ICombatLogic;
-    
+    combatStats: CombatStats;
+
     world: any;
     playerEntity: any;
     enemySystem: any;
@@ -120,9 +122,10 @@ export class Combat {
         this.effectsManager = new EffectsManager(scene);
         this.aiSpawnerManager = new AISpawnerManager();
         this.combatLogic = new CombatLogic(this.effectsManager, this.eventManager, this.aiSpawnerManager);
-        
+        this.combatStats = new CombatStats();
+
         // Pool manager removed - projectile system not in use
-        
+
         // Initialize ECS world for advanced combat systems
         this.initializeECSWorld();
         
@@ -183,7 +186,12 @@ export class Combat {
             
             // Mark world as initialized
             this.worldSetup.setWorldInitialized();
-            
+
+            // Initialize combat stats tracker with the world's message bus
+            if (this.world && this.world.messageBus) {
+                this.combatStats.initialize(this.world.messageBus);
+            }
+
         } catch (error) {
             console.error("[COMBAT] Error setting up ECS world:", error);
         }
@@ -343,23 +351,27 @@ export class Combat {
     dispose() {
 
         // Projectile system removed
-        
+
         // Dispose submodules
         if (this.effectsManager) {
             this.effectsManager.dispose();
         }
-        
+
         if (this.eventManager) {
             this.eventManager.cleanup();
         }
-        
+
         if (this.aiSpawnerManager) {
             this.aiSpawnerManager.emergencyCleanup();
         }
-        
+
+        if (this.combatStats) {
+            this.combatStats.dispose();
+        }
+
         // Mark as disposed
         this.disposed = true;
-        
+
     }
 
     /**
