@@ -9,7 +9,7 @@ npm install
 npm run dev          # Dev server (port 3000)
 npm run build        # Production build
 npm run typecheck    # TypeScript strict check (0 errors)
-npm run test         # Vitest - 14 files, 283 tests (all passing)
+npm run test         # Vitest - 15 files, 304 tests (all passing)
 npm run test:smoke   # Headless browser runtime test (Playwright)
 ```
 
@@ -26,7 +26,7 @@ npm run test:smoke   # Headless browser runtime test (Playwright)
 
 ## Architecture
 
-256 TypeScript files, 0 JavaScript. Pure TS codebase.
+264 TypeScript files, 0 JavaScript. Pure TS codebase.
 
 ```
 src/
@@ -51,9 +51,10 @@ js/
 │   ├── environment.ts   # Environment (39 submodules)
 │   ├── audio/           # 7 files
 │   ├── pooling/         # 14 files (object pools)
-│   ├── spaceship/       # 7 files
+│   ├── game/            # 7 files (saveSystem, lifecycle, state, tests)
+│   ├── spaceship/       # 10 files (includes xp/ranks systems)
 │   ├── intro/           # 6 files
-│   └── ui/              # 73 files (hud, settings, stargate, starmap, combat, blackjack)
+│   └── ui/              # 97 files (hud, settings, stargate, starmap, combat, blackjack)
 ├── globals/             # Module singletons (debug, messageBus, objectPool)
 └── core/                # 3 active files (messageBus, world, events)
 
@@ -65,7 +66,7 @@ css/                     # 18 CSS files
 
 - **bitECS**: 29 components across 8 categories (Transform, Render, Physics, Combat, Spaceship, Mining, AI, Tags). All systems wired into game loop via `ecsRunner.ts`.
 - **WebGPU**: Auto-fallback to WebGL2. TSL laser material for mining.
-- **Code splitting**: game-core 186 kB, combat 27 kB, env 62 kB, ui 64 kB.
+- **Code splitting**: game-core 189 kB, combat 27 kB, env 62 kB, ui 73 kB.
 - **Build config**: `vite.config.js` (not .ts), port 3000, base: '/Asteroid-Miner/'.
 - **Module resolution**: `tsconfig.json` uses "bundler" mode, `allowImportingTsExtensions: true`. Vite resolves .js -> .ts at dev and build time.
 
@@ -80,9 +81,9 @@ css/                     # 18 CSS files
 
 ## Active Issues
 
-- 225 `console.log` across 82 files (26 files use debugLog, rest ungated)
-- 24 `window.game` files (43 occurrences, includes comments)
-- 626 `any` type escapes (299 `as any` + 327 `: any`, excluding tests)
+- 263 `console.log` across 83 files (30 files use debugLog, rest ungated)
+- 27 `window.game` files (55 occurrences, includes comments)
+- 643 `any` type escapes (307 `as any` + 336 `: any`, excluding tests)
 - 80 files use `import * as THREE` - Three.js bundle 1,370 kB, tree-shaking blocked
-- No save/load system - player progress resets on refresh
+- `js/main/startupSequence.ts` local type aliases (`UiLike`, `CombatLike`) must be updated when adding properties to ui/combat modules - recurring source of type errors
 - Test coverage gaps: environment, ui, renderer, spaceship, audio modules have zero tests
