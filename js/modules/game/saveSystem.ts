@@ -37,6 +37,8 @@ export interface SaveSchema {
         fuelTankLevel: number;
         miningLevel: number;
         scannerLevel: number;
+        weaponLevel: number;
+        shieldLevel: number;
     };
     progress: {
         totalPlaytime: number; // seconds (duplicated for convenience)
@@ -78,6 +80,8 @@ export function getDefaultSave(): SaveSchema {
             fuelTankLevel: 1,
             miningLevel: 1,
             scannerLevel: 1,
+            weaponLevel: 1,
+            shieldLevel: 1,
         },
         progress: {
             totalPlaytime: 0,
@@ -176,6 +180,8 @@ export class SaveSystem {
                     fuelTankLevel: upgrades?.fuelTankLevel ?? 1,
                     miningLevel: upgrades?.miningLevel ?? 1,
                     scannerLevel: upgrades?.scannerLevel ?? 1,
+                    weaponLevel: upgrades?.weaponLevel ?? 1,
+                    shieldLevel: upgrades?.shieldLevel ?? 1,
                 },
                 progress: {
                     totalPlaytime: (existing?.progress?.totalPlaytime ?? 0) + this.getSessionElapsed(),
@@ -247,6 +253,8 @@ export class SaveSystem {
             upgrades.fuelTankLevel = save.upgrades.fuelTankLevel;
             upgrades.miningLevel = save.upgrades.miningLevel;
             upgrades.scannerLevel = save.upgrades.scannerLevel;
+            upgrades.weaponLevel = save.upgrades.weaponLevel;
+            upgrades.shieldLevel = save.upgrades.shieldLevel;
 
             // Recalculate upgrade costs based on levels
             upgrades.engineUpgradeCost = 800 * Math.pow(4, save.upgrades.engineLevel - 1);
@@ -254,6 +262,8 @@ export class SaveSystem {
             upgrades.fuelUpgradeCost = 1000 * Math.pow(4, save.upgrades.fuelTankLevel - 1);
             upgrades.miningUpgradeCost = 1200 * Math.pow(4, save.upgrades.miningLevel - 1);
             upgrades.scannerUpgradeCost = 600 * Math.pow(4, save.upgrades.scannerLevel - 1);
+            upgrades.weaponUpgradeCost = 800 * Math.pow(3, save.upgrades.weaponLevel - 1);
+            upgrades.shieldUpgradeCost = 600 * Math.pow(3, save.upgrades.shieldLevel - 1);
         }
 
         // Restore derived stats from upgrade levels
@@ -261,6 +271,10 @@ export class SaveSystem {
         spaceship.miningEfficiency = 1.0 * Math.pow(2, save.upgrades.miningLevel - 1);
         spaceship.collisionResistance = 1.0 * Math.pow(1.5, save.upgrades.hullLevel - 1);
         spaceship.scanRange = 1000 * Math.pow(2, save.upgrades.scannerLevel - 1);
+        spaceship.maxShield = 50 * Math.pow(1.3, save.upgrades.shieldLevel - 1);
+        if (spaceship.shield > spaceship.maxShield) {
+            spaceship.shield = spaceship.maxShield;
+        }
 
         // Increment play sessions
         this.incrementPlaySessions();

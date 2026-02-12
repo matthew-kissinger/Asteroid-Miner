@@ -73,11 +73,13 @@ export class HealthSync {
     });
 
     // Store the values that need to be synced to the HealthComponent
+    const shieldRegenRate = (spaceshipState as { shieldRegenRate?: number }).shieldRegenRate;
     const valuesForSync = {
       shield: spaceshipState.shield,
       maxShield: spaceshipState.maxShield,
       hull: spaceshipState.hull,
-      maxHull: spaceshipState.maxHull
+      maxHull: spaceshipState.maxHull,
+      ...(shieldRegenRate != null && { shieldRegenRate })
     };
 
     debugLog(`Preparing to sync values to player HealthComponent: Shield=${spaceshipState.shield}, Hull=${spaceshipState.hull}`);

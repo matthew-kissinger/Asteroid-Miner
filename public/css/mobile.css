@@ -187,6 +187,8 @@
     #upgrade-mining, 
     #upgrade-hull, 
     #upgrade-scanner, 
+    #upgrade-weapon, 
+    #upgrade-shield, 
     #purchase-laser {
         padding: 15px !important;
         min-height: 44px !important;

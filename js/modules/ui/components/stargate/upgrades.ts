@@ -16,6 +16,14 @@ interface Spaceship {
     scannerLevel: number;
     scanRange: number;
     scannerUpgradeCost: number;
+    weaponLevel: number;
+    weaponDamage: number;
+    weaponFireRate: number;
+    weaponUpgradeCost: number;
+    shieldLevel: number;
+    maxShield: number;
+    shieldRegenRate: number;
+    shieldUpgradeCost: number;
     credits: number;
 }
 
@@ -120,12 +128,54 @@ export class UpgradesView {
             scannerUpgradeProgress.style.width = `${Math.min(this.spaceship.scannerLevel * 20, 100)}%`;
         }
         
+        // Update Weapon upgrade information
+        const currentWeaponLevel = document.getElementById('current-weapon-level');
+        const currentWeaponDamage = document.getElementById('current-weapon-damage');
+        const currentWeaponFireRate = document.getElementById('current-weapon-firerate');
+        const nextWeaponDamage = document.getElementById('next-weapon-damage');
+        const nextWeaponFireRate = document.getElementById('next-weapon-firerate');
+        const weaponUpgradeCost = document.getElementById('weapon-upgrade-cost');
+        const weaponUpgradeProgress = document.getElementById('weapon-upgrade-progress');
+        
+        if (currentWeaponLevel) currentWeaponLevel.textContent = String(this.spaceship.weaponLevel);
+        if (currentWeaponDamage) currentWeaponDamage.textContent = String(Math.round(this.spaceship.weaponDamage));
+        if (currentWeaponFireRate) currentWeaponFireRate.textContent = this.spaceship.weaponFireRate.toFixed(2);
+        if (nextWeaponDamage) nextWeaponDamage.textContent = String(Math.round(this.spaceship.weaponDamage * 1.2));
+        if (nextWeaponFireRate) nextWeaponFireRate.textContent = (this.spaceship.weaponFireRate * 1.15).toFixed(2);
+        if (weaponUpgradeCost) weaponUpgradeCost.textContent = String(this.spaceship.weaponUpgradeCost);
+        if (weaponUpgradeProgress) {
+            weaponUpgradeProgress.style.width = `${Math.min(this.spaceship.weaponLevel * 20, 100)}%`;
+        }
+        
+        // Update Shield upgrade information
+        const currentShieldLevel = document.getElementById('current-shield-level');
+        const currentShieldMax = document.getElementById('current-shield-max');
+        const currentShieldRegen = document.getElementById('current-shield-regen');
+        const nextShieldMax = document.getElementById('next-shield-max');
+        const nextShieldRegen = document.getElementById('next-shield-regen');
+        const shieldUpgradeCost = document.getElementById('shield-upgrade-cost');
+        const shieldUpgradeProgress = document.getElementById('shield-upgrade-progress');
+        
+        if (currentShieldLevel) currentShieldLevel.textContent = String(this.spaceship.shieldLevel);
+        if (currentShieldMax) currentShieldMax.textContent = String(Math.round(this.spaceship.maxShield));
+        if (currentShieldRegen) currentShieldRegen.textContent = this.spaceship.shieldRegenRate.toFixed(1);
+        if (nextShieldMax) nextShieldMax.textContent = String(Math.round(this.spaceship.maxShield * 1.3));
+        if (nextShieldRegen) nextShieldRegen.textContent = (this.spaceship.shieldRegenRate * 1.2).toFixed(1);
+        if (shieldUpgradeCost) shieldUpgradeCost.textContent = String(this.spaceship.shieldUpgradeCost);
+        if (shieldUpgradeProgress) {
+            shieldUpgradeProgress.style.width = `${Math.min(this.spaceship.shieldLevel * 20, 100)}%`;
+        }
+        
         // Update upgrade button statuses
         this.updateUpgradeButtonStatus('upgrade-fuel-tank', this.spaceship.credits, this.spaceship.fuelUpgradeCost, '#00cc33');
         this.updateUpgradeButtonStatus('upgrade-engine', this.spaceship.credits, this.spaceship.engineUpgradeCost, '#ff9900');
         this.updateUpgradeButtonStatus('upgrade-mining', this.spaceship.credits, this.spaceship.miningUpgradeCost, '#ff3030');
         this.updateUpgradeButtonStatus('upgrade-hull', this.spaceship.credits, this.spaceship.hullUpgradeCost, '#30cfd0');
         this.updateUpgradeButtonStatus('upgrade-scanner', this.spaceship.credits, this.spaceship.scannerUpgradeCost, '#9933cc');
+        const weaponCost = this.spaceship.weaponLevel >= 5 ? Infinity : this.spaceship.weaponUpgradeCost;
+        const shieldCost = this.spaceship.shieldLevel >= 5 ? Infinity : this.spaceship.shieldUpgradeCost;
+        this.updateUpgradeButtonStatus('upgrade-weapon', this.spaceship.credits, weaponCost, '#ff4444');
+        this.updateUpgradeButtonStatus('upgrade-shield', this.spaceship.credits, shieldCost, '#4488ff');
     }
     
     // Helper method to update upgrade button status

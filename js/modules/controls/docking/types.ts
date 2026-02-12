@@ -32,6 +32,8 @@ export type DockingSpaceship = {
     miningUpgradeCost: number;
     hullUpgradeCost: number;
     scannerUpgradeCost: number;
+    weaponUpgradeCost: number;
+    shieldUpgradeCost: number;
     miningEfficiency: number;
     refuel: () => number;
     repairShield: () => number;
@@ -41,6 +43,8 @@ export type DockingSpaceship = {
     upgradeMiningLaser: () => void;
     upgradeHull: () => void;
     upgradeScanner: () => void;
+    upgradeWeapon: () => void;
+    upgradeShield: () => void;
     dock: () => void;
     undock: () => unknown;
     mesh: {
