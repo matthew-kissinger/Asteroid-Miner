@@ -196,8 +196,6 @@ See `CLAUDE.md` for detailed technical discussion.
 - **Weapon & Shield Upgrade Categories:** Expanded stargate upgrade terminal with weapon and shield specialization trees
 - **Persistent Settings:** Audio, graphics, and control settings saved across sessions via localStorage
 - **Achievement System:** 14 achievements across 6 categories with HUD popup notifications and persistence
-- **Mission Contracts:** Procedural mission contracts available at stargate missions panel
-
 ### v0.7.0
 - **Combat Sound Effects:** Synthesized weapon, explosion, shield, and mining sounds via Web Audio API - zero external audio assets
 - **Save/Load System:** localStorage persistence for player progress, credits, cargo, upgrades, and high scores with auto-save every 30 seconds
