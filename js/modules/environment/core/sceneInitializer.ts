@@ -10,6 +10,7 @@ import type { SpaceAnomalies } from '../spaceAnomalies.ts';
 import type { SystemTransition } from '../systemTransition.ts';
 import type { VibeVersePortals } from '../vibeVersePortals.ts';
 import type { HazardManager } from '../hazards/hazardManager.ts';
+import type { EnvironmentEffects } from '../effects/environmentEffects.ts';
 
 interface EnvironmentComponents {
     skybox: Skybox;
@@ -25,6 +26,7 @@ interface RemainingComponents {
     systemTransition: SystemTransition;
     customSystemCreator: unknown;
     hazardManager: HazardManager;
+    environmentEffects: EnvironmentEffects;
 }
 
 export class SceneInitializer {
@@ -41,6 +43,7 @@ export class SceneInitializer {
     customSystemCreator?: unknown;
     vibeVersePortals?: VibeVersePortals;
     hazardManager?: HazardManager;
+    environmentEffects?: EnvironmentEffects;
 
     constructor(scene: any) {
         this.scene = scene;
@@ -108,6 +111,10 @@ export class SceneInitializer {
         }
         this.hazardManager.generateHazards();
 
+        // Initialize environmental effects (dust, nebula, starfield)
+        const { EnvironmentEffects } = await import('../effects/environmentEffects.ts');
+        this.environmentEffects = new EnvironmentEffects(this.scene);
+
         this.componentsLoaded = true;
         console.log("All environment components initialized");
 
@@ -117,6 +124,7 @@ export class SceneInitializer {
             systemTransition: this.systemTransition,
             customSystemCreator: this.customSystemCreator,
             hazardManager: this.hazardManager,
+            environmentEffects: this.environmentEffects,
         };
     }
 
@@ -138,5 +146,6 @@ export class SceneInitializer {
         if (this.spaceAnomalies) this.spaceAnomalies.clearAllAnomalies();
         if (this.hazardManager) this.hazardManager.dispose();
         if (this.vibeVersePortals) this.vibeVersePortals.dispose();
+        if (this.environmentEffects) this.environmentEffects.dispose();
     }
 }

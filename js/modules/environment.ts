@@ -10,6 +10,7 @@ import type { AsteroidBelt } from './environment/asteroidBelt.ts';
 import type { SpaceAnomalies } from './environment/spaceAnomalies.ts';
 import type { SystemTransition } from './environment/systemTransition.ts';
 import type { HazardManager } from './environment/hazards/hazardManager.ts';
+import type { EnvironmentEffects } from './environment/effects/environmentEffects.ts';
 import { SceneInitializer } from './environment/core/sceneInitializer.ts';
 import { RegionManager } from './environment/core/regionManager.ts';
 import { SystemTransitionManager } from './environment/core/systemTransitionManager.ts';
@@ -52,6 +53,7 @@ interface EnvironmentComponents {
     systemTransition?: SystemTransition;
     customSystemCreator?: CustomSystemCreator;
     hazardManager?: HazardManager;
+    environmentEffects?: EnvironmentEffects;
 }
 
 export class Environment {
@@ -72,10 +74,11 @@ export class Environment {
     systemTransition?: SystemTransition;
     customSystemCreator?: CustomSystemCreator;
     hazardManager?: HazardManager;
+    environmentEffects?: EnvironmentEffects;
 
     asteroids: EnvironmentAsteroidData[];
     currentSystemId: string;
-    spaceship: unknown;
+    spaceship: any; // Using any to access position property
     vibeVersePortals?: VibeVersePortalsUpdatable;
 
     constructor(scene: THREE.Scene) {
@@ -154,6 +157,22 @@ export class Environment {
             this.hazardManager
         );
         this.currentSystemId = this.transitionManager.getCurrentSystemId();
+
+        // Connect new asteroids from the updated asteroid belt
+        if (this.asteroidBelt) {
+            this.asteroids = this.asteroidBelt.getAsteroids() as unknown as EnvironmentAsteroidData[];
+        }
+
+        // Dispose and recreate environmental effects for the new system
+        if (this.environmentEffects) {
+            this.environmentEffects.dispose();
+            this.environmentEffects = undefined;
+        }
+        if (this.componentsLoaded) {
+            import('./environment/effects/environmentEffects.ts').then(({ EnvironmentEffects }) => {
+                this.environmentEffects = new EnvironmentEffects(this.scene);
+            }).catch(err => console.error("Failed to recreate environment effects:", err));
+        }
     }
 
     // Get the player's current location based on position
@@ -246,6 +265,13 @@ export class Environment {
             // Update environmental hazards
             if (this.hazardManager) {
                 this.hazardManager.update(deltaTime);
+            }
+
+            // Update environmental effects (dust, nebula, starfield)
+            if (this.environmentEffects) {
+                const playerPos = this.spaceship && this.spaceship.position ? this.spaceship.position : new THREE.Vector3(0, 0, 0);
+                const hasAsteroidBelt = !!this.asteroidBelt && this.asteroids.length > 0;
+                this.environmentEffects.update(deltaTime, playerPos, hasAsteroidBelt);
             }
 
             // Update vibe verse portals
