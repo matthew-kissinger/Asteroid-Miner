@@ -5,8 +5,10 @@ import { MusicPlaylist } from './music/playlist.ts';
 import { MusicPlayer } from './music/player.ts';
 import { SoundPlayer } from './effects/soundPlayer.ts';
 import { CombatSounds } from './effects/combatSounds.ts';
+import { AmbientMusic } from './music/ambientMusic.ts';
 import { MobileAudioEnabler } from './mobile/enabler.ts';
 import { debugLog } from '../../globals/debug.js';
+import { mainMessageBus } from '../../globals/messageBus.ts';
 
 export class AudioManager {
     private audioContextManager: AudioContextManager;
@@ -15,7 +17,9 @@ export class AudioManager {
     private musicPlayer: MusicPlayer;
     private soundPlayer: SoundPlayer;
     private combatSounds: CombatSounds;
+    private ambientMusic: AmbientMusic;
     private mobileEnabler: MobileAudioEnabler;
+    private unsubscribes: (() => void)[] = [];
     
     // Exposed properties for compatibility
     public sounds: SoundMap;
@@ -43,6 +47,25 @@ export class AudioManager {
             () => this.soundPlayer.isMuted(),
         );
         this.combatSounds.subscribeToEvents();
+        
+        this.ambientMusic = new AmbientMusic(
+            this.audioContextManager,
+            () => this.musicPlayer.getVolume(),
+            () => this.musicPlayer.isMuted(),
+        );
+        
+        // Subscribe to docking/undocking events for ambient music
+        this.unsubscribes.push(
+            mainMessageBus.subscribe('player.undocked', () => {
+                this.ambientMusic.start();
+            })
+        );
+        this.unsubscribes.push(
+            mainMessageBus.subscribe('player.docked', () => {
+                this.ambientMusic.stop();
+            })
+        );
+
         this.mobileEnabler = new MobileAudioEnabler(this.audioContextManager, this.musicPlayer);
         
         // Exposed properties for compatibility
@@ -83,6 +106,7 @@ export class AudioManager {
     
     set musicVolume(value: number) {
         this.musicPlayer.setVolume(value);
+        this.ambientMusic.updateVolume();
     }
     
     get sfxVolume(): number {
@@ -192,6 +216,7 @@ export class AudioManager {
     toggleMute(): boolean {
         const soundMuted = this.soundPlayer.toggleMute();
         const musicMuted = this.musicPlayer.toggleMute();
+        this.ambientMusic.updateVolume();
         
         const overallMuted = soundMuted || musicMuted;
         debugLog(`Audio ${overallMuted ? 'muted' : 'unmuted'}`);
@@ -234,6 +259,15 @@ export class AudioManager {
         
         // Clean up combat sounds
         this.combatSounds.cleanup();
+        
+        // Stop ambient music
+        this.ambientMusic.stop();
+        
+        // Unsubscribe from events
+        for (const unsub of this.unsubscribes) {
+            unsub();
+        }
+        this.unsubscribes = [];
         
         // Pause all music
         this.musicPlayer.pauseAll();
