@@ -7,6 +7,7 @@ import { HUDStatusIndicators } from './components/hud/statusIndicators.ts';
 import { HUDEventHandlers } from './components/hud/eventHandlers.ts';
 import { HUDHelpers } from './components/hud/helpers.ts';
 import { HUDXpBar } from './components/hud/xpBar.ts';
+import { StargateIndicator } from './components/hud/stargateIndicator.ts';
 
 type HUDSpaceship = {
     [key: string]: unknown;
@@ -18,13 +19,16 @@ export class HUD {
     spaceship: HUDSpaceship | null;
     eventHandlers: HUDEventHandlers | null;
     xpBar: HUDXpBar | null = null;
+    stargateIndicator: StargateIndicator | null = null;
     world: any = null;
     settings: any = null;
+    camera: any = null;
 
     constructor(spaceship: HUDSpaceship) {
         this.spaceship = spaceship;
         this.eventHandlers = new HUDEventHandlers();
         this.xpBar = new HUDXpBar();
+        this.stargateIndicator = new StargateIndicator();
         this.setupHUD();
         this.eventHandlers?.animateHudIn();
     }
@@ -32,16 +36,16 @@ export class HUD {
     setupHUD(): void {
         // Initialize styles first
         HUDStyles.initializeStyles();
-        
+
         // Create main HUD container
         const hudContainer = this.createMainContainer();
-        
+
         // Create scanline effect and get reference
         const scanline = HUDStatusIndicators.createScanlineEffect(hudContainer);
         if (scanline) {
             this.eventHandlers?.setScanline(scanline);
         }
-        
+
         // Create all HUD panels
         HUDDisplays.createFlightPanel(hudContainer);
         HUDDisplays.createStatusPanel(hudContainer);
@@ -50,6 +54,7 @@ export class HUD {
         HUDDisplays.createResourcePanel(hudContainer);
         HUDNotifications.createNotificationsArea(hudContainer);
         this.xpBar?.create(hudContainer);
+        this.stargateIndicator?.init(hudContainer);
     }
     
     createMainContainer(): HTMLDivElement {
@@ -71,6 +76,11 @@ export class HUD {
 
         // Update XP bar
         this.xpBar?.update(this.spaceship);
+
+        // Update stargate indicator
+        if (this.stargateIndicator && this.camera && (this.spaceship as any).mesh) {
+            this.stargateIndicator.update(this.camera, (this.spaceship as any).mesh.position);
+        }
 
         // Update horde mode display
         HUDNotifications.updateHordeModeDisplay();
@@ -102,16 +112,19 @@ export class HUD {
         this.eventHandlers?.destroy();
         this.xpBar?.destroy();
         this.xpBar = null;
+        this.stargateIndicator?.destroy();
+        this.stargateIndicator = null;
 
         // Remove DOM elements
         const hudContainer = document.getElementById('hud-container') as HTMLDivElement | null;
         if (hudContainer && hudContainer.parentNode) {
             hudContainer.parentNode.removeChild(hudContainer);
         }
-        
+
         // Clear references
         this.spaceship = null;
         this.eventHandlers = null;
+        this.camera = null;
     }
     
     // Backward compatibility methods
