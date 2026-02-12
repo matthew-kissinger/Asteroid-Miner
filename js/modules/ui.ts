@@ -92,6 +92,9 @@ interface GameOverScreenComponent {
     audio?: AudioForUI;
     show?: (resources: unknown, message: unknown) => void;
     setupGameOverScreen?: () => void;
+    setRespawnCallback?: (callback: () => void) => void;
+    setRespawnState?: (isHordeMode: boolean, credits: number, cargo: { iron: number; gold: number; platinum: number }) => void;
+    hide?: () => void;
 }
 
 interface ControlsMenuComponent {
@@ -580,6 +583,22 @@ export class UI {
                 this.gameOverScreen.audio = this.audio;
             }
             
+            // Set up respawn state from game reference
+            const game = (window as any).game;
+            if (game && this.gameOverScreen.setRespawnState) {
+                const isHorde = game.isHordeActive || game.hordeMode?.isActive || false;
+                const credits = game.spaceship?.credits || 0;
+                const cargo = game.spaceship?.cargo || { iron: 0, gold: 0, platinum: 0 };
+                this.gameOverScreen.setRespawnState(isHorde, credits, cargo);
+            }
+            
+            // Set up respawn callback
+            if (this.gameOverScreen.setRespawnCallback) {
+                this.gameOverScreen.setRespawnCallback(() => {
+                    this.handleRespawnAtStargate();
+                });
+            }
+            
             // Pass the message object through directly - gameOverScreen will handle the parsing
             this.gameOverScreen.show(resources, message);
             
@@ -618,6 +637,79 @@ export class UI {
         
         // Hide other UI elements
         this.hideUI();
+    }
+    
+    /**
+     * Handle respawn at stargate - reset game state without page reload
+     */
+    private handleRespawnAtStargate(): void {
+        const game = (window as any).game;
+        if (!game || !game.spaceship) {
+            console.error("Cannot respawn: game reference not available");
+            return;
+        }
+        
+        const spaceship = game.spaceship;
+        
+        // Calculate and apply credit penalty
+        if (spaceship.credits > 0) {
+            const penalty = Math.max(100, Math.floor(spaceship.credits * 0.25));
+            spaceship.credits = Math.max(0, spaceship.credits - penalty);
+            debugLog(`Respawn: Deducted ${penalty} credits. Remaining: ${spaceship.credits}`);
+        } else {
+            // No credits - lose all cargo instead
+            spaceship.cargo = { iron: 0, gold: 0, platinum: 0 };
+            debugLog("Respawn: Lost all cargo (no credits to deduct)");
+        }
+        
+        // Reset ship state - partial recovery
+        spaceship.hull = Math.floor(spaceship.maxHull * 0.5);
+        spaceship.shield = 0;
+        spaceship.fuel = Math.floor(spaceship.maxFuel * 0.5);
+        spaceship.isDestroyed = false;
+        spaceship.velocity.set(0, 0, 0);
+        
+        // Reset thrust state
+        if (spaceship.thrust) {
+            spaceship.thrust.forward = false;
+            spaceship.thrust.backward = false;
+            spaceship.thrust.left = false;
+            spaceship.thrust.right = false;
+            spaceship.thrust.boost = false;
+        }
+        
+        // Sync health component
+        if (spaceship.syncValuesToHealthComponent) {
+            spaceship.syncValuesToHealthComponent();
+        }
+        
+        // Dock at stargate
+        spaceship.dock();
+        
+        // Clear game over state
+        game.isGameOver = false;
+        
+        // Reset game time to prevent immediate re-triggering
+        if (game.lastUpdateTime) {
+            game.lastUpdateTime = performance.now();
+        }
+        
+        // Hide the game over screen
+        if (this.gameOverScreen?.hide) {
+            this.gameOverScreen.hide();
+        }
+        
+        // Show the stargate UI (docked interface)
+        if (this.stargateInterface && (this.stargateInterface as any).showStargateUI) {
+            (this.stargateInterface as any).showStargateUI();
+        }
+        
+        // Show HUD again
+        if (this.hud && this.hud.show) {
+            this.hud.show();
+        }
+        
+        debugLog("Respawn complete: Player docked at stargate");
     }
     
     hideUI(): void {

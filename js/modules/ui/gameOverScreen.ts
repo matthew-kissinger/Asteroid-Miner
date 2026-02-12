@@ -31,10 +31,16 @@ type GameOverMessage = {
     };
 };
 
+export type RespawnCallback = () => void;
+
 export class GameOverScreen {
     isVisible: boolean;
     audio?: GameOverAudio;
     private gameRef: { difficultyManager?: { gameTime: number; currentLevel: number }; gameTime?: number } | null;
+    private onRespawnCallback: RespawnCallback | null = null;
+    private isHordeMode: boolean = false;
+    private playerCredits: number = 0;
+    private playerCargo: { iron: number; gold: number; platinum: number } = { iron: 0, gold: 0, platinum: 0 };
 
     constructor() {
         this.isVisible = false;
@@ -44,6 +50,16 @@ export class GameOverScreen {
     
     setGameReference(gameRef: { difficultyManager?: { gameTime: number; currentLevel: number }; gameTime?: number }): void {
         this.gameRef = gameRef;
+    }
+    
+    setRespawnCallback(callback: RespawnCallback): void {
+        this.onRespawnCallback = callback;
+    }
+
+    setRespawnState(isHordeMode: boolean, credits: number, cargo: { iron: number; gold: number; platinum: number }): void {
+        this.isHordeMode = isHordeMode;
+        this.playerCredits = credits;
+        this.playerCargo = cargo;
     }
     
     // Helper method to handle paths for GitHub Pages and local development
@@ -71,8 +87,16 @@ export class GameOverScreen {
         gameOverMessage.classList.add('game-over-message');
         gameOverContainer.appendChild(gameOverMessage);
         
+        // Button container for respawn + restart
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('game-over-button-container');
+        gameOverContainer.appendChild(buttonContainer);
+        
+        // Respawn at Stargate button
+        this.setupRespawnButton(buttonContainer);
+        
         // Restart button
-        this.setupRestartButton(gameOverContainer);
+        this.setupRestartButton(buttonContainer);
         
         // Resources collected summary (for game over screen)
         const resourcesSummary = document.createElement('div');
@@ -81,6 +105,28 @@ export class GameOverScreen {
         gameOverContainer.appendChild(resourcesSummary);
     }
     
+    setupRespawnButton(container: HTMLElement): void {
+        const respawnButton = document.createElement('button');
+        respawnButton.id = 'respawn-stargate-button';
+        respawnButton.textContent = 'RESPAWN AT STARGATE';
+        respawnButton.classList.add('game-over-respawn-button');
+        
+        respawnButton.addEventListener('click', () => {
+            if (!this.onRespawnCallback) return;
+            
+            this.audio?.playSound?.('uiClick');
+            
+            // Disable buttons during respawn
+            respawnButton.disabled = true;
+            const restartBtn = document.getElementById('restart-game-button') as HTMLButtonElement | null;
+            if (restartBtn) restartBtn.disabled = true;
+            
+            this.onRespawnCallback();
+        });
+        
+        container.appendChild(respawnButton);
+    }
+
     setupRestartButton(container: HTMLElement): void {
         const restartButton = document.createElement('button');
         restartButton.id = 'restart-game-button';
@@ -127,6 +173,9 @@ export class GameOverScreen {
     
     show(resources: unknown, message: unknown): void {
         console.log("GameOverScreen: Showing game over screen");
+        
+        // Update respawn button state
+        this.updateRespawnButton();
         
         // Show game over screen
         const gameOverContainer = document.getElementById('game-over-container') as HTMLDivElement | null;
@@ -312,4 +361,46 @@ export class GameOverScreen {
             document.exitPointerLock();
         }
     }
-} 
+
+    private updateRespawnButton(): void {
+        const respawnButton = document.getElementById('respawn-stargate-button') as HTMLButtonElement | null;
+        if (!respawnButton) return;
+
+        // Hide respawn in horde mode (permadeath)
+        if (this.isHordeMode) {
+            respawnButton.style.display = 'none';
+            return;
+        }
+
+        respawnButton.style.display = '';
+
+        // No callback means respawn not available
+        if (!this.onRespawnCallback) {
+            respawnButton.disabled = true;
+            respawnButton.textContent = 'RESPAWN UNAVAILABLE';
+            return;
+        }
+
+        respawnButton.disabled = false;
+        const hasCargo = this.playerCargo.iron > 0 || this.playerCargo.gold > 0 || this.playerCargo.platinum > 0;
+
+        if (this.playerCredits > 0) {
+            const penalty = Math.max(100, Math.floor(this.playerCredits * 0.25));
+            respawnButton.textContent = `RESPAWN AT STARGATE (-${penalty} credits)`;
+        } else if (hasCargo) {
+            respawnButton.textContent = 'RESPAWN AT STARGATE (lose cargo)';
+        } else {
+            // Free respawn - player has nothing to lose
+            respawnButton.textContent = 'RESPAWN AT STARGATE (free)';
+        }
+    }
+
+    hide(): void {
+        const gameOverContainer = document.getElementById('game-over-container') as HTMLDivElement | null;
+        if (gameOverContainer) {
+            gameOverContainer.classList.remove('game-over-container--visible');
+            gameOverContainer.classList.add('game-over-container--hidden');
+        }
+        this.isVisible = false;
+    }
+}
