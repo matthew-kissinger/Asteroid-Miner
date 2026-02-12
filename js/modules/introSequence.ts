@@ -1,6 +1,6 @@
 // introSequence.ts - Manages the cinematic Star Dreadnought intro sequence
 
-import * as THREE from 'three';
+import type { Group, Vector3, Euler, Object3D, Camera, Scene } from 'three';
 import { debugLog } from '../globals/debug.ts';
 import { StarDreadnought } from './environment/starDreadnought.ts';
 import { createIntroSoundEffects } from './intro/audio/soundEffects.ts';
@@ -26,18 +26,18 @@ type AudioManagerLike = {
 };
 
 interface PortalEffectLike {
-    getPortalGroup: () => THREE.Group;
+    getPortalGroup: () => Group;
     updatePortalEffect: () => void;
     setOpacity: (opacity: number) => void;
     setScale: (scale: number) => void;
-    setPosition: (position: THREE.Vector3) => void;
-    setRotation: (rotation: THREE.Euler) => void;
+    setPosition: (position: Vector3) => void;
+    setRotation: (rotation: Euler) => void;
     setVisible: (visible: boolean) => void;
     dispose: () => void;
 }
 
 interface StarDreadnoughtLike {
-    ship: THREE.Group;
+    ship: Group;
     teleportBeamActive: boolean;
     setEnginesPower: (power: number) => void;
     activateTeleportBeam: () => void;
@@ -62,8 +62,8 @@ interface MeshLike {
     position: VectorLike;
     rotation: EulerLike;
     visible?: boolean;
-    add?: (obj: THREE.Object3D) => void;
-    remove?: (obj: THREE.Object3D) => void;
+    add?: (obj: Object3D) => void;
+    remove?: (obj: Object3D) => void;
 }
 
 interface SpaceshipLike {
@@ -75,7 +75,7 @@ interface SpaceshipLike {
         right: boolean;
         boost: boolean;
     };
-    velocity?: THREE.Vector3;
+    velocity?: Vector3;
     isDocked?: boolean;
     hull?: number;
     shield?: number;
@@ -92,12 +92,12 @@ interface DialogueSystemLike {
 export type IntroSequenceAnimationContext = {
     portalEffect: PortalEffectLike;
     starDreadnought: StarDreadnoughtLike;
-    camera: THREE.Camera;
+    camera: Camera;
     spaceship: SpaceshipLike | null;
     introSounds: IntroSoundMap;
     flashOverlay: (maxOpacity?: number) => void;
-    finalPlayerPosition?: THREE.Vector3;
-    playerShieldEffect?: THREE.Object3D | null;
+    finalPlayerPosition?: Vector3;
+    playerShieldEffect?: Object3D | null;
     shieldPulseTime?: number;
 };
 
@@ -108,16 +108,16 @@ type GameWindowWithInstance = Window & {
 };
 
 export class IntroSequence {
-    scene: THREE.Scene | null;
-    camera: THREE.Camera | null;
+    scene: Scene | null;
+    camera: Camera | null;
     spaceship: SpaceshipLike | null;
     audio: AudioManagerLike | null;
     isPlaying: boolean;
     sequenceTime: number;
     onComplete: (() => void) | null;
     skipEnabled: boolean;
-    initialCameraPosition: THREE.Vector3 | null;
-    initialCameraRotation: THREE.Euler | null;
+    initialCameraPosition: Vector3 | null;
+    initialCameraRotation: Euler | null;
     starDreadnought: StarDreadnoughtLike | null;
     portalEffect: PortalEffectLike | null;
     overlay: HTMLDivElement | null;
@@ -127,12 +127,12 @@ export class IntroSequence {
     skipButton: HTMLDivElement | null;
     lastTime: number;
     animationFrameId: number | null;
-    finalPlayerPosition?: THREE.Vector3;
-    playerShieldEffect?: THREE.Object3D | null;
+    finalPlayerPosition?: Vector3;
+    playerShieldEffect?: Object3D | null;
     shieldPulseTime?: number;
     skipHandler?: (event: KeyboardEvent) => void;
 
-    constructor(scene: THREE.Scene, camera: THREE.Camera, spaceship: SpaceshipLike | null, audioManager: AudioManagerLike | null) {
+    constructor(scene: Scene, camera: Camera, spaceship: SpaceshipLike | null, audioManager: AudioManagerLike | null) {
         this.scene = scene;
         this.camera = camera;
         this.spaceship = spaceship;
@@ -199,8 +199,8 @@ export class IntroSequence {
         this.sequenceTime = 0;
         this.onComplete = onComplete || null;
 
-        const camera = this.camera as THREE.Camera;
-        const scene = this.scene as THREE.Scene;
+        const camera = this.camera as Camera;
+        const scene = this.scene as Scene;
         const portalEffect = this.portalEffect as PortalEffectLike;
         const starDreadnought = this.starDreadnought as StarDreadnoughtLike;
         
@@ -297,7 +297,7 @@ export class IntroSequence {
         return {
             portalEffect: this.portalEffect as PortalEffectLike,
             starDreadnought: this.starDreadnought as StarDreadnoughtLike,
-            camera: this.camera as THREE.Camera,
+            camera: this.camera as Camera,
             spaceship: this.spaceship,
             introSounds: this.introSounds,
             flashOverlay: this.flashOverlay.bind(this),
@@ -391,7 +391,7 @@ export class IntroSequence {
         debugLog("Intro sequence complete");
         this.isPlaying = false;
 
-        const scene = this.scene as THREE.Scene;
+        const scene = this.scene as Scene;
         const portalEffect = this.portalEffect as PortalEffectLike;
         const starDreadnought = this.starDreadnought as StarDreadnoughtLike;
         

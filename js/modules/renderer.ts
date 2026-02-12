@@ -1,6 +1,19 @@
 // renderer.ts - Main renderer orchestrator delegating to specialized submodules
 
-import * as THREE from 'three';
+import {
+  WebGLRenderer,
+  Scene,
+  PerspectiveCamera,
+  PCFSoftShadowMap,
+  ACESFilmicToneMapping,
+  SRGBColorSpace,
+  Object3D,
+  BufferGeometry,
+  Material,
+  InstancedMesh,
+  Vector3,
+  Quaternion,
+} from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
 import { WebGPURenderer } from 'three/webgpu';
 import { LightingManager } from './renderer/lighting';
@@ -8,19 +21,19 @@ import { PostProcessingManager } from './renderer/post';
 import { TSLPostProcessingManager } from './renderer/postTSL';
 import { SceneApiManager } from './renderer/sceneApi';
 import { RenderHelpers } from './renderer/helpers';
-import { debugLog } from '../globals/debug.js';
+import { debugLog } from '../globals/debug.ts';
 import { VolumetricLightingManager } from './renderer/volumetricLighting';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 
-type RendererType = THREE.WebGLRenderer | WebGPURenderer;
+type RendererType = WebGLRenderer | WebGPURenderer;
 
 interface ViewDef {
     [key: string]: any;
 }
 
 export class Renderer {
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
+    scene: Scene;
+    camera: PerspectiveCamera;
     renderer!: RendererType;
     renderAlpha: number = 0;
     lightingManager?: LightingManager;
@@ -36,8 +49,8 @@ export class Renderer {
     constructor() {
         debugLog("Initializing enhanced renderer...");
 
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 400000);
+        this.scene = new Scene();
+        this.camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 400000);
 
         // Interpolation alpha provided by main
         this.renderAlpha = 0;
@@ -55,12 +68,12 @@ export class Renderer {
         // Enable shadow mapping
         if ('shadowMap' in this.renderer) {
             this.renderer.shadowMap.enabled = true;
-            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.renderer.shadowMap.type = PCFSoftShadowMap;
         }
 
         // Set tone mapping for HDR rendering
         if ('toneMapping' in this.renderer) {
-            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            this.renderer.toneMapping = ACESFilmicToneMapping;
             this.renderer.toneMappingExposure = 1.0;
         }
 
@@ -77,7 +90,7 @@ export class Renderer {
             this.postProcessingManager = new TSLPostProcessingManager(this.renderer, this.scene, this.camera);
         } else {
             debugLog("Using GLSL Post-Processing for WebGL");
-            this.postProcessingManager = new PostProcessingManager(this.renderer as THREE.WebGLRenderer, this.scene, this.camera);
+            this.postProcessingManager = new PostProcessingManager(this.renderer as WebGLRenderer, this.scene, this.camera);
         }
 
         this.sceneApiManager = new SceneApiManager(this.scene);
@@ -124,7 +137,7 @@ export class Renderer {
         }
 
         debugLog("WebGL 2 is available.");
-        return new THREE.WebGLRenderer({
+        return new WebGLRenderer({
             antialias: true,
             powerPreference: "high-performance",
             logarithmicDepthBuffer: true, // Better for space scenes with huge distance ranges
@@ -145,7 +158,7 @@ export class Renderer {
         
         // Set the output color space to sRGB
         if ('outputColorSpace' in this.renderer) {
-            this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+            this.renderer.outputColorSpace = SRGBColorSpace;
         }
         
         // Position camera - brought closer for better visibility
@@ -158,7 +171,7 @@ export class Renderer {
         // Enhance shadow mapping for better quality eclipse effects
         if ('shadowMap' in this.renderer) {
             this.renderer.shadowMap.enabled = true;
-            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.renderer.shadowMap.type = PCFSoftShadowMap;
             if ('autoUpdate' in this.renderer.shadowMap) {
                 (this.renderer.shadowMap as any).autoUpdate = true;
             }
@@ -178,11 +191,11 @@ export class Renderer {
     }
     
     // Explicitly define getter methods for scene and camera
-    getScene(): THREE.Scene {
+    getScene(): Scene {
         return this.scene;
     }
     
-    getCamera(): THREE.PerspectiveCamera {
+    getCamera(): PerspectiveCamera {
         return this.camera;
     }
     
@@ -229,7 +242,7 @@ export class Renderer {
     }
     
     // Add an object to the scene through guarded path
-    add(object: THREE.Object3D): void {
+    add(object: Object3D): void {
         this._withGuard(() => this.scene.add(object));
     }
     
@@ -323,7 +336,7 @@ export class Renderer {
     /**
      * Create an instanced mesh for efficient rendering of many similar objects
      */
-    createInstancedMesh(key: string, geometry: THREE.BufferGeometry, material: THREE.Material, maxCount: number): THREE.InstancedMesh | null {
+    createInstancedMesh(key: string, geometry: BufferGeometry, material: Material, maxCount: number): InstancedMesh | null {
         if (this.renderHelpers) {
             return this.renderHelpers.createInstancedMesh(key, geometry, material, maxCount);
         }
@@ -333,7 +346,7 @@ export class Renderer {
     /**
      * Add or update an instance in an instanced mesh
      */
-    updateInstance(key: string, index: number, position: THREE.Vector3, quaternion: THREE.Quaternion, scale: THREE.Vector3): boolean {
+    updateInstance(key: string, index: number, position: Vector3, quaternion: Quaternion, scale: Vector3): boolean {
         if (this.renderHelpers) {
             return Boolean(this.renderHelpers.updateInstance(key, index, position, quaternion, scale));
         }

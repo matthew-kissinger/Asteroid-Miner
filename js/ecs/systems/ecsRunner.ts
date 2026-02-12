@@ -5,7 +5,7 @@
  * Runs PARALLEL to legacy ECS - both systems execute each frame.
  */
 
-import * as THREE from 'three'
+import { Scene, BoxGeometry, MeshBasicMaterial, Mesh } from 'three'
 import {
   applyThrustSystem,
   applyDragSystem,
@@ -63,7 +63,7 @@ let meshRegistry: MeshRegistry | null = null
  * Creates the mesh registry and a test entity to verify integration.
  * This test entity has a small velocity and should move across the screen.
  */
-export function initECS(scene?: THREE.Scene): void {
+export function initECS(scene?: Scene): void {
   // Create mesh registry
   meshRegistry = createMeshRegistry()
 
@@ -94,9 +94,9 @@ export function initECS(scene?: THREE.Scene): void {
 
   // Create a simple test mesh (bright green cube)
   if (scene) {
-    const geometry = new THREE.BoxGeometry(1, 1, 1)
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-    const mesh = new THREE.Mesh(geometry, material)
+    const geometry = new BoxGeometry(1, 1, 1)
+    const material = new MeshBasicMaterial({ color: 0x00ff00 })
+    const mesh = new Mesh(geometry, material)
     scene.add(mesh)
 
     // Register mesh and link to entity

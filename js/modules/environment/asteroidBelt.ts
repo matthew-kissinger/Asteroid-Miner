@@ -1,6 +1,16 @@
 // asteroidBelt.ts - Creates and manages the asteroid belt
 
-import * as THREE from 'three';
+import {
+  Mesh,
+  Scene,
+  BufferGeometry,
+  IcosahedronGeometry,
+  TetrahedronGeometry,
+  OctahedronGeometry,
+  Vector3,
+  Color,
+  MeshStandardMaterial,
+} from 'three';
 import { createGameEntity, removeGameEntity } from '../../ecs/world';
 import { Position, Asteroid as AsteroidTag } from '../../ecs/components';
 import { addAsteroid } from '../../ecs/systems/index';
@@ -20,7 +30,7 @@ interface AsteroidRotationSpeed {
 }
 
 interface AsteroidData {
-    mesh: THREE.Mesh;
+    mesh: Mesh;
     eid: number;
     size: number;
     orbitSpeed: number;
@@ -42,14 +52,14 @@ interface AsteroidSystemParams {
 }
 
 export class AsteroidBelt {
-    scene: THREE.Scene;
+    scene: Scene;
     asteroids: AsteroidData[];
     innerRadius: number;
     outerRadius: number;
     width: number;
     resourceMultipliers: ResourceMultipliers;
 
-    constructor(scene: THREE.Scene) {
+    constructor(scene: Scene) {
         this.scene = scene;
         this.asteroids = [];
         this.innerRadius = 20000;
@@ -68,20 +78,20 @@ export class AsteroidBelt {
             const size = Math.random() * 120 + 120; // Dramatically increased size for visibility
 
             // Use different geometries for variety
-            let geometry: THREE.BufferGeometry;
+            let geometry: BufferGeometry;
             const type = Math.floor(Math.random() * 3);
             if (type === 0) {
-                geometry = new THREE.IcosahedronGeometry(size, 0);
+                geometry = new IcosahedronGeometry(size, 0);
             } else if (type === 1) {
-                geometry = new THREE.TetrahedronGeometry(size, 0);
+                geometry = new TetrahedronGeometry(size, 0);
             } else {
-                geometry = new THREE.OctahedronGeometry(size, 0);
+                geometry = new OctahedronGeometry(size, 0);
             }
 
             // Deform the geometry to make it look more like an asteroid
             const positions = geometry.attributes.position;
             for (let j = 0; j < positions.count; j++) {
-                const vertex = new THREE.Vector3();
+                const vertex = new Vector3();
                 vertex.fromBufferAttribute(positions, j);
 
                 // Add some random bumps
@@ -96,7 +106,7 @@ export class AsteroidBelt {
             geometry.computeVertexNormals();
 
             // Material with different color variations - brighter for better visibility
-            const color = new THREE.Color();
+            const color = new Color();
             const resourceRoll = Math.random();
             let resourceType: ResourceType | null = null;
 
@@ -116,7 +126,7 @@ export class AsteroidBelt {
             }
 
             // Enhanced material with higher emissive properties for better visibility
-            const material = new THREE.MeshStandardMaterial({
+            const material = new MeshStandardMaterial({
                 color: color,
                 roughness: 0.6 + Math.random() * 0.2, // Reduced roughness
                 metalness: 0.4 + Math.random() * 0.4, // Increased metalness
@@ -126,7 +136,7 @@ export class AsteroidBelt {
             });
 
             // Create the mesh
-            const mesh = new THREE.Mesh(geometry, material);
+            const mesh = new Mesh(geometry, material);
 
             // Position in asteroid belt with variation using torus pattern
             const angle = Math.random() * Math.PI * 2;
@@ -191,9 +201,9 @@ export class AsteroidBelt {
         }
     }
 
-    getRegionInfo(): { center: THREE.Vector3; innerRadius: number; outerRadius: number } {
+    getRegionInfo(): { center: Vector3; innerRadius: number; outerRadius: number } {
         return {
-            center: new THREE.Vector3(0, 0, 0),
+            center: new Vector3(0, 0, 0),
             innerRadius: this.innerRadius,
             outerRadius: this.outerRadius
         };
@@ -264,7 +274,7 @@ export class AsteroidBelt {
     }
 
     // Helper function to find the closest asteroid to a point (for mining)
-    findClosestAsteroid(position: THREE.Vector3, maxDistance: number = 1600): AsteroidData | null {
+    findClosestAsteroid(position: Vector3, maxDistance: number = 1600): AsteroidData | null {
         let closestAsteroid: AsteroidData | null = null;
         let closestDistance = maxDistance;
 
@@ -299,15 +309,15 @@ export class AsteroidBelt {
             // Dispose of textures if they exist
             if (Array.isArray(material)) {
                 material.forEach(mat => {
-                    if ((mat as THREE.MeshStandardMaterial).map) (mat as THREE.MeshStandardMaterial).map?.dispose();
-                    if ((mat as THREE.MeshStandardMaterial).emissiveMap) (mat as THREE.MeshStandardMaterial).emissiveMap?.dispose();
-                    if ((mat as THREE.MeshStandardMaterial).normalMap) (mat as THREE.MeshStandardMaterial).normalMap?.dispose();
-                    if ((mat as THREE.MeshStandardMaterial).roughnessMap) (mat as THREE.MeshStandardMaterial).roughnessMap?.dispose();
-                    if ((mat as THREE.MeshStandardMaterial).metalnessMap) (mat as THREE.MeshStandardMaterial).metalnessMap?.dispose();
+                    if ((mat as MeshStandardMaterial).map) (mat as MeshStandardMaterial).map?.dispose();
+                    if ((mat as MeshStandardMaterial).emissiveMap) (mat as MeshStandardMaterial).emissiveMap?.dispose();
+                    if ((mat as MeshStandardMaterial).normalMap) (mat as MeshStandardMaterial).normalMap?.dispose();
+                    if ((mat as MeshStandardMaterial).roughnessMap) (mat as MeshStandardMaterial).roughnessMap?.dispose();
+                    if ((mat as MeshStandardMaterial).metalnessMap) (mat as MeshStandardMaterial).metalnessMap?.dispose();
                     mat.dispose();
                 });
             } else {
-                const mat = material as THREE.MeshStandardMaterial;
+                const mat = material as MeshStandardMaterial;
                 mat.map?.dispose();
                 mat.emissiveMap?.dispose();
                 mat.normalMap?.dispose();

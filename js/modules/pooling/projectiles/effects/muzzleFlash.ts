@@ -9,11 +9,18 @@
  */
 
 import { ObjectPool } from '../../ObjectPool.ts';
-import * as THREE from 'three';
+import {
+  BufferGeometry,
+  MeshBasicMaterial,
+  PointLight,
+  Vector3,
+  Object3D,
+  Mesh,
+} from 'three';
 
 type SharedAssets = {
-    muzzleFlashGeometry: THREE.BufferGeometry;
-    muzzleFlashMaterial: THREE.MeshBasicMaterial;
+    muzzleFlashGeometry: BufferGeometry;
+    muzzleFlashMaterial: MeshBasicMaterial;
 };
 
 type MuzzleFlashUserData = {
@@ -22,20 +29,20 @@ type MuzzleFlashUserData = {
     active: boolean;
     pooled: boolean;
     startTime: number;
-    flashLight: THREE.PointLight | null;
+    flashLight: PointLight | null;
     weaponType: string;
     burstDuration: number;
-    initialPosition: THREE.Vector3;
-    direction: THREE.Vector3;
+    initialPosition: Vector3;
+    direction: Vector3;
 };
 
-type MuzzleFlashMesh = THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> & {
+type MuzzleFlashMesh = Mesh<BufferGeometry, MeshBasicMaterial> & {
     userData: MuzzleFlashUserData;
 };
 
-type AddToScene = (object: THREE.Object3D) => void;
+type AddToScene = (object: Object3D) => void;
 
-type RemoveFromParent = (object: THREE.Object3D) => void;
+type RemoveFromParent = (object: Object3D) => void;
 
 export class MuzzleFlashPool {
     sharedAssets: SharedAssets;
@@ -78,7 +85,7 @@ export class MuzzleFlashPool {
      */
     createMuzzleFlash(): MuzzleFlashMesh {
         // Create cone mesh for muzzle flash
-        const muzzleFlash = new THREE.Mesh(this.sharedAssets.muzzleFlashGeometry, this.sharedAssets.muzzleFlashMaterial.clone()) as MuzzleFlashMesh;
+        const muzzleFlash = new Mesh(this.sharedAssets.muzzleFlashGeometry, this.sharedAssets.muzzleFlashMaterial.clone()) as MuzzleFlashMesh;
 
         // Set up userData to track state
         muzzleFlash.userData = {
@@ -90,12 +97,12 @@ export class MuzzleFlashPool {
             flashLight: null,
             weaponType: 'generic',
             burstDuration: 70, // Default burst duration
-            initialPosition: new THREE.Vector3(),
-            direction: new THREE.Vector3()
+            initialPosition: new Vector3(),
+            direction: new Vector3()
         };
 
         // Create a point light that will be attached to the flash
-        const flashLight = new THREE.PointLight(0x00ffff, 200, 10, 2);
+        const flashLight = new PointLight(0x00ffff, 200, 10, 2);
         flashLight.visible = false;
         this._addToScene(flashLight);
 
@@ -145,7 +152,7 @@ export class MuzzleFlashPool {
      * @param direction - Direction of firing
      * @returns A muzzle flash mesh
      */
-    getMuzzleFlash(weaponType = 'generic', position: THREE.Vector3 | null = null, direction: THREE.Vector3 | null = null): MuzzleFlashMesh {
+    getMuzzleFlash(weaponType = 'generic', position: Vector3 | null = null, direction: Vector3 | null = null): MuzzleFlashMesh {
         const muzzleFlash = this.pool.get();
         muzzleFlash.visible = true;
         muzzleFlash.userData.active = true;
@@ -231,7 +238,7 @@ export class MuzzleFlashPool {
      * @param light - The light to configure
      * @param weaponType - Type of weapon
      */
-    configureLightForWeapon(light: THREE.PointLight, weaponType: string): void {
+    configureLightForWeapon(light: PointLight, weaponType: string): void {
         switch (weaponType) {
             case 'laser':
                 light.color.setHex(0x00ffff); // Cyan
@@ -400,7 +407,7 @@ export class MuzzleFlashPool {
      * Dispose the muzzle flash pool
      * @param disposeFn - Custom dispose function
      */
-    dispose(disposeFn?: (obj: THREE.Object3D) => void): void {
+    dispose(disposeFn?: (obj: Object3D) => void): void {
         this.pool.dispose((muzzleFlash) => {
             // Remove from scene
             if (muzzleFlash.parent) {

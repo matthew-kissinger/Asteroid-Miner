@@ -9,11 +9,18 @@
  */
 
 import { ObjectPool } from '../../ObjectPool.ts';
-import * as THREE from 'three';
+import {
+  BufferGeometry,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  Vector3,
+  Object3D,
+  Mesh,
+} from 'three';
 
 type SharedAssets = {
-    trailParticleGeometries: THREE.BufferGeometry[];
-    trailParticleMaterial: THREE.MeshBasicMaterial;
+    trailParticleGeometries: BufferGeometry[];
+    trailParticleMaterial: MeshBasicMaterial;
 };
 
 type TrailParticleUserData = {
@@ -21,14 +28,14 @@ type TrailParticleUserData = {
     active: boolean;
     pooled: boolean;
     sizeIndex: number;
-    initialOffset: THREE.Vector3;
+    initialOffset: Vector3;
     birthTime: number;
     lifetime: number;
-    velocity: THREE.Vector3;
+    velocity: Vector3;
     initialOpacity: number;
 };
 
-type TrailParticle = THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> & {
+type TrailParticle = Mesh<BufferGeometry, MeshBasicMaterial> & {
     userData: TrailParticleUserData;
 };
 
@@ -46,19 +53,19 @@ type TrailContainerUserData = {
     trailOpacity?: number;
 };
 
-type TrailContainer = THREE.Object3D & {
+type TrailContainer = Object3D & {
     userData: TrailContainerUserData;
 };
 
-type ProjectileWithTrail = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> & {
+type ProjectileWithTrail = Mesh<BufferGeometry, MeshStandardMaterial> & {
     userData: {
         projectileType?: string;
         active?: boolean;
-        trail?: THREE.Object3D | null;
+        trail?: Object3D | null;
     } & Record<string, unknown>;
 };
 
-type RemoveFromParent = (object: THREE.Object3D) => void;
+type RemoveFromParent = (object: Object3D) => void;
 
 export class TrailEffectsPool {
     sharedAssets: SharedAssets;
@@ -109,7 +116,7 @@ export class TrailEffectsPool {
      * @returns A trail container
      */
     createTrailContainer(): TrailContainer {
-        const trailContainer = new THREE.Object3D() as TrailContainer;
+        const trailContainer = new Object3D() as TrailContainer;
 
         // Set up userData to track state
         trailContainer.userData = {
@@ -150,7 +157,7 @@ export class TrailEffectsPool {
      */
     createTrailParticle(): TrailParticle {
         // Create a particle with default size (will be updated when used)
-        const particle = new THREE.Mesh(
+        const particle = new Mesh(
             this.sharedAssets.trailParticleGeometries[0],
             this.sharedAssets.trailParticleMaterial.clone()
         ) as TrailParticle;
@@ -161,10 +168,10 @@ export class TrailEffectsPool {
             active: false,
             pooled: true,
             sizeIndex: 0,
-            initialOffset: new THREE.Vector3(),
+            initialOffset: new Vector3(),
             birthTime: 0,
             lifetime: 1000,
-            velocity: new THREE.Vector3(),
+            velocity: new Vector3(),
             initialOpacity: 0.9
         };
 
@@ -371,7 +378,7 @@ export class TrailEffectsPool {
         const particle = this.getTrailParticle(sizeIndex);
 
         // Position at trail origin with some randomness
-        const randomOffset = new THREE.Vector3((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
+        const randomOffset = new Vector3((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
         particle.position.copy(randomOffset);
 
         // Set particle properties based on trail configuration
@@ -459,7 +466,7 @@ export class TrailEffectsPool {
      * Dispose the trail effects pools
      * @param disposeFn - Custom dispose function
      */
-    dispose(disposeFn?: (obj: THREE.Object3D) => void): void {
+    dispose(disposeFn?: (obj: Object3D) => void): void {
         this.trailContainerPool.dispose((trail) => {
             // Remove from scene or parent
             if (trail.parent) {
