@@ -53,9 +53,9 @@ export class GameStateManager {
         }
 
         // Check if out of fuel and not near stargate
-        if (this.game.spaceship.fuel <= 0 && 
-            (this.game.controls as any).dockingSystem && 
-            !(this.game.controls as any).dockingSystem.nearStargate) {
+        if (this.game.spaceship.fuel <= 0 &&
+            this.game.controls.dockingSystem &&
+            !this.game.controls.dockingSystem.nearStargate) {
             // Use message bus to publish game over event rather than direct call
             this.game.messageBus.publish('game.over', {
                 reason: "Your ship ran out of fuel",
@@ -85,7 +85,7 @@ export class GameStateManager {
      * Handle game over events from message bus
      * @param message The game over event message
      */
-    handleGameOverEvent(message: any): void {
+    handleGameOverEvent(message: { data?: { reason?: string; source?: string; type?: string } }): void {
         // Check if game is already in game over state to prevent duplicate handling
         if (this.game.isGameOver) {
             console.log("Game: Already in game over state, ignoring duplicate event");
@@ -135,7 +135,7 @@ export class GameStateManager {
 
         // Show game over screen with resources collected and combat stats
         const gameStats = {
-            resources: (this.game.controls as any)?.resources || {},
+            resources: this.game.controls?.resources || {},
             combatStats: {
                 enemiesDestroyed: this.game.combatManager?.stats?.enemiesDestroyed || 0,
                 damageDealt: this.game.damageDealt || 0,
@@ -150,9 +150,9 @@ export class GameStateManager {
 
         // Show game over UI
         console.log("Game: Showing game over UI");
-        if (this.game.ui && (this.game.ui as any).showGameOver) {
+        if (this.game.ui && this.game.ui.showGameOver) {
             // Pass the entire message object to the UI so it can access both reason and type
-            (this.game.ui as any).showGameOver(gameStats, typeof message === 'string' ? message : message);
+            this.game.ui.showGameOver(gameStats, typeof message === 'string' ? message : message);
         } else {
             console.log("Game: UI not available, using fallback");
             // For fallback, extract the reason string if message is an object
@@ -162,17 +162,17 @@ export class GameStateManager {
         }
 
         // Stop spaceship movement
-        if (this.game.spaceship && (this.game.spaceship as any).thrust) {
-            (this.game.spaceship as any).thrust.forward = false;
-            (this.game.spaceship as any).thrust.backward = false;
-            (this.game.spaceship as any).thrust.left = false;
-            (this.game.spaceship as any).thrust.right = false;
-            (this.game.spaceship as any).thrust.boost = false;
+        if (this.game.spaceship && this.game.spaceship.thrust) {
+            this.game.spaceship.thrust.forward = false;
+            this.game.spaceship.thrust.backward = false;
+            this.game.spaceship.thrust.left = false;
+            this.game.spaceship.thrust.right = false;
+            this.game.spaceship.thrust.boost = false;
         }
 
         // Stop all control inputs
-        if (this.game.controls && (this.game.controls as any).inputHandler) {
-            (this.game.controls as any).inputHandler.exitPointerLock();
+        if (this.game.controls && this.game.controls.inputHandler) {
+            this.game.controls.inputHandler.exitPointerLock?.();
         }
 
         console.log("Game: Game over handling complete");
@@ -243,8 +243,8 @@ export class GameStateManager {
         });
         
         // Notify the player
-        if (this.game.ui && (this.game.ui as any).showNotification) {
-            (this.game.ui as any).showNotification("HORDE MODE ACTIVATED - SURVIVE!", 5000);
+        if (this.game.ui && this.game.ui.showNotification) {
+            this.game.ui.showNotification("HORDE MODE ACTIVATED - SURVIVE!", 5000);
         }
         
         // Force player to undock if currently docked

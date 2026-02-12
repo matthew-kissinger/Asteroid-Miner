@@ -25,7 +25,7 @@ interface GameInitializerLike {
 
 interface GameStateManagerLike {
     checkGameOver: () => void;
-    handleGameOverEvent: (message: any) => void;
+    handleGameOverEvent: (message: { data?: GameOverEventData }) => void;
     gameOver: (message: GameOverMessage) => void;
     showFallbackGameOver: (message: string) => void;
     activateHordeMode: () => void;
@@ -53,6 +53,65 @@ interface GameHelpersLike {
     getGameStatistics: () => any;
     areSystemsReady: () => boolean;
     logSystemStatus: () => void;
+}
+
+// Typed facades for subsystems used by coordinators
+interface UIFacade {
+    update?: () => void;
+    updateCoordinates?: (x: number, y: number, z: number) => void;
+    updateFPS?: (fps: number, cap?: number) => void;
+    updateLocation?: (locationName: string) => void;
+    showGameOver?: (gameStats: any, message: any) => void;
+    showNotification?: (message: string, duration?: number) => void;
+}
+
+interface DockingSystemFacade {
+    nearStargate?: boolean;
+    isDocked?: boolean;
+    [key: string]: unknown;
+}
+
+interface InputHandlerFacade {
+    exitPointerLock?: () => void;
+    [key: string]: unknown;
+}
+
+interface ControlsFacade {
+    update?: (deltaTime: number) => void;
+    dockingSystem?: DockingSystemFacade;
+    inputHandler?: InputHandlerFacade;
+    resources?: Record<string, any>;
+}
+
+interface CombatFacade {
+    update?: (deltaTime: number) => void;
+    isFiring?: boolean;
+    fireParticleCannon?: () => void;
+    checkHit?: (enemy: any) => boolean;
+    projectiles?: Array<{ mesh?: any; [key: string]: unknown }>;
+}
+
+interface ThrustState {
+    forward: boolean;
+    backward: boolean;
+    left: boolean;
+    right: boolean;
+    boost: boolean;
+}
+
+interface SpaceshipFacade {
+    isDocked: boolean;
+    isDestroyed: boolean;
+    fuel: number;
+    mesh?: { position: THREE.Vector3 };
+    thrust?: ThrustState;
+    undock?: () => void;
+}
+
+interface GameOverEventData {
+    reason?: string;
+    source?: string;
+    type?: string;
 }
 
 export class Game {
@@ -85,11 +144,11 @@ export class Game {
     camera!: THREE.PerspectiveCamera;
     physics!: Physics;
     environment!: Environment;
-    spaceship!: Spaceship;
-    ui!: UI;
-    combat!: Combat;
+    spaceship!: Spaceship & SpaceshipFacade;
+    ui!: UI & UIFacade;
+    combat!: Combat & CombatFacade;
     combatManager: any; // AI manager
-    controls!: Controls;
+    controls!: Controls & ControlsFacade;
     audio!: AudioManager;
     messageBus: MessageBus = new MessageBus();
     gameOverUnsubscribe?: Function;

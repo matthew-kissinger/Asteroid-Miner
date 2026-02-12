@@ -24,21 +24,21 @@ export class GameSystemCoordinator {
         }
 
         // Update coordinates in HUD after physics update
-        if (this.game.ui && (this.game.ui as any).updateCoordinates && this.game.spaceship && this.game.spaceship.mesh) {
+        if (this.game.ui && this.game.ui.updateCoordinates && this.game.spaceship && this.game.spaceship.mesh) {
             const position = this.game.spaceship.mesh.position;
-            (this.game.ui as any).updateCoordinates(position.x, position.y, position.z);
+            this.game.ui.updateCoordinates(position.x, position.y, position.z);
         }
 
         // Calculate and update FPS
         this.game.currentFPS = 1 / deltaTime;
         // Only update FPS display every 10 frames to reduce DOM operations
-        if (this.game.frameCount % 10 === 0 && this.game.ui && (this.game.ui as any).updateFPS) {
-            (this.game.ui as any).updateFPS(this.game.currentFPS);
+        if (this.game.frameCount % 10 === 0 && this.game.ui && this.game.ui.updateFPS) {
+            this.game.ui.updateFPS(this.game.currentFPS);
         }
 
         // Update controls
-        if (this.game.controls && (this.game.controls as any).update) {
-            (this.game.controls as any).update(deltaTime);
+        if (this.game.controls && this.game.controls.update) {
+            this.game.controls.update(deltaTime);
         }
 
         // Update environment
@@ -55,8 +55,8 @@ export class GameSystemCoordinator {
         // Update location info
         if (this.game.environment && this.game.spaceship && this.game.spaceship.mesh) {
             const locationName = this.game.environment.getPlayerLocation(this.game.spaceship.mesh.position);
-            if (this.game.ui && (this.game.ui as any).updateLocation) {
-                (this.game.ui as any).updateLocation(locationName);
+            if (this.game.ui && this.game.ui.updateLocation) {
+                this.game.ui.updateLocation(locationName);
             }
         }
 
@@ -111,7 +111,7 @@ export class GameSystemCoordinator {
                 if (this.game.combatManager.enemies) {
                     for (const enemy of this.game.combatManager.enemies) {
                         if (!enemy.isDestroyed) {
-                            const didHit = (this.game.combat as any).checkHit && (this.game.combat as any).checkHit(enemy);
+                            const didHit = this.game.combat.checkHit && this.game.combat.checkHit(enemy);
                             // Track stats and play hit sound
                             if (didHit) {
                                 this.game.damageDealt += 1;
@@ -135,8 +135,8 @@ export class GameSystemCoordinator {
      */
     preventSelfDamage(): void {
         const minSafeDistance = 30; // Safe distance from player to prevent self-hits
-        if (this.game.combat && (this.game.combat as any).projectiles) {
-            const projectiles = (this.game.combat as any).projectiles;
+        if (this.game.combat && this.game.combat.projectiles) {
+            const projectiles = this.game.combat.projectiles;
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const projectile = projectiles[i];
                 if (projectile.mesh && projectile.mesh.position.distanceTo(this.game.spaceship.mesh!.position) < minSafeDistance) {
@@ -162,11 +162,11 @@ export class GameSystemCoordinator {
         if (this.game.spaceship.isDocked) {
             // No thruster sounds when docked
             this.game.audio.stopSound('thrust');
-        } else {
-            const thrust = (this.game.spaceship as any).thrust;
-            const isThrusting = thrust.forward || 
-                              thrust.backward || 
-                              thrust.left || 
+        } else if (this.game.spaceship.thrust) {
+            const thrust = this.game.spaceship.thrust;
+            const isThrusting = thrust.forward ||
+                              thrust.backward ||
+                              thrust.left ||
                               thrust.right;
 
             if (isThrusting) {
